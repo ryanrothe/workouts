@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Achilles Rebuild" />
+<meta name="theme-color" content="#d94f1c" />
+<link rel="manifest" href="../manifest.webmanifest" />
+<link rel="apple-touch-icon" href="../icon-180.png" />
+<link rel="icon" type="image/png" href="../favicon.png" />
+<title>Achilles Rebuild — 12-Week Program</title>
+<link rel="stylesheet" href="../shared/styles.css" />
+<style>
+  /* Achilles-specific styles. Shared design tokens come from ../shared/styles.css. */
+
+  /* Hero */
+  .hero {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .hero-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .phase-badge {
+    display: inline-block;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border: 1px solid var(--primary-line);
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .stat {
+    background: var(--card-2);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    padding: 8px 6px;
+    text-align: center;
+  }
+  .stat-num { font-size: 17px; font-weight: 700; color: var(--primary); font-variant-numeric: tabular-nums; }
+  .stat-label { font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+  .progress-bar { background: var(--border-soft); border-radius: 999px; height: 6px; overflow: hidden; margin-top: 10px; }
+  .progress-fill { background: linear-gradient(90deg, var(--primary), var(--accent)); height: 100%; transition: width 0.3s; width: 0%; }
+
+  /* Week pills */
+  .week-bar {
+    display: flex; gap: 5px;
+    overflow-x: auto; margin-bottom: 12px; padding: 4px 2px;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .week-bar::-webkit-scrollbar { display: none; }
+  .week-pill {
+    flex-shrink: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    min-width: 58px;
+    text-align: center;
+    line-height: 1.2;
+    font-family: inherit;
+  }
+  .week-pill .wk-label { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .week-pill .wk-num { display: block; font-size: 15px; font-weight: 700; color: var(--text); }
+  .week-pill.active { background: var(--primary); border-color: var(--primary); }
+  .week-pill.active .wk-num, .week-pill.active .wk-label { color: white; }
+  .week-pill.done { border-color: var(--success); background: var(--success-soft); }
+  .week-pill.done .wk-num { color: var(--success); }
+
+  /* Exercise tag color variants (extends .ex-tag from shared) */
+  .ex-tag.iso  { background: #f1eafd; color: #6b3ed0; }
+  .ex-tag.hsr  { background: var(--primary-soft); color: var(--primary); }
+  .ex-tag.ecc  { background: #e7f0fb; color: #1f63b8; }
+  .ex-tag.plyo { background: #fef0e3; color: #b35309; }
+  .ex-tag.mob  { background: #e3f5ea; color: var(--success); }
+  .ex-tag.warm { background: #f0f1f3; color: #6b7588; }
+  .ex-tag.acc  { background: #fdf2f8; color: #b03060; }
+
+  /* Principles pane content */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 10px 0;
+  }
+  .info-grid .info-cell {
+    background: var(--card-2);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+  }
+  .info-cell h4 { margin-bottom: 4px; }
+  .info-cell p { font-size: 12px; margin: 0; color: var(--text-body); }
+
+  .phase-summary { display: flex; gap: 10px; align-items: center; }
+  .phase-summary .phase-num {
+    width: 36px; height: 36px;
+    background: var(--primary-soft);
+    border: 1px solid var(--primary-line);
+    color: var(--primary);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .phase-summary .phase-text { font-size: 12.5px; color: var(--muted); }
+  .phase-summary .phase-text strong { color: var(--text); }
+
+  /* Self-assess */
+  .assess-grid { display: grid; gap: 8px; }
+  .assess-row {
+    background: var(--card-2);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    display: flex; gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .assess-row .assess-label { flex: 1; min-width: 130px; font-size: 12.5px; font-weight: 600; }
+  .assess-row .assess-input {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12.5px;
+    font-family: inherit;
+    width: 70px;
+  }
+  .assess-row .assess-sub { color: var(--muted); font-size: 11px; font-weight: 500; }
+  .assess-sym { font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+  .sym-good { background: var(--success-soft); color: var(--success); }
+  .sym-warn { background: var(--warning-soft); color: var(--warning); }
+  .sym-bad  { background: var(--danger-soft);  color: var(--danger); }
+
+  .reset-link {
+    background: none; border: none; color: var(--muted);
+    font-size: 11px; cursor: pointer; padding: 4px 8px; text-decoration: underline;
+    font-family: inherit;
+  }
+  .ref-list { font-size: 11.5px; color: var(--muted); line-height: 1.55; }
+  .ref-list li { margin-bottom: 6px; }
+
+  @media (max-width: 420px) {
+    .hero-stats { gap: 6px; }
+    .stat { padding: 6px 4px; }
+    .stat-num { font-size: 15px; }
+    .stat-label { font-size: 8.5px; }
+  }
+</style>
+</head>
+<body data-program="achilles">
+
+<header class="appbar">
+  <div class="appbar-inner">
+    <a class="appbar-back" href="../" aria-label="Back to Exercise Library">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="10 3 5 8 10 13"/></svg>
+      Library
+    </a>
+    <div class="appbar-title">
+      <div class="eyebrow">Program</div>
+      <div class="name">Achilles Rebuild</div>
+    </div>
+  </div>
+  <div class="appbar-accent"></div>
+</header>
+
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <span class="phase-badge" id="hero-phase">Phase 1</span>
+        <h1 style="margin-top:6px">Achilles Rebuild — 12 Weeks</h1>
+        <div class="hero-sub">3 days/week · tendon-specific · post-rupture rebuild</div>
+      </div>
+      <button class="reset-link" id="reset-btn" title="Reset all tracking">Reset</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num" id="stat-week">1</div><div class="stat-label">Current Week</div></div>
+      <div class="stat"><div class="stat-num" id="stat-sessions">0</div><div class="stat-label">Sessions Done</div></div>
+      <div class="stat"><div class="stat-num" id="stat-streak">0</div><div class="stat-label">This Week</div></div>
+      <div class="stat"><div class="stat-num" id="stat-pct">0%</div><div class="stat-label">Overall</div></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-pane="program">Program</button>
+    <button class="tab" data-pane="principles">Principles</button>
+    <button class="tab" data-pane="assess">Self-Assess</button>
+    <button class="tab" data-pane="reference">Exercise Library</button>
+  </div>
+
+  <!-- PROGRAM PANE -->
+  <div class="pane active" id="pane-program">
+    <div class="week-bar" id="week-bar"></div>
+    <div id="phase-info"></div>
+    <div id="days-container"></div>
+  </div>
+
+  <!-- PRINCIPLES PANE -->
+  <div class="pane" id="pane-principles">
+    <div class="card">
+      <h2>What this program is doing — and why</h2>
+      <p>This 12-week program is built around the two interventions with the strongest evidence for Achilles tendon adaptation, plus a structured progression into reactive loading so your tendon can store and return energy under basketball-specific demands.</p>
+
+      <h3>The three loading types — what each does</h3>
+      <div class="info-grid">
+        <div class="info-cell">
+          <h4>1. Heavy Isometric</h4>
+          <p>30–45s holds at high effort. Cook &amp; Rio's work shows isometrics reduce tendon pain and increase tendon stiffness via collagen reorganization. Lower joint-stress than dynamic loading.</p>
+        </div>
+        <div class="info-cell">
+          <h4>2. Heavy Slow Resistance (HSR)</h4>
+          <p>Slow tempo (3-0-3) at 70–85% 1RM. Kongsgaard and Beyer trials show HSR produces tendon hypertrophy and stiffness gains equal to or better than eccentrics, with better adherence.</p>
+        </div>
+        <div class="info-cell">
+          <h4>3. Plyometric / Energy Storage</h4>
+          <p>Pogos → bounding → depth jumps. Trains the tendon's stretch-shorten cycle. Without this, return-to-sport doesn't replicate basketball loads.</p>
+        </div>
+        <div class="info-cell">
+          <h4>4. Eccentric Overload</h4>
+          <p>Alfredson-style step heel raises with 4-sec lowering. Long-established for tendon remodeling — kept as a maintenance dose, not the main driver.</p>
+        </div>
+      </div>
+
+      <h3>Why both gastroc and soleus</h3>
+      <p>The soleus actually transmits more force through the Achilles during running and jumping than the gastroc, but it's almost always undertrained because most calf work is done with straight knees. Every day in this program includes a <strong>bent-knee soleus loading</strong> drill. This is the most commonly missed piece of post-rupture programs.</p>
+
+      <h3>How to load: RPE and progression</h3>
+      <ul>
+        <li><strong>RPE 7–8</strong> = 2–3 reps left in the tank. This is your working zone for HSR sets.</li>
+        <li><strong>RPE 9</strong> = 1 rep left, or you couldn't hold another 5 seconds. This is your isometric target.</li>
+        <li>Add ~2.5–5% load each week if all prescribed reps were clean at target tempo.</li>
+        <li>Some tendon "warmth" or soreness up to ~4/10 during loading is fine. Sharp focal pain, swelling, or 24-hr morning stiffness is a signal to back off 10–15%.</li>
+      </ul>
+
+      <div class="note-box">
+        <strong>The Silbernagel pain rule (well-validated):</strong> Pain ≤ 5/10 during the exercise, and back to baseline by the next morning. If both true, the load is fine and you can progress.
+      </div>
+
+      <h3>Why 3 days/week</h3>
+      <p>Tendons adapt slowly — collagen turnover is a 24–72 hour process. Loading more often than every other day on the same tissue gives diminishing returns and risks accumulating microtrauma faster than you can remodel it. Three sessions with full recovery in between is the sweet spot for tendon work in someone training other things (like basketball) on off-days.</p>
+
+      <h3>Basketball alongside this</h3>
+      <ul>
+        <li>Schedule heavy tendon sessions (Day A, B) <strong>not</strong> on the same day as basketball.</li>
+        <li>Day C can stack with light shooting/skill work, but avoid full-court play immediately after.</li>
+        <li>If you played hard the day before, downgrade an isometric day to a deload (60% volume).</li>
+      </ul>
+
+      <h3>Phase logic</h3>
+      <div class="phase-summary"><div class="phase-num">1</div><div class="phase-text"><strong>Weeks 1–4 — Foundation.</strong> Build tendon stiffness with heavy iso + HSR. Light plyo prep only.</div></div>
+      <div class="phase-summary" style="margin-top:8px"><div class="phase-num">2</div><div class="phase-text"><strong>Weeks 5–8 — Energy Storage.</strong> Maintain HSR, layer in bilateral and controlled single-leg plyometrics. Multi-directional intro.</div></div>
+      <div class="phase-summary" style="margin-top:8px"><div class="phase-num">3</div><div class="phase-text"><strong>Weeks 9–12 — Reactive / Sport-Specific.</strong> Stiffness plyos (min ground contact), depth drops, single-leg reactive, bounding. Basketball-ready.</div></div>
+
+      <h3>References (open-access where possible)</h3>
+      <ul class="ref-list">
+        <li>Beyer R, et al. Heavy Slow Resistance vs. Eccentric Training in Achilles Tendinopathy. <em>Am J Sports Med</em>, 2015.</li>
+        <li>Kongsgaard M, et al. Corticosteroid injections, eccentric decline squat training, and HSR training in patellar tendinopathy. <em>Scand J Med Sci Sports</em>, 2009.</li>
+        <li>Rio E, et al. Isometric exercise induces analgesia and reduces inhibition in tendinopathy. <em>Br J Sports Med</em>, 2015.</li>
+        <li>Silbernagel KG, et al. Continued sports activity using a pain-monitoring model during Achilles rehab. <em>Am J Sports Med</em>, 2007.</li>
+        <li>O'Neill S, et al. Plantarflexor strength and endurance deficits in Achilles tendon rupture. <em>JOSPT</em>, 2019.</li>
+        <li>Cook JL, Docking SI. "Rehabilitation will increase the 'capacity' of your... insert here..." <em>Br J Sports Med</em>, 2015.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ASSESS PANE -->
+  <div class="pane" id="pane-assess">
+    <div class="card">
+      <h2>Self-Assessment — re-test every 4 weeks</h2>
+      <p>Track these once at Week 1, then re-test at the end of each phase (Weeks 4, 8, 12). The symmetry number is what matters most — you're rebuilding the injured side to match the uninjured side.</p>
+
+      <div class="note-box">
+        <strong>How to test:</strong> Warm up with 2 min jump rope. Rest 90s between each test. Test injured leg <em>second</em> (so you're not pre-fatigued the wrong way).
+      </div>
+
+      <h3 style="margin-top:14px">Test 1 — Single-Leg Heel Raise to Fatigue</h3>
+      <p style="font-size:12px;color:var(--muted)">Stand on one leg, fingertips on wall for balance. Full ROM heel raise to a 2-sec hold at top, lower fully. Count reps until form breaks. Repeat on other side.</p>
+      <div class="assess-grid" id="assess-test1"></div>
+
+      <h3 style="margin-top:16px">Test 2 — Single-Leg Hop for Distance</h3>
+      <p style="font-size:12px;color:var(--muted)">From standing, hop forward on one leg as far as possible and stick the landing for 3 sec. Best of 3. Measure heel-to-heel.</p>
+      <div class="assess-grid" id="assess-test2"></div>
+
+      <h3 style="margin-top:16px">Test 3 — Single-Leg Heel Raise Load Test</h3>
+      <p style="font-size:12px;color:var(--muted)">Hold heaviest DB you can do 5 strict single-leg heel raises with, off a step, full ROM. Conservative — go light first time.</p>
+      <div class="assess-grid" id="assess-test3"></div>
+
+      <div class="warn-box" style="margin-top:14px">
+        <strong>Limb Symmetry Index (LSI):</strong> Injured ÷ Uninjured × 100. Most return-to-sport literature uses ≥ 90% as the threshold for full clearance to high-impact activity. Below 80% = stay conservative with plyo dosing this phase.
+      </div>
+    </div>
+  </div>
+
+  <!-- REFERENCE PANE -->
+  <div class="pane" id="pane-reference">
+    <div class="card">
+      <h2>Exercise Library</h2>
+      <p>Tap any exercise to open a YouTube search with curated keywords. Each exercise card in the program also has its own video link.</p>
+      <div id="exercise-library"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ===========================================================================
+   PROGRAM DATA
+   =========================================================================== */
+const VIDEO_BASE = "https://www.youtube.com/results?search_query=";
+function v(q) { return VIDEO_BASE + encodeURIComponent(q); }
+
+const EXERCISES = {
+  rope_warm:    { name: "Jump Rope Warm-Up",                                 tag: "warm",  q: "jump rope warm up basketball" },
+  airdyne_warm: { name: "Airdyne or Rower Warm-Up + Ankle CARs",             tag: "warm",  q: "ankle cars mobility warm up" },
+  dyn_warm:     { name: "Dynamic Mobility (5 min)",                          tag: "warm",  q: "dynamic warm up lower body basketball" },
+  slant_stretch:{ name: "Slant Board Gastroc Stretch",                       tag: "mob",   q: "slant board calf stretch gastroc" },
+  soleus_stretch:{ name: "Soleus Wall Stretch (bent knee)",                  tag: "mob",   q: "soleus wall stretch bent knee" },
+
+  iso_sl_heel:  { name: "Heavy Mid-Range Single-Leg Heel Raise Hold (weighted)", tag: "iso",  q: "isometric heel raise rio protocol tendon" },
+  iso_soleus:   { name: "Heavy Soleus Isometric (seated, barbell on knees)", tag: "iso",   q: "seated soleus isometric barbell" },
+  iso_bw_long:  { name: "Long-Duration Bodyweight Heel Raise Hold",          tag: "iso",   q: "long duration calf raise hold isometric" },
+  iso_soleus_wallsit:{ name: "Soleus Wall Sit (heels down, knees over toes)", tag: "iso",  q: "soleus wall sit isometric" },
+
+  hsr_standing: { name: "Standing Barbell Calf Raise (HSR)",                 tag: "hsr",   q: "barbell standing calf raise slow tempo HSR" },
+  hsr_seated:   { name: "Seated Barbell Calf Raise (soleus HSR)",            tag: "hsr",   q: "seated barbell calf raise soleus knee bent" },
+  hsr_db_sl:    { name: "Single-Leg DB Heel Raise (HSR)",                    tag: "hsr",   q: "single leg dumbbell calf raise slow tempo" },
+
+  ecc_alfredson:{ name: "Single-Leg Eccentric Heel Raise off Step (Alfredson, weighted)", tag: "ecc", q: "Alfredson eccentric heel raise protocol" },
+  ecc_heavy:    { name: "Heavy Eccentric Single-Leg Heel Raise (DB, 4-sec lower)", tag: "ecc", q: "eccentric overload heel raise heavy dumbbell" },
+
+  tib_raise:    { name: "Tibialis Raise (weighted)",                         tag: "acc",   q: "tibialis raise plate ATG" },
+  sl_rdl:       { name: "Single-Leg RDL (KB or DB)",                         tag: "acc",   q: "single leg romanian deadlift kettlebell" },
+  atg_split:    { name: "ATG Split Squat (on ramp if needed)",               tag: "acc",   q: "ATG split squat knees over toes" },
+  band_inv_ev:  { name: "Banded Ankle Inversion + Eversion",                 tag: "acc",   q: "banded ankle inversion eversion" },
+  sl_balance:   { name: "Single-Leg Balance + Perturbation",                 tag: "acc",   q: "single leg balance ankle stability perturbation" },
+  db_hi_rep:    { name: "Standing DB Calf Raise (high-rep finisher)",        tag: "acc",   q: "dumbbell calf raise high rep finisher" },
+  bw_burnout:   { name: "Bodyweight Calf Raise Burnout",                     tag: "acc",   q: "bodyweight calf raise burnout to failure" },
+
+  pogo_bi:      { name: "Bilateral Pogo Hops (stiff ankle, low amplitude)",  tag: "plyo",  q: "pogo hops stiff ankle achilles" },
+  pogo_max:     { name: "Bilateral Pogo Hops (max effort, 10s)",             tag: "plyo",  q: "max pogo hops stiffness training" },
+  pogo_sl:      { name: "Single-Leg Pogo Hops",                              tag: "plyo",  q: "single leg pogo hops continuous" },
+  pogo_ladder:  { name: "Pogo Ladder (continuous, build stiffness)",         tag: "plyo",  q: "pogo hop continuous stiffness drill" },
+  pogo_max_stiff:{ name: "Max-Stiffness Pogo Hops (min ground contact)",     tag: "plyo",  q: "stiffness pogo minimum ground contact time" },
+  line_lat:     { name: "Lateral Line Hops (bilateral, side-side)",          tag: "plyo",  q: "lateral line hops basketball" },
+  line_fb:      { name: "Front-Back Line Hops (bilateral)",                  tag: "plyo",  q: "front back line hops plyometric" },
+  rope_var:     { name: "Jump Rope Variations (mix double + single leg)",    tag: "plyo",  q: "jump rope variations boxers single leg" },
+  rope_skill:   { name: "Jump Rope Skill Work (single-leg, double-unders)",  tag: "plyo",  q: "jump rope skills double under single leg" },
+  box_jump:     { name: "Box Jump (12-24\", controlled, step down)",         tag: "plyo",  q: "box jump step down landing" },
+  sl_lat_hop:   { name: "Single-Leg Lateral Hop (stick landing)",            tag: "plyo",  q: "single leg lateral hop stick landing" },
+  sl_box:       { name: "Single-Leg Box Jump (with stick landing)",          tag: "plyo",  q: "single leg box jump stick landing" },
+  lat_bound:    { name: "Lateral Bound (continuous, side-to-side)",          tag: "plyo",  q: "lateral bound speed skater" },
+  fwd_bound:    { name: "Forward Bounding (10–15 yards)",                    tag: "plyo",  q: "forward bounding plyometric drill" },
+  ab_skip:      { name: "A-Skip / B-Skip Drills",                            tag: "plyo",  q: "A skip B skip running drill" },
+  shuffle_cut:  { name: "Lateral Shuffle → Single-Leg Cut",                  tag: "plyo",  q: "lateral shuffle cut basketball drill" },
+  depth_drop:   { name: "Depth Drop to Stick Landing (12–18\")",             tag: "plyo",  q: "depth drop stick landing plyometric" },
+  box_depth_combo:{ name: "Box Jump → Depth Drop Combo",                     tag: "plyo",  q: "box jump depth drop combination plyometric" }
+};
+
+const DAYS = {
+  "1A": {
+    name: "Day A — Heavy Tendon",
+    focus: "Heavy isometrics + HSR (gastroc bias) · ~45 min",
+    exercises: [
+      { id: "rope_warm",    sets: "3", reps: "60s easy → brisk", load: "" },
+      { id: "iso_sl_heel",  sets: "5", reps: "30–45s hold / leg", load: "RPE 8–9 · DB in hand or weighted vest. Hold at ~50% range." },
+      { id: "hsr_standing", sets: "4", reps: "8 @ 3-0-3 tempo",   load: "Start ~0.5× BW on bar · Add 2.5–5% if all reps clean" },
+      { id: "iso_soleus",   sets: "5", reps: "45s hold",          load: "RPE 8–9 · Barbell across thighs seated, mid-range" },
+      { id: "tib_raise",    sets: "3", reps: "15",                load: "Plate hooked on foot or band" },
+      { id: "slant_stretch",sets: "2", reps: "60s / leg",         load: "" }
+    ]
+  },
+  "1B": {
+    name: "Day B — Eccentric + Soleus",
+    focus: "Eccentric overload + bent-knee work · ~40 min",
+    exercises: [
+      { id: "airdyne_warm", sets: "1", reps: "3 min + ankle CARs", load: "" },
+      { id: "ecc_alfredson",sets: "3", reps: "15 / leg",          load: "4-sec eccentric. DB in opposite hand. Use both legs to lift, injured leg only to lower." },
+      { id: "hsr_seated",   sets: "4", reps: "10 @ 3-0-3 tempo",  load: "Barbell on knees seated. RPE 7–8." },
+      { id: "sl_rdl",       sets: "3", reps: "8 / leg",           load: "KB or DB · slow eccentric" },
+      { id: "atg_split",    sets: "3", reps: "8 / leg",           load: "On a ramp if heel lifts" },
+      { id: "iso_bw_long",  sets: "3", reps: "60s hold",          load: "Bodyweight, both legs, top position" },
+      { id: "soleus_stretch", sets: "2", reps: "60s / leg",       load: "" }
+    ]
+  },
+  "1C": {
+    name: "Day C — Stiffness Prep",
+    focus: "Pogo intro + balance + maintenance · ~35 min",
+    exercises: [
+      { id: "rope_warm",    sets: "1", reps: "3 min easy",         load: "" },
+      { id: "rope_var",     sets: "5", reps: "60s",                load: "Vary: regular, high knees, alternating feet, single-leg on last set" },
+      { id: "pogo_bi",      sets: "3", reps: "20",                 load: "Stiff ankles, low amplitude, focus on quick rebounds" },
+      { id: "sl_balance",   sets: "3", reps: "45s / leg",          load: "Eyes closed or on unstable surface" },
+      { id: "band_inv_ev",  sets: "2", reps: "15 each direction",  load: "" },
+      { id: "db_hi_rep",    sets: "3", reps: "20",                 load: "Moderate DBs, full ROM" }
+    ]
+  },
+
+  "2A": {
+    name: "Day A — Heavy HSR + Reactive Intro",
+    focus: "Build peak HSR loads, intro bilateral plyo · ~50 min",
+    exercises: [
+      { id: "rope_warm",    sets: "3", reps: "90s",               load: "Build pace" },
+      { id: "pogo_max",     sets: "4", reps: "10s max reps",      load: "Stiff ankle, count rebounds — log in notes" },
+      { id: "hsr_standing", sets: "5", reps: "6 @ 3-0-3 tempo",   load: "Build to 1.0–1.25× BW on bar" },
+      { id: "iso_sl_heel",  sets: "4", reps: "30s / leg",         load: "RPE 9. Add weight if hitting target cleanly." },
+      { id: "box_jump",     sets: "4", reps: "5",                 load: "Step down. Reset between reps." },
+      { id: "iso_soleus",   sets: "4", reps: "30s hold",          load: "Heavier than Phase 1" }
+    ]
+  },
+  "2B": {
+    name: "Day B — Eccentric + Single-Leg Plyo Intro",
+    focus: "Eccentric overload + intro to SL plyos · ~45 min",
+    exercises: [
+      { id: "dyn_warm",     sets: "1", reps: "5 min",             load: "" },
+      { id: "ecc_alfredson",sets: "4", reps: "12 / leg",          load: "4-sec eccentric, heavier DB than Phase 1" },
+      { id: "hsr_seated",   sets: "5", reps: "8 @ 3-0-3",         load: "Add weight from Phase 1" },
+      { id: "pogo_sl",      sets: "3", reps: "10 / leg",          load: "Low amplitude, focus on landing quality" },
+      { id: "sl_rdl",       sets: "3", reps: "8 / leg",           load: "Heavier than Phase 1" },
+      { id: "atg_split",    sets: "3", reps: "8 / leg",           load: "" },
+      { id: "tib_raise",    sets: "3", reps: "15",                load: "Weighted" }
+    ]
+  },
+  "2C": {
+    name: "Day C — Multi-Directional + Stiffness",
+    focus: "Lateral plyo intro, sport-prep · ~40 min",
+    exercises: [
+      { id: "rope_warm",    sets: "2", reps: "90s",               load: "" },
+      { id: "line_lat",     sets: "4", reps: "20s",               load: "Both feet, side-to-side over a line" },
+      { id: "line_fb",      sets: "4", reps: "20s",               load: "Both feet, front-to-back over a line" },
+      { id: "sl_lat_hop",   sets: "3", reps: "6 / leg",           load: "Stick the landing for 2 sec" },
+      { id: "pogo_ladder",  sets: "3", reps: "30s continuous",    load: "Build sustained stiffness" },
+      { id: "hsr_db_sl",    sets: "3", reps: "25 / leg",          load: "Bodyweight or light DB, full ROM" }
+    ]
+  },
+
+  "3A": {
+    name: "Day A — Stiffness Plyos + Heavy Maintenance",
+    focus: "Tendon stiffness peak · ~50 min",
+    exercises: [
+      { id: "rope_skill",   sets: "3", reps: "60s",               load: "Single-leg, alternating, double-unders" },
+      { id: "pogo_max_stiff",sets: "5", reps: "10s",              load: "Minimum ground contact time. Quality > quantity." },
+      { id: "hsr_standing", sets: "4", reps: "6 @ 3-0-3",         load: "Heavy — Phase 2 top weight or +5%" },
+      { id: "iso_sl_heel",  sets: "3", reps: "30s / leg",         load: "RPE 9, heaviest of program" },
+      { id: "depth_drop",   sets: "4", reps: "5",                 load: "12–18\" box, stick the landing" },
+      { id: "iso_soleus",   sets: "3", reps: "30s",               load: "" }
+    ]
+  },
+  "3B": {
+    name: "Day B — Single-Leg Reactive",
+    focus: "Symmetry + reactive force production · ~45 min",
+    exercises: [
+      { id: "dyn_warm",     sets: "1", reps: "5 min + ankle prep",load: "" },
+      { id: "pogo_sl",      sets: "4", reps: "15s / leg",         load: "Continuous, stiff ankle" },
+      { id: "ecc_heavy",    sets: "3", reps: "8 / leg",           load: "Heavy DB, 4-sec eccentric" },
+      { id: "sl_box",       sets: "4", reps: "4 / leg",           load: "Stick the landing 2 sec. Lower box if landing isn't quiet." },
+      { id: "lat_bound",    sets: "4", reps: "6 each side",       load: "Continuous, like a speed skater" },
+      { id: "sl_rdl",       sets: "3", reps: "6 / leg",           load: "Heavy" }
+    ]
+  },
+  "3C": {
+    name: "Day C — Sport-Specific / Bounding",
+    focus: "Basketball-ready movement integration · ~45 min",
+    exercises: [
+      { id: "rope_warm",    sets: "2", reps: "60s",               load: "" },
+      { id: "fwd_bound",    sets: "4", reps: "1 length (10–15 yd)", load: "Big steps, hold each landing for 1 sec" },
+      { id: "ab_skip",      sets: "3", reps: "20 yd each",        load: "Focus on dorsiflexion and rebound" },
+      { id: "shuffle_cut",  sets: "3", reps: "6 each side",       load: "Plant on outside leg, cut sharply" },
+      { id: "box_depth_combo",sets: "3", reps: "5",               load: "Jump up → step off → drop → stick" },
+      { id: "bw_burnout",   sets: "2", reps: "max",               load: "Single-leg, alternating" },
+      { id: "slant_stretch",sets: "1", reps: "90s / leg",         load: "Cooldown" }
+    ]
+  }
+};
+
+const PHASES = [
+  {
+    id: 1, name: "Phase 1: Foundation",
+    weeks: [1, 2, 3, 4],
+    overview: "Heavy isometric holds + heavy slow resistance to build tendon stiffness. Plyo introduction only — pogo hops and bilateral work. Calf endurance baseline established.",
+    progression: [
+      "Week 1 — Establish baseline. Pick loads at RPE 7. Form before weight.",
+      "Week 2 — Add 2.5–5% to HSR loads if all reps clean at target tempo. Push isometric duration toward upper end (45s).",
+      "Week 3 — Add another 2.5–5%. Heaviest week of phase.",
+      "Week 4 — Optional deload (60% volume, same intensity) if accumulated fatigue. Otherwise hold Week 3 loads. Run Self-Assess at end of week."
+    ],
+    dayKeys: ["1A", "1B", "1C"]
+  },
+  {
+    id: 2, name: "Phase 2: Energy Storage",
+    weeks: [5, 6, 7, 8],
+    overview: "HSR pushed to peak loads while introducing single-leg plyometrics and multi-directional work. Tendon now adapts to storing and returning energy.",
+    progression: [
+      "Week 5 — Reset HSR to Week 3 loads, then climb. Intro single-leg pogos at low amplitude.",
+      "Week 6 — Add load to HSR. Increase landing demands on plyos.",
+      "Week 7 — Peak HSR loads (~1.25× BW on standing calf). Plyo volume up.",
+      "Week 8 — Hold loads, prioritize movement quality. Self-Assess at end of week."
+    ],
+    dayKeys: ["2A", "2B", "2C"]
+  },
+  {
+    id: 3, name: "Phase 3: Reactive / Sport-Specific",
+    weeks: [9, 10, 11, 12],
+    overview: "Stiffness plyos and sport-specific reactive loading. HSR drops to maintenance dose. Goal: tendon behaves like a spring under basketball loads.",
+    progression: [
+      "Week 9 — Intro depth drops at conservative height. Stiffness pogos focus on quality.",
+      "Week 10 — Increase depth drop height (cap at 18\"). Bounding distance up.",
+      "Week 11 — Peak reactive volume. Full sport movement integrated.",
+      "Week 12 — Maintain. Final Self-Assess. Decide on maintenance template (2× / week Day A + Day C is the sustainable long-term dose)."
+    ],
+    dayKeys: ["3A", "3B", "3C"]
+  }
+];
+
+/* ===========================================================================
+   STATE — localStorage persistence (key unchanged from original)
+   =========================================================================== */
+const STORAGE_KEY = "achilles_program_v1";
+let state = loadState();
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return {
+    currentWeek: 1,
+    completed: {},
+    logs: {},
+    expanded: {},
+    assessments: {}
+  };
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  updateStats();
+}
+
+/* ===========================================================================
+   RENDER
+   =========================================================================== */
+function getPhaseForWeek(wk) {
+  return PHASES.find(p => p.weeks.includes(wk)) || PHASES[0];
+}
+
+function renderWeekBar() {
+  const bar = document.getElementById("week-bar");
+  bar.innerHTML = "";
+  for (let wk = 1; wk <= 12; wk++) {
+    const done = isWeekComplete(wk);
+    const btn = document.createElement("button");
+    btn.className = "week-pill" + (wk === state.currentWeek ? " active" : "") + (done ? " done" : "");
+    btn.innerHTML = `<span class="wk-label">Wk</span><span class="wk-num">${wk}</span>`;
+    btn.onclick = () => { state.currentWeek = wk; saveState(); renderAll(); };
+    bar.appendChild(btn);
+  }
+}
+
+function renderPhaseInfo() {
+  const phase = getPhaseForWeek(state.currentWeek);
+  const weekIdx = state.currentWeek - phase.weeks[0];
+  const guidance = phase.progression[weekIdx] || "";
+  document.getElementById("phase-info").innerHTML = `
+    <div class="card" style="padding:14px 16px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px">
+        <h2>${phase.name}</h2>
+        <span class="phase-badge">Week ${state.currentWeek}</span>
+      </div>
+      <p style="font-size:12.5px;color:var(--text-body);margin-bottom:8px">${phase.overview}</p>
+      <div class="note-box" style="margin:0"><strong>This week:</strong> ${guidance}</div>
+    </div>
+  `;
+}
+
+function renderDays() {
+  const phase = getPhaseForWeek(state.currentWeek);
+  const container = document.getElementById("days-container");
+  container.innerHTML = "";
+  phase.dayKeys.forEach(dayKey => {
+    const day = DAYS[dayKey];
+    const dayId = `${state.currentWeek}_${dayKey}`;
+    const isExpanded = state.expanded[dayId] !== false;
+    const completed = countCompleted(state.currentWeek, dayKey);
+    const total = day.exercises.length;
+    const isFullyDone = completed === total;
+
+    const dayEl = document.createElement("div");
+    dayEl.className = "day" + (isExpanded ? "" : " collapsed");
+    dayEl.innerHTML = `
+      <div class="day-header">
+        <div class="day-title">
+          <div class="day-name">${day.name}</div>
+          <div class="day-focus">${day.focus}</div>
+        </div>
+        <div class="day-meta">
+          <span class="day-chip ${isFullyDone ? "complete" : ""}">${completed} / ${total}</span>
+          <span class="caret">▼</span>
+        </div>
+      </div>
+      <div class="day-body"></div>
+    `;
+    dayEl.querySelector(".day-header").onclick = () => {
+      state.expanded[dayId] = !isExpanded;
+      saveState();
+      renderDays();
+    };
+    const body = dayEl.querySelector(".day-body");
+    day.exercises.forEach((ex, idx) => {
+      body.appendChild(renderExercise(ex, idx, dayKey));
+    });
+    container.appendChild(dayEl);
+  });
+}
+
+function renderExercise(ex, idx, dayKey) {
+  const exDef = EXERCISES[ex.id];
+  const stateKey = `${state.currentWeek}_${dayKey}_${idx}`;
+  const isDone = !!state.completed[stateKey];
+  const log = state.logs[stateKey] || { weight: "", notes: "" };
+
+  const el = document.createElement("div");
+  el.className = "exercise";
+  el.innerHTML = `
+    <div class="ex-row">
+      <div class="ex-check ${isDone ? "done" : ""}">
+        <svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 8 7 12 13 4"></polyline>
+        </svg>
+      </div>
+      <div class="ex-info">
+        <div>
+          <span class="ex-tag ${exDef.tag}">${tagLabel(exDef.tag)}</span>
+          <span class="ex-name">${exDef.name}</span>
+        </div>
+        <div class="ex-prescription"><strong>${ex.sets} × ${ex.reps}</strong>${ex.load ? " · " + ex.load : ""}</div>
+        <div class="ex-actions">
+          <a class="btn" href="${v(exDef.q)}" target="_blank" rel="noopener">▶ Video</a>
+          <button class="btn log-toggle">✎ Log</button>
+        </div>
+        <div class="ex-log">
+          <div class="log-row">
+            <input type="text" class="log-weight" placeholder="Weight / load (e.g. 60 lb, BW)" value="${escapeAttr(log.weight)}">
+          </div>
+          <textarea class="log-notes" placeholder="Notes — how it felt, RPE, pain, form cues...">${escapeHtml(log.notes)}</textarea>
+        </div>
+      </div>
+    </div>
+  `;
+
+  el.querySelector(".ex-check").onclick = () => {
+    state.completed[stateKey] = !isDone;
+    saveState();
+    renderDays();
+  };
+  el.querySelector(".log-toggle").onclick = () => {
+    el.querySelector(".ex-log").classList.toggle("open");
+  };
+  if (log.weight || log.notes) el.querySelector(".ex-log").classList.add("open");
+
+  el.querySelector(".log-weight").addEventListener("input", e => {
+    if (!state.logs[stateKey]) state.logs[stateKey] = { weight: "", notes: "" };
+    state.logs[stateKey].weight = e.target.value;
+    saveState();
+  });
+  el.querySelector(".log-notes").addEventListener("input", e => {
+    if (!state.logs[stateKey]) state.logs[stateKey] = { weight: "", notes: "" };
+    state.logs[stateKey].notes = e.target.value;
+    saveState();
+  });
+  return el;
+}
+
+function tagLabel(t) {
+  return ({iso:"ISO", hsr:"HSR", ecc:"ECC", plyo:"PLYO", mob:"Mobility", warm:"Warm-Up", acc:"Accessory"}[t]) || t;
+}
+
+function countCompleted(wk, dayKey) {
+  const day = DAYS[dayKey];
+  let count = 0;
+  day.exercises.forEach((_, i) => { if (state.completed[`${wk}_${dayKey}_${i}`]) count++; });
+  return count;
+}
+function isDayComplete(wk, dayKey) {
+  return countCompleted(wk, dayKey) === DAYS[dayKey].exercises.length;
+}
+function isWeekComplete(wk) {
+  const phase = getPhaseForWeek(wk);
+  return phase.dayKeys.every(d => isDayComplete(wk, d));
+}
+
+function updateStats() {
+  const phase = getPhaseForWeek(state.currentWeek);
+  document.getElementById("hero-phase").textContent = phase.name.replace(/:.*/, "");
+  document.getElementById("stat-week").textContent = state.currentWeek;
+
+  let totalSessions = 0, totalThisWeek = 0;
+  for (let wk = 1; wk <= 12; wk++) {
+    const p = getPhaseForWeek(wk);
+    p.dayKeys.forEach(dk => {
+      if (isDayComplete(wk, dk)) {
+        totalSessions++;
+        if (wk === state.currentWeek) totalThisWeek++;
+      }
+    });
+  }
+  document.getElementById("stat-sessions").textContent = totalSessions;
+  document.getElementById("stat-streak").textContent = totalThisWeek + " / 3";
+
+  let totalEx = 0, doneEx = 0;
+  for (let wk = 1; wk <= 12; wk++) {
+    const p = getPhaseForWeek(wk);
+    p.dayKeys.forEach(dk => {
+      const day = DAYS[dk];
+      day.exercises.forEach((_, i) => {
+        totalEx++;
+        if (state.completed[`${wk}_${dk}_${i}`]) doneEx++;
+      });
+    });
+  }
+  const pct = totalEx ? Math.round((doneEx / totalEx) * 100) : 0;
+  document.getElementById("stat-pct").textContent = pct + "%";
+  document.getElementById("progress-fill").style.width = pct + "%";
+}
+
+/* ===========================================================================
+   ASSESSMENT PANE
+   =========================================================================== */
+function renderAssess() {
+  const weeks = [1, 4, 8, 12];
+  const tests = [
+    { id: "test1", el: "assess-test1", unit: "reps", placeholder: "" },
+    { id: "test2", el: "assess-test2", unit: "in",   placeholder: "" },
+    { id: "test3", el: "assess-test3", unit: "lb",   placeholder: "" }
+  ];
+  tests.forEach(test => {
+    const container = document.getElementById(test.el);
+    container.innerHTML = "";
+    weeks.forEach(wk => {
+      const keyL = `${test.id}_w${wk}_L`;
+      const keyR = `${test.id}_w${wk}_R`;
+      const valL = state.assessments[keyL] || "";
+      const valR = state.assessments[keyR] || "";
+      const sym = computeSymmetry(valL, valR);
+      const row = document.createElement("div");
+      row.className = "assess-row";
+      row.innerHTML = `
+        <div class="assess-label">Week ${wk}</div>
+        <span class="assess-sub">Uninj.</span>
+        <input class="assess-input" type="number" placeholder="—" value="${valL}" data-key="${keyL}">
+        <span class="assess-sub">Inj.</span>
+        <input class="assess-input" type="number" placeholder="—" value="${valR}" data-key="${keyR}">
+        <span class="assess-sub">${test.unit}</span>
+        ${sym.label ? `<span class="assess-sym ${sym.cls}">${sym.label}</span>` : ""}
+      `;
+      row.querySelectorAll("input").forEach(input => {
+        input.addEventListener("input", e => {
+          state.assessments[e.target.dataset.key] = e.target.value;
+          saveState();
+          renderAssess();
+        });
+      });
+      container.appendChild(row);
+    });
+  });
+}
+
+function computeSymmetry(uninj, inj) {
+  const u = parseFloat(uninj), i = parseFloat(inj);
+  if (!u || !i) return { label: "", cls: "" };
+  const pct = Math.round((i / u) * 100);
+  let cls = "sym-bad";
+  if (pct >= 90) cls = "sym-good";
+  else if (pct >= 80) cls = "sym-warn";
+  return { label: `LSI ${pct}%`, cls };
+}
+
+/* ===========================================================================
+   EXERCISE LIBRARY (in-app tab)
+   =========================================================================== */
+function renderLibrary() {
+  const container = document.getElementById("exercise-library");
+  const groups = {};
+  Object.entries(EXERCISES).forEach(([id, ex]) => {
+    const t = ex.tag;
+    if (!groups[t]) groups[t] = [];
+    groups[t].push(ex);
+  });
+  const order = ["warm", "iso", "hsr", "ecc", "plyo", "acc", "mob"];
+  container.innerHTML = order.map(t => {
+    if (!groups[t]) return "";
+    return `
+      <h3 style="margin-top:14px"><span class="ex-tag ${t}">${tagLabel(t)}</span></h3>
+      <div>
+        ${groups[t].map(ex => `
+          <a class="btn" style="display:flex;justify-content:space-between;margin-bottom:6px;padding:9px 12px;background:var(--card-2)"
+             href="${v(ex.q)}" target="_blank" rel="noopener">
+            <span style="font-size:13px;color:var(--text)">${ex.name}</span>
+            <span style="color:var(--muted)">▶</span>
+          </a>
+        `).join("")}
+      </div>
+    `;
+  }).join("");
+}
+
+/* ===========================================================================
+   HELPERS / WIRING
+   =========================================================================== */
+function escapeAttr(s) { return String(s || "").replace(/"/g, "&quot;"); }
+function escapeHtml(s) { return String(s || "").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function renderAll() {
+  renderWeekBar();
+  renderPhaseInfo();
+  renderDays();
+  renderAssess();
+  renderLibrary();
+  updateStats();
+}
+
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".pane").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("pane-" + tab.dataset.pane).classList.add("active");
+  };
+});
+
+document.getElementById("reset-btn").onclick = () => {
+  if (confirm("Reset all program tracking? Logs, checks, and assessments will be cleared.")) {
+    state = { currentWeek: 1, completed: {}, logs: {}, expanded: {}, assessments: {} };
+    saveState();
+    renderAll();
+  }
+};
+
+renderAll();
+</script>
+</body>
+</html>

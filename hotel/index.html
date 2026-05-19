@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Hotel Workouts" />
+<meta name="theme-color" content="#2f6fdc" />
+<link rel="manifest" href="../manifest.webmanifest" />
+<link rel="apple-touch-icon" href="../icon-180.png" />
+<link rel="icon" type="image/png" href="../favicon.png" />
+<title>Hotel Workouts — Madsen Upper / Lower</title>
+<link rel="stylesheet" href="../shared/styles.css" />
+<style>
+  /* Hotel-specific styles. Shared design tokens come from ../shared/styles.css. */
+
+  /* Hero */
+  .hero {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .hero-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .coach-badge {
+    display: inline-block;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border: 1px solid var(--primary-line);
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .stat {
+    background: var(--card-2);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    padding: 8px 6px;
+    text-align: center;
+  }
+  .stat-num { font-size: 17px; font-weight: 700; color: var(--primary); font-variant-numeric: tabular-nums; }
+  .stat-label { font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+
+  /* Session bar */
+  .session-bar {
+    display: flex; gap: 5px;
+    overflow-x: auto;
+    margin-bottom: 12px;
+    padding: 4px 2px;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    align-items: stretch;
+  }
+  .session-bar::-webkit-scrollbar { display: none; }
+  .session-pill {
+    flex-shrink: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    min-width: 78px;
+    text-align: center;
+    line-height: 1.2;
+    font-family: inherit;
+  }
+  .session-pill .sp-label { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .session-pill .sp-date { display: block; font-size: 13px; font-weight: 700; color: var(--text); }
+  .session-pill.active { background: var(--primary); border-color: var(--primary); }
+  .session-pill.active .sp-date, .session-pill.active .sp-label { color: white; }
+  .session-pill.done { border-color: var(--success); background: var(--success-soft); }
+  .session-pill.done .sp-date { color: var(--success); }
+  .session-pill.new {
+    background: var(--text);
+    border-color: var(--text);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    min-width: 64px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* Exercise tag color variants (extends .ex-tag from shared) */
+  .ex-tag.push  { background: var(--primary-soft); color: var(--primary); }
+  .ex-tag.pull  { background: #e7f0fb; color: #1f63b8; }
+  .ex-tag.shldr { background: #fef0e3; color: #b35309; }
+  .ex-tag.arms  { background: #fdf2f8; color: #b03060; }
+  .ex-tag.tempo { background: #f1eafd; color: #6b3ed0; }
+  .ex-tag.legs  { background: var(--success-soft); color: var(--success); }
+  .ex-tag.hinge { background: #fff4d6; color: #856300; }
+  .ex-tag.core  { background: #f0f1f3; color: #6b7588; }
+
+  /* Rest timer button (60s) */
+  .btn-timer {
+    font-variant-numeric: tabular-nums;
+    min-width: 78px;
+    justify-content: center;
+  }
+  .btn-timer.running {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+  .btn-timer.done {
+    background: var(--success);
+    color: white;
+    border-color: var(--success);
+    animation: timer-flash 0.6s ease-out;
+  }
+  @keyframes timer-flash {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+
+  /* Session toolbar */
+  .session-toolbar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+    font-size: 12px; color: var(--muted);
+  }
+  .session-toolbar .left { display: flex; align-items: center; gap: 8px; }
+  .btn-danger { color: var(--danger); border-color: #f3c8c4; }
+
+  /* Notes pane */
+  .quote-box {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin: 10px 0;
+    font-size: 12.5px;
+    font-style: italic;
+    color: var(--text);
+  }
+
+  .empty-state {
+    background: var(--card);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 24px 18px;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .empty-state p { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+
+  .reset-link {
+    background: none; border: none; color: var(--muted);
+    font-size: 11px; cursor: pointer; padding: 4px 8px; text-decoration: underline;
+    font-family: inherit;
+  }
+
+  @media (max-width: 420px) {
+    .hero-stats { gap: 6px; }
+    .stat { padding: 6px 4px; }
+    .stat-num { font-size: 15px; }
+    .stat-label { font-size: 8.5px; }
+  }
+</style>
+</head>
+<body data-program="hotel">
+
+<header class="appbar">
+  <div class="appbar-inner">
+    <a class="appbar-back" href="../" aria-label="Back to Exercise Library">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="10 3 5 8 10 13"/></svg>
+      Library
+    </a>
+    <div class="appbar-title">
+      <div class="eyebrow">Travel</div>
+      <div class="name">Hotel Workouts · Madsen Split</div>
+    </div>
+  </div>
+  <div class="appbar-accent"></div>
+</header>
+
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <span class="coach-badge">Coach · John Madsen</span>
+        <h1 style="margin-top:6px">Upper / Lower — On the Road</h1>
+        <div class="hero-sub">DB + bodyweight · open-ended · log each session as you train</div>
+      </div>
+      <button class="reset-link" id="reset-btn" title="Reset all tracking">Reset</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total Sessions</div></div>
+      <div class="stat"><div class="stat-num" id="stat-upper">0</div><div class="stat-label">Upper</div></div>
+      <div class="stat"><div class="stat-num" id="stat-lower">0</div><div class="stat-label">Legs</div></div>
+      <div class="stat"><div class="stat-num" id="stat-last">—</div><div class="stat-label">Last Session</div></div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-pane="upper">Upper Body</button>
+    <button class="tab" data-pane="lower">Legs</button>
+    <button class="tab" data-pane="notes">Notes</button>
+  </div>
+
+  <!-- UPPER PANE -->
+  <div class="pane active" id="pane-upper">
+    <div class="session-bar" id="session-bar-upper"></div>
+    <div id="container-upper"></div>
+  </div>
+
+  <!-- LOWER PANE -->
+  <div class="pane" id="pane-lower">
+    <div class="session-bar" id="session-bar-lower"></div>
+    <div id="container-lower"></div>
+  </div>
+
+  <!-- NOTES PANE -->
+  <div class="pane" id="pane-notes">
+    <div class="card">
+      <h2>How this tracker works</h2>
+      <p>Two workouts, both from John Madsen. Tap <strong>Upper Body</strong> or <strong>Legs</strong> to switch between them. Within each, tap the <strong>+ New</strong> pill to start a new dated session — check off exercises as you finish them, and log the weight you used in the box that opens when you tap <strong>✎ Log</strong>.</p>
+      <p>Your last session's load shows up under each exercise as a reference so you know what to beat (or match).</p>
+
+      <h3>Upper Body — original message</h3>
+      <div class="quote-box">
+        Upper body<br>
+        1. Plyo push ups 10x3 (60 sec rest)<br>
+        2. Max rep pushups (5 minutes)<br>
+        3. DB high incline press 3xmax reps heaviest DB's possible<br>
+        4. DB lateral raise 3x15<br>
+        4a. Db side raise 3x15<br>
+        5. Pull ups (2/3/5) = 1 wave - do 7 waves<br>
+        6. Db hammer curl 4x6
+      </div>
+
+      <h3>Legs — original message</h3>
+      <div class="quote-box">
+        Tomorrow for my legs I'll do<br><br>
+        Goblet squat (6 second eccentric, 6 second pause) 5x10<br><br>
+        Bulgarian squat 7 x 7<br><br>
+        Db RDL 7x7<br><br>
+        Hanging leg raise 7 x 7<br><br>
+        If weights not heavy enough def do single leg variations.<br><br>
+        You got it man
+      </div>
+
+      <h3>Key technique cues</h3>
+      <ul>
+        <li><strong>Pull-up waves (2/3/5):</strong> 2 reps, short rest, 3 reps, short rest, 5 reps — that's 1 wave. Rest 60–90s, then next wave. Total: 70 reps across 21 mini-sets.</li>
+        <li><strong>Goblet squat tempo:</strong> 6 sec down, 6 sec pause at bottom, drive up at normal speed. Each rep ~13–15 sec. Pick a weight you can hold through all 50 reps with form intact — usually lighter than you'd guess.</li>
+        <li><strong>Lateral / side raise superset:</strong> Lateral raise straight into side raise without rest, then rest before the next round.</li>
+        <li><strong>If weights are too light:</strong> Swap in single-leg variations (single-leg goblet, single-leg RDL). Bulgarians are already unilateral.</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ===========================================================================
+   PROGRAM DATA — John Madsen Upper / Lower Split
+   =========================================================================== */
+const VIDEO_BASE = "https://www.youtube.com/results?search_query=";
+function v(q) { return VIDEO_BASE + encodeURIComponent(q); }
+
+const EXERCISES = {
+  plyo_pushup:   { name: "Plyo Push-Ups",                              tag: "push",  q: "plyo push up explosive technique" },
+  max_pushup:    { name: "Max Rep Push-Ups (5 min AMRAP)",             tag: "push",  q: "max rep push ups 5 minutes amrap" },
+  db_incline:    { name: "DB High Incline Press",                      tag: "push",  q: "dumbbell high incline press heavy" },
+  db_lat_raise:  { name: "DB Lateral Raise",                           tag: "shldr", q: "dumbbell lateral raise strict form" },
+  db_side_raise: { name: "DB Side Raise (front)",                      tag: "shldr", q: "dumbbell front raise shoulder" },
+  pullup_wave:   { name: "Pull-Up Waves (2 / 3 / 5)",                  tag: "pull",  q: "pull up wave loading 2 3 5 protocol" },
+  db_hammer:     { name: "DB Hammer Curl",                             tag: "arms",  q: "dumbbell hammer curl heavy" },
+
+  goblet_tempo:  { name: "Goblet Squat — 6s eccentric / 6s pause",     tag: "tempo", q: "goblet squat tempo eccentric pause" },
+  bulgarian:     { name: "Bulgarian Split Squat",                      tag: "legs",  q: "bulgarian split squat dumbbell" },
+  db_rdl:        { name: "DB Romanian Deadlift",                       tag: "hinge", q: "dumbbell romanian deadlift form" },
+  hang_leg:      { name: "Hanging Leg Raise",                          tag: "core",  q: "hanging leg raise strict" }
+};
+
+const WORKOUTS = {
+  upper: {
+    name: "Upper Body",
+    focus: "Push · Pull · Shoulders · Arms",
+    exercises: [
+      { id: "plyo_pushup",   sets: "3",  reps: "10",            load: "60 sec rest between sets" },
+      { id: "max_pushup",    sets: "1",  reps: "AMRAP",         load: "5 minutes total — break as needed" },
+      { id: "db_incline",    sets: "3",  reps: "max reps",      load: "Heaviest DBs possible" },
+      { id: "db_lat_raise",  sets: "3",  reps: "15",            load: "Strict — superset with side raise" },
+      { id: "db_side_raise", sets: "3",  reps: "15",            load: "Straight into this from lateral raise" },
+      { id: "pullup_wave",   sets: "7",  reps: "waves (2/3/5)", load: "1 wave = 2 + 3 + 5 reps. 70 reps total." },
+      { id: "db_hammer",     sets: "4",  reps: "6",             load: "Heavy, controlled" }
+    ]
+  },
+  lower: {
+    name: "Legs",
+    focus: "Quads · Glutes · Hamstrings · Core",
+    exercises: [
+      { id: "goblet_tempo",  sets: "5",  reps: "10",            load: "6s eccentric · 6s pause at bottom" },
+      { id: "bulgarian",     sets: "7",  reps: "7 / leg",       load: "" },
+      { id: "db_rdl",        sets: "7",  reps: "7",             load: "Hinge focus, controlled descent" },
+      { id: "hang_leg",      sets: "7",  reps: "7",             load: "Strict, no swinging" }
+    ]
+  }
+};
+
+/* ===========================================================================
+   STATE — localStorage persistence (key unchanged from original)
+   =========================================================================== */
+const STORAGE_KEY = "madsen_split_v1";
+let state = loadState();
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return {
+    sessions: { upper: [], lower: [] },
+    activeSessionId: { upper: null, lower: null }
+  };
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  updateStats();
+}
+
+function todayISO() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function shortDate(iso) {
+  if (!iso) return "—";
+  const [y, m, d] = iso.split("-");
+  return `${parseInt(m,10)}/${parseInt(d,10)}`;
+}
+function daysAgo(iso) {
+  if (!iso) return null;
+  const then = new Date(iso + "T00:00:00");
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  return Math.round((now - then) / 86400000);
+}
+
+function newSessionId() {
+  return "s_" + Date.now() + "_" + Math.random().toString(36).slice(2,6);
+}
+
+function startSession(workout) {
+  const sess = {
+    id: newSessionId(),
+    date: todayISO(),
+    completed: {},
+    logs: {}
+  };
+  state.sessions[workout].unshift(sess);
+  state.activeSessionId[workout] = sess.id;
+  saveState();
+  render(workout);
+}
+
+function getActiveSession(workout) {
+  const id = state.activeSessionId[workout];
+  if (!id) return null;
+  return state.sessions[workout].find(s => s.id === id) || null;
+}
+
+function getLastLoggedLoad(workout, exIdx, beforeSessionId) {
+  const sessions = state.sessions[workout];
+  let foundCurrent = false;
+  for (const s of sessions) {
+    if (s.id === beforeSessionId) { foundCurrent = true; continue; }
+    if (!foundCurrent) continue;
+    const log = s.logs[exIdx];
+    if (log && log.weight) return { weight: log.weight, date: s.date };
+  }
+  return null;
+}
+
+function deleteSession(workout, sessionId) {
+  if (!confirm("Delete this session? Logs and checks for it will be gone.")) return;
+  state.sessions[workout] = state.sessions[workout].filter(s => s.id !== sessionId);
+  if (state.activeSessionId[workout] === sessionId) {
+    state.activeSessionId[workout] = state.sessions[workout][0]?.id || null;
+  }
+  saveState();
+  render(workout);
+}
+
+/* ===========================================================================
+   RENDER
+   =========================================================================== */
+function renderSessionBar(workout) {
+  const bar = document.getElementById("session-bar-" + workout);
+  bar.innerHTML = "";
+
+  const newBtn = document.createElement("button");
+  newBtn.className = "session-pill new";
+  newBtn.innerHTML = "+ New";
+  newBtn.onclick = () => startSession(workout);
+  bar.appendChild(newBtn);
+
+  const sessions = state.sessions[workout];
+  const activeId = state.activeSessionId[workout];
+  sessions.forEach((s, idx) => {
+    const total = WORKOUTS[workout].exercises.length;
+    const done = Object.values(s.completed).filter(Boolean).length;
+    const isFull = done === total;
+    const isActive = s.id === activeId;
+    const btn = document.createElement("button");
+    btn.className = "session-pill" + (isActive ? " active" : "") + (!isActive && isFull ? " done" : "");
+    const labelText = idx === 0 ? "Latest" : `#${sessions.length - idx}`;
+    btn.innerHTML = `<span class="sp-label">${labelText}</span><span class="sp-date">${shortDate(s.date)}</span>`;
+    btn.onclick = () => {
+      state.activeSessionId[workout] = s.id;
+      saveState();
+      render(workout);
+    };
+    bar.appendChild(btn);
+  });
+}
+
+function renderWorkout(workout) {
+  renderSessionBar(workout);
+  const container = document.getElementById("container-" + workout);
+  container.innerHTML = "";
+
+  const session = getActiveSession(workout);
+  if (!session) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <p>No sessions logged yet for <strong>${WORKOUTS[workout].name}</strong>.</p>
+        <button class="btn btn-primary" onclick="startSession('${workout}')">Start your first session</button>
+      </div>
+    `;
+    return;
+  }
+
+  const w = WORKOUTS[workout];
+  const completed = Object.values(session.completed).filter(Boolean).length;
+  const total = w.exercises.length;
+  const isFullyDone = completed === total;
+
+  const toolbar = document.createElement("div");
+  toolbar.className = "session-toolbar";
+  toolbar.innerHTML = `
+    <div class="left">
+      <span>Session on <strong style="color:var(--text)">${session.date}</strong></span>
+    </div>
+    <button class="btn btn-danger" data-action="delete">Delete session</button>
+  `;
+  toolbar.querySelector("[data-action=delete]").onclick = () => deleteSession(workout, session.id);
+  container.appendChild(toolbar);
+
+  const dayEl = document.createElement("div");
+  dayEl.className = "day";
+  dayEl.innerHTML = `
+    <div class="day-header">
+      <div class="day-title">
+        <div class="day-name">${w.name}</div>
+        <div class="day-focus">${w.focus}</div>
+      </div>
+      <div class="day-meta">
+        <span class="day-chip ${isFullyDone ? "complete" : ""}">${completed} / ${total}</span>
+      </div>
+    </div>
+    <div class="day-body"></div>
+  `;
+  const body = dayEl.querySelector(".day-body");
+  w.exercises.forEach((ex, idx) => {
+    body.appendChild(renderExercise(workout, session, ex, idx));
+  });
+  container.appendChild(dayEl);
+}
+
+function renderExercise(workout, session, ex, idx) {
+  const exDef = EXERCISES[ex.id];
+  const isDone = !!session.completed[idx];
+  const log = session.logs[idx] || { weight: "", notes: "" };
+  const lastLoad = getLastLoggedLoad(workout, idx, session.id);
+
+  const el = document.createElement("div");
+  el.className = "exercise";
+  el.innerHTML = `
+    <div class="ex-row">
+      <div class="ex-check ${isDone ? "done" : ""}">
+        <svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 8 7 12 13 4"></polyline>
+        </svg>
+      </div>
+      <div class="ex-info">
+        <div>
+          <span class="ex-tag ${exDef.tag}">${tagLabel(exDef.tag)}</span>
+          <span class="ex-name">${exDef.name}</span>
+        </div>
+        <div class="ex-prescription"><strong>${ex.sets} × ${ex.reps}</strong>${ex.load ? " · " + ex.load : ""}</div>
+        ${lastLoad ? `<div class="ex-last">Last (${shortDate(lastLoad.date)}): <strong>${escapeHtml(lastLoad.weight)}</strong></div>` : ""}
+        <div class="ex-actions">
+          <a class="btn" href="${v(exDef.q)}" target="_blank" rel="noopener">▶ Video</a>
+          <button class="btn log-toggle">✎ Log</button>
+          <button class="btn btn-timer rest-timer" data-default="⏱ 60s">⏱ 60s</button>
+        </div>
+        <div class="ex-log">
+          <input type="text" class="log-weight" placeholder="Weight / load (e.g. 50 lb DBs, BW+25)" value="${escapeAttr(log.weight)}">
+          <textarea class="log-notes" placeholder="Notes — reps actually hit, RPE, how it felt...">${escapeHtml(log.notes)}</textarea>
+        </div>
+      </div>
+    </div>
+  `;
+
+  el.querySelector(".ex-check").onclick = () => {
+    session.completed[idx] = !isDone;
+    saveState();
+    render(workout);
+  };
+  el.querySelector(".log-toggle").onclick = () => {
+    el.querySelector(".ex-log").classList.toggle("open");
+  };
+  if (log.weight || log.notes) el.querySelector(".ex-log").classList.add("open");
+
+  const timerKey = `${workout}_${session.id}_${idx}`;
+  const timerBtn = el.querySelector(".rest-timer");
+  reattachTimer(timerKey, timerBtn);
+  timerBtn.onclick = () => toggleRestTimer(timerKey, timerBtn);
+
+  el.querySelector(".log-weight").addEventListener("input", e => {
+    if (!session.logs[idx]) session.logs[idx] = { weight: "", notes: "" };
+    session.logs[idx].weight = e.target.value;
+    saveState();
+  });
+  el.querySelector(".log-notes").addEventListener("input", e => {
+    if (!session.logs[idx]) session.logs[idx] = { weight: "", notes: "" };
+    session.logs[idx].notes = e.target.value;
+    saveState();
+  });
+  return el;
+}
+
+function tagLabel(t) {
+  return ({push:"Push", pull:"Pull", shldr:"Shoulder", arms:"Arms", tempo:"Tempo", legs:"Legs", hinge:"Hinge", core:"Core"}[t]) || t;
+}
+
+function updateStats() {
+  const upper = state.sessions.upper.length;
+  const lower = state.sessions.lower.length;
+  document.getElementById("stat-upper").textContent = upper;
+  document.getElementById("stat-lower").textContent = lower;
+  document.getElementById("stat-total").textContent = upper + lower;
+
+  const lastDates = [
+    state.sessions.upper[0]?.date,
+    state.sessions.lower[0]?.date
+  ].filter(Boolean).sort().reverse();
+  const lastDate = lastDates[0];
+  if (!lastDate) {
+    document.getElementById("stat-last").textContent = "—";
+  } else {
+    const d = daysAgo(lastDate);
+    document.getElementById("stat-last").textContent = d === 0 ? "Today" : (d === 1 ? "1d" : `${d}d`);
+  }
+}
+
+function render(workout) {
+  if (workout) renderWorkout(workout);
+  else { renderWorkout("upper"); renderWorkout("lower"); }
+  updateStats();
+}
+
+/* ===========================================================================
+   REST TIMER (60s) — survives re-renders by tracking timers in a module-level map
+   =========================================================================== */
+const REST_SECONDS = 60;
+const activeTimers = {};
+let audioCtx = null;
+
+function ensureAudio() {
+  if (audioCtx) return audioCtx;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) audioCtx = new AC();
+  } catch (e) {}
+  return audioCtx;
+}
+
+function beep() {
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  [0, 0.18, 0.36].forEach((offset, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = i === 2 ? 1100 : 880;
+    gain.gain.setValueAtTime(0, now + offset);
+    gain.gain.linearRampToValueAtTime(0.25, now + offset + 0.01);
+    gain.gain.linearRampToValueAtTime(0, now + offset + 0.14);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now + offset);
+    osc.stop(now + offset + 0.16);
+  });
+  if (navigator.vibrate) {
+    try { navigator.vibrate([120, 80, 120, 80, 200]); } catch (e) {}
+  }
+}
+
+function formatTimer(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${String(sec).padStart(2, "0")}`;
+}
+
+function paintTimer(btn, remaining) {
+  if (!btn || !btn.isConnected) return;
+  btn.classList.add("running");
+  btn.classList.remove("done");
+  btn.textContent = formatTimer(remaining);
+}
+
+function paintTimerDone(btn) {
+  if (!btn || !btn.isConnected) return;
+  btn.classList.remove("running");
+  btn.classList.add("done");
+  btn.textContent = "Done!";
+  setTimeout(() => {
+    if (btn && btn.isConnected) {
+      btn.classList.remove("done");
+      btn.textContent = btn.dataset.default || "⏱ 60s";
+    }
+  }, 1800);
+}
+
+function paintTimerReset(btn) {
+  if (!btn || !btn.isConnected) return;
+  btn.classList.remove("running", "done");
+  btn.textContent = btn.dataset.default || "⏱ 60s";
+}
+
+function startRestTimer(key, btn) {
+  ensureAudio();
+  if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+
+  const endsAt = Date.now() + REST_SECONDS * 1000;
+  paintTimer(btn, REST_SECONDS);
+
+  const intervalId = setInterval(() => {
+    const t = activeTimers[key];
+    if (!t) return;
+    const remaining = Math.round((t.endsAt - Date.now()) / 1000);
+    if (remaining <= 0) {
+      clearInterval(t.intervalId);
+      const finalBtn = t.btn;
+      delete activeTimers[key];
+      paintTimerDone(finalBtn);
+      beep();
+    } else {
+      paintTimer(t.btn, remaining);
+    }
+  }, 250);
+
+  activeTimers[key] = { endsAt, intervalId, btn };
+}
+
+function cancelRestTimer(key) {
+  const t = activeTimers[key];
+  if (!t) return;
+  clearInterval(t.intervalId);
+  const btn = t.btn;
+  delete activeTimers[key];
+  paintTimerReset(btn);
+}
+
+function toggleRestTimer(key, btn) {
+  if (activeTimers[key]) cancelRestTimer(key);
+  else startRestTimer(key, btn);
+}
+
+function reattachTimer(key, btn) {
+  const t = activeTimers[key];
+  if (!t) return;
+  t.btn = btn;
+  const remaining = Math.round((t.endsAt - Date.now()) / 1000);
+  if (remaining > 0) paintTimer(btn, remaining);
+}
+
+/* ===========================================================================
+   HELPERS / WIRING
+   =========================================================================== */
+function escapeAttr(s) { return String(s || "").replace(/"/g, "&quot;"); }
+function escapeHtml(s) { return String(s || "").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".pane").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("pane-" + tab.dataset.pane).classList.add("active");
+  };
+});
+
+document.getElementById("reset-btn").onclick = () => {
+  if (confirm("Reset all tracking? Every session, log, and check across both workouts will be cleared.")) {
+    state = { sessions: { upper: [], lower: [] }, activeSessionId: { upper: null, lower: null } };
+    saveState();
+    render();
+  }
+};
+
+render();
+</script>
+</body>
+</html>

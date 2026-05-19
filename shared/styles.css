@@ -1,0 +1,351 @@
+/* ============================================================================
+   Exercise Library — shared design system
+   Light theme, per-program accent. Imported by launcher + all 3 sub-apps.
+   ============================================================================ */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --bg:           #f6f7fa;
+  --card:         #ffffff;
+  --card-2:       #fafbfd;
+  --border:       #e4e7ed;
+  --border-soft:  #eef0f4;
+
+  /* Text */
+  --text:         #1a1f2b;
+  --muted:        #6b7588;
+  --text-body:    #3a4252;
+
+  /* Per-program accent — overridden in each app's <body data-program="...">.
+     The launcher uses the default coral. */
+  --primary:        #d94f1c;   /* coral — default */
+  --primary-soft:   #fdece3;
+  --primary-line:   #f5c6ad;
+
+  /* Secondary accent (teal — used for tags, links, secondary highlights) */
+  --accent:         #0e7c7b;
+  --accent-soft:    #e3f2f1;
+
+  /* State */
+  --success:        #1f8a4c;
+  --success-soft:   #e3f5ea;
+  --success-line:   #b8e1c5;
+  --warning:        #a06200;
+  --warning-soft:   #fbeed1;
+  --danger:         #b3261e;
+  --danger-soft:    #fbe5e3;
+
+  /* Geometry */
+  --radius:     12px;
+  --radius-sm:  8px;
+  --radius-lg:  16px;
+  --tap:        44px;
+  --shadow:     0 1px 2px rgba(20, 30, 50, 0.04), 0 0 0 1px rgba(20, 30, 50, 0.02);
+  --shadow-lg:  0 8px 24px rgba(20, 30, 50, 0.08), 0 1px 2px rgba(20, 30, 50, 0.04);
+}
+
+/* Per-program accent — set <body data-program="achilles|athletic-af|hotel|launcher"> */
+body[data-program="achilles"] {
+  --primary:      #d94f1c;     /* coral, matches existing rehab look */
+  --primary-soft: #fdece3;
+  --primary-line: #f5c6ad;
+}
+body[data-program="athletic-af"] {
+  --primary:      #f25c2d;     /* Athletic AF orange, retained */
+  --primary-soft: #ffe6db;
+  --primary-line: #f8b89a;
+}
+body[data-program="hotel"] {
+  --primary:      #2f6fdc;     /* travel/portable blue */
+  --primary-soft: #e2ecfb;
+  --primary-line: #b8cdf2;
+}
+body[data-program="launcher"] {
+  --primary:      #1a1f2b;     /* neutral charcoal for the menu */
+  --primary-soft: #eef0f4;
+  --primary-line: #d8dce4;
+}
+
+/* ============================================================================
+   Reset + base
+   ============================================================================ */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+button, input, textarea, select { font: inherit; color: inherit; }
+button { background: none; border: none; cursor: pointer; }
+a { color: var(--accent); text-decoration: none; }
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.012em; color: var(--text); }
+h1 { font-size: 20px; }
+h2 { font-size: 17px; }
+h3 { font-size: 15px; }
+h4 { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+p { margin: 0 0 8px; }
+
+/* ============================================================================
+   Shared app shell — topbar with back-nav
+   Used by all 3 sub-apps (NOT the launcher).
+   ============================================================================ */
+.appbar {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding-top: env(safe-area-inset-top);
+}
+.appbar-inner {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+}
+.appbar-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 32px; padding: 0 12px 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.appbar-back:hover, .appbar-back:active { background: var(--card-2); }
+.appbar-back svg { width: 14px; height: 14px; }
+.appbar-title {
+  flex: 1;
+  min-width: 0;
+  display: flex; flex-direction: column; min-width: 0;
+}
+.appbar-title .eyebrow {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--muted); font-weight: 700;
+}
+.appbar-title .name {
+  font-size: 14.5px; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.appbar-accent {
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+}
+
+/* ============================================================================
+   Containers
+   ============================================================================ */
+.container { max-width: 760px; margin: 0 auto; padding: 14px; }
+
+/* ============================================================================
+   Buttons — used everywhere
+   ============================================================================ */
+.btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--card-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.btn:hover, .btn:active { background: var(--border-soft); }
+.btn-primary { background: var(--text); color: white; border-color: var(--text); }
+.btn-primary:hover { background: #000; }
+.btn-accent { background: var(--primary); color: white; border-color: var(--primary); }
+.btn-accent:hover { filter: brightness(0.95); }
+.btn-danger { background: var(--danger-soft); color: var(--danger); border-color: var(--danger-soft); }
+.btn-tap {
+  /* For 44px-min touch targets (Athletic AF set rows, modal actions). */
+  height: var(--tap); padding: 0 14px; font-size: 13px; border-radius: 10px;
+}
+
+/* ============================================================================
+   Card patterns
+   ============================================================================ */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+.card h2 { margin-bottom: 8px; }
+.card h3 { margin: 12px 0 6px; }
+.card p { color: var(--text-body); font-size: 13px; }
+.card ul, .card ol { padding-left: 20px; color: var(--text-body); font-size: 13px; line-height: 1.65; margin: 6px 0; }
+.card li { margin-bottom: 4px; }
+.card strong { color: var(--text); }
+
+.note-box {
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin: 10px 0;
+  font-size: 12.5px;
+  color: var(--text);
+}
+.warn-box {
+  background: var(--warning-soft);
+  border-left: 3px solid var(--warning);
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin: 10px 0;
+  font-size: 12.5px;
+}
+
+/* ============================================================================
+   Day card pattern — used by Achilles + Hotel
+   ============================================================================ */
+.day {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.day-header {
+  padding: 14px 16px;
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.day-title { flex: 1; min-width: 0; }
+.day-name { font-weight: 600; font-size: 15px; }
+.day-focus { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.day-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.day-chip {
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.day-chip.complete { background: var(--success-soft); border-color: var(--success-line); color: var(--success); }
+.caret { color: var(--muted); transition: transform 0.2s; font-size: 11px; }
+.day.collapsed .caret { transform: rotate(-90deg); }
+.day-body { border-top: 1px solid var(--border-soft); padding: 6px 14px 14px; }
+.day.collapsed .day-body { display: none; }
+
+/* ============================================================================
+   Exercise row pattern — used by Achilles + Hotel
+   ============================================================================ */
+.exercise {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.exercise:last-child { border-bottom: none; }
+.ex-row { display: flex; align-items: flex-start; gap: 10px; }
+.ex-check {
+  width: 24px; height: 24px;
+  border: 2px solid #c8cdd6;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 1px;
+  background: white;
+  transition: all 0.15s;
+}
+.ex-check svg { width: 14px; height: 14px; opacity: 0; transition: opacity 0.15s; }
+.ex-check.done { background: var(--success); border-color: var(--success); }
+.ex-check.done svg { opacity: 1; }
+.ex-info { flex: 1; min-width: 0; }
+.ex-name { font-weight: 600; font-size: 14px; line-height: 1.35; }
+.ex-prescription { color: var(--text-body); font-size: 12.5px; margin-top: 4px; line-height: 1.45; }
+.ex-last { color: var(--muted); font-size: 11.5px; margin-top: 3px; }
+.ex-load { color: var(--muted); font-size: 11.5px; margin-top: 3px; font-style: italic; }
+.ex-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+
+.ex-tag {
+  display: inline-block;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 9.5px;
+  font-weight: 700;
+  margin-right: 4px;
+  margin-bottom: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: 1px;
+}
+
+/* Log editor block */
+.ex-log {
+  margin-top: 8px;
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+}
+.ex-log.open { display: flex; }
+.ex-log input, .ex-log textarea {
+  background: var(--card-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 12.5px;
+  font-family: inherit;
+  width: 100%;
+}
+.ex-log input:focus, .ex-log textarea:focus { outline: none; border-color: var(--primary); }
+.ex-log .log-row { display: flex; gap: 6px; }
+.ex-log .log-row input { flex: 1; }
+.ex-log textarea { resize: vertical; min-height: 44px; }
+
+/* ============================================================================
+   Tabs (Achilles + Hotel use these)
+   ============================================================================ */
+.tabs {
+  display: flex; gap: 6px;
+  overflow-x: auto; margin-bottom: 12px; padding-bottom: 2px;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex-shrink: 0;
+  background: var(--card);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+}
+.tab.active { background: var(--text); border-color: var(--text); color: white; }
+
+.pane { display: none; }
+.pane.active { display: block; }
+
+/* ============================================================================
+   Mobile tweaks
+   ============================================================================ */
+@media (max-width: 420px) {
+  .container { padding: 10px; }
+  h1 { font-size: 18px; }
+}

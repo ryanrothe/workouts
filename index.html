@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Exercise Library" />
+<meta name="theme-color" content="#d94f1c" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png" />
+<link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
+<link rel="icon" type="image/png" href="favicon.png" />
+<title>Exercise Library</title>
+<link rel="stylesheet" href="shared/styles.css" />
+<style>
+  /* Launcher-specific layout */
+  body[data-program="launcher"] {
+    min-height: 100vh;
+    padding-top: env(safe-area-inset-top);
+  }
+  .launcher-shell {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 28px 18px 24px;
+  }
+  .launcher-hero {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 22px;
+  }
+  .launcher-hero .icon {
+    width: 56px; height: 56px; border-radius: 14px;
+    background: #d94f1c;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 18px rgba(217, 79, 28, 0.25), inset 0 -2px 0 rgba(0,0,0,0.08);
+  }
+  .launcher-hero .icon svg { width: 36px; height: 36px; color: white; }
+  .launcher-hero .lh-text h1 {
+    font-size: 22px; font-weight: 800; letter-spacing: -0.02em;
+  }
+  .launcher-hero .lh-text .sub {
+    font-size: 12.5px; color: var(--muted); margin-top: 2px;
+  }
+
+  .launcher-section-label {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); font-weight: 700;
+    margin: 22px 4px 8px;
+  }
+
+  .tile-stack { display: flex; flex-direction: column; gap: 12px; }
+
+  .tile {
+    display: flex; align-items: stretch;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    color: var(--text);
+    text-decoration: none;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+  }
+  .tile:hover, .tile:active {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
+    border-color: #d5d9e1;
+  }
+  .tile-stripe {
+    flex: 0 0 8px;
+    background: var(--tile-accent, #d94f1c);
+  }
+  .tile-body {
+    flex: 1; min-width: 0;
+    padding: 16px 16px 16px 14px;
+    display: flex; gap: 14px; align-items: center;
+  }
+  .tile-icon {
+    flex: 0 0 52px; width: 52px; height: 52px; border-radius: 12px;
+    background: var(--tile-accent-soft, #fdece3);
+    color: var(--tile-accent, #d94f1c);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tile-icon svg { width: 28px; height: 28px; }
+  .tile-text { flex: 1; min-width: 0; }
+  .tile-name {
+    font-size: 16.5px; font-weight: 700; letter-spacing: -0.012em;
+    color: var(--text);
+  }
+  .tile-sub {
+    font-size: 12.5px; color: var(--muted); margin-top: 3px;
+    line-height: 1.4;
+  }
+  .tile-meta {
+    margin-top: 6px;
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .tile-tag {
+    display: inline-block;
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 1px 8px;
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .tile-chev {
+    flex: 0 0 auto;
+    color: var(--muted);
+    font-size: 16px;
+    margin-right: 4px;
+  }
+
+  /* Per-tile accents (override CSS variables locally) */
+  .tile.tile-achilles    { --tile-accent: #d94f1c; --tile-accent-soft: #fdece3; }
+  .tile.tile-athletic-af { --tile-accent: #f25c2d; --tile-accent-soft: #ffe6db; }
+  .tile.tile-hotel       { --tile-accent: #2f6fdc; --tile-accent-soft: #e2ecfb; }
+
+  .launcher-foot {
+    margin-top: 28px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .launcher-foot .pwa-hint {
+    margin-top: 4px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-size: 11.5px;
+    color: var(--text-body);
+    box-shadow: var(--shadow);
+    text-align: left;
+  }
+  .launcher-foot .pwa-hint strong { color: var(--text); }
+</style>
+</head>
+<body data-program="launcher">
+
+<div class="launcher-shell">
+
+  <div class="launcher-hero">
+    <div class="icon" aria-hidden="true">
+      <!-- dumbbell SVG, matches the home-screen icon -->
+      <svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4"  y="22" width="6"  height="20" rx="2.5"/>
+        <rect x="11" y="17" width="6"  height="30" rx="2.5"/>
+        <rect x="18" y="29" width="28" height="6"  rx="2"/>
+        <rect x="47" y="17" width="6"  height="30" rx="2.5"/>
+        <rect x="54" y="22" width="6"  height="20" rx="2.5"/>
+      </svg>
+    </div>
+    <div class="lh-text">
+      <h1>Exercise Library</h1>
+      <div class="sub">Three programs, one place. Pick one to start.</div>
+    </div>
+  </div>
+
+  <div class="launcher-section-label">Programs</div>
+
+  <div class="tile-stack">
+
+    <a class="tile tile-achilles" href="achilles/">
+      <div class="tile-stripe"></div>
+      <div class="tile-body">
+        <div class="tile-icon" aria-hidden="true">
+          <!-- foot / heel raise icon: rising arrow on a base -->
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 25h22"/>
+            <path d="M16 25V8"/>
+            <path d="M11 13l5-5 5 5"/>
+          </svg>
+        </div>
+        <div class="tile-text">
+          <div class="tile-name">Achilles Rebuild</div>
+          <div class="tile-sub">12-week tendon-specific rehab — isometrics, HSR, plyo progression.</div>
+          <div class="tile-meta">
+            <span class="tile-tag">12 weeks</span>
+            <span class="tile-tag">3×/week</span>
+            <span class="tile-tag">Rehab</span>
+          </div>
+        </div>
+        <div class="tile-chev">›</div>
+      </div>
+    </a>
+
+    <a class="tile tile-athletic-af" href="athletic-af/">
+      <div class="tile-stripe"></div>
+      <div class="tile-body">
+        <div class="tile-icon" aria-hidden="true">
+          <!-- barbell -->
+          <svg viewBox="0 0 32 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2"  y="11" width="3"  height="10" rx="1.2"/>
+            <rect x="6"  y="8"  width="3"  height="16" rx="1.2"/>
+            <rect x="10" y="14" width="12" height="4"  rx="1.2"/>
+            <rect x="23" y="8"  width="3"  height="16" rx="1.2"/>
+            <rect x="27" y="11" width="3"  height="10" rx="1.2"/>
+          </svg>
+        </div>
+        <div class="tile-text">
+          <div class="tile-name">Athletic AF</div>
+          <div class="tile-sub">5-phase strength + conditioning program. Sets, PRs, plate calc, history.</div>
+          <div class="tile-meta">
+            <span class="tile-tag">5 phases + Wk 17</span>
+            <span class="tile-tag">Strength</span>
+            <span class="tile-tag">PR tracking</span>
+          </div>
+        </div>
+        <div class="tile-chev">›</div>
+      </div>
+    </a>
+
+    <a class="tile tile-hotel" href="hotel/">
+      <div class="tile-stripe"></div>
+      <div class="tile-body">
+        <div class="tile-icon" aria-hidden="true">
+          <!-- suitcase / travel -->
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="10" width="22" height="16" rx="2.5"/>
+            <path d="M12 10V7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3"/>
+            <path d="M5 17h22"/>
+          </svg>
+        </div>
+        <div class="tile-text">
+          <div class="tile-name">Hotel Workouts</div>
+          <div class="tile-sub">Madsen upper / lower splits. DB + bodyweight — works on the road.</div>
+          <div class="tile-meta">
+            <span class="tile-tag">Upper + Lower</span>
+            <span class="tile-tag">DB / bodyweight</span>
+            <span class="tile-tag">Travel-ready</span>
+          </div>
+        </div>
+        <div class="tile-chev">›</div>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="launcher-foot">
+    <div class="pwa-hint">
+      <strong>Tip:</strong> Tap the Safari <em>Share</em> icon and pick <strong>Add to Home Screen</strong> to install. Your logs are saved per program and stay on your phone.
+    </div>
+    <div style="margin-top:10px">Exercise Library · static PWA · iCloud / GitHub Pages</div>
+  </div>
+
+</div>
+
+<script>
+  // Register the shared service worker for offline use.
+  // Scope is the folder containing index.html so all 3 sub-apps are covered.
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => { /* offline only — non-fatal */ });
+    });
+  }
+</script>
+
+</body>
+</html>

@@ -116,9 +116,11 @@
   }
 
   /* Per-tile accents (override CSS variables locally) */
-  .tile.tile-achilles    { --tile-accent: #d94f1c; --tile-accent-soft: #fdece3; }
-  .tile.tile-athletic-af { --tile-accent: #f25c2d; --tile-accent-soft: #ffe6db; }
-  .tile.tile-hotel       { --tile-accent: #2f6fdc; --tile-accent-soft: #e2ecfb; }
+  .tile.tile-achilles          { --tile-accent: #d94f1c; --tile-accent-soft: #fdece3; }
+  .tile.tile-athletic-af       { --tile-accent: #f25c2d; --tile-accent-soft: #ffe6db; }
+  .tile.tile-hotel             { --tile-accent: #2f6fdc; --tile-accent-soft: #e2ecfb; }
+  .tile.tile-full-body-aesthetics { --tile-accent: #7c3aed; --tile-accent-soft: #f5f0ff; }
+  .tile.tile-kb-shred          { --tile-accent: #059669; --tile-accent-soft: #ecfdf5; }
 
   .launcher-foot {
     margin-top: 28px;
@@ -158,7 +160,7 @@
     </div>
     <div class="lh-text">
       <h1>Exercise Library</h1>
-      <div class="sub">Three programs, one place. Pick one to start.</div>
+      <div class="sub">Five programs, one place. Pick one to start.</div>
     </div>
   </div>
 
@@ -240,6 +242,58 @@
       </div>
     </a>
 
+    <a class="tile tile-kb-shred" href="kb-shred/">
+      <div class="tile-stripe"></div>
+      <div class="tile-body">
+        <div class="tile-icon" aria-hidden="true">
+          <!-- kettlebell shape -->
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="16" cy="20" r="9" fill="currentColor" stroke="none" opacity="0.15"/>
+            <circle cx="16" cy="20" r="9"/>
+            <path d="M12 11.5a5 5 0 0 1 8 0"/>
+            <rect x="13" y="7" width="6" height="4" rx="2"/>
+          </svg>
+        </div>
+        <div class="tile-text">
+          <div class="tile-name">KB Shred</div>
+          <div class="tile-sub">Adam Gooch's 8-week KB program. Full body daily with supersets and conditioning circuits.</div>
+          <div class="tile-meta">
+            <span class="tile-tag">8 weeks</span>
+            <span class="tile-tag">4×/week</span>
+            <span class="tile-tag">Kettlebell</span>
+          </div>
+        </div>
+        <div class="tile-chev">›</div>
+      </div>
+    </a>
+
+    <a class="tile tile-full-body-aesthetics" href="full-body-aesthetics/">
+      <div class="tile-stripe"></div>
+      <div class="tile-body">
+        <div class="tile-icon" aria-hidden="true">
+          <!-- dumbbell curl / aesthetics -->
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2"  y="13" width="4" height="6" rx="1.5" fill="currentColor" stroke="none"/>
+            <rect x="7"  y="10" width="3" height="12" rx="1.2" fill="currentColor" stroke="none"/>
+            <path d="M10 16h12"/>
+            <rect x="22" y="10" width="3" height="12" rx="1.2" fill="currentColor" stroke="none"/>
+            <rect x="26" y="13" width="4" height="6" rx="1.5" fill="currentColor" stroke="none"/>
+            <path d="M13 11 Q16 7 19 11" stroke-width="2" fill="none"/>
+          </svg>
+        </div>
+        <div class="tile-text">
+          <div class="tile-name">Full Body Aesthetics</div>
+          <div class="tile-sub">Ryan Fischer's 64-week DB program. Full body daily, cycling strength and hypertrophy.</div>
+          <div class="tile-meta">
+            <span class="tile-tag">64 weeks</span>
+            <span class="tile-tag">6×/week</span>
+            <span class="tile-tag">DB / Bodyweight</span>
+          </div>
+        </div>
+        <div class="tile-chev">›</div>
+      </div>
+    </a>
+
   </div>
 
   <div class="launcher-foot">
@@ -253,7 +307,7 @@
 
 <script>
   // Register the shared service worker for offline use.
-  // Scope is the folder containing index.html so all 3 sub-apps are covered.
+  // Scope is the folder containing index.html so all 4 sub-apps are covered.
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("sw.js").catch(() => { /* offline only — non-fatal */ });

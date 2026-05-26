@@ -62,6 +62,16 @@ body[data-program="hotel"] {
   --primary-soft: #e2ecfb;
   --primary-line: #b8cdf2;
 }
+body[data-program="full-body-aesthetics"] {
+  --primary:      #7c3aed;     /* violet — Full Body Aesthetics */
+  --primary-soft: #f5f0ff;
+  --primary-line: #d4b8f8;
+}
+body[data-program="kb-shred"] {
+  --primary:      #059669;     /* emerald — KB Shred */
+  --primary-soft: #ecfdf5;
+  --primary-line: #a7f3d0;
+}
 body[data-program="launcher"] {
   --primary:      #1a1f2b;     /* neutral charcoal for the menu */
   --primary-soft: #eef0f4;

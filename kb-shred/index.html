@@ -1,0 +1,928 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="KB Shred" />
+<meta name="theme-color" content="#059669" />
+<link rel="manifest" href="../manifest.webmanifest" />
+<link rel="apple-touch-icon" href="../icon-180.png" />
+<link rel="icon" type="image/png" href="../favicon.png" />
+<title>KB Shred</title>
+<link rel="stylesheet" href="../shared/styles.css" />
+<style>
+/* ─── KB Shred specific ──────────────────────────────────────── */
+
+.kbs-topbar {
+  position: sticky;
+  top: calc(env(safe-area-inset-top) + 55px);
+  z-index: 49;
+  background: rgba(255,255,255,0.94);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.kbs-topbar-inner {
+  max-width: 720px; margin: 0 auto;
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+}
+.crumbs { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.crumbs .phase { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+.crumbs .focus { font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--card);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  color: var(--text);
+}
+.icon-btn:active { background: var(--card-2); }
+.icon-btn svg { width: 18px; height: 18px; }
+
+/* Day chips */
+.day-nav {
+  display: flex; gap: 6px; padding: 4px 14px 12px;
+  max-width: 720px; margin: 0 auto;
+  overflow-x: auto; scrollbar-width: none;
+}
+.day-nav::-webkit-scrollbar { display: none; }
+.day-chip {
+  flex: 0 0 auto; height: 32px; padding: 0 13px;
+  border-radius: 999px; border: 1px solid var(--border);
+  background: var(--card); color: var(--muted);
+  font-size: 12.5px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px;
+  white-space: nowrap; font-family: inherit;
+}
+.day-chip.active { background: var(--primary); border-color: var(--primary); color: white; }
+.day-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: #c8cdd6; }
+.day-chip.active .dot { background: white; }
+.day-chip.done .dot { background: var(--success); }
+
+/* Main */
+main { padding: 12px 14px 100px; max-width: 720px; margin: 0 auto; }
+
+/* Hero stats */
+.hero {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 8px; margin-bottom: 16px;
+}
+.stat {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 10px 6px;
+  text-align: center; box-shadow: var(--shadow);
+}
+.stat-num { font-size: 18px; font-weight: 800; color: var(--primary); font-variant-numeric: tabular-nums; }
+.stat-label { font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-top: 2px; }
+
+/* Progress bar */
+.week-progress {
+  height: 5px; background: var(--border-soft); border-radius: 99px; overflow: hidden;
+  margin-bottom: 16px;
+}
+.week-progress > div { height: 100%; background: linear-gradient(90deg, var(--primary), #34d399); transition: width .25s; }
+
+/* Day header */
+.day-header { margin: 0 0 10px; }
+.day-header h2 { font-size: 21px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 2px; }
+.day-header .day-sublabel { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.day-header .done-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--success-soft); color: var(--success);
+  border: 1px solid var(--success-line);
+  border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 700;
+  margin-left: 8px; vertical-align: middle;
+}
+.workout-type {
+  display: inline-block; background: var(--primary-soft); color: var(--primary);
+  border: 1px solid var(--primary-line); border-radius: 999px;
+  padding: 2px 9px; font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;
+}
+.cond-badge {
+  display: inline-block; background: #fef9c3; color: #854d0e;
+  border: 1px solid #fde68a; border-radius: 999px;
+  padding: 2px 9px; font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;
+}
+
+/* Video link */
+.vid-link {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--card-2); border: 1px solid var(--border); border-radius: 999px;
+  padding: 5px 11px; font-size: 12px; font-weight: 600; color: var(--text);
+  text-decoration: none; cursor: pointer; margin-bottom: 12px;
+}
+.vid-link:active { background: var(--card); }
+.vid-link svg { width: 13px; height: 13px; color: var(--primary); }
+
+/* Superset group card */
+.superset-group {
+  background: var(--card); border: 1.5px solid var(--primary-line);
+  border-radius: var(--radius-lg); padding: 12px 12px 6px; margin: 0 0 10px;
+  box-shadow: var(--shadow);
+}
+.superset-header {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 10px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.superset-label {
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;
+  background: var(--primary-soft); color: var(--primary);
+  border: 1px solid var(--primary-line);
+  border-radius: 999px; padding: 2px 8px;
+}
+.superset-note { font-size: 11px; color: var(--muted); }
+
+/* Exercise cards */
+.ex-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px; margin: 0 0 10px;
+  box-shadow: var(--shadow);
+}
+.ex-card.done-card { opacity: 0.72; }
+.ex-card.sub-card {
+  background: var(--card-2); border-color: var(--border-soft);
+  box-shadow: none; margin: 0 0 8px;
+}
+.ex-card.sub-card:last-child { margin-bottom: 0; }
+.ex-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+.sub-label {
+  flex: 0 0 auto; height: 22px; min-width: 26px;
+  padding: 0 7px; border-radius: 6px;
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+  background: var(--primary-soft); color: var(--primary);
+  border: 1px solid var(--primary-line);
+  display: flex; align-items: center; justify-content: center;
+}
+.ex-name { flex: 1; font-size: 16px; font-weight: 700; line-height: 1.3; }
+.ex-prescription { font-size: 12.5px; color: var(--muted); margin-bottom: 4px; line-height: 1.4; }
+.ex-notes-text { font-size: 11.5px; color: var(--text-body); margin-bottom: 10px; font-style: italic; }
+
+/* Set rows */
+.sets { display: flex; flex-direction: column; gap: 6px; margin-bottom: 2px; }
+.set-row {
+  display: grid; grid-template-columns: 30px 1fr 44px; gap: 8px;
+  align-items: center;
+}
+.set-num {
+  text-align: center; font-size: 11px; font-weight: 700; color: var(--muted);
+  background: var(--card-2); border: 1px solid var(--border-soft); border-radius: 8px;
+  height: 44px; display: flex; align-items: center; justify-content: center;
+}
+.set-weight {
+  width: 100%; height: 44px; padding: 0 10px;
+  background: var(--card-2); border: 1px solid var(--border); border-radius: 10px;
+  color: var(--text); font-size: 16px; font-family: inherit;
+  -webkit-appearance: none; appearance: none;
+}
+.set-weight::placeholder { color: var(--muted); }
+.set-weight:focus { outline: none; border-color: var(--primary); }
+.check-btn {
+  width: 44px; height: 44px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--card-2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--muted); transition: background .12s, border-color .12s;
+}
+.check-btn svg { width: 18px; height: 18px; stroke-width: 2.5; }
+.check-btn.checked { background: var(--success); border-color: var(--success); color: white; }
+.set-row.done-row .set-weight { opacity: 0.5; }
+
+/* Timer button */
+.timer-btn {
+  margin-top: 10px; height: 36px; padding: 0 14px;
+  border-radius: 999px; border: 1px solid var(--border); background: var(--card-2);
+  font-size: 12.5px; font-weight: 600; color: var(--muted); cursor: pointer;
+  font-family: inherit; display: inline-flex; align-items: center; gap: 5px;
+}
+.timer-btn.running { background: var(--primary-soft); border-color: var(--primary-line); color: var(--primary); }
+.timer-btn.done { background: var(--success-soft); border-color: var(--success-line); color: var(--success); }
+
+/* Notes textarea */
+.ex-notes-input {
+  margin-top: 8px; width: 100%; min-height: 36px; padding: 8px 10px;
+  background: var(--card-2); border: 1px solid var(--border-soft); border-radius: 10px;
+  font-size: 13px; font-family: inherit; color: var(--text);
+  resize: vertical; box-sizing: border-box;
+}
+.ex-notes-input:focus { outline: none; border-color: var(--primary); }
+.ex-notes-input::placeholder { color: var(--muted); }
+
+/* Mark done */
+.mark-done-btn {
+  width: 100%; height: 48px; border-radius: var(--radius);
+  border: 1.5px solid var(--primary); background: var(--primary);
+  color: white; font-size: 15px; font-weight: 700; cursor: pointer;
+  font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px;
+  margin-bottom: 10px;
+}
+.mark-done-btn.undone { background: var(--card); color: var(--primary); }
+.mark-done-btn svg { width: 16px; height: 16px; stroke-width: 2.5; }
+
+/* Bottom rest timer bar */
+.rest-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+  z-index: 60; transform: translateY(100%); transition: transform .25s;
+}
+.rest-bar.visible { transform: translateY(0); }
+.rest-time { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--primary); min-width: 64px; }
+.rest-desc { flex: 1; font-size: 12px; color: var(--muted); }
+.rest-bar-btn {
+  height: 36px; padding: 0 14px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--card);
+  font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+
+/* Modal */
+.modal-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.35); z-index: 100;
+  align-items: flex-end;
+}
+.modal-backdrop.visible { display: flex; }
+.modal {
+  background: var(--card); border-radius: 20px 20px 0 0;
+  width: 100%; max-height: 80vh; overflow-y: auto;
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+  box-shadow: 0 -4px 32px rgba(0,0,0,0.12);
+}
+.modal h3 { font-size: 18px; font-weight: 800; margin: 0 0 14px; }
+.modal-close { float: right; cursor: pointer; color: var(--muted); font-size: 22px; line-height: 1; margin-top: -2px; }
+
+/* Week picker grid (4-col for 8 weeks) */
+.week-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px; }
+.wk-chip {
+  aspect-ratio: 1; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--card-2); font-size: 13px; font-weight: 700; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; font-family: inherit; color: var(--text);
+  position: relative; overflow: hidden;
+}
+.wk-chip .wk-fill {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: var(--primary-soft); transition: height .2s;
+}
+.wk-chip .wk-num { position: relative; z-index: 1; }
+.wk-chip .wk-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--border); position: relative; z-index: 1; }
+.wk-chip.active { border-color: var(--primary); }
+.wk-chip.active .wk-num { color: var(--primary); }
+.wk-chip.all-done { background: var(--success-soft); border-color: var(--success-line); }
+.wk-chip.all-done .wk-dot { background: var(--success); }
+
+/* Menu */
+.menu-list { list-style: none; padding: 0; margin: 0; }
+.menu-list li { border-bottom: 1px solid var(--border); }
+.menu-list li:last-child { border-bottom: none; }
+.menu-list button {
+  width: 100%; text-align: left; padding: 14px 2px;
+  background: none; border: none; font-size: 15px; font-family: inherit; cursor: pointer; color: var(--text);
+}
+.menu-list button:active { color: var(--primary); }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: calc(72px + env(safe-area-inset-bottom));
+  left: 50%; transform: translateX(-50%) translateY(16px);
+  background: var(--text); color: white; border-radius: 999px;
+  padding: 8px 18px; font-size: 13.5px; font-weight: 600;
+  opacity: 0; transition: opacity .2s, transform .2s; z-index: 200;
+  white-space: nowrap; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body data-program="kb-shred">
+
+<header class="appbar">
+  <div class="appbar-inner">
+    <a class="appbar-back" href="../" aria-label="Back to Exercise Library">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="10 3 5 8 10 13"/></svg>
+      Library
+    </a>
+    <div class="appbar-title">
+      <div class="eyebrow">Program</div>
+      <div class="name">KB Shred</div>
+    </div>
+  </div>
+  <div class="appbar-accent"></div>
+</header>
+
+<div class="kbs-topbar">
+  <div class="kbs-topbar-inner">
+    <button class="icon-btn" id="btnPickWeek" aria-label="Pick week">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <div class="crumbs">
+      <div class="phase" id="weekLabel">—</div>
+      <div class="focus" id="dayLabel">—</div>
+    </div>
+    <button class="icon-btn" id="btnMenu" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>
+    </button>
+  </div>
+  <div class="day-nav" id="dayNav"></div>
+</div>
+
+<main id="main"></main>
+
+<div class="rest-bar" id="restBar">
+  <div class="rest-time" id="restTime">1:00</div>
+  <div class="rest-desc" id="restDesc">Rest</div>
+  <button class="rest-bar-btn" id="restAdd">+30s</button>
+  <button class="rest-bar-btn" id="restStop">Stop</button>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" id="modal"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   KB Shred Tracker — Adam Gooch 8-Week Intermediate KB Program
+   Static PWA, data from data.json, state in localStorage.
+   Key: kb_shred_v1
+   ============================================================ */
+
+const STORAGE_KEY = 'kb_shred_v1';
+let PROGRAM = null;
+let STATE = null;
+
+/* ── storage ────────────────────────────────────────────────── */
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { currentWeek: 'w1', currentDay: 'Day 1', logs: {} };
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); } catch(e) {}
+}
+
+/* ── helpers ────────────────────────────────────────────────── */
+const $ = (sel, root=document) => root.querySelector(sel);
+function el(tag, attrs={}, ...children) {
+  const e = document.createElement(tag);
+  for (const k in attrs) {
+    if (k === 'class') e.className = attrs[k];
+    else if (k === 'html') e.innerHTML = attrs[k];
+    else if (k.startsWith('on')) e[k] = attrs[k];
+    else e.setAttribute(k, attrs[k]);
+  }
+  children.forEach(c => {
+    if (c != null) {
+      if (typeof c === 'string') e.appendChild(document.createTextNode(c));
+      else e.appendChild(c);
+    }
+  });
+  return e;
+}
+
+function currentWeek() { return PROGRAM.weeks.find(w => w.id === STATE.currentWeek) || PROGRAM.weeks[0]; }
+function currentDay() {
+  const w = currentWeek();
+  return w.days.find(d => d.day === STATE.currentDay) || w.days[0];
+}
+function logKey(weekId, dayId) { return `${weekId}_${dayId}`; }
+function getLog(weekId, dayId) { return STATE.logs[logKey(weekId, dayId)] || {}; }
+function setLog(weekId, dayId, data) {
+  STATE.logs[logKey(weekId, dayId)] = data;
+  saveState();
+}
+
+function dayDone(weekId, day) { return !!getLog(weekId, day.day).done; }
+
+function weekProgress(week) {
+  if (!week.days.length) return 0;
+  return week.days.filter(d => dayDone(week.id, d)).length / week.days.length;
+}
+
+function totalDone() {
+  return PROGRAM.weeks.reduce((acc, w) => acc + w.days.filter(d => dayDone(w.id, d)).length, 0);
+}
+function totalDays() {
+  return PROGRAM.weeks.reduce((acc, w) => acc + w.days.length, 0);
+}
+
+/* ── strip "A1: " / "B2: " prefix from exercise names ──────── */
+function cleanName(name) {
+  return name.replace(/^[A-Z]\d+:\s*/, '');
+}
+
+/* ── build superset render groups ───────────────────────────── */
+function buildRenderGroups(exercises) {
+  const groups = [];
+  const supGroups = {}; // label -> [index, ...]
+  const seen = new Set();
+
+  exercises.forEach((ex, i) => {
+    if (ex.superset) {
+      const key = ex.superset;
+      if (!supGroups[key]) supGroups[key] = [];
+      supGroups[key].push(i);
+    }
+  });
+
+  exercises.forEach((ex, i) => {
+    if (seen.has(i)) return;
+    if (ex.superset) {
+      const key = ex.superset;
+      if (!seen.has(supGroups[key][0])) {
+        supGroups[key].forEach(idx => seen.add(idx));
+        groups.push({
+          type: 'superset',
+          label: key,
+          items: supGroups[key].map(idx => ({ idx, ex: exercises[idx] }))
+        });
+      }
+    } else {
+      seen.add(i);
+      groups.push({ type: 'single', idx: i, ex });
+    }
+  });
+
+  return groups;
+}
+
+/* ── format prescription string ─────────────────────────────── */
+function fmtPrescription(ex) {
+  const parts = [];
+  if (ex.sets && ex.reps) parts.push(`${ex.sets} sets × ${ex.reps}`);
+  if (ex.rest) parts.push(`${ex.rest}s rest`);
+  return parts.join(' · ');
+}
+
+/* ── render ──────────────────────────────────────────────────── */
+function render() {
+  renderTopbar();
+  renderHero();
+  renderDayContent();
+}
+
+function renderTopbar() {
+  const w = currentWeek();
+  const d = currentDay();
+  $('#weekLabel').textContent = w.label;
+  $('#dayLabel').textContent = `${d.day} · ${d.label}`;
+  renderDayNav();
+}
+
+function renderDayNav() {
+  const w = currentWeek();
+  const nav = $('#dayNav');
+  nav.innerHTML = '';
+  w.days.forEach(d => {
+    const done = dayDone(w.id, d);
+    const isActive = d.day === STATE.currentDay;
+    const chip = el('button', {
+      class: `day-chip${isActive ? ' active' : ''}${done ? ' done' : ''}`,
+      onclick: () => {
+        STATE.currentDay = d.day;
+        saveState();
+        render();
+        window.scrollTo(0, 0);
+      }
+    },
+      el('span', { class: 'dot' }),
+      d.day
+    );
+    nav.appendChild(chip);
+  });
+}
+
+function renderHero() {
+  const w = currentWeek();
+  const prog = weekProgress(w);
+  const doneThisWeek = w.days.filter(d => dayDone(w.id, d)).length;
+  const allDone = totalDone();
+  const allDays = totalDays();
+  const pct = allDays ? Math.round(allDone / allDays * 100) : 0;
+
+  const main = $('#main');
+  main.innerHTML = '';
+
+  main.appendChild(el('div', { class: 'hero' },
+    el('div', { class: 'stat' }, el('div', { class: 'stat-num' }, String(w.week)), el('div', { class: 'stat-label' }, 'Week')),
+    el('div', { class: 'stat' }, el('div', { class: 'stat-num' }, `${doneThisWeek}/${w.days.length}`), el('div', { class: 'stat-label' }, 'This Wk')),
+    el('div', { class: 'stat' }, el('div', { class: 'stat-num' }, String(allDone)), el('div', { class: 'stat-label' }, 'Days Done')),
+    el('div', { class: 'stat' }, el('div', { class: 'stat-num' }, `${pct}%`), el('div', { class: 'stat-label' }, 'Overall'))
+  ));
+
+  main.appendChild(el('div', { class: 'week-progress' },
+    el('div', { style: `width:${Math.round(prog * 100)}%` })
+  ));
+}
+
+function renderDayContent() {
+  const w = currentWeek();
+  const d = currentDay();
+  const main = $('#main');
+  const wrapper = el('div', {});
+  const log = getLog(w.id, d.day);
+  const isDone = !!log.done;
+
+  // Day header
+  const h2 = el('h2', {}, d.day);
+  if (isDone) h2.appendChild(el('span', {
+    class: 'done-badge',
+    html: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8l4 4 6-8"/></svg>&nbsp;Done'
+  }));
+  const header = el('div', { class: 'day-header' }, h2);
+  if (d.label) header.appendChild(el('div', { class: 'day-sublabel' }, d.label));
+  wrapper.appendChild(header);
+
+  // Type badge
+  if (d.conditioning) {
+    wrapper.appendChild(el('div', { class: 'cond-badge' }, '⚡ Circuit / Conditioning'));
+  } else {
+    wrapper.appendChild(el('div', { class: 'workout-type' }, 'Full Body'));
+  }
+
+  // Video link
+  if (d.link) {
+    const a = el('a', {
+      class: 'vid-link', href: d.link, target: '_blank', rel: 'noopener',
+      html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21"/></svg>'
+    });
+    a.appendChild(document.createTextNode(' Watch Workout'));
+    wrapper.appendChild(a);
+  }
+
+  // Exercises
+  if (d.exercises && d.exercises.length) {
+    renderExercises(w, d, wrapper, log);
+  }
+
+  appendMarkDoneBtn(w, d, wrapper, log);
+  main.appendChild(wrapper);
+}
+
+/* ── exercise renderer ──────────────────────────────────────── */
+function renderExercises(w, d, wrapper, log) {
+  const groups = buildRenderGroups(d.exercises);
+
+  groups.forEach(group => {
+    if (group.type === 'single') {
+      wrapper.appendChild(buildExCard(w, d, group.idx, group.ex, log, null, false));
+    } else {
+      const supCard = el('div', { class: 'superset-group' });
+
+      const header = el('div', { class: 'superset-header' });
+      header.appendChild(el('span', { class: 'superset-label' }, `Superset ${group.label}`));
+      header.appendChild(el('span', { class: 'superset-note' }, 'Alternate A then B, rest between rounds'));
+      supCard.appendChild(header);
+
+      group.items.forEach((item, subIdx) => {
+        const subLabel = `${group.label}${subIdx + 1}`; // A1, A2, B1, B2
+        supCard.appendChild(buildExCard(w, d, item.idx, item.ex, log, subLabel, true));
+      });
+
+      wrapper.appendChild(supCard);
+    }
+  });
+}
+
+function buildExCard(w, d, exIdx, ex, log, subLabel, isSubCard) {
+  const exLog = (log.exercises || {})[exIdx] || {};
+  const allChecked = Array.from({ length: ex.sets }, (_, i) => !!(exLog[`s${i}`]));
+  const exDone = ex.sets > 0 && allChecked.every(Boolean);
+  const restSecs = parseInt(ex.rest) || 60;
+
+  const card = el('div', { class: `ex-card${isSubCard ? ' sub-card' : ''}${exDone ? ' done-card' : ''}` });
+
+  // Head: optional sub-label + name
+  const head = el('div', { class: 'ex-head' });
+  if (subLabel) head.appendChild(el('span', { class: 'sub-label' }, subLabel));
+  head.appendChild(el('div', { class: 'ex-name' }, cleanName(ex.name)));
+  card.appendChild(head);
+
+  // Prescription + notes
+  const presc = fmtPrescription(ex);
+  if (presc) card.appendChild(el('div', { class: 'ex-prescription' }, presc));
+  if (ex.notes) card.appendChild(el('div', { class: 'ex-notes-text' }, ex.notes));
+
+  // Set rows
+  const setsEl = el('div', { class: 'sets' });
+  for (let i = 0; i < ex.sets; i++) {
+    const checked = !!(exLog[`s${i}`]);
+    const weight = exLog[`w${i}`] || '';
+
+    const weightInput = el('input', {
+      type: 'text', inputmode: 'decimal', placeholder: 'lb / kg',
+      class: 'set-weight', value: weight
+    });
+    weightInput.addEventListener('input', e => {
+      ensureExLog(w.id, d.day, exIdx)[`w${i}`] = e.target.value;
+      saveState();
+    });
+
+    const checkBtn = el('button', { class: `check-btn${checked ? ' checked' : ''}`, 'aria-label': 'Mark set done' });
+    checkBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l5 5 9-12"/></svg>';
+    checkBtn.addEventListener('click', () => {
+      const exL = ensureExLog(w.id, d.day, exIdx);
+      exL[`s${i}`] = !exL[`s${i}`];
+      if (exL[`s${i}`]) {
+        startRestTimer(`${w.id}_${d.day}_${exIdx}_${i}`, null, restSecs);
+      } else {
+        cancelRestTimer(`${w.id}_${d.day}_${exIdx}_${i}`);
+      }
+      saveState();
+      render();
+    });
+
+    setsEl.appendChild(el('div', { class: `set-row${checked ? ' done-row' : ''}` },
+      el('div', { class: 'set-num' }, String(i + 1)),
+      weightInput,
+      checkBtn
+    ));
+  }
+  card.appendChild(setsEl);
+
+  // Per-exercise notes
+  const notesInput = el('textarea', { class: 'ex-notes-input', placeholder: 'Notes…', rows: '1' });
+  notesInput.value = exLog.notes || '';
+  notesInput.addEventListener('input', e => {
+    ensureExLog(w.id, d.day, exIdx).notes = e.target.value;
+    saveState();
+  });
+  card.appendChild(notesInput);
+
+  // Rest timer button
+  const timerKey = `${w.id}_${d.day}_${exIdx}`;
+  const timerBtn = el('button', { class: 'timer-btn', 'data-timer': timerKey }, `⏱ ${restSecs}s`);
+  timerBtn.addEventListener('click', () => {
+    ensureAudio();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    if (activeTimers[timerKey]) {
+      cancelRestTimer(timerKey);
+    } else {
+      startRestTimer(timerKey, timerBtn, restSecs);
+    }
+  });
+  reattachTimer(timerKey, timerBtn);
+  card.appendChild(timerBtn);
+
+  return card;
+}
+
+/* ── mark done button ───────────────────────────────────────── */
+function appendMarkDoneBtn(w, d, wrapper, log) {
+  const isDone = !!log.done;
+  const btn = el('button', {
+    class: `mark-done-btn${isDone ? ' undone' : ''}`,
+    html: isDone
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5 9-12"/></svg> Mark as Not Done'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5 9-12"/></svg> Mark as Done'
+  });
+  btn.addEventListener('click', () => {
+    const l = getLog(w.id, d.day);
+    l.done = !l.done;
+    if (!l.date) l.date = new Date().toISOString().slice(0, 10);
+    setLog(w.id, d.day, l);
+    toast(l.done ? 'Day complete! 🎉' : 'Unmarked');
+    render();
+  });
+  wrapper.appendChild(btn);
+}
+
+/* ── exercise log helpers ───────────────────────────────────── */
+function ensureExLog(weekId, dayId, exIdx) {
+  const key = logKey(weekId, dayId);
+  if (!STATE.logs[key]) STATE.logs[key] = {};
+  const log = STATE.logs[key];
+  if (!log.exercises) log.exercises = {};
+  if (!log.exercises[exIdx]) log.exercises[exIdx] = {};
+  return log.exercises[exIdx];
+}
+
+/* ── rest timer ─────────────────────────────────────────────── */
+const activeTimers = {};
+let audioCtx = null;
+
+function ensureAudio() {
+  if (audioCtx) return audioCtx;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) audioCtx = new AC();
+  } catch(e) {}
+  return audioCtx;
+}
+function beep() {
+  const ctx = ensureAudio(); if (!ctx) return;
+  const now = ctx.currentTime;
+  [0, 0.18, 0.36].forEach((offset, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = i === 2 ? 1100 : 880;
+    gain.gain.setValueAtTime(0, now + offset);
+    gain.gain.linearRampToValueAtTime(0.25, now + offset + 0.01);
+    gain.gain.linearRampToValueAtTime(0, now + offset + 0.14);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now + offset); osc.stop(now + offset + 0.16);
+  });
+  try { if (navigator.vibrate) navigator.vibrate([120, 80, 120, 80, 200]); } catch(e) {}
+}
+function fmtTime(s) {
+  const m = Math.floor(s / 60), sec = Math.max(0, Math.floor(s % 60));
+  return `${m}:${String(sec).padStart(2, '0')}`;
+}
+function startRestTimer(key, btn, secs) {
+  const restSecs = secs || 60;
+  const origLabel = `${restSecs}s`;
+  const endsAt = Date.now() + restSecs * 1000;
+  if (btn) { btn.classList.add('running'); btn.textContent = fmtTime(restSecs); }
+  $('#restBar').classList.add('visible');
+  $('#restTime').textContent = fmtTime(restSecs);
+  $('#restDesc').textContent = 'Rest';
+  const intervalId = setInterval(() => {
+    const t = activeTimers[key]; if (!t) return;
+    const rem = (t.endsAt - Date.now()) / 1000;
+    $('#restTime').textContent = fmtTime(rem);
+    if (t.btn && t.btn.isConnected) t.btn.textContent = fmtTime(rem);
+    if (rem <= 0) {
+      clearInterval(t.intervalId);
+      const b = t.btn;
+      const lbl = t.origLabel;
+      delete activeTimers[key];
+      if (b && b.isConnected) {
+        b.classList.remove('running'); b.classList.add('done'); b.textContent = 'Done!';
+        setTimeout(() => { if (b.isConnected) { b.classList.remove('done'); b.textContent = `⏱ ${lbl}`; } }, 1800);
+      }
+      beep();
+      setTimeout(() => { if (!Object.keys(activeTimers).length) $('#restBar').classList.remove('visible'); }, 1000);
+    }
+  }, 250);
+  activeTimers[key] = { endsAt, intervalId, btn, origLabel };
+}
+function cancelRestTimer(key) {
+  const t = activeTimers[key]; if (!t) return;
+  clearInterval(t.intervalId);
+  const b = t.btn;
+  const lbl = t.origLabel;
+  delete activeTimers[key];
+  if (b && b.isConnected) { b.classList.remove('running', 'done'); b.textContent = `⏱ ${lbl}`; }
+  if (!Object.keys(activeTimers).length) $('#restBar').classList.remove('visible');
+}
+function reattachTimer(key, btn) {
+  const t = activeTimers[key]; if (!t) return;
+  t.btn = btn;
+  if (btn) btn.classList.add('running');
+}
+
+$('#restAdd').addEventListener('click', () => {
+  Object.values(activeTimers).forEach(t => { t.endsAt += 30000; });
+});
+$('#restStop').addEventListener('click', () => {
+  Object.keys(activeTimers).forEach(cancelRestTimer);
+  $('#restBar').classList.remove('visible');
+});
+
+/* ── modals ──────────────────────────────────────────────────── */
+function openModal(content) {
+  const m = $('#modal');
+  m.innerHTML = '';
+  m.appendChild(content);
+  $('#modalBackdrop').classList.add('visible');
+}
+function closeModal() { $('#modalBackdrop').classList.remove('visible'); }
+$('#modalBackdrop').addEventListener('click', e => { if (e.target.id === 'modalBackdrop') closeModal(); });
+
+function openWeekPicker() {
+  const wrap = el('div', {});
+  wrap.appendChild(el('span', { class: 'modal-close', onclick: closeModal }, '×'));
+  wrap.appendChild(el('h3', {}, 'Jump to Week'));
+  const grid = el('div', { class: 'week-grid' });
+  PROGRAM.weeks.forEach(w => {
+    const prog = weekProgress(w);
+    const allDone = prog >= 1;
+    const chip = el('button', {
+      class: `wk-chip${w.id === STATE.currentWeek ? ' active' : ''}${allDone ? ' all-done' : ''}`,
+      onclick: () => {
+        STATE.currentWeek = w.id;
+        STATE.currentDay = w.days[0].day;
+        saveState(); render(); closeModal();
+        window.scrollTo(0, 0);
+      }
+    });
+    chip.appendChild(el('div', { class: 'wk-fill', style: `height:${Math.round(prog * 100)}%` }));
+    chip.appendChild(el('div', { class: 'wk-num' }, String(w.week)));
+    chip.appendChild(el('div', { class: 'wk-dot' }));
+    grid.appendChild(chip);
+  });
+  wrap.appendChild(grid);
+  openModal(wrap);
+}
+
+function openMenu() {
+  const wrap = el('div', {});
+  wrap.appendChild(el('span', { class: 'modal-close', onclick: closeModal }, '×'));
+  wrap.appendChild(el('h3', {}, 'Menu'));
+  const ul = el('ul', { class: 'menu-list' });
+  [
+    ['About this program', openAbout],
+    ['Export backup', doExport],
+    ['Import backup', doImport],
+    ['Reset all data', doReset],
+  ].forEach(([label, fn]) => {
+    ul.appendChild(el('li', {}, el('button', { onclick: () => { closeModal(); fn(); } }, label)));
+  });
+  wrap.appendChild(ul);
+  openModal(wrap);
+}
+
+function openAbout() {
+  openModal(el('div', {},
+    el('span', { class: 'modal-close', onclick: closeModal }, '×'),
+    el('h3', {}, 'About'),
+    el('div', {
+      style: 'font-size:14px;line-height:1.6;color:var(--text-body)',
+      html: '<p><strong>8-Week Intermediate Kettlebell Shred</strong> by Adam Gooch</p><p>4 training days per week over 8 weeks. Full body kettlebell training with supersets, conditioning circuits, and progressive overload. Intensity guided by RPE (Rate of Perceived Exertion).</p><p>Each day has a linked workout video. Your logs are saved in this browser\'s local storage. Use Export from the menu to save a backup.</p>'
+    })
+  ));
+}
+
+/* ── export / import / reset ────────────────────────────────── */
+function doExport() {
+  const payload = { app: 'kb-shred', version: 1, exportedAt: new Date().toISOString(), state: STATE };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `kb-shred-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('Backup downloaded');
+}
+function doImport() {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json,application/json';
+  inp.onchange = () => {
+    const f = inp.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const obj = JSON.parse(r.result);
+        if (obj && obj.state) {
+          if (!confirm('Replace current data with this backup?')) return;
+          STATE = obj.state; saveState(); render(); toast('Import complete');
+        } else { alert("Doesn't look like a valid backup."); }
+      } catch(e) { alert('Could not read file: ' + e.message); }
+    };
+    r.readAsText(f);
+  };
+  inp.click();
+}
+function doReset() {
+  if (!confirm('Delete all your logged data? This cannot be undone.')) return;
+  STATE = { currentWeek: 'w1', currentDay: 'Day 1', logs: {} };
+  saveState(); render(); toast('Data cleared');
+}
+
+/* ── toast ──────────────────────────────────────────────────── */
+let toastTimeout = null;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  if (toastTimeout) clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ── init ───────────────────────────────────────────────────── */
+$('#btnPickWeek').addEventListener('click', openWeekPicker);
+$('#btnMenu').addEventListener('click', openMenu);
+
+async function init() {
+  STATE = loadState();
+  try {
+    const res = await fetch('data.json', { cache: 'no-store' });
+    PROGRAM = await res.json();
+  } catch(e) {
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text)">Could not load program data. Make sure data.json is next to index.html.</div>';
+    return;
+  }
+  if (!PROGRAM.weeks.find(w => w.id === STATE.currentWeek)) {
+    STATE.currentWeek = PROGRAM.weeks[0].id;
+  }
+  const w = currentWeek();
+  if (!w.days.find(d => d.day === STATE.currentDay)) {
+    STATE.currentDay = w.days[0].day;
+  }
+  saveState();
+  render();
+}
+init();
+</script>
+</body>
+</html>

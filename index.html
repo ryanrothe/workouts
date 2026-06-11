@@ -116,6 +116,7 @@
   }
 
   /* Per-tile accents (override CSS variables locally) */
+  .tile.tile-hyrox             { --tile-accent: #c8860a; --tile-accent-soft: #fbeecb; }
   .tile.tile-achilles          { --tile-accent: #d94f1c; --tile-accent-soft: #fdece3; }
   .tile.tile-athletic-af       { --tile-accent: #f25c2d; --tile-accent-soft: #ffe6db; }
   .tile.tile-hotel             { --tile-accent: #2f6fdc; --tile-accent-soft: #e2ecfb; }
@@ -160,13 +161,38 @@
     </div>
     <div class="lh-text">
       <h1>Exercise Library</h1>
-      <div class="sub">Five programs, one place. Pick one to start.</div>
+      <div class="sub">Six programs, one place. Pick one to start.</div>
     </div>
   </div>
 
   <div class="launcher-section-label">Programs</div>
 
   <div class="tile-stack">
+
+    <a class="tile tile-hyrox" href="hyrox/">
+      <div class="tile-stripe"></div>
+      <div class="tile-body">
+        <div class="tile-icon" aria-hidden="true">
+          <!-- stopwatch / race engine -->
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="16" cy="18" r="10"/>
+            <path d="M16 18l4-4"/>
+            <path d="M13 4h6"/>
+            <path d="M16 4v4"/>
+          </svg>
+        </div>
+        <div class="tile-text">
+          <div class="tile-name">Hyrox Home Engine</div>
+          <div class="tile-sub">12-week Hyrox build for a home gym. Low-impact cardio, sled substitutes, travel mode, benchmark charts.</div>
+          <div class="tile-meta">
+            <span class="tile-tag">12 weeks</span>
+            <span class="tile-tag">4×/week</span>
+            <span class="tile-tag">Hyrox</span>
+          </div>
+        </div>
+        <div class="tile-chev">›</div>
+      </div>
+    </a>
 
     <a class="tile tile-achilles" href="achilles/">
       <div class="tile-stripe"></div>

@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Hyrox Home" />
+<meta name="theme-color" content="#c8860a" />
+<link rel="manifest" href="../manifest.webmanifest" />
+<link rel="apple-touch-icon" href="../icon-180.png" />
+<link rel="icon" type="image/png" href="../favicon.png" />
+<title>Hyrox Home Engine — 12-Week Program</title>
+<link rel="stylesheet" href="../shared/styles.css" />
+<style>
+  /* Hyrox-specific styles. Shared tokens from ../shared/styles.css. */
+  .hero {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow);
+  }
+  .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .hero-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .phase-badge {
+    display: inline-block; background: var(--primary-soft); color: var(--primary);
+    border: 1px solid var(--primary-line); border-radius: 999px; padding: 3px 10px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+  .stat { background: var(--card-2); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 8px 6px; text-align: center; }
+  .stat-num { font-size: 17px; font-weight: 700; color: var(--primary); font-variant-numeric: tabular-nums; }
+  .stat-label { font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+  .progress-bar { background: var(--border-soft); border-radius: 999px; height: 6px; overflow: hidden; margin-top: 10px; }
+  .progress-fill { background: linear-gradient(90deg, var(--primary), var(--accent)); height: 100%; transition: width 0.3s; width: 0%; }
+
+  /* Travel toggle */
+  .travel-switch {
+    display: flex; align-items: center; gap: 8px; margin-top: 12px;
+    background: var(--card-2); border: 1px solid var(--border-soft);
+    border-radius: 999px; padding: 7px 12px; cursor: pointer; user-select: none;
+    font-size: 12px; color: var(--muted); font-weight: 600; width: fit-content;
+  }
+  .travel-switch .sw { width: 38px; height: 22px; border-radius: 999px; background: #cdd2db; position: relative; transition: .2s; flex-shrink:0; }
+  .travel-switch .sw::after { content:""; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition:.2s; box-shadow:0 1px 2px rgba(0,0,0,.2); }
+  body.travel .travel-switch { color: var(--primary); border-color: var(--primary-line); background: var(--primary-soft); }
+  body.travel .travel-switch .sw { background: var(--primary); }
+  body.travel .travel-switch .sw::after { left: 18px; }
+
+  /* Week pills */
+  .week-bar { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 12px; padding: 4px 2px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .week-bar::-webkit-scrollbar { display: none; }
+  .week-pill { flex-shrink: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 9px; font-size: 11px; color: var(--muted); cursor: pointer; min-width: 54px; text-align: center; line-height: 1.2; font-family: inherit; position: relative; }
+  .week-pill .wk-label { display: block; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .week-pill .wk-num { display: block; font-size: 15px; font-weight: 700; color: var(--text); }
+  .week-pill.active { background: var(--primary); border-color: var(--primary); }
+  .week-pill.active .wk-num, .week-pill.active .wk-label { color: white; }
+  .week-pill.done { border-color: var(--success); background: var(--success-soft); }
+  .week-pill.done .wk-num { color: var(--success); }
+  .week-pill.bench .wk-label { color: var(--primary); font-weight: 800; }
+  .week-pill.active.bench .wk-label { color: #fff; }
+
+  /* Exercise tag color variants */
+  .ex-tag.str   { background: var(--primary-soft); color: var(--primary); }
+  .ex-tag.eng   { background: #e7f0fb; color: #1f63b8; }
+  .ex-tag.sled  { background: #f1eafd; color: #6b3ed0; }
+  .ex-tag.sta   { background: #fef0e3; color: #b35309; }
+  .ex-tag.warm  { background: #f0f1f3; color: #6b7588; }
+  .ex-tag.mob   { background: #e3f5ea; color: var(--success); }
+  .ex-tag.bench { background: #fbeed1; color: #a06200; }
+
+  /* Travel substitution line on each exercise */
+  .ex-travel { display: none; font-size: 11.5px; color: var(--primary); margin-top: 4px; line-height: 1.4; }
+  body.travel .ex-travel { display: block; }
+  body.travel .ex-prescription { opacity: .5; }
+  .ex-travel b { font-weight: 700; }
+
+  /* Info / guide */
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+  .info-grid .info-cell { background: var(--card-2); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 10px; }
+  .info-cell h4 { margin-bottom: 4px; }
+  .info-cell p { font-size: 12px; margin: 0; color: var(--text-body); }
+  .phase-summary { display: flex; gap: 10px; align-items: center; }
+  .phase-summary .phase-num { width: 34px; height: 34px; background: var(--primary-soft); border: 1px solid var(--primary-line); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; font-size:13px; }
+  .phase-summary .phase-text { font-size: 12.5px; color: var(--muted); }
+  .phase-summary .phase-text strong { color: var(--text); }
+  .sub-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 6px 0 12px; }
+  .sub-table th, .sub-table td { text-align: left; padding: 8px 9px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+  .sub-table th { color: var(--accent); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
+  .sub-table td .home { color: var(--text); }
+  .sub-table td .trav { color: var(--primary); display:block; margin-top:3px; font-size:11.5px; }
+  .reset-link { background: none; border: none; color: var(--muted); font-size: 11px; cursor: pointer; padding: 4px 8px; text-decoration: underline; font-family: inherit; }
+
+  /* Benchmarks */
+  .bm-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; box-shadow: var(--shadow); }
+  .bm-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .bm-name { font-weight: 700; font-size: 14.5px; }
+  .bm-unit { font-size: 11px; color: var(--muted); font-weight: 600; }
+  .bm-goal { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .bm-inputs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin: 12px 0 6px; }
+  .bm-field { display: flex; flex-direction: column; gap: 3px; }
+  .bm-field label { font-size: 9.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 700; text-align: center; }
+  .bm-field input { background: var(--card-2); border: 1px solid var(--border); border-radius: 7px; padding: 8px 6px; font-size: 13px; font-family: inherit; text-align: center; width: 100%; font-variant-numeric: tabular-nums; }
+  .bm-field input:focus { outline: none; border-color: var(--primary); }
+  .bm-field.baseline input { border-color: var(--primary-line); background: var(--primary-soft); }
+  .bm-chart { margin-top: 8px; }
+  .bm-chart svg { width: 100%; height: auto; display: block; }
+  .bm-delta { font-size: 12px; font-weight: 700; margin-top: 6px; }
+  .bm-delta.good { color: var(--success); }
+  .bm-delta.bad { color: var(--danger); }
+  .bm-delta.flat { color: var(--muted); }
+  .sim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .sim-cell { background: var(--card-2); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 11px; }
+  .sim-cell label { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 700; }
+  .sim-cell input { background: white; border: 1px solid var(--border); border-radius: 7px; padding: 8px; font-size: 15px; font-family: inherit; text-align: center; width: 100%; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .empty-hint { color: var(--muted); font-size: 11.5px; font-style: italic; padding: 4px 0; }
+
+  @media (max-width: 420px) {
+    .hero-stats { gap: 6px; } .stat { padding: 6px 4px; } .stat-num { font-size: 15px; } .stat-label { font-size: 8.5px; }
+    .info-grid { grid-template-columns: 1fr; }
+    .bm-inputs { gap: 5px; } .bm-field input { font-size: 12px; padding: 7px 3px; }
+  }
+</style>
+</head>
+<body data-program="hyrox">
+
+<header class="appbar">
+  <div class="appbar-inner">
+    <a class="appbar-back" href="../" aria-label="Back to Exercise Library">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="10 3 5 8 10 13"/></svg>
+      Library
+    </a>
+    <div class="appbar-title">
+      <div class="eyebrow">Program</div>
+      <div class="name">Hyrox Home Engine</div>
+    </div>
+  </div>
+  <div class="appbar-accent"></div>
+</header>
+
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <span class="phase-badge" id="hero-phase">Base</span>
+        <h1 style="margin-top:6px">Hyrox Home Engine — 12 Weeks</h1>
+        <div class="hero-sub">4 days/week · low-impact cardio · home gym + travel mode</div>
+      </div>
+      <button class="reset-link" id="reset-btn" title="Reset all tracking">Reset</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num" id="stat-week">1</div><div class="stat-label">Current Week</div></div>
+      <div class="stat"><div class="stat-num" id="stat-sessions">0</div><div class="stat-label">Sessions Done</div></div>
+      <div class="stat"><div class="stat-num" id="stat-streak">0 / 4</div><div class="stat-label">This Week</div></div>
+      <div class="stat"><div class="stat-num" id="stat-pct">0%</div><div class="stat-label">Overall</div></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="travel-switch" id="travel-switch" title="Swap to hotel / travel substitutions">
+      <span class="sw"></span><span id="travel-label">✈️ Travel mode — off</span>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-pane="program">Program</button>
+    <button class="tab" data-pane="benchmarks">Benchmarks</button>
+    <button class="tab" data-pane="guide">Guide</button>
+    <button class="tab" data-pane="subs">Substitutions</button>
+  </div>
+
+  <!-- PROGRAM PANE -->
+  <div class="pane active" id="pane-program">
+    <div class="week-bar" id="week-bar"></div>
+    <div id="phase-info"></div>
+    <div id="days-container"></div>
+  </div>
+
+  <!-- BENCHMARKS PANE -->
+  <div class="pane" id="pane-benchmarks">
+    <div class="card">
+      <h2>Benchmarks &amp; progress charts</h2>
+      <p>Test these on <strong>Week 1</strong> (baseline), then re-test on the benchmark weeks — <strong>4, 8, and 12</strong>. The repeatable engine tests are charted so you can see the trend. The simulations aren't the same distance, so they're compared head-to-head separately.</p>
+      <div class="note-box" style="margin:10px 0 0"><strong>Time format:</strong> enter as <code>m:ss</code> (e.g. <code>8:05</code>) or plain seconds. Reps as a number.</div>
+    </div>
+
+    <h4 style="margin:16px 4px 8px">Repeatable engine tests — charted Wk 1 → 12</h4>
+    <div id="bm-repeatable"></div>
+
+    <h4 style="margin:18px 4px 8px">Simulation times — head-to-head</h4>
+    <div class="card" style="padding:14px 16px">
+      <div class="bm-head"><div class="bm-name">Half-Hyrox Simulation</div><div class="bm-unit">total time</div></div>
+      <div class="bm-goal">Day D of Weeks 4 &amp; 8 — same circuit both times.</div>
+      <div class="sim-grid" style="margin-top:10px">
+        <div class="sim-cell"><label>Week 4 — baseline</label><input data-sim="half" data-wk="4" type="text" placeholder="m:ss"></div>
+        <div class="sim-cell"><label>Week 8 — re-test</label><input data-sim="half" data-wk="8" type="text" placeholder="m:ss"></div>
+      </div>
+      <div class="bm-delta flat" id="delta-half">Enter both to see your improvement.</div>
+    </div>
+    <div class="card" style="padding:14px 16px">
+      <div class="bm-head"><div class="bm-name">Full Hyrox Simulation</div><div class="bm-unit">total time</div></div>
+      <div class="bm-goal">Day D of Week 11 (peak effort) &amp; Week 12 (race day).</div>
+      <div class="sim-grid" style="margin-top:10px">
+        <div class="sim-cell"><label>Week 11 — peak</label><input data-sim="full" data-wk="11" type="text" placeholder="m:ss"></div>
+        <div class="sim-cell"><label>Week 12 — race day</label><input data-sim="full" data-wk="12" type="text" placeholder="m:ss"></div>
+      </div>
+      <div class="bm-delta flat" id="delta-full">Enter both to see your improvement.</div>
+    </div>
+  </div>
+
+  <!-- GUIDE PANE -->
+  <div class="pane" id="pane-guide">
+    <div class="card">
+      <h2>How the 12 weeks are built</h2>
+      <p>A periodized build toward Hyrox-style fitness using your home gym, with every run swapped for low-impact cardio so your hips stay happy. Three phases, four sessions a week, 45–60 minutes each.</p>
+      <div class="phase-summary"><div class="phase-num">1</div><div class="phase-text"><strong>Base · Weeks 1–4.</strong> Aerobic base, movement quality, hip prep, strength-endurance foundation. Wk 4 = first Half-Hyrox benchmark.</div></div>
+      <div class="phase-summary" style="margin-top:8px"><div class="phase-num">2</div><div class="phase-text"><strong>Build · Weeks 5–8.</strong> Threshold engine, sled-substitute power, heavier strength-endurance. Wk 8 = repeat the Half-Hyrox and chase your baseline.</div></div>
+      <div class="phase-summary" style="margin-top:8px"><div class="phase-num">3</div><div class="phase-text"><strong>Peak · Weeks 9–12.</strong> Full simulations, race-pace pacing &amp; transitions, then taper. Wk 11 peak sim, Wk 12 final race-day sim.</div></div>
+
+      <h3>The four-day week</h3>
+      <div class="info-grid">
+        <div class="info-cell"><h4>Day A</h4><p>Lower strength + a sled-substitute / engine primer.</p></div>
+        <div class="info-cell"><h4>Day B</h4><p>Low-impact engine — Zone 2 in Base, threshold &amp; race-pace later.</p></div>
+        <div class="info-cell"><h4>Day C</h4><p>Upper strength + pull (sled-pull pattern) + wall-ball volume.</p></div>
+        <div class="info-cell"><h4>Day D</h4><p>The long day — compromised cardio &amp; Hyrox simulations.</p></div>
+      </div>
+
+      <h3>Why no running (and when you do run)</h3>
+      <p>The 8×1&nbsp;km runs are replaced with Airbike and rowing efforts — same "compromised running" cardio stimulus, none of the pounding your hips don't love. <strong>Running stays as a weekend thing on the basketball court</strong>, not a programmed weekday load. If you ever want a run, the treadmill incline power-walk is the only foot-strike option built in, and it's always optional.</p>
+
+      <div class="note-box"><strong>Want a shorter block?</strong> Stop at Week 8 (run Phases 1–2, treat the Wk 8 benchmark as your finish line) for an 8-week version, or add the first two Peak weeks for a 10-week version.</div>
+
+      <h3>How to load</h3>
+      <ul>
+        <li><strong>RPE 7</strong> = ~3 reps left. Your default strength working zone early on.</li>
+        <li><strong>RPE 8</strong> = ~2 reps left. Build-phase strength target.</li>
+        <li>Add ~2.5–5% load when all prescribed reps are clean at the target tempo.</li>
+        <li>Station weight goals = Hyrox Men's Open: farmers carry <strong>2×24&nbsp;kg</strong>, sandbag <strong>20&nbsp;kg</strong>, wall ball <strong>6&nbsp;kg / 100 reps</strong>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SUBSTITUTIONS PANE -->
+  <div class="pane" id="pane-subs">
+    <div class="card">
+      <h2>Station substitution guide</h2>
+      <p>No sled and no SkiErg at home — here's how each of the 8 stations is trained, and how it swaps again on the road. Flip <strong>Travel mode</strong> on the Program tab to see hotel versions inline on every exercise.</p>
+      <table class="sub-table">
+        <tr><th>Station</th><th>Open standard</th><th>Home build &amp; travel</th></tr>
+        <tr><td><b>SkiErg</b> 1000m</td><td>Bodyweight erg</td><td><span class="home">Concept2 Row 1000m + banded straight-arm pulldowns for the pull pattern</span><span class="trav">✈ Rower / elliptical, or DB straight-arm pullovers</span></td></tr>
+        <tr><td><b>Sled Push</b> 50m</td><td>152kg incl. sled</td><td><span class="home">Airbike max-effort intervals (metabolic match) + banded forward drag</span><span class="trav">✈ DB thrusters + incline treadmill power-walk</span></td></tr>
+        <tr><td><b>Sled Pull</b> 50m</td><td>103kg incl. sled</td><td><span class="home">Banded hand-over-hand drag + heavy bent rows</span><span class="trav">✈ DB / backpack rows + band pulls</span></td></tr>
+        <tr><td><b>Burpee Broad Jump</b> 80m</td><td>Bodyweight</td><td><span class="home">Burpee broad jumps — full reps, you're good on these</span><span class="trav">✈ Same — bodyweight anywhere</span></td></tr>
+        <tr><td><b>Row</b> 1000m</td><td>Bodyweight erg</td><td><span class="home">Concept2 Rower — your real station, train it hard</span><span class="trav">✈ Hotel rower or bike intervals</span></td></tr>
+        <tr><td><b>Farmers Carry</b> 200m</td><td>2×24kg</td><td><span class="home">KB/DB carries — build to 2×24kg (53lb)</span><span class="trav">✈ Heavy DBs or loaded backpack</span></td></tr>
+        <tr><td><b>Sandbag Lunges</b> 100m</td><td>20kg</td><td><span class="home">Sandbag walking lunges (on shoulders/back) — build to 20kg</span><span class="trav">✈ Loaded-backpack walking lunges</span></td></tr>
+        <tr><td><b>Wall Balls</b> 100 reps</td><td>6kg to 3.0m</td><td><span class="home">Wall ball 6kg/14lb — chase 100 unbroken</span><span class="trav">✈ DB thrusters (1 = 1 rep)</span></td></tr>
+      </table>
+      <div class="note-box"><strong>The sled, solved 3 ways:</strong> Airbike intervals reproduce the anaerobic cost of a sled push; banded hand-over-hand drags replicate the sled-pull motor pattern; heavy loaded carries build the same grip + leg-drive base. The program rotates all three so nothing's missed.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ===========================================================================
+   PROGRAM DATA — generated per phase, with home + travel prescriptions
+   =========================================================================== */
+const VIDEO_BASE = "https://www.youtube.com/results?search_query=";
+function v(q){ return VIDEO_BASE + encodeURIComponent(q); }
+/* item: name, tag, rx(home), travel, q(video) */
+function I(name, tag, rx, travel, q){ return { name, tag, rx, travel, q: q || (name + " exercise form") }; }
+
+function basePhase(wp){
+  const d = wp===4;
+  const sqRx   = ["3×8 @ RPE 6","4×8 @ RPE 6.5","4×8 @ RPE 7","Deload 3×6 @ RPE 5"][wp-1];
+  const rowFin = ["4×500m @ moderate, 90s rest","4×500m @ moderate, 75s rest","5×500m @ moderate, 75s rest","3×500m easy"][wp-1];
+  const z2     = ["5 rounds (3min Row Z2 / 2min Airbike Z2) — 25min","6 rounds — 30min","7 rounds — 35min","4 rounds easy — 20min"][wp-1];
+  const pull   = ["4×5","4×6","4×7","Deload 3×5"][wp-1];
+  const wbA    = ["4×20 reps","4×22 reps","4×25 reps","3×15 reps"][wp-1];
+  const longD  = d
+    ? "BENCHMARK — Half-Hyrox sim, record total time: 500m Airbike → 500m Row → 500m Airbike → 25m band drag → 500m Airbike → 40 wall balls → 500m Airbike → 100m farmers carry → 50m walking lunges → 50 wall balls."
+    : ([
+        "3 rounds, rest 2–3min: 800m Row · 20 wall balls · 600m Airbike · 20m sandbag walking lunges · 40m farmers carry",
+        "3 rounds, rest 2–3min: 800m Row · 25 wall balls · 700m Airbike · 20m walking lunges · 50m farmers carry",
+        "4 rounds, rest 2min: 800m Row · 25 wall balls · 600m Airbike · 20m walking lunges · 50m farmers carry",
+      ][wp-1]);
+  return [
+    { tag:"A", name:"Lower Strength + Engine Primer", focus:"Legs · posterior chain · aerobic", blocks:[
+      { label:"Warm-up & hip prep", items:[
+        I("Airbike easy","warm","5 min, Zone 1","Bike / brisk incline-walk 5 min","airbike easy warmup"),
+        I("Hip prep","mob","Banded clamshells 2×15/side · lateral band walks 2×10/side · leg swings 10/side","Same — bodyweight, no gear","banded clamshell lateral walk hip"),
+      ]},
+      { label:"Strength", items:[
+        I("Back Squat","str",sqRx,"DB Goblet Squat 3×10","barbell back squat"),
+        I("Romanian Deadlift","str",d?"2×10 light":"3×10 @ RPE 7","DB RDL 3×10","romanian deadlift barbell"),
+        I("KB Swing","str",d?"3×12":"4×15","DB swing / sumo DL 4×12","kettlebell swing"),
+      ]},
+      { label:"Station strength-endurance", items:[
+        I("Sandbag Walking Lunges","sta",d?"3×15m":"4×20m — sandbag on shoulders/back, build to 20kg","Backpack walking lunges 4×20m","sandbag walking lunge"),
+      ]},
+      { label:"Engine finisher", items:[
+        I("Row intervals","eng",rowFin,"Hotel rower/bike: 4×500m or 4×90s hard","concept2 rower 500m intervals"),
+      ]},
+    ]},
+    { tag:"B", name:"Low-Impact Aerobic Base", focus:"Zone 2 engine · core", blocks:[
+      { label:"Warm-up", items:[ I("Easy Row","warm","5 min building","Easy bike/elliptical 5 min","rowing warmup") ]},
+      { label:"Main — keep it conversational (Zone 2)", items:[
+        I("Row / Airbike alternation","eng",z2,"Treadmill incline walk + bike, same total time, Zone 2","zone 2 cardio rowing airbike"),
+      ]},
+      { label:"Accessory", items:[
+        I("Banded Straight-Arm Pulldown (SkiErg pattern)","sta","3×20","DB straight-arm pullover 3×15","band straight arm pulldown skierg"),
+        I("Core","sta","Hollow hold 3×30s + side plank 3×30s/side","Same","hollow hold side plank"),
+      ]},
+    ]},
+    { tag:"C", name:"Upper / Total Strength + Pull", focus:"Push · pull · sled-pull pattern", blocks:[
+      { label:"Warm-up", items:[ I("Airbike + activation","warm","5 min + band pull-aparts 2×15 + scap pull-ups 2×8","Bike + band pull-aparts","band pull apart scap pullup") ]},
+      { label:"Strength", items:[
+        I("Pull-ups (band-assist ok)","str",pull,"DB rows 4×10 or band rows","pull up"),
+        I("DB Bench / Overhead Press","str","4×8 @ RPE 7","DB floor press 4×8","dumbbell bench press"),
+        I("Bent-over Barbell Row","str","4×10 @ RPE 7","DB single-arm row 4×10/side","bent over barbell row"),
+      ]},
+      { label:"Sled-pull substitute", items:[
+        I("Band Hand-over-Hand Drag","sled",d?"3×15m":"4×15m — walk back, pull steady","Band/backpack hand-over-hand drag 4×15m","band sled pull hand over hand"),
+      ]},
+      { label:"Wall ball + carry", items:[
+        I("Wall Balls","sta",wbA+" @ 6kg/14lb","DB thrusters "+wbA,"wall ball shot crossfit"),
+        I("Farmers Carry","sta",d?"3×40m":"4×40m heavy","Heavy DB / backpack carry 4×40m","farmers carry kettlebell"),
+      ]},
+    ]},
+    { tag:"D", name: d?"BENCHMARK — Half-Hyrox Sim":"Hyrox Mixed Conditioning", focus: d?"Record your baseline time":"Compromised cardio · long day (50–60min)", blocks:[
+      { label:"Warm-up", items:[ I("Progressive Row + dynamic","warm","5 min","Bike + dynamic 5 min","dynamic warmup full body") ]},
+      { label: d?"Benchmark — go hard, log it on the Benchmarks tab":"Main circuit", items:[
+        I(d?"Half-Hyrox Simulation":"Conditioning rounds", d?"bench":"eng", longD, "Swap machines for what the hotel has; keep the structure","hyrox simulation workout"),
+      ]},
+      { label:"Cooldown", items:[ I("Hip mobility","mob","Figure-4 + hip flexor stretch 5 min","Same","hip mobility cooldown") ]},
+    ]},
+  ];
+}
+
+function buildPhase(wp){
+  const d = wp===4;
+  const sqRx = ["4×6 @ RPE 7","5×5 @ RPE 7.5","4×5 @ RPE 8","Deload 3×5 @ RPE 6"][wp-1];
+  const bikeSprint=["6×30s hard / 90s easy","7×30s hard / 90s easy","8×30s hard / 90s easy","4×20s easy"][wp-1];
+  const thresh=["4×1000m Row @ threshold, rest = work","5×1000m Row @ threshold, rest = work","3×(1000m Row + 1000m Airbike) continuous, 60s between","3×750m Row easy"][wp-1];
+  const wb=["5×20","4×25","3×30 (chase unbroken)","3×20 deload"][wp-1];
+  const wpull=["4×5","4×5 +load","4×4 +load","3×5 light"][wp-1];
+  const longD = d
+    ? "BENCHMARK — repeat the Week 4 Half-Hyrox sim, same order, compare your time. Aim to beat baseline."
+    : ([
+        "Half-Hyrox circuit, steady: 1000m Airbike → 500m Row → 1000m Airbike → 25m band drag + 25m sandbag drag → 1000m Airbike → 50 wall balls → 1000m Airbike → 100m farmers carry → 50m walking lunges",
+        "Same circuit, push pace on the Airbike legs (treat as race 'runs')",
+        "Same circuit + add 1000m Airbike + 25 wall balls to the end",
+      ][wp-1]);
+  return [
+    { tag:"A", name:"Lower Strength + Sled-Push Sub", focus:"Strength · anaerobic power", blocks:[
+      { label:"Warm-up & hip prep", items:[ I("Airbike + hip prep","warm","5 min + clamshells / lateral walks","Bike + band hip prep","hip prep warmup") ]},
+      { label:"Strength", items:[
+        I("Back Squat","str",sqRx,"DB Goblet/Front Squat 4×6","barbell back squat"),
+        I("Bulgarian Split Squat","str",d?"2×8/leg":"3×8/leg","DB Bulgarian split squat 3×8/leg","bulgarian split squat"),
+      ]},
+      { label:"Sled-push substitute combo", items:[
+        I("Airbike Sprint Intervals (sled metabolic match)","sled",bikeSprint,"Hotel bike sprints, or DB thrusters 6×10","airbike sprint intervals"),
+        I("Banded Forward Drag","sled",d?"3×20m":"4×20m drive forward","Backpack-loaded incline walk 4×40m","band resisted forward march drag"),
+      ]},
+    ]},
+    { tag:"B", name:"Threshold Engine", focus:"Lactate threshold · the Hyrox engine", blocks:[
+      { label:"Warm-up", items:[ I("Easy Row","warm","6 min progressive","Easy bike 6 min","rowing warmup") ]},
+      { label:"Main", items:[ I("Threshold intervals","eng",thresh,"Hotel rower/bike: match work:rest, threshold effort","rowing threshold intervals 1000m") ]},
+      { label:"Accessory", items:[
+        I("Banded Pulldowns (ski pattern)","sta","4×20","DB pullover 4×15","band straight arm pulldown"),
+        I("Hanging Knee Raises","sta","3×12","Lying leg raises 3×15","hanging knee raise"),
+      ]},
+    ]},
+    { tag:"C", name:"Upper Strength + Sled-Pull Power + Wall Balls", focus:"Pull power · wall-ball volume", blocks:[
+      { label:"Warm-up", items:[ I("Airbike + activation","warm","5 min + pull-aparts","Bike + band pull-aparts","band pull apart") ]},
+      { label:"Strength", items:[
+        I("Weighted Pull-ups","str",wpull,"DB rows 4×8 / band rows","weighted pull up"),
+        I("Overhead Press","str",d?"3×5 light":"5×5 @ RPE 7.5","DB shoulder press 5×6","standing overhead press barbell"),
+        I("Pendlay / Barbell Row","str","4×8","DB row 4×8/side","pendlay row"),
+      ]},
+      { label:"Sled-pull substitute", items:[ I("Heavy Band Hand-over-Hand Drag","sled",d?"4×15m light":"6×15m heavy","Backpack hand-over-hand drag 6×15m","band sled pull hand over hand") ]},
+      { label:"Wall balls + carry", items:[
+        I("Wall Balls","sta",wb+" @ 6kg — chase 100 unbroken goal","DB thrusters, same reps","wall ball shots"),
+        I("Farmers Carry","sta","4×50m heavy","Heavy DB/backpack carry 4×50m","farmers carry"),
+      ]},
+    ]},
+    { tag:"D", name: d?"BENCHMARK — Half-Hyrox Sim #2":"Hyrox Simulation (half distance)", focus: d?"Beat your Week 4 time":"Race practice · pacing", blocks:[
+      { label:"Warm-up", items:[ I("Progressive Row + dynamic","warm","6 min","Bike + dynamic 6 min","dynamic warmup") ]},
+      { label: d?"Benchmark — log it on the Benchmarks tab vs Week 4":"Simulation", items:[
+        I(d?"Half-Hyrox Simulation #2":"Half-Hyrox circuit", d?"bench":"eng", longD, "Sub hotel machines, keep the order & efforts","hyrox half simulation"),
+      ]},
+      { label:"Cooldown", items:[ I("Hip mobility","mob","Figure-4 + hip flexor 5 min","Same","hip mobility cooldown") ]},
+    ]},
+  ];
+}
+
+function peakPhase(wp){
+  const t = wp===4;
+  const sqRx=["4×4 @ RPE 8","4×4 @ RPE 8","3×3 @ RPE 8","Taper 2×3 light, snappy"][wp-1];
+  const bikePow=["8×20s max / 100s easy","8×20s max / 100s easy","6×20s max / 100s easy","Taper 4×15s easy"][wp-1];
+  const racePace=[
+    "6×(500m Row @ race pace / 15 wall balls), 60s between",
+    "8×(500m Row @ race pace / 15 wall balls), 60s between",
+    "5×(1000m Airbike @ race pace / 20 wall balls), 75s between",
+    "Taper: 3×(500m easy / 15 wall balls)"
+  ][wp-1];
+  const fullSim=[
+    "FULL Hyrox simulation @ ~80% — settle into pacing & transitions, record time",
+    "FULL Hyrox simulation @ ~90% — sharpen transitions ('RoxZone'), record time",
+    "FULL Hyrox simulation @ 95–100% — PEAK BENCHMARK, leave it all out there",
+    "RACE DAY: FINAL FULL Hyrox simulation — go all out, record your final time"
+  ][wp-1];
+  return [
+    { tag:"A", name:"Strength Maintenance + Power", focus:"Keep strength · explosive power", blocks:[
+      { label:"Warm-up & hip prep", items:[ I("Airbike + hip prep","warm","5 min","Bike + band hip prep","hip prep warmup") ]},
+      { label:"Strength", items:[
+        I("Back Squat","str",sqRx,"DB Front Squat, same scheme","barbell back squat"),
+        I("Trap-bar / Conventional Deadlift","str",t?"2×3 light":"3×3 @ RPE 8","DB RDL 3×6","trap bar deadlift"),
+      ]},
+      { label:"Sled-push power sub", items:[ I("Airbike Power Intervals","sled",bikePow,"Hotel bike sprints or DB thrusters 6×8","airbike power sprint") ]},
+    ]},
+    { tag:"B", name:"Race-Pace Engine Intervals", focus:"Goal pace · compromised wall balls", blocks:[
+      { label:"Warm-up", items:[ I("Easy Row","warm","6 min","Easy bike 6 min","rowing warmup") ]},
+      { label:"Main — hold realistic race pace", items:[ I("Race-pace intervals","eng",racePace,"Hotel rower/bike + DB thrusters, same structure","rowing race pace intervals") ]},
+      { label:"Accessory", items:[ I("Core circuit","sta",t?"Light: plank 3×30s":"Hollow + side plank + hanging knee raise, 3 rounds","Same","core circuit") ]},
+    ]},
+    { tag:"C", name: t?"Light Technique + Mobility":"Strength-Endurance Circuit + Pull", focus: t?"Stay fresh — light only":"Station strength-endurance", blocks:
+      t
+      ? [
+          { label:"Technique", items:[
+            I("Wall ball technique","sta","3×15 smooth, perfect depth & catch","DB thrusters 3×15 light","wall ball technique"),
+            I("Movement rehearsal","sta","Light band drags + 2×40m carry, easy","Light carries only","movement rehearsal"),
+          ]},
+          { label:"Pull maintenance", items:[ I("Pull-ups","str","2×5 easy","DB rows 4×8","pull up") ]},
+        ]
+      : [
+          { label:"Warm-up", items:[ I("Airbike + activation","warm","5 min","Bike + pull-aparts","band pull apart") ]},
+          { label:"Giant set — 3 rounds, minimal rest", items:[
+            I("Band Drag","sled","20m","Backpack drag 20m","band sled drag"),
+            I("Sandbag Walking Lunges","sta","20m on shoulders/back","Backpack walking lunges 20m","sandbag walking lunge"),
+            I("Farmers Carry","sta","50m heavy","Heavy DB carry 50m","farmers carry"),
+            I("Wall Balls","sta","25 reps","DB thrusters 25","wall ball shots"),
+          ]},
+          { label:"Pull maintenance", items:[ I("Pull-ups","str","4×6","DB rows 4×8","pull up") ]},
+        ]
+    },
+    { tag:"D", name: t?"FINAL FULL Hyrox — Race Day":"FULL Hyrox Simulation", focus: t?"Your finish line — go all out":"Whole-race practice · record time", blocks:[
+      { label:"Warm-up", items:[ I("Full progressive warm-up","warm","8–10 min row/bike + dynamic + hip prep","Bike + dynamic + hip prep","full body warmup") ]},
+      { label: t?"RACE — empty the tank, log it on Benchmarks":"Simulation — full distance, low-impact", items:[
+        I("Full Hyrox (low-impact)", (wp>=3?"bench":"eng"), fullSim+":", "Sub hotel machines for each leg","hyrox full simulation"),
+        I("→ Race order","eng","Airbike(run) → Row 1000m(ski) → Airbike → 50m band+sandbag drag(sleds) → Airbike → 80m burpee broad jumps → Airbike → Row 1000m → Airbike → 200m farmers carry → Airbike → 100m walking lunges → Airbike → 100 wall balls","Same order, hotel-equipment subs","hyrox race order stations"),
+      ]},
+      { label:"Cooldown", items:[ I("Full mobility","mob","10 min, hips priority","Same","hip mobility cooldown") ]},
+    ]},
+  ];
+}
+
+const PHASES = [
+  { id:1, name:"Base", weeks:[1,2,3,4], fn:basePhase,
+    overview:"Aerobic base, movement quality, hip prep, and a strength-endurance foundation.",
+    progression:[
+      "Week 1 — Establish baselines. Pick loads at RPE 6–7, form first. Run your Week-1 benchmark tests.",
+      "Week 2 — Add a little to squat/RDL if clean. Engine volume steps up.",
+      "Week 3 — Heaviest base week. Push the Zone 2 duration.",
+      "Week 4 — Lighter strength + first Half-Hyrox benchmark on Day D. Log the time."
+    ]},
+  { id:2, name:"Build", weeks:[5,6,7,8], fn:buildPhase,
+    overview:"Threshold engine, sled-substitute power, heavier strength-endurance, compromised cardio.",
+    progression:[
+      "Week 5 — Strength gets heavier (lower reps). Intro Airbike sled-sprints.",
+      "Week 6 — Add load + an interval. Wall-ball volume climbs.",
+      "Week 7 — Peak build week — longest threshold piece, heaviest drags.",
+      "Week 8 — Lighter strength + repeat the Half-Hyrox benchmark. Chase Week 4."
+    ]},
+  { id:3, name:"Peak", weeks:[9,10,11,12], fn:peakPhase,
+    overview:"Full simulations, race-pace pacing & transitions, then taper to a final effort.",
+    progression:[
+      "Week 9 — First full simulation at ~80%. Learn the pacing and transitions.",
+      "Week 10 — Full sim at ~90%. Sharpen the 'RoxZone' transitions.",
+      "Week 11 — Peak benchmark: full sim at 95–100%. Empty the tank.",
+      "Week 12 — Taper all week, then the final race-day full simulation. Finish line."
+    ]},
+];
+
+/* Pre-generate all 12 weeks */
+const WEEKS = [];
+PHASES.forEach(ph => ph.weeks.forEach((wk, i) => {
+  WEEKS[wk] = { week: wk, phase: ph, wp: i+1, days: ph.fn(i+1), bench: (i+1)===4 };
+}));
+const BENCH_WEEKS = [4, 8, 11, 12];
+
+/* ===========================================================================
+   BENCHMARK CONFIG
+   =========================================================================== */
+const REPEATABLE = [
+  { id:"row2k",   name:"2,000m Row time trial", unit:"time", goal:"Engine ceiling. All-out 2k on the Concept2.", better:"down" },
+  { id:"bike4",   name:"Airbike — 4 min max calories", unit:"reps", goal:"Anaerobic engine. Total calories in 4 minutes.", better:"up" },
+  { id:"wbmax",   name:"Max unbroken Wall Balls", unit:"reps", goal:"Strength-endurance. 6kg/14lb to target height.", better:"up" },
+  { id:"farm",    name:"100m Farmers Carry (timed)", unit:"time", goal:"At your working weight — note the load in seconds.", better:"down" },
+];
+const BM_COLS = [1, 4, 8, 12];
+
+/* ===========================================================================
+   STATE
+   =========================================================================== */
+const STORAGE_KEY = "hyrox_home_v1";
+let state = loadState();
+function loadState(){
+  try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) return JSON.parse(raw); } catch(e){}
+  return { currentWeek:1, travel:false, completed:{}, logs:{}, expanded:{}, bench:{}, sim:{} };
+}
+function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} updateStats(); }
+
+/* ===========================================================================
+   TIME HELPERS
+   =========================================================================== */
+function parseVal(s){
+  if (s == null) return null;
+  s = String(s).trim();
+  if (!s) return null;
+  if (s.indexOf(":") >= 0){
+    const p = s.split(":");
+    const m = parseFloat(p[0]) || 0, sec = parseFloat(p[1]) || 0;
+    return m*60 + sec;
+  }
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+function fmtTime(totalSec){
+  if (totalSec == null) return "—";
+  const m = Math.floor(totalSec/60), s = Math.round(totalSec%60);
+  return m + ":" + String(s).padStart(2,"0");
+}
+function escapeAttr(s){ return String(s||"").replace(/"/g,"&quot;"); }
+function escapeHtml(s){ return String(s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+/* ===========================================================================
+   RENDER — PROGRAM
+   =========================================================================== */
+function renderWeekBar(){
+  const bar = document.getElementById("week-bar");
+  bar.innerHTML = "";
+  for (let wk=1; wk<=12; wk++){
+    const w = WEEKS[wk];
+    const done = isWeekComplete(wk);
+    const isBench = BENCH_WEEKS.includes(wk);
+    const btn = document.createElement("button");
+    btn.className = "week-pill" + (wk===state.currentWeek?" active":"") + (done?" done":"") + (isBench?" bench":"");
+    btn.innerHTML = `<span class="wk-label">${isBench?"★ Wk":"Wk"}</span><span class="wk-num">${wk}</span>`;
+    btn.onclick = () => { state.currentWeek = wk; saveState(); renderProgram(); };
+    bar.appendChild(btn);
+  }
+}
+function renderPhaseInfo(){
+  const w = WEEKS[state.currentWeek];
+  const ph = w.phase;
+  const guidance = ph.progression[w.wp-1] || "";
+  document.getElementById("phase-info").innerHTML = `
+    <div class="card" style="padding:14px 16px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px">
+        <h2>${ph.name} Phase</h2>
+        <span class="phase-badge">Week ${w.week}</span>
+      </div>
+      <p style="font-size:12.5px;color:var(--text-body);margin-bottom:8px">${ph.overview}</p>
+      <div class="note-box" style="margin:0"><strong>This week:</strong> ${guidance}</div>
+    </div>`;
+}
+function renderDays(){
+  const w = WEEKS[state.currentWeek];
+  const container = document.getElementById("days-container");
+  container.innerHTML = "";
+  w.days.forEach((day, di) => {
+    const dayId = `${w.week}_${di}`;
+    const isExpanded = state.expanded[dayId] !== false;
+    const total = countItems(day);
+    const completed = countCompleted(w.week, di, day);
+    const full = completed === total;
+    const el = document.createElement("div");
+    el.className = "day" + (isExpanded ? "" : " collapsed");
+    el.innerHTML = `
+      <div class="day-header">
+        <div class="day-title">
+          <div class="day-name"><span style="color:var(--primary);font-weight:800">${day.tag}</span> · ${day.name}</div>
+          <div class="day-focus">${day.focus}</div>
+        </div>
+        <div class="day-meta">
+          <span class="day-chip ${full?"complete":""}">${completed} / ${total}</span>
+          <span class="caret">▼</span>
+        </div>
+      </div>
+      <div class="day-body"></div>`;
+    el.querySelector(".day-header").onclick = () => { state.expanded[dayId] = !isExpanded; saveState(); renderDays(); };
+    const body = el.querySelector(".day-body");
+    let idx = 0;
+    day.blocks.forEach(block => {
+      const lab = document.createElement("h4");
+      lab.style.margin = "12px 0 2px"; lab.textContent = block.label;
+      body.appendChild(lab);
+      block.items.forEach(item => { body.appendChild(renderExercise(item, w.week, di, idx)); idx++; });
+    });
+    container.appendChild(el);
+  });
+}
+function renderExercise(item, wk, di, idx){
+  const key = `${wk}_${di}_${idx}`;
+  const isDone = !!state.completed[key];
+  const log = state.logs[key] || { val:"", notes:"" };
+  const el = document.createElement("div");
+  el.className = "exercise";
+  el.innerHTML = `
+    <div class="ex-row">
+      <div class="ex-check ${isDone?"done":""}">
+        <svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8 7 12 13 4"></polyline></svg>
+      </div>
+      <div class="ex-info">
+        <div><span class="ex-tag ${item.tag}">${tagLabel(item.tag)}</span><span class="ex-name">${escapeHtml(item.name)}</span></div>
+        <div class="ex-prescription">${escapeHtml(item.rx)}</div>
+        ${item.travel?`<div class="ex-travel"><b>✈ Travel:</b> ${escapeHtml(item.travel)}</div>`:""}
+        <div class="ex-actions">
+          <a class="btn" href="${v(item.q)}" target="_blank" rel="noopener">▶ Video</a>
+          <button class="btn log-toggle">✎ Log</button>
+        </div>
+        <div class="ex-log">
+          <div class="log-row"><input type="text" class="log-val" placeholder="Weight / time / reps" value="${escapeAttr(log.val)}"></div>
+          <textarea class="log-notes" placeholder="How it felt, RPE, pace, cues...">${escapeHtml(log.notes)}</textarea>
+        </div>
+      </div>
+    </div>`;
+  el.querySelector(".ex-check").onclick = () => { state.completed[key] = !isDone; saveState(); renderDays(); };
+  el.querySelector(".log-toggle").onclick = () => el.querySelector(".ex-log").classList.toggle("open");
+  if (log.val || log.notes) el.querySelector(".ex-log").classList.add("open");
+  el.querySelector(".log-val").addEventListener("input", e => { if(!state.logs[key]) state.logs[key]={val:"",notes:""}; state.logs[key].val=e.target.value; saveState(); });
+  el.querySelector(".log-notes").addEventListener("input", e => { if(!state.logs[key]) state.logs[key]={val:"",notes:""}; state.logs[key].notes=e.target.value; saveState(); });
+  return el;
+}
+function tagLabel(t){ return ({str:"Strength",eng:"Engine",sled:"Sled Sub",sta:"Station",warm:"Warm-Up",mob:"Mobility",bench:"Benchmark"}[t])||t; }
+
+function countItems(day){ let n=0; day.blocks.forEach(b=>n+=b.items.length); return n; }
+function countCompleted(wk, di, day){ let c=0,idx=0; day.blocks.forEach(b=>b.items.forEach(()=>{ if(state.completed[`${wk}_${di}_${idx}`])c++; idx++; })); return c; }
+function isDayComplete(wk, di){ const day=WEEKS[wk].days[di]; return countCompleted(wk,di,day)===countItems(day); }
+function isWeekComplete(wk){ return WEEKS[wk].days.every((_,di)=>isDayComplete(wk,di)); }
+
+function updateStats(){
+  const w = WEEKS[state.currentWeek];
+  document.getElementById("hero-phase").textContent = w.phase.name;
+  document.getElementById("stat-week").textContent = state.currentWeek;
+  let sessions=0, thisWeek=0, totalEx=0, doneEx=0;
+  for (let wk=1; wk<=12; wk++){
+    WEEKS[wk].days.forEach((day,di)=>{
+      if (isDayComplete(wk,di)){ sessions++; if(wk===state.currentWeek) thisWeek++; }
+      let idx2=0;
+      day.blocks.forEach(b=>b.items.forEach(()=>{ totalEx++; if(state.completed[`${wk}_${di}_${idx2}`])doneEx++; idx2++; }));
+    });
+  }
+  document.getElementById("stat-sessions").textContent = sessions;
+  document.getElementById("stat-streak").textContent = thisWeek + " / 4";
+  const pct = totalEx ? Math.round(doneEx/totalEx*100) : 0;
+  document.getElementById("stat-pct").textContent = pct + "%";
+  document.getElementById("progress-fill").style.width = pct + "%";
+}
+
+/* ===========================================================================
+   RENDER — BENCHMARKS + CHARTS
+   =========================================================================== */
+function sparkline(points, better){
+  // points: [{label, val}] with val possibly null. Draws an SVG line chart.
+  const W=300, H=96, padL=8, padR=8, padT=14, padB=20;
+  const real = points.filter(p => p.val != null);
+  if (real.length === 0){
+    return `<div class="empty-hint">Enter at least one value to chart your trend.</div>`;
+  }
+  const vals = real.map(p=>p.val);
+  let min = Math.min(...vals), max = Math.max(...vals);
+  if (min === max){ min -= 1; max += 1; }
+  const span = max - min;
+  const n = points.length;
+  const x = i => padL + (n===1?0:(i/(n-1))*(W-padL-padR));
+  const y = val => padT + (1 - (val-min)/span) * (H-padT-padB);
+
+  // line path through real points (skip nulls but connect across)
+  let path = "", started=false, dots="", labels="";
+  points.forEach((p,i)=>{
+    const px = x(i);
+    if (p.val != null){
+      const py = y(p.val);
+      path += (started?" L ":"M ") + px.toFixed(1) + " " + py.toFixed(1);
+      started = true;
+      dots += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="3.5" fill="var(--primary)"/>`;
+      const disp = p.unit==="time" ? fmtTime(p.val) : (Number.isInteger(p.val)?p.val:p.val.toFixed(0));
+      labels += `<text x="${px.toFixed(1)}" y="${(py-8).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--text)">${disp}</text>`;
+    }
+    labels += `<text x="${px.toFixed(1)}" y="${H-6}" text-anchor="middle" font-size="9" fill="var(--muted)">Wk ${p.label}</text>`;
+  });
+  // baseline grid line
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img">
+    <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="var(--border)" stroke-width="1"/>
+    <path d="${path}" fill="none" stroke="var(--primary)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    ${dots}${labels}
+  </svg>`;
+}
+function deltaText(first, last, unit, better){
+  if (first == null || last == null) return { txt:"Log two tests to see change.", cls:"flat" };
+  const diff = last - first;
+  if (diff === 0) return { txt:"No change yet.", cls:"flat" };
+  const improved = better==="down" ? diff < 0 : diff > 0;
+  const mag = unit==="time" ? fmtTime(Math.abs(diff)) : Math.abs(diff);
+  const dir = better==="down" ? (diff<0?"faster":"slower") : (diff>0?"more":"fewer");
+  const pct = first!==0 ? Math.round(Math.abs(diff)/first*100) : 0;
+  return { txt:`${improved?"▲":"▼"} ${mag} ${dir} (${pct}%) vs. baseline`, cls: improved?"good":"bad" };
+}
+function renderBenchmarks(){
+  const host = document.getElementById("bm-repeatable");
+  host.innerHTML = "";
+  REPEATABLE.forEach(bm => {
+    const card = document.createElement("div");
+    card.className = "bm-card";
+    const points = BM_COLS.map(wk => ({ label:wk, unit:bm.unit, val: parseVal((state.bench[bm.id]||{})[wk]) }));
+    const firstReal = points.find(p=>p.val!=null);
+    const lastReal = [...points].reverse().find(p=>p.val!=null);
+    const d = (firstReal && lastReal && firstReal!==lastReal) ? deltaText(firstReal.val, lastReal.val, bm.unit, bm.better) : {txt:"Log two tests to see change.",cls:"flat"};
+    card.innerHTML = `
+      <div class="bm-head"><div class="bm-name">${bm.name}</div><div class="bm-unit">${bm.unit==="time"?"lower = better":"higher = better"}</div></div>
+      <div class="bm-goal">${bm.goal}</div>
+      <div class="bm-inputs">
+        ${BM_COLS.map((wk,i)=>`
+          <div class="bm-field ${i===0?"baseline":""}">
+            <label>${i===0?"Wk1 base":"Wk "+wk}</label>
+            <input type="text" data-bm="${bm.id}" data-wk="${wk}" placeholder="${bm.unit==="time"?"m:ss":"#"}" value="${escapeAttr((state.bench[bm.id]||{})[wk]||"")}">
+          </div>`).join("")}
+      </div>
+      <div class="bm-chart">${sparkline(points, bm.better)}</div>
+      <div class="bm-delta ${d.cls}">${d.txt}</div>`;
+    card.querySelectorAll("input[data-bm]").forEach(inp=>{
+      inp.addEventListener("input", e=>{
+        const id=e.target.dataset.bm, wk=e.target.dataset.wk;
+        if(!state.bench[id]) state.bench[id]={};
+        state.bench[id][wk]=e.target.value;
+        saveState();
+        renderBenchmarks();
+      });
+    });
+    host.appendChild(card);
+  });
+  // sims
+  wireSimInputs();
+  renderSimDeltas();
+}
+function wireSimInputs(){
+  document.querySelectorAll("input[data-sim]").forEach(inp=>{
+    const sim=inp.dataset.sim, wk=inp.dataset.wk;
+    inp.value = (state.sim[sim]||{})[wk] || "";
+    inp.oninput = e => { if(!state.sim[sim]) state.sim[sim]={}; state.sim[sim][wk]=e.target.value; saveState(); renderSimDeltas(); };
+  });
+}
+function renderSimDeltas(){
+  const half = state.sim.half||{}, full = state.sim.full||{};
+  const dh = deltaText(parseVal(half[4]), parseVal(half[8]), "time", "down");
+  const df = deltaText(parseVal(full[11]), parseVal(full[12]), "time", "down");
+  const eh = document.getElementById("delta-half"), ef = document.getElementById("delta-full");
+  eh.textContent = dh.txt; eh.className = "bm-delta " + dh.cls;
+  ef.textContent = df.txt; ef.className = "bm-delta " + df.cls;
+}
+
+/* ===========================================================================
+   WIRING
+   =========================================================================== */
+function renderProgram(){ renderWeekBar(); renderPhaseInfo(); renderDays(); updateStats(); }
+function renderAll(){ renderProgram(); renderBenchmarks(); applyTravel(); }
+
+document.querySelectorAll(".tab").forEach(tab=>{
+  tab.onclick = () => {
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    document.querySelectorAll(".pane").forEach(p=>p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("pane-"+tab.dataset.pane).classList.add("active");
+  };
+});
+
+function applyTravel(){
+  document.body.classList.toggle("travel", !!state.travel);
+  document.getElementById("travel-label").textContent = state.travel ? "✈️ Travel mode — on (hotel subs)" : "✈️ Travel mode — off";
+}
+document.getElementById("travel-switch").onclick = () => { state.travel = !state.travel; saveState(); applyTravel(); };
+
+document.getElementById("reset-btn").onclick = () => {
+  if (confirm("Reset all Hyrox tracking? Checks, logs, and benchmark times will be cleared.")){
+    state = { currentWeek:1, travel:false, completed:{}, logs:{}, expanded:{}, bench:{}, sim:{} };
+    saveState(); renderAll();
+  }
+};
+
+renderAll();
+</script>
+</body>
+</html>

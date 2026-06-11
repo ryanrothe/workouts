@@ -1,14 +1,25 @@
 # Exercise Library
 
-One PWA that wraps three workout programs: **Achilles Rebuild**, **Athletic AF**, and **Hotel Workouts** (Madsen upper/lower split).
+One PWA that wraps six workout programs: **Hyrox Home Engine**, **Achilles Rebuild**, **Athletic AF**, **Hotel Workouts** (Madsen upper/lower split), **KB Shred**, and **Full Body Aesthetics**.
 
 Launcher at the root picks a program. Each sub-app keeps its own data, its own features, and its own per-program accent color — but they share one design system, one PWA shell, and one home-screen icon.
+
+## Programs
+
+| Program | Length | Cadence | Focus |
+|---|---|---|---|
+| **Hyrox Home Engine** | 12 weeks | 4×/week | Hyrox-style conditioning on a home gym. Low-impact cardio (no programmed running), creative sled substitutes, a travel/hotel mode that swaps every exercise inline, and a Benchmarks tab that charts engine tests across the test weeks. |
+| **Achilles Rebuild** | 12 weeks | 3×/week | Tendon-specific post-rupture rehab — isometrics, HSR, plyo progression, self-assessment. |
+| **Athletic AF** | 5 phases + Wk 17 | — | Strength + conditioning. Per-set logging, PR detection, plate calculator, history, export/import. |
+| **Hotel Workouts** | Upper / Lower | — | Madsen split. DB + bodyweight, travel-ready. |
+| **KB Shred** | 8 weeks | 4×/week | Adam Gooch kettlebell program. Full-body daily with supersets and conditioning circuits. |
+| **Full Body Aesthetics** | 64 weeks | 6×/week | Ryan Fischer DB program. Full body daily, cycling strength and hypertrophy. |
 
 ## Structure
 
 ```
 exercise-library/
-├── index.html              ← Launcher (3 program tiles)
+├── index.html              ← Launcher (6 program tiles; Hyrox first)
 ├── manifest.webmanifest    ← PWA manifest — installs as "Exercise Library"
 ├── sw.js                   ← Shared service worker (offline cache)
 ├── icon-180.png            ← Dumbbell icon — used by iOS Add to Home Screen
@@ -17,13 +28,21 @@ exercise-library/
 ├── favicon.png             ← Browser-tab favicon (64×64)
 ├── shared/
 │   └── styles.css          ← Design tokens + shared components (appbar, cards, buttons, day card, exercise rows)
+├── hyrox/
+│   └── index.html          ← Hyrox Home Engine — 12-week build, travel mode + benchmark charts (self-contained)
 ├── achilles/
 │   └── index.html          ← Achilles Rebuild — 12-week tendon rehab
 ├── athletic-af/
 │   ├── index.html          ← Athletic AF — re-skinned to light theme
 │   └── data.json           ← 5-phase + Week 17 program data
-└── hotel/
-    └── index.html          ← Hotel Workouts — Madsen upper/lower split
+├── hotel/
+│   └── index.html          ← Hotel Workouts — Madsen upper/lower split
+├── kb-shred/
+│   ├── index.html          ← KB Shred — 8-week kettlebell program
+│   └── data.json           ← Program data
+└── full-body-aesthetics/
+    ├── index.html          ← Full Body Aesthetics — 64-week DB program
+    └── data.json           ← Program data
 ```
 
 ## What changed vs. the three source repos
@@ -43,6 +62,7 @@ The merge **preserves all logged data**. Each sub-app keeps its original `localS
 
 | Sub-app | Key | What it holds |
 |---|---|---|
+| Hyrox | `hyrox_home_v1` | Current week, travel-mode flag, checked exercises, per-exercise logs, benchmark + simulation times |
 | Achilles | `achilles_program_v1` | Current week, checked exercises, weight/notes logs, self-assess scores |
 | Athletic AF | `athleticAF.v1` | Current week + day, per-set logs, full session history, PR records |
 | Hotel | `madsen_split_v1` | Sessions per workout (upper/lower) with checks + logs |

@@ -72,6 +72,11 @@ body[data-program="kb-shred"] {
   --primary-soft: #ecfdf5;
   --primary-line: #a7f3d0;
 }
+body[data-program="hyrox"] {
+  --primary:      #c8860a;     /* amber/gold — Hyrox (black + yellow identity) */
+  --primary-soft: #fbeecb;
+  --primary-line: #ecd28f;
+}
 body[data-program="launcher"] {
   --primary:      #1a1f2b;     /* neutral charcoal for the menu */
   --primary-soft: #eef0f4;

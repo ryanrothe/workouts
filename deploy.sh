@@ -43,17 +43,24 @@ fi
 
 cd "$REPO"
 
-if git diff --quiet && git diff --cached --quiet && [ -z "$(git status --porcelain)" ]; then
-  echo "→ No changes to deploy. Already up to date."
-  exit 0
+if [ -n "$(git status --porcelain)" ]; then
+  echo "→ Changed files:"
+  git status --short
+  git add -A
+  git commit -q -m "$MSG"
+  echo "→ Committed: $MSG"
+else
+  echo "→ No file changes."
 fi
 
-echo "→ Changed files:"
-git status --short
-
-git add -A
-git commit -q -m "$MSG"
-echo "→ Committed: $MSG"
+# Commits can already be sitting here unpushed — a clean tree is not "nothing to do".
+git fetch -q origin main
+if [ -z "$(git log origin/main..HEAD --oneline)" ]; then
+  echo "→ Nothing to push. Already up to date."
+  exit 0
+fi
+echo "→ Commits to push:"
+git log origin/main..HEAD --oneline
 
 echo "→ Pushing to GitHub..."
 git push -q origin main

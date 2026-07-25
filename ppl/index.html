@@ -118,6 +118,51 @@
   .ex-tag.calves { background: var(--accent-soft); color: var(--accent); }
   .ex-tag.core   { background: #f0f1f3; color: #6b7588; }
 
+  /* "Last:" reference + next-load suggestion */
+  .ex-hit-flag { font-weight: 700; }
+  .ex-hit-flag.yes { color: var(--success); }
+  .ex-hit-flag.no  { color: var(--danger); }
+
+  .ex-suggest {
+    display: inline-flex; align-items: center; gap: 5px;
+    margin-top: 5px;
+    border-radius: 6px;
+    padding: 4px 9px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    border: 1px solid transparent;
+    text-align: left;
+    line-height: 1.35;
+  }
+  .ex-suggest.up      { background: var(--success-soft); color: var(--success); border-color: var(--success-line); }
+  .ex-suggest.hold    { background: var(--card-2);       color: var(--text-body); border-color: var(--border); }
+  .ex-suggest.plateau { background: var(--warning-soft); color: var(--warning); border-color: #edd9a6; }
+  .ex-suggest:active { filter: brightness(0.96); }
+  .ex-suggest .sg-tap { font-weight: 600; opacity: 0.72; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* Log editor — weight + did-you-hit-the-range */
+  .log-weight-row { display: flex; align-items: center; gap: 6px; }
+  .log-weight-row .log-weight { flex: 1; min-width: 0; }
+  .log-weight-row .unit { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .hit-label { font-size: 11px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+  .hit-row { display: flex; gap: 6px; }
+  .hit-btn {
+    flex: 1;
+    border: 1px solid var(--border);
+    background: var(--card-2);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 8px 6px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .hit-btn.on-yes { background: var(--success-soft); color: var(--success); border-color: var(--success-line); }
+  .hit-btn.on-no  { background: var(--danger-soft);  color: var(--danger);  border-color: #f3c8c4; }
+
   /* Rest timer button */
   .btn-timer {
     font-variant-numeric: tabular-nums;
@@ -243,7 +288,14 @@
       <div class="card">
         <h2>How this tracker works</h2>
         <p>Six workouts, one per training day: <strong>Push A → Pull A → Legs A → Push B → Pull B → Legs B</strong>. Tap a tab to open that day. Inside it, hit <strong>+ New</strong> to start a dated session, check exercises off as you finish them, and tap <strong>✎ Log</strong> to record the weight you used.</p>
-        <p>The load you used last time shows up under each exercise, so you always know the number to beat. The <strong>Up Next</strong> stat tells you which day is due based on what you trained most recently — it rotates through the six, so a missed day doesn't throw off the cycle.</p>
+        <p>When you log, enter the weight and tap <strong>✓ Hit</strong> or <strong>✗ Missed</strong> — did every set land inside the prescribed rep range? That one tap is what drives the weight suggestions. Tap it again to clear it.</p>
+        <p>Next time you do that workout, the app does the progression math for you and shows a suggested load. Tap the suggestion to fill it in:</p>
+        <ul>
+          <li><strong>Green — "Try 190 lb":</strong> you hit the range last time, so it adds 5 lb.</li>
+          <li><strong>Grey — "Hold 185 lb, beat your reps":</strong> you missed, so the weight stays put. Per the program, you don't drop it.</li>
+          <li><strong>Amber — "Plateau: drop to 165 lb × 8-10":</strong> three logged sessions at the same weight with no successful one. It cuts ~10% and adds 2 reps to the range automatically.</li>
+        </ul>
+        <p>Suggestions only appear once there's a logged weight to work from, so bodyweight movements stay quiet until you start adding load to them. The <strong>Up Next</strong> stat tells you which day is due based on what you trained most recently — it rotates through the six, so a missed day doesn't throw off the cycle.</p>
         <p>Rest timers are pre-set per exercise: <strong>2 min</strong> on squats and deadlifts, <strong>90s</strong> on the main lifts, <strong>60s</strong> on accessories.</p>
 
         <h3>The split</h3>
@@ -511,17 +563,77 @@ function getActiveSession(workout) {
   return state.sessions[workout].find(s => s.id === id) || null;
 }
 
-/* Walk backward from the active session to the most recent prior logged load. */
-function getLastLoggedLoad(workout, exIdx, beforeSessionId) {
-  const sessions = state.sessions[workout];
+/* ===========================================================================
+   PROGRESSION — the program's own rules, applied to your logged history.
+     · every set inside the rep range  → add 5 lb next time
+     · missed the reps                 → hold the weight, beat the reps
+     · 3 logged sessions, same weight,
+       none successful                 → plateau: cut ~10%, add 2 reps
+   =========================================================================== */
+const INCREMENT = 5;          // "5 pound increases each time" — per the program
+const PLATEAU_SESSIONS = 3;   // ~2-3 weeks at 2 sessions/week per muscle group
+
+/* Weights are numeric now; older free-text logs ("185 lb") still parse. */
+function parseWeight(w) {
+  if (typeof w === "number") return isFinite(w) ? w : null;
+  if (typeof w === "string") {
+    const m = w.match(/\d+(\.\d+)?/);
+    return m ? parseFloat(m[0]) : null;
+  }
+  return null;
+}
+function fmtWeight(n) {
+  return (Math.round(n * 10) / 10).toString().replace(/\.0$/, "");
+}
+function roundToIncrement(n) {
+  return Math.max(INCREMENT, Math.round(n / INCREMENT) * INCREMENT);
+}
+/* "6-8" → "8-10". Returns null for "to failure", "35", "10-12 steps / foot". */
+function bumpRange(reps) {
+  const m = String(reps).match(/^(\d+)\s*-\s*(\d+)$/);
+  return m ? `${parseInt(m[1],10) + 2}-${parseInt(m[2],10) + 2}` : null;
+}
+
+/* Prior sessions that logged a weight for this exercise, newest first. */
+function priorEntries(workout, exIdx, beforeSessionId) {
+  const out = [];
   let foundCurrent = false;
-  for (const s of sessions) {
+  for (const s of state.sessions[workout]) {
     if (s.id === beforeSessionId) { foundCurrent = true; continue; }
     if (!foundCurrent) continue;
     const log = s.logs[exIdx];
-    if (log && log.weight) return { weight: log.weight, date: s.date };
+    const w = parseWeight(log && log.weight);
+    if (w !== null) out.push({ weight: w, hit: log.hit === true, date: s.date });
   }
-  return null;
+  return out;
+}
+
+function getLastLoggedLoad(workout, exIdx, beforeSessionId) {
+  return priorEntries(workout, exIdx, beforeSessionId)[0] || null;
+}
+
+/* No prior numeric load → no suggestion. That's also what keeps bodyweight
+   movements quiet until you actually start adding weight to them. */
+function suggestNext(workout, exIdx, beforeSessionId, ex) {
+  const hist = priorEntries(workout, exIdx, beforeSessionId);
+  if (!hist.length) return null;
+
+  if (hist.length >= PLATEAU_SESSIONS) {
+    const w = hist.slice(0, PLATEAU_SESSIONS);
+    const stuck = w.every(e => e.weight === w[0].weight) && w.every(e => !e.hit);
+    if (stuck) {
+      return {
+        type: "plateau",
+        weight: roundToIncrement(w[0].weight * 0.9),
+        reps: bumpRange(ex.reps),
+        from: w[0].weight
+      };
+    }
+  }
+
+  const last = hist[0];
+  if (last.hit) return { type: "up",   weight: last.weight + INCREMENT, from: last.weight };
+  return             { type: "hold", weight: last.weight,             from: last.weight };
 }
 
 function deleteSession(workout, sessionId) {
@@ -684,8 +796,29 @@ function renderExercise(workout, session, ex, idx) {
   const isDone = !!session.completed[idx];
   const log = session.logs[idx] || { weight: "", notes: "" };
   const lastLoad = getLastLoggedLoad(workout, idx, session.id);
+  const sugg = suggestNext(workout, idx, session.id, ex);
   const restSecs = ex.rest || 60;
   const restText = restLabel(restSecs);
+
+  const lastHtml = lastLoad
+    ? `<div class="ex-last">Last (${shortDate(lastLoad.date)}): <strong>${fmtWeight(lastLoad.weight)} lb</strong>` +
+      (lastLoad.hit
+        ? ` · <span class="ex-hit-flag yes">hit the range</span>`
+        : ` · <span class="ex-hit-flag no">missed</span>`) +
+      `</div>`
+    : "";
+
+  let suggHtml = "";
+  if (sugg) {
+    const label =
+      sugg.type === "up"      ? `Try ${fmtWeight(sugg.weight)} lb` :
+      sugg.type === "hold"    ? `Hold ${fmtWeight(sugg.weight)} lb — beat your reps` :
+      /* plateau */             `Plateau: drop to ${fmtWeight(sugg.weight)} lb${sugg.reps ? ` × ${sugg.reps}` : ""}`;
+    suggHtml = `<button class="ex-suggest ${sugg.type}" data-w="${sugg.weight}">${label}<span class="sg-tap">tap to use</span></button>`;
+  }
+
+  const hitVal = log.hit === true ? "yes" : (log.hit === false ? "no" : "");
+  const weightVal = parseWeight(log.weight);
 
   const el = document.createElement("div");
   el.className = "exercise";
@@ -702,14 +835,24 @@ function renderExercise(workout, session, ex, idx) {
           <span class="ex-name">${exDef.name}</span>
         </div>
         <div class="ex-prescription"><strong>${ex.sets} × ${ex.reps}</strong>${ex.load ? " · " + ex.load : ""}</div>
-        ${lastLoad ? `<div class="ex-last">Last (${shortDate(lastLoad.date)}): <strong>${escapeHtml(lastLoad.weight)}</strong></div>` : ""}
+        ${lastHtml}
+        ${suggHtml}
         <div class="ex-actions">
           <a class="btn" href="${v(exDef.q)}" target="_blank" rel="noopener">▶ Video</a>
           <button class="btn log-toggle">✎ Log</button>
           <button class="btn btn-timer rest-timer" data-default="${restText}">${restText}</button>
         </div>
         <div class="ex-log">
-          <input type="text" class="log-weight" placeholder="Weight / load (e.g. 185 lb, 55 lb DBs, BW+25)" value="${escapeAttr(log.weight)}">
+          <div class="log-weight-row">
+            <input type="number" class="log-weight" inputmode="decimal" step="0.5" min="0"
+                   placeholder="Weight" value="${weightVal === null ? "" : weightVal}">
+            <span class="unit">lb</span>
+          </div>
+          <div class="hit-label">All ${ex.sets} sets inside ${ex.reps}?</div>
+          <div class="hit-row">
+            <button class="hit-btn hit-yes ${hitVal === "yes" ? "on-yes" : ""}">✓ Hit</button>
+            <button class="hit-btn hit-no ${hitVal === "no" ? "on-no" : ""}">✗ Missed</button>
+          </div>
           <textarea class="log-notes" placeholder="Notes — reps actually hit, RPE, how it felt...">${escapeHtml(log.notes)}</textarea>
         </div>
       </div>
@@ -724,21 +867,51 @@ function renderExercise(workout, session, ex, idx) {
   el.querySelector(".log-toggle").onclick = () => {
     el.querySelector(".ex-log").classList.toggle("open");
   };
-  if (log.weight || log.notes) el.querySelector(".ex-log").classList.add("open");
+  if (weightVal !== null || log.notes || log.hit != null) el.querySelector(".ex-log").classList.add("open");
+
+  function ensureLog() {
+    if (!session.logs[idx]) session.logs[idx] = { weight: null, hit: null, notes: "" };
+    return session.logs[idx];
+  }
+
+  // Tapping the suggestion fills the weight box and opens the log.
+  const suggBtn = el.querySelector(".ex-suggest");
+  if (suggBtn) {
+    suggBtn.onclick = () => {
+      ensureLog().weight = parseFloat(suggBtn.dataset.w);
+      saveState();
+      render(workout);
+    };
+  }
+
+  const yesBtn = el.querySelector(".hit-yes");
+  const noBtn  = el.querySelector(".hit-no");
+  yesBtn.onclick = () => {
+    const l = ensureLog();
+    l.hit = l.hit === true ? null : true;   // tap again to clear
+    saveState();
+    render(workout);
+  };
+  noBtn.onclick = () => {
+    const l = ensureLog();
+    l.hit = l.hit === false ? null : false;
+    saveState();
+    render(workout);
+  };
 
   const timerKey = `${workout}_${session.id}_${idx}`;
   const timerBtn = el.querySelector(".rest-timer");
   reattachTimer(timerKey, timerBtn);
   timerBtn.onclick = () => toggleRestTimer(timerKey, timerBtn, restSecs);
 
+  // Typing weight must NOT re-render — that would blur the field mid-entry.
   el.querySelector(".log-weight").addEventListener("input", e => {
-    if (!session.logs[idx]) session.logs[idx] = { weight: "", notes: "" };
-    session.logs[idx].weight = e.target.value;
+    const raw = e.target.value.trim();
+    ensureLog().weight = raw === "" ? null : parseFloat(raw);
     saveState();
   });
   el.querySelector(".log-notes").addEventListener("input", e => {
-    if (!session.logs[idx]) session.logs[idx] = { weight: "", notes: "" };
-    session.logs[idx].notes = e.target.value;
+    ensureLog().notes = e.target.value;
     saveState();
   });
   return el;

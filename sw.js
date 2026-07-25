@@ -2,7 +2,7 @@
    Caches the launcher + all three sub-apps + shared styles + program data + icons.
    Network-first for HTML, cache-first for static assets. */
 
-const CACHE = 'exercise-library-v6';
+const CACHE = 'exercise-library-v7';
 const PRECACHE = [
   './',
   './index.html',

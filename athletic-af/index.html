@@ -124,6 +124,26 @@
   .ex-toggle-details {
     background: none; border: 0; color: var(--muted); cursor: pointer; padding: 4px; margin: -4px;
   }
+  /* Coach chip — suggested load for today */
+  .coach {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    width: 100%; margin-top: 10px; padding: 9px 12px;
+    border-radius: 10px; border: 1px solid transparent;
+    font-family: inherit; font-size: 13.5px; font-weight: 700;
+    text-align: left; cursor: pointer;
+  }
+  .coach-label { line-height: 1.3; }
+  .coach-sub {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    opacity: 0.7; white-space: nowrap; flex-shrink: 0;
+  }
+  .coach-up      { background: var(--success-soft); color: var(--success); border-color: var(--success-line); }
+  .coach-hold    { background: var(--card-2);       color: var(--text-body); border-color: var(--border); }
+  .coach-plateau { background: var(--warning-soft); color: var(--warning); border-color: #edd9a6; }
+  .coach-beat    { background: var(--primary-soft); color: var(--primary); border-color: var(--primary-line); }
+  .coach-info    { background: var(--card-2); color: var(--muted); border-color: var(--border-soft); cursor: default; font-weight: 600; }
+  .coach:active { filter: brightness(0.96); }
+
   .ex-details {
     margin-top: 10px; padding: 10px 12px;
     background: var(--card-2); border: 1px solid var(--border-soft); border-radius: 10px;
@@ -436,6 +456,100 @@ function isPR(exerciseName, weight, reps) {
   return weight > best;
 }
 
+/* ---------------- coach: target parsing + load suggestion ----------------
+   Athletic AF prescribes reps in free text, so the target is parsed out of
+   `details`. Measured against the full program (593 entries):
+     fixed reps 46%  ·  no target 35%  ·  % of 1RM 12%  ·  max/AMRAP 5%  ·  range 1%
+   Parentheticals are stripped first — tempo notes like "1-2 SECOND TEMPO"
+   would otherwise read as a 1-2 rep range. Anything with a % is left alone,
+   since the program dictates that load off your 1RM, not off last session. */
+function parseTarget(details) {
+  const s = details || '';
+  if (!s.trim()) return { kind: 'none' };
+  if (s.includes('%')) return { kind: 'pct' };
+  let core = s.replace(/\([^)]*\)/g, ' ');                       // drop parentheticals
+  core = core.replace(/\d+\s*(?:min|sec)[^,\n]*/gi, ' ');        // drop rest instructions
+  let m = core.match(/(\d+)\s*-\s*(\d+)\s*reps?/i);
+  if (m) return { kind: 'range', lo: +m[1], hi: +m[2], target: +m[2] };
+  if (/\bmax\b/i.test(core)) return { kind: 'amrap' };
+  m = core.match(/(\d+)\s*reps?\b/i);
+  if (m) return { kind: 'fixed', target: +m[1] };
+  m = core.match(/x\s*(\d+)\b/i);
+  if (m) return { kind: 'fixed', target: +m[1] };
+  return { kind: 'none' };
+}
+
+/* Some days run the same lift twice under different protocols (a heavy top set
+   and a 10%-off max-rep set). Name alone would blend them, so new records also
+   carry a protocol signature; legacy records without one still match by name. */
+function exSig(ex) {
+  return (ex.name || '') + '|' + (ex.details || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+}
+
+/* Lower-body and big hinges move in bigger jumps than upper-body work. */
+const HEAVY_LIFT = /squat|deadlift|hip thrust|leg press|lunge|rdl|romanian|good morning|hack|step up|belt/i;
+function incrementFor(name) { return HEAVY_LIFT.test(name || '') ? 10 : 5; }
+function roundTo(n, step) { return Math.max(step, Math.round(n / step) * step); }
+
+/* A "session" here is one workout instance: same week + same day. */
+function sessionsFor(exerciseName, sig) {
+  let recs = STATE.sessions.filter(s => s.exerciseName === exerciseName);
+  if (sig && recs.some(s => s.sig === sig)) recs = recs.filter(s => s.sig === sig);
+  const byKey = new Map();
+  recs.forEach(s => {
+    const key = (s.weekId || '?') + '|' + (s.dayIdx != null ? s.dayIdx : '?');
+    if (!byKey.has(key)) byKey.set(key, { key, ts: 0, sets: [] });
+    const g = byKey.get(key);
+    g.ts = Math.max(g.ts, s.ts || 0);
+    g.sets.push({ reps: +s.reps || 0, weight: +s.weight || 0 });
+  });
+  return Array.from(byKey.values()).sort((a, b) => b.ts - a.ts);
+}
+
+function topWeight(sess) { return sess.sets.reduce((m, s) => Math.max(m, s.weight || 0), 0); }
+function allSetsHit(sess, target) {
+  const done = sess.sets.filter(s => s.reps > 0);
+  return done.length > 0 && done.every(s => s.reps >= target);
+}
+
+function suggestFor(ex, sig) {
+  const t = parseTarget(ex.details);
+  const hist = sessionsFor(ex.name, sig);
+  if (!hist.length) return null;
+  const last = hist[0];
+  const w = topWeight(last);
+  const repsList = last.sets.map(s => s.reps || 0);
+  const lastLine = `${last.sets.length} set${last.sets.length === 1 ? '' : 's'} @ ${w || 'BW'}${w ? ' ' + PROGRAM.unit : ''} · ${repsList.join(', ')} reps`;
+
+  // No usable rep target, or the program sets the load off a % of 1RM.
+  if (t.kind === 'pct')  return { type: 'info', label: `Last: ${lastLine}`, sub: 'Load set by % of 1RM' };
+  if (t.kind === 'none') return { type: 'info', label: `Last: ${lastLine}` };
+  if (t.kind === 'amrap') {
+    const best = Math.max(...repsList, 0);
+    return { type: 'beat', label: `Beat ${best} rep${best === 1 ? '' : 's'}${w ? ` @ ${w} ${PROGRAM.unit}` : ''}` };
+  }
+
+  // Bodyweight or unlogged load — coach the reps, not the weight.
+  if (!w) return { type: 'beat', label: `Hit ${t.target} reps${t.kind === 'range' ? ` (${t.lo}-${t.hi})` : ''} — last: ${repsList.join(', ')}` };
+
+  const inc = incrementFor(ex.name);
+
+  // Plateau: three sessions at the same load, never completing all sets at target.
+  if (hist.length >= 3) {
+    const win = hist.slice(0, 3);
+    if (win.every(s => topWeight(s) === w) && win.every(s => !allSetsHit(s, t.target))) {
+      return { type: 'plateau', weight: roundTo(w * 0.9, inc), from: w,
+               label: `Plateau: drop to ${roundTo(w * 0.9, inc)} ${PROGRAM.unit}` };
+    }
+  }
+
+  if (allSetsHit(last, t.target)) {
+    return { type: 'up', weight: w + inc, from: w, label: `Try ${w + inc} ${PROGRAM.unit}` };
+  }
+  return { type: 'hold', weight: w, from: w,
+           label: `Hold ${w} ${PROGRAM.unit} — get all ${t.target}s` };
+}
+
 /* ---------------- render ---------------- */
 function renderTopbar() {
   const w = currentWeek();
@@ -537,6 +651,28 @@ function renderExercise(ex, exIdx, weekId) {
     return wrap;
   }
 
+  // Coach chip — suggested load for today, based on your last session.
+  const sig = exSig(ex);
+  const sugg = suggestFor(ex, sig);
+  if (sugg) {
+    const chip = el('button', { class: 'coach coach-' + sugg.type,
+      onclick: () => {
+        if (!sugg.weight) return;
+        for (let i = 0; i < ex.set_count; i++) {
+          if (!log.sets[i]) log.sets[i] = { reps: '', weight: '', done: false };
+          if (!log.sets[i].done) log.sets[i].weight = String(sugg.weight);
+        }
+        saveState();
+        renderDay();
+      }
+    },
+      el('span', {class:'coach-label'}, sugg.label),
+      sugg.sub ? el('span', {class:'coach-sub'}, sugg.sub)
+               : (sugg.weight ? el('span', {class:'coach-sub'}, 'tap to fill') : null)
+    );
+    wrap.appendChild(chip);
+  }
+
   const last = findLastPerformance(ex.name);
   const sets = el('div', {class:'sets'});
   for (let i = 0; i < ex.set_count; i++) {
@@ -566,7 +702,7 @@ function renderExercise(ex, exIdx, weekId) {
             const wasPR = isPR(ex.name, weight, reps);
             STATE.sessions.push({
               ts: Date.now(),
-              weekId, dayIdx: STATE.currentDayIdx, exerciseName: ex.name,
+              weekId, dayIdx: STATE.currentDayIdx, exerciseName: ex.name, sig,
               reps, weight, isPR: wasPR
             });
             if (wasPR && weight > 0) toast(`PR! ${ex.name}`);

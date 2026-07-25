@@ -1,6 +1,6 @@
 # Exercise Library
 
-One PWA that wraps six workout programs: **Hyrox Home Engine**, **Achilles Rebuild**, **Athletic AF**, **Hotel Workouts** (Madsen upper/lower split), **KB Shred**, and **Full Body Aesthetics**.
+One PWA that wraps seven workout programs: **Hyrox Home Engine**, **Achilles Rebuild**, **Athletic AF**, **Hotel Workouts** (Madsen upper/lower split), **KB Shred**, **6-Day PPL**, and **Full Body Aesthetics**.
 
 Launcher at the root picks a program. Each sub-app keeps its own data, its own features, and its own per-program accent color — but they share one design system, one PWA shell, and one home-screen icon.
 
@@ -13,13 +13,14 @@ Launcher at the root picks a program. Each sub-app keeps its own data, its own f
 | **Athletic AF** | 5 phases + Wk 17 | — | Strength + conditioning. Per-set logging, PR detection, plate calculator, history, export/import. |
 | **Hotel Workouts** | Upper / Lower | — | Madsen split. DB + bodyweight, travel-ready. |
 | **KB Shred** | 8 weeks | 4×/week | Adam Gooch kettlebell program. Full-body daily with supersets and conditioning circuits. |
+| **6-Day PPL** | Open-ended (3-month block) | 6×/week | Jason Helmes / Anyman Fitness push-pull-legs split. Six dated session logs, per-exercise rest timers, "last load" reference, and an Up Next stat that rotates the cycle. |
 | **Full Body Aesthetics** | 64 weeks | 6×/week | Ryan Fischer DB program. Full body daily, cycling strength and hypertrophy. |
 
 ## Structure
 
 ```
 exercise-library/
-├── index.html              ← Launcher (6 program tiles; Hyrox first)
+├── index.html              ← Launcher (7 program tiles; PPL first)
 ├── manifest.webmanifest    ← PWA manifest — installs as "Exercise Library"
 ├── sw.js                   ← Shared service worker (offline cache)
 ├── icon-180.png            ← Dumbbell icon — used by iOS Add to Home Screen
@@ -40,6 +41,8 @@ exercise-library/
 ├── kb-shred/
 │   ├── index.html          ← KB Shred — 8-week kettlebell program
 │   └── data.json           ← Program data
+├── ppl/
+│   └── index.html          ← 6-Day PPL — push/pull/legs split (self-contained)
 └── full-body-aesthetics/
     ├── index.html          ← Full Body Aesthetics — 64-week DB program
     └── data.json           ← Program data
@@ -66,6 +69,7 @@ The merge **preserves all logged data**. Each sub-app keeps its original `localS
 | Achilles | `achilles_program_v1` | Current week, checked exercises, weight/notes logs, self-assess scores |
 | Athletic AF | `athleticAF.v1` | Current week + day, per-set logs, full session history, PR records |
 | Hotel | `madsen_split_v1` | Sessions per workout (upper/lower) with checks + logs |
+| 6-Day PPL | `ppl_v1` | Sessions per workout (6 keys: pushA/pullA/legsA/pushB/pullB/legsB) with checks + logs |
 | Athletic AF plate calc | `plateBar`, `plateTarget` | Last-used bar weight + target |
 
 If you've been tracking workouts in the original repos, **the data still lives in those browsers** under those keys. To carry it over to the merged repo, either:
@@ -87,7 +91,7 @@ If you've been tracking workouts in the original repos, **the data still lives i
 4. After ~30 seconds, the site is at `https://<your-user>.github.io/<repo-name>/`.
 5. Open that URL on your iPhone in Safari → Share → **Add to Home Screen**. The dumbbell icon picks up automatically.
 
-## Adding a fourth program later
+## Adding another program later
 
 1. Make a new folder, e.g. `mobility/`, with its own `index.html`.
 2. In `index.html`, link the shared stylesheet:

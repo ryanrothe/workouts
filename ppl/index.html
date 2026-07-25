@@ -1,0 +1,936 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="6-Day PPL" />
+<meta name="theme-color" content="#be185d" />
+<link rel="manifest" href="../manifest.webmanifest" />
+<link rel="apple-touch-icon" href="../icon-180.png" />
+<link rel="icon" type="image/png" href="../favicon.png" />
+<title>6-Day PPL — Push / Pull / Legs</title>
+<link rel="stylesheet" href="../shared/styles.css" />
+<style>
+  /* PPL-specific styles. Shared design tokens come from ../shared/styles.css. */
+
+  /* Hero */
+  .hero {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .hero-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .coach-badge {
+    display: inline-block;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border: 1px solid var(--primary-line);
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .stat {
+    background: var(--card-2);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    padding: 8px 6px;
+    text-align: center;
+  }
+  .stat-num { font-size: 17px; font-weight: 700; color: var(--primary); font-variant-numeric: tabular-nums; }
+  .stat-num.sm { font-size: 12.5px; line-height: 1.55; letter-spacing: -0.01em; }
+  .stat-label { font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+
+  /* Session bar */
+  .session-bar {
+    display: flex; gap: 5px;
+    overflow-x: auto;
+    margin-bottom: 12px;
+    padding: 4px 2px;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    align-items: stretch;
+  }
+  .session-bar::-webkit-scrollbar { display: none; }
+  .session-pill {
+    flex-shrink: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    min-width: 78px;
+    text-align: center;
+    line-height: 1.2;
+    font-family: inherit;
+  }
+  .session-pill .sp-label { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .session-pill .sp-date { display: block; font-size: 13px; font-weight: 700; color: var(--text); }
+  .session-pill.active { background: var(--primary); border-color: var(--primary); }
+  .session-pill.active .sp-date, .session-pill.active .sp-label { color: white; }
+  .session-pill.done { border-color: var(--success); background: var(--success-soft); }
+  .session-pill.done .sp-date { color: var(--success); }
+  .session-pill.new {
+    background: var(--text);
+    border-color: var(--text);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    min-width: 64px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* Tab shows an "up next" dot on the workout that's due */
+  /* [hidden] must beat the display rule below, or every tab shows a dot. */
+  .tab .due-dot[hidden] { display: none; }
+  .tab .due-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--primary);
+    margin-left: 5px;
+    vertical-align: 1px;
+  }
+  .tab.active .due-dot { background: white; }
+
+  /* Exercise tag color variants (extends .ex-tag from shared) */
+  .ex-tag.push   { background: #ffe9e0; color: #c2410c; }
+  .ex-tag.pull   { background: #e7f0fb; color: #1f63b8; }
+  .ex-tag.legs   { background: var(--success-soft); color: var(--success); }
+  .ex-tag.shldr  { background: #fef0e3; color: #b35309; }
+  .ex-tag.arms   { background: #f1eafd; color: #6b3ed0; }
+  .ex-tag.hinge  { background: #fff4d6; color: #856300; }
+  .ex-tag.calves { background: var(--accent-soft); color: var(--accent); }
+  .ex-tag.core   { background: #f0f1f3; color: #6b7588; }
+
+  /* Rest timer button */
+  .btn-timer {
+    font-variant-numeric: tabular-nums;
+    min-width: 78px;
+    justify-content: center;
+  }
+  .btn-timer.running {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+  .btn-timer.done {
+    background: var(--success);
+    color: white;
+    border-color: var(--success);
+    animation: timer-flash 0.6s ease-out;
+  }
+  @keyframes timer-flash {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+
+  /* Session toolbar */
+  .session-toolbar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+    font-size: 12px; color: var(--muted);
+  }
+  .session-toolbar .left { display: flex; align-items: center; gap: 8px; }
+  .btn-danger { color: var(--danger); border-color: #f3c8c4; }
+
+  /* Notes pane */
+  .quote-box {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin: 10px 0;
+    font-size: 12.5px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .quote-box .qb-day {
+    display: block;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .empty-state {
+    background: var(--card);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 24px 18px;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .empty-state p { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+
+  .reset-link {
+    background: none; border: none; color: var(--muted);
+    font-size: 11px; cursor: pointer; padding: 4px 8px; text-decoration: underline;
+    font-family: inherit;
+  }
+
+  @media (max-width: 420px) {
+    .hero-stats { gap: 6px; }
+    .stat { padding: 6px 4px; }
+    .stat-num { font-size: 15px; }
+    .stat-num.sm { font-size: 11.5px; }
+    .stat-label { font-size: 8.5px; }
+  }
+</style>
+</head>
+<body data-program="ppl">
+
+<header class="appbar">
+  <div class="appbar-inner">
+    <a class="appbar-back" href="../" aria-label="Back to Exercise Library">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="10 3 5 8 10 13"/></svg>
+      Library
+    </a>
+    <div class="appbar-title">
+      <div class="eyebrow">Program</div>
+      <div class="name">6-Day PPL · Push / Pull / Legs</div>
+    </div>
+  </div>
+  <div class="appbar-accent"></div>
+</header>
+
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <span class="coach-badge">Anyman Fitness · Jason Helmes</span>
+        <h1 style="margin-top:6px">The 6-Day PPL Program</h1>
+        <div class="hero-sub">Every muscle group twice a week · 45 min a session · reverse linear periodization</div>
+      </div>
+      <button class="reset-link" id="reset-btn" title="Reset all tracking">Reset</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total Sessions</div></div>
+      <div class="stat"><div class="stat-num" id="stat-week">0 / 6</div><div class="stat-label">This Week</div></div>
+      <div class="stat"><div class="stat-num" id="stat-last">—</div><div class="stat-label">Last Session</div></div>
+      <div class="stat"><div class="stat-num sm" id="stat-next">Push A</div><div class="stat-label">Up Next</div></div>
+    </div>
+  </div>
+
+  <!-- TABS — workout tabs are injected before the Notes tab -->
+  <div class="tabs" id="tabs">
+    <button class="tab" data-pane="notes">Notes</button>
+  </div>
+
+  <!-- PANES — workout panes are injected before the Notes pane -->
+  <div id="panes">
+    <div class="pane" id="pane-notes">
+      <div class="card">
+        <h2>How this tracker works</h2>
+        <p>Six workouts, one per training day: <strong>Push A → Pull A → Legs A → Push B → Pull B → Legs B</strong>. Tap a tab to open that day. Inside it, hit <strong>+ New</strong> to start a dated session, check exercises off as you finish them, and tap <strong>✎ Log</strong> to record the weight you used.</p>
+        <p>The load you used last time shows up under each exercise, so you always know the number to beat. The <strong>Up Next</strong> stat tells you which day is due based on what you trained most recently — it rotates through the six, so a missed day doesn't throw off the cycle.</p>
+        <p>Rest timers are pre-set per exercise: <strong>2 min</strong> on squats and deadlifts, <strong>90s</strong> on the main lifts, <strong>60s</strong> on accessories.</p>
+
+        <h3>The split</h3>
+        <ul>
+          <li><strong>Push A (Mon)</strong> — barbell, heavy. Low reps on the presses.</li>
+          <li><strong>Pull A (Tue)</strong> — vertical + horizontal pulling, calves, laterals.</li>
+          <li><strong>Legs A (Wed)</strong> — squat-led, plus cable arm work.</li>
+          <li><strong>Push B (Thu)</strong> — dumbbell, higher rep. Same muscles, different stimulus.</li>
+          <li><strong>Pull B (Fri)</strong> — machine and cable rows, plus single-arm arm work.</li>
+          <li><strong>Legs B (Sat)</strong> — deadlift-led, unilateral work, core, traps.</li>
+        </ul>
+
+        <h3>Progression model</h3>
+        <p>Reverse linear periodization. In plain terms:</p>
+        <ul>
+          <li>Start each lift at a weight you're confident you can handle for the reps listed.</li>
+          <li><strong>Hit every set inside the rep range?</strong> Add the smallest increment available next time you do that workout — roughly 5 lb on the main lifts.</li>
+          <li><strong>Missed the reps?</strong> Don't drop the weight. Log what you did and try to beat it next time. Once every set lands in range, add weight again.</li>
+          <li><strong>Plateaued</strong> (2 to 3 weeks with no rep or weight increase)? Cut the weight about 10% and raise the rep range by 2 — a 6-8 becomes an 8-10. Volume keeps climbing, your joints get a break from constant weight PRs.</li>
+          <li>Main lifts (bench, squat, deadlift, pulldowns) climb regularly. Accessories (curls, triceps, raises) often won't — that's expected. Just do a little better each time.</li>
+        </ul>
+
+        <h3>Execution standards</h3>
+        <ul>
+          <li>Perfect form, no body English. Hit parallel on squats, touch the chest on bench.</li>
+          <li>Keep tension on the muscle through the whole set — this is a mind-muscle-connection program, not a move-the-weight program.</li>
+          <li>No machine? Substitute. Pulldowns for pull-ups, DB rows for the row machine — the pattern matters more than the equipment.</li>
+        </ul>
+
+        <h3>Block length</h3>
+        <p>Designed as a 3-month block, but the exercise variety supports running it longer. Log honestly and the "last load" reference will tell you when you've genuinely stalled versus just had a bad day.</p>
+
+        <h3>Nutrition, per the program</h3>
+        <ul>
+          <li><strong>Fat loss:</strong> 1 g protein per pound of goal bodyweight; calories at roughly bodyweight × 10. Adjust if the scale isn't moving week to week.</li>
+          <li><strong>Muscle gain:</strong> same protein target; calories at roughly bodyweight × 14-16. Adjust if weight isn't climbing.</li>
+        </ul>
+        <div class="note-box">Source: <em>The 6-Day PPL Training Program</em>, Jason Helmes / Anyman Fitness. Prescriptions below are transcribed as written.</div>
+
+        <h3>The program as written</h3>
+        <div class="quote-box" id="quote-source"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ===========================================================================
+   PROGRAM DATA — Jason Helmes / Anyman Fitness, 6-Day Push-Pull-Legs
+   =========================================================================== */
+const VIDEO_BASE = "https://www.youtube.com/results?search_query=";
+function v(q) { return VIDEO_BASE + encodeURIComponent(q); }
+
+const EXERCISES = {
+  /* Push A — barbell */
+  bb_bench:       { name: "Barbell Bench Press",              tag: "push",   q: "barbell bench press proper form touch chest" },
+  bb_incline:     { name: "Barbell Incline Bench Press",      tag: "push",   q: "barbell incline bench press form" },
+  bb_ohp:         { name: "Barbell Shoulder Press",           tag: "shldr",  q: "barbell overhead shoulder press form" },
+  ez_curl:        { name: "EZ Curl Bar Bicep Curls",          tag: "arms",   q: "ez bar bicep curl form" },
+  db_skull:       { name: "Dumbbell Skull Crushers",          tag: "arms",   q: "dumbbell skull crusher triceps form" },
+
+  /* Pull A */
+  pullup_neutral: { name: "Neutral Grip Pull-Ups",            tag: "pull",   q: "neutral grip pull up form" },
+  cable_row:      { name: "Seated Cable Rows",                tag: "pull",   q: "seated cable row form" },
+  straight_arm:   { name: "Straight Arm Pulldowns",           tag: "pull",   q: "straight arm pulldown lat form" },
+  bw_calf:        { name: "Bodyweight Calf Raises",           tag: "calves", q: "bodyweight standing calf raise full range" },
+  db_lateral:     { name: "Dumbbell Lateral Raises",          tag: "shldr",  q: "dumbbell lateral raise strict form" },
+
+  /* Legs A */
+  bb_squat:       { name: "Barbell Back Squats",              tag: "legs",   q: "barbell back squat to parallel form" },
+  db_rdl:         { name: "Dumbbell Romanian Deadlifts",      tag: "hinge",  q: "dumbbell romanian deadlift form" },
+  walk_lunge:     { name: "Walking Lunges",                   tag: "legs",   q: "walking lunge dumbbell form" },
+  rope_tricep:    { name: "Cable Rope Tricep Extensions",     tag: "arms",   q: "cable rope tricep extension form" },
+  rope_curl:      { name: "Cable Rope Bicep Curls",           tag: "arms",   q: "cable rope bicep curl form" },
+
+  /* Push B — dumbbell */
+  db_bench:       { name: "Dumbbell Bench Press",             tag: "push",   q: "dumbbell bench press form" },
+  db_ohp:         { name: "Dumbbell Shoulder Press",          tag: "shldr",  q: "seated dumbbell shoulder press form" },
+  db_incline:     { name: "Dumbbell Incline Bench Press",     tag: "push",   q: "dumbbell incline bench press form" },
+  db_front:       { name: "Dumbbell Front Raises",            tag: "shldr",  q: "dumbbell front raise form" },
+
+  /* Pull B */
+  neutral_pd:     { name: "Neutral Grip Pulldowns",           tag: "pull",   q: "neutral grip lat pulldown form" },
+  horiz_row:      { name: "Horizontal Row Machine",           tag: "pull",   q: "seated machine row form" },
+  chest_sup_row:  { name: "Chest Supported Row",              tag: "pull",   q: "chest supported row form" },
+  one_arm_push:   { name: "One Arm Cable Tricep Pushdowns",   tag: "arms",   q: "single arm cable tricep pushdown form" },
+  one_arm_curl:   { name: "One Arm Cable Bicep Curls",        tag: "arms",   q: "single arm cable bicep curl form" },
+
+  /* Legs B */
+  bb_deadlift:    { name: "Barbell Deadlifts",                tag: "hinge",  q: "barbell conventional deadlift form" },
+  goblet_squat:   { name: "Goblet Squats",                    tag: "legs",   q: "goblet squat form" },
+  step_up:        { name: "Bench Step Ups",                   tag: "legs",   q: "dumbbell bench step up form" },
+  hang_leg:       { name: "Hanging Leg Raises",               tag: "core",   q: "hanging leg raise strict form" },
+  bb_shrug:       { name: "Barbell Shrugs",                   tag: "pull",   q: "barbell shrug trap form" }
+};
+
+/* Workout order IS the training cycle — "Up Next" rotates through it. */
+const WORKOUT_ORDER = ["pushA", "pullA", "legsA", "pushB", "pullB", "legsB"];
+
+const WORKOUTS = {
+  pushA: {
+    name: "Push A",
+    day: "Monday",
+    tab: "Push A",
+    focus: "Barbell · Chest · Shoulders · Arms · heavy",
+    exercises: [
+      { id: "bb_bench",   sets: "3", reps: "6-8",   load: "Touch the chest, no bounce",        rest: 90  },
+      { id: "bb_incline", sets: "3", reps: "6-8",   load: "",                                  rest: 90  },
+      { id: "bb_ohp",     sets: "3", reps: "10-12", load: "Strict — no leg drive",             rest: 90  },
+      { id: "ez_curl",    sets: "3", reps: "12-14", load: "",                                  rest: 60  },
+      { id: "db_skull",   sets: "3", reps: "18-20", load: "High rep — chase the pump",         rest: 60  }
+    ]
+  },
+  pullA: {
+    name: "Pull A",
+    day: "Tuesday",
+    tab: "Pull A",
+    focus: "Back · Calves · Side delts",
+    exercises: [
+      { id: "pullup_neutral", sets: "3", reps: "to failure", load: "Pulldowns are a fine sub",  rest: 90 },
+      { id: "cable_row",      sets: "3", reps: "8-10",       load: "",                          rest: 90 },
+      { id: "straight_arm",   sets: "3", reps: "12-14",      load: "Lats, not triceps",         rest: 60 },
+      { id: "bw_calf",        sets: "3", reps: "35",         load: "Bodyweight, full range",    rest: 60 },
+      { id: "db_lateral",     sets: "3", reps: "18-20",      load: "Light and strict",          rest: 60 }
+    ]
+  },
+  legsA: {
+    name: "Legs A",
+    day: "Wednesday",
+    tab: "Legs A",
+    focus: "Squat · Hinge · Arms",
+    exercises: [
+      { id: "bb_squat",    sets: "3", reps: "8-10",             load: "Hit parallel every rep",  rest: 120 },
+      { id: "db_rdl",      sets: "3", reps: "12-15",            load: "Hinge, controlled descent", rest: 90 },
+      { id: "walk_lunge",  sets: "3", reps: "10-12 steps / foot", load: "",                      rest: 90  },
+      { id: "rope_tricep", sets: "3", reps: "18-20",            load: "",                        rest: 60  },
+      { id: "rope_curl",   sets: "3", reps: "18-20",            load: "",                        rest: 60  }
+    ]
+  },
+  pushB: {
+    name: "Push B",
+    day: "Thursday",
+    tab: "Push B",
+    focus: "Dumbbell · Chest · Shoulders · volume",
+    exercises: [
+      { id: "db_bench",   sets: "3", reps: "12-14", load: "Higher rep than Monday",     rest: 90 },
+      { id: "db_ohp",     sets: "3", reps: "12-14", load: "",                           rest: 90 },
+      { id: "db_incline", sets: "3", reps: "12-14", load: "",                           rest: 90 },
+      { id: "bw_calf",    sets: "3", reps: "35",    load: "Bodyweight, full range",     rest: 60 },
+      { id: "db_front",   sets: "3", reps: "18-20", load: "Light and strict",           rest: 60 }
+    ]
+  },
+  pullB: {
+    name: "Pull B",
+    day: "Friday",
+    tab: "Pull B",
+    focus: "Back · Machines and cables · Arms",
+    exercises: [
+      { id: "neutral_pd",    sets: "3", reps: "10-12", load: "",                          rest: 90 },
+      { id: "horiz_row",     sets: "3", reps: "10-12", load: "Sub DB rows if no machine", rest: 90 },
+      { id: "chest_sup_row", sets: "3", reps: "10-12", load: "Chest stays pinned",        rest: 90 },
+      { id: "one_arm_push",  sets: "3", reps: "18-20", load: "Per arm",                   rest: 60 },
+      { id: "one_arm_curl",  sets: "3", reps: "18-20", load: "Per arm",                   rest: 60 }
+    ]
+  },
+  legsB: {
+    name: "Legs B",
+    day: "Saturday",
+    tab: "Legs B",
+    focus: "Deadlift · Unilateral · Core · Traps",
+    exercises: [
+      { id: "bb_deadlift",  sets: "3", reps: "5-8",           load: "Heaviest lift of the week", rest: 120 },
+      { id: "goblet_squat", sets: "3", reps: "12-15",         load: "",                          rest: 90  },
+      { id: "step_up",      sets: "3", reps: "10-12 / leg",   load: "Drive through the heel",    rest: 90  },
+      { id: "hang_leg",     sets: "3", reps: "to failure",    load: "Strict, no swinging",       rest: 60  },
+      { id: "bb_shrug",     sets: "3", reps: "20-25",         load: "Hold the top for a beat",   rest: 60  }
+    ]
+  }
+};
+
+/* ===========================================================================
+   STATE — localStorage persistence
+   =========================================================================== */
+const STORAGE_KEY = "ppl_v1";
+let state = loadState();
+
+function emptyState() {
+  const sessions = {}, active = {};
+  WORKOUT_ORDER.forEach(k => { sessions[k] = []; active[k] = null; });
+  return { sessions, activeSessionId: active };
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const base = emptyState();
+      // Merge forward so a future added workout key never crashes an old save.
+      WORKOUT_ORDER.forEach(k => {
+        if (Array.isArray(parsed.sessions?.[k])) base.sessions[k] = parsed.sessions[k];
+        if (parsed.activeSessionId?.[k]) base.activeSessionId[k] = parsed.activeSessionId[k];
+      });
+      return base;
+    }
+  } catch (e) {}
+  return emptyState();
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  updateStats();
+}
+
+function todayISO() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function shortDate(iso) {
+  if (!iso) return "—";
+  const [y, m, d] = iso.split("-");
+  return `${parseInt(m,10)}/${parseInt(d,10)}`;
+}
+function daysAgo(iso) {
+  if (!iso) return null;
+  const then = new Date(iso + "T00:00:00");
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  return Math.round((now - then) / 86400000);
+}
+/* Monday-start week, because the program runs Mon–Sat. */
+function weekStartISO() {
+  const d = new Date();
+  d.setHours(0,0,0,0);
+  const dow = (d.getDay() + 6) % 7;   // Mon = 0
+  d.setDate(d.getDate() - dow);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function newSessionId() {
+  return "s_" + Date.now() + "_" + Math.random().toString(36).slice(2,6);
+}
+function sessionTs(s) {
+  const m = /^s_(\d+)_/.exec(s.id || "");
+  return m ? parseInt(m[1], 10) : 0;
+}
+
+function startSession(workout) {
+  const sess = { id: newSessionId(), date: todayISO(), completed: {}, logs: {} };
+  state.sessions[workout].unshift(sess);
+  state.activeSessionId[workout] = sess.id;
+  saveState();
+  render(workout);
+}
+
+function getActiveSession(workout) {
+  const id = state.activeSessionId[workout];
+  if (!id) return null;
+  return state.sessions[workout].find(s => s.id === id) || null;
+}
+
+/* Walk backward from the active session to the most recent prior logged load. */
+function getLastLoggedLoad(workout, exIdx, beforeSessionId) {
+  const sessions = state.sessions[workout];
+  let foundCurrent = false;
+  for (const s of sessions) {
+    if (s.id === beforeSessionId) { foundCurrent = true; continue; }
+    if (!foundCurrent) continue;
+    const log = s.logs[exIdx];
+    if (log && log.weight) return { weight: log.weight, date: s.date };
+  }
+  return null;
+}
+
+function deleteSession(workout, sessionId) {
+  if (!confirm("Delete this session? Logs and checks for it will be gone.")) return;
+  state.sessions[workout] = state.sessions[workout].filter(s => s.id !== sessionId);
+  if (state.activeSessionId[workout] === sessionId) {
+    state.activeSessionId[workout] = state.sessions[workout][0]?.id || null;
+  }
+  saveState();
+  render(workout);
+}
+
+/* The workout that's due: one step past whatever was trained most recently. */
+function nextUpKey() {
+  let bestKey = null, bestTs = -1;
+  WORKOUT_ORDER.forEach(k => {
+    const s = state.sessions[k][0];
+    if (!s) return;
+    const ts = sessionTs(s);
+    if (ts > bestTs) { bestTs = ts; bestKey = k; }
+  });
+  if (!bestKey) return WORKOUT_ORDER[0];
+  const idx = WORKOUT_ORDER.indexOf(bestKey);
+  return WORKOUT_ORDER[(idx + 1) % WORKOUT_ORDER.length];
+}
+
+/* ===========================================================================
+   SHELL — build one tab + one pane per workout, ahead of the static Notes pane
+   =========================================================================== */
+function buildShell() {
+  const tabsEl = document.getElementById("tabs");
+  const panesEl = document.getElementById("panes");
+
+  const tabsHtml = WORKOUT_ORDER.map(k =>
+    `<button class="tab" data-pane="${k}">${WORKOUTS[k].tab}<span class="due-dot" hidden></span></button>`
+  ).join("");
+  const panesHtml = WORKOUT_ORDER.map(k =>
+    `<div class="pane" id="pane-${k}">
+       <div class="session-bar" id="session-bar-${k}"></div>
+       <div id="container-${k}"></div>
+     </div>`
+  ).join("");
+
+  tabsEl.insertAdjacentHTML("afterbegin", tabsHtml);
+  panesEl.insertAdjacentHTML("afterbegin", panesHtml);
+
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".pane").forEach(p => p.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById("pane-" + tab.dataset.pane).classList.add("active");
+    };
+  });
+}
+
+/* The Notes pane lists the program as written — built from the same data. */
+function buildSourceQuote() {
+  document.getElementById("quote-source").innerHTML = WORKOUT_ORDER.map(k => {
+    const w = WORKOUTS[k];
+    const lines = w.exercises
+      .map(ex => {
+        // "3 sets to failure" reads right; "3 sets of to failure" does not.
+        const reps = /^to failure$/i.test(ex.reps) ? "to failure" : `of ${ex.reps}`;
+        return `${EXERCISES[ex.id].name} — ${ex.sets} sets ${reps}`;
+      })
+      .join("<br>");
+    return `<span class="qb-day">${w.day} · ${w.name}</span>${lines}`;
+  }).join("<div style='height:10px'></div>");
+}
+
+/* ===========================================================================
+   RENDER
+   =========================================================================== */
+function renderSessionBar(workout) {
+  const bar = document.getElementById("session-bar-" + workout);
+  bar.innerHTML = "";
+
+  const newBtn = document.createElement("button");
+  newBtn.className = "session-pill new";
+  newBtn.innerHTML = "+ New";
+  newBtn.onclick = () => startSession(workout);
+  bar.appendChild(newBtn);
+
+  const sessions = state.sessions[workout];
+  const activeId = state.activeSessionId[workout];
+  sessions.forEach((s, idx) => {
+    const total = WORKOUTS[workout].exercises.length;
+    const done = Object.values(s.completed).filter(Boolean).length;
+    const isFull = done === total;
+    const isActive = s.id === activeId;
+    const btn = document.createElement("button");
+    btn.className = "session-pill" + (isActive ? " active" : "") + (!isActive && isFull ? " done" : "");
+    const labelText = idx === 0 ? "Latest" : `#${sessions.length - idx}`;
+    btn.innerHTML = `<span class="sp-label">${labelText}</span><span class="sp-date">${shortDate(s.date)}</span>`;
+    btn.onclick = () => {
+      state.activeSessionId[workout] = s.id;
+      saveState();
+      render(workout);
+    };
+    bar.appendChild(btn);
+  });
+}
+
+function renderWorkout(workout) {
+  renderSessionBar(workout);
+  const container = document.getElementById("container-" + workout);
+  container.innerHTML = "";
+
+  const w = WORKOUTS[workout];
+  const session = getActiveSession(workout);
+  if (!session) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <p>No sessions logged yet for <strong>${w.name}</strong> — ${w.day}.</p>
+        <button class="btn btn-primary" onclick="startSession('${workout}')">Start your first session</button>
+      </div>
+    `;
+    return;
+  }
+
+  const completed = Object.values(session.completed).filter(Boolean).length;
+  const total = w.exercises.length;
+  const isFullyDone = completed === total;
+
+  const toolbar = document.createElement("div");
+  toolbar.className = "session-toolbar";
+  toolbar.innerHTML = `
+    <div class="left">
+      <span>Session on <strong style="color:var(--text)">${session.date}</strong></span>
+    </div>
+    <button class="btn btn-danger" data-action="delete">Delete session</button>
+  `;
+  toolbar.querySelector("[data-action=delete]").onclick = () => deleteSession(workout, session.id);
+  container.appendChild(toolbar);
+
+  const dayEl = document.createElement("div");
+  dayEl.className = "day";
+  dayEl.innerHTML = `
+    <div class="day-header">
+      <div class="day-title">
+        <div class="day-name">${w.day} · ${w.name}</div>
+        <div class="day-focus">${w.focus}</div>
+      </div>
+      <div class="day-meta">
+        <span class="day-chip ${isFullyDone ? "complete" : ""}">${completed} / ${total}</span>
+      </div>
+    </div>
+    <div class="day-body"></div>
+  `;
+  const body = dayEl.querySelector(".day-body");
+  w.exercises.forEach((ex, idx) => {
+    body.appendChild(renderExercise(workout, session, ex, idx));
+  });
+  container.appendChild(dayEl);
+}
+
+function renderExercise(workout, session, ex, idx) {
+  const exDef = EXERCISES[ex.id];
+  const isDone = !!session.completed[idx];
+  const log = session.logs[idx] || { weight: "", notes: "" };
+  const lastLoad = getLastLoggedLoad(workout, idx, session.id);
+  const restSecs = ex.rest || 60;
+  const restText = restLabel(restSecs);
+
+  const el = document.createElement("div");
+  el.className = "exercise";
+  el.innerHTML = `
+    <div class="ex-row">
+      <div class="ex-check ${isDone ? "done" : ""}">
+        <svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 8 7 12 13 4"></polyline>
+        </svg>
+      </div>
+      <div class="ex-info">
+        <div>
+          <span class="ex-tag ${exDef.tag}">${tagLabel(exDef.tag)}</span>
+          <span class="ex-name">${exDef.name}</span>
+        </div>
+        <div class="ex-prescription"><strong>${ex.sets} × ${ex.reps}</strong>${ex.load ? " · " + ex.load : ""}</div>
+        ${lastLoad ? `<div class="ex-last">Last (${shortDate(lastLoad.date)}): <strong>${escapeHtml(lastLoad.weight)}</strong></div>` : ""}
+        <div class="ex-actions">
+          <a class="btn" href="${v(exDef.q)}" target="_blank" rel="noopener">▶ Video</a>
+          <button class="btn log-toggle">✎ Log</button>
+          <button class="btn btn-timer rest-timer" data-default="${restText}">${restText}</button>
+        </div>
+        <div class="ex-log">
+          <input type="text" class="log-weight" placeholder="Weight / load (e.g. 185 lb, 55 lb DBs, BW+25)" value="${escapeAttr(log.weight)}">
+          <textarea class="log-notes" placeholder="Notes — reps actually hit, RPE, how it felt...">${escapeHtml(log.notes)}</textarea>
+        </div>
+      </div>
+    </div>
+  `;
+
+  el.querySelector(".ex-check").onclick = () => {
+    session.completed[idx] = !isDone;
+    saveState();
+    render(workout);
+  };
+  el.querySelector(".log-toggle").onclick = () => {
+    el.querySelector(".ex-log").classList.toggle("open");
+  };
+  if (log.weight || log.notes) el.querySelector(".ex-log").classList.add("open");
+
+  const timerKey = `${workout}_${session.id}_${idx}`;
+  const timerBtn = el.querySelector(".rest-timer");
+  reattachTimer(timerKey, timerBtn);
+  timerBtn.onclick = () => toggleRestTimer(timerKey, timerBtn, restSecs);
+
+  el.querySelector(".log-weight").addEventListener("input", e => {
+    if (!session.logs[idx]) session.logs[idx] = { weight: "", notes: "" };
+    session.logs[idx].weight = e.target.value;
+    saveState();
+  });
+  el.querySelector(".log-notes").addEventListener("input", e => {
+    if (!session.logs[idx]) session.logs[idx] = { weight: "", notes: "" };
+    session.logs[idx].notes = e.target.value;
+    saveState();
+  });
+  return el;
+}
+
+function tagLabel(t) {
+  return ({
+    push: "Push", pull: "Pull", legs: "Legs", shldr: "Shoulder",
+    arms: "Arms", hinge: "Hinge", calves: "Calves", core: "Core"
+  }[t]) || t;
+}
+
+function updateStats() {
+  const total = WORKOUT_ORDER.reduce((n, k) => n + state.sessions[k].length, 0);
+  document.getElementById("stat-total").textContent = total;
+
+  const ws = weekStartISO();
+  const thisWeek = WORKOUT_ORDER.reduce(
+    (n, k) => n + state.sessions[k].filter(s => s.date >= ws).length, 0
+  );
+  document.getElementById("stat-week").textContent = `${thisWeek} / 6`;
+
+  const lastDates = WORKOUT_ORDER.map(k => state.sessions[k][0]?.date).filter(Boolean).sort().reverse();
+  const lastDate = lastDates[0];
+  if (!lastDate) {
+    document.getElementById("stat-last").textContent = "—";
+  } else {
+    const d = daysAgo(lastDate);
+    document.getElementById("stat-last").textContent = d === 0 ? "Today" : (d === 1 ? "1d" : `${d}d`);
+  }
+
+  const next = nextUpKey();
+  document.getElementById("stat-next").textContent = WORKOUTS[next].tab;
+  document.querySelectorAll(".tab").forEach(tab => {
+    const dot = tab.querySelector(".due-dot");
+    if (dot) dot.hidden = tab.dataset.pane !== next;
+  });
+}
+
+function render(workout) {
+  if (workout) renderWorkout(workout);
+  else WORKOUT_ORDER.forEach(renderWorkout);
+  updateStats();
+}
+
+/* ===========================================================================
+   REST TIMER — per-exercise duration; survives re-renders via a module-level map
+   =========================================================================== */
+const activeTimers = {};
+let audioCtx = null;
+
+function restLabel(secs) {
+  return secs >= 120 ? `⏱ ${Math.round(secs / 60)}m` : `⏱ ${secs}s`;
+}
+
+function ensureAudio() {
+  if (audioCtx) return audioCtx;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) audioCtx = new AC();
+  } catch (e) {}
+  return audioCtx;
+}
+
+function beep() {
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  [0, 0.18, 0.36].forEach((offset, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = i === 2 ? 1100 : 880;
+    gain.gain.setValueAtTime(0, now + offset);
+    gain.gain.linearRampToValueAtTime(0.25, now + offset + 0.01);
+    gain.gain.linearRampToValueAtTime(0, now + offset + 0.14);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now + offset);
+    osc.stop(now + offset + 0.16);
+  });
+  if (navigator.vibrate) {
+    try { navigator.vibrate([120, 80, 120, 80, 200]); } catch (e) {}
+  }
+}
+
+function formatTimer(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${String(sec).padStart(2, "0")}`;
+}
+
+/* No isConnected guard here on purpose: on re-render, reattachTimer hands us the
+   fresh button before it's been appended, and we still want the countdown text
+   painted so it never flashes back to the default label. */
+function paintTimer(btn, remaining) {
+  if (!btn) return;
+  btn.classList.add("running");
+  btn.classList.remove("done");
+  btn.textContent = formatTimer(remaining);
+}
+
+function paintTimerDone(btn) {
+  if (!btn || !btn.isConnected) return;
+  btn.classList.remove("running");
+  btn.classList.add("done");
+  btn.textContent = "Done!";
+  setTimeout(() => {
+    if (btn && btn.isConnected) {
+      btn.classList.remove("done");
+      btn.textContent = btn.dataset.default || "⏱ 60s";
+    }
+  }, 1800);
+}
+
+function paintTimerReset(btn) {
+  if (!btn || !btn.isConnected) return;
+  btn.classList.remove("running", "done");
+  btn.textContent = btn.dataset.default || "⏱ 60s";
+}
+
+function startRestTimer(key, btn, secs) {
+  // iOS: the AudioContext must be created/resumed inside the user gesture.
+  ensureAudio();
+  if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+
+  const endsAt = Date.now() + secs * 1000;
+  paintTimer(btn, secs);
+
+  const intervalId = setInterval(() => {
+    const t = activeTimers[key];
+    if (!t) return;
+    const remaining = Math.round((t.endsAt - Date.now()) / 1000);
+    if (remaining <= 0) {
+      clearInterval(t.intervalId);
+      const finalBtn = t.btn;
+      delete activeTimers[key];
+      paintTimerDone(finalBtn);
+      beep();
+    } else {
+      paintTimer(t.btn, remaining);
+    }
+  }, 250);
+
+  activeTimers[key] = { endsAt, intervalId, btn, secs };
+}
+
+function cancelRestTimer(key) {
+  const t = activeTimers[key];
+  if (!t) return;
+  clearInterval(t.intervalId);
+  const btn = t.btn;
+  delete activeTimers[key];
+  paintTimerReset(btn);
+}
+
+function toggleRestTimer(key, btn, secs) {
+  if (activeTimers[key]) cancelRestTimer(key);
+  else startRestTimer(key, btn, secs);
+}
+
+function reattachTimer(key, btn) {
+  const t = activeTimers[key];
+  if (!t) return;
+  t.btn = btn;
+  const remaining = Math.round((t.endsAt - Date.now()) / 1000);
+  if (remaining > 0) paintTimer(btn, remaining);
+}
+
+/* ===========================================================================
+   HELPERS / WIRING
+   =========================================================================== */
+function escapeAttr(s) { return String(s || "").replace(/"/g, "&quot;"); }
+function escapeHtml(s) { return String(s || "").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+document.getElementById("reset-btn").onclick = () => {
+  if (confirm("Reset all tracking? Every session, log, and check across all six workouts will be cleared.")) {
+    state = emptyState();
+    saveState();
+    render();
+  }
+};
+
+buildShell();
+buildSourceQuote();
+render();
+
+/* Open on the workout that's due, so the app lands where you're training today. */
+(function openDueTab() {
+  const next = nextUpKey();
+  const tab = document.querySelector(`.tab[data-pane="${next}"]`);
+  if (tab) tab.click();
+})();
+</script>
+</body>
+</html>

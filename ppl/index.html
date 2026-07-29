@@ -538,6 +538,10 @@ const WORKOUTS = {
 const STORAGE_KEY = "ppl_v1";
 let state = loadState();
 
+/* One-shot: set when a swap chip is tapped so the re-rendered row opens its
+   log panel — picking a sub almost always means you're about to log it. */
+let autoOpenLog = null;
+
 function emptyState() {
   const sessions = {}, active = {};
   WORKOUT_ORDER.forEach(k => { sessions[k] = []; active[k] = null; });
@@ -981,12 +985,17 @@ function renderExercise(workout, session, ex, idx) {
         const chosen = chip.dataset.ex;
         if (chosen === ex.id) delete session.subs[idx];
         else session.subs[idx] = chosen;
+        autoOpenLog = `${workout}_${idx}`;
         saveState();
         render(workout);
       };
     });
   }
   if (weightVal !== null || log.notes || log.hit != null) el.querySelector(".ex-log").classList.add("open");
+  if (autoOpenLog === `${workout}_${idx}`) {
+    el.querySelector(".ex-log").classList.add("open");
+    autoOpenLog = null;
+  }
 
   function ensureLog() {
     if (!session.logs[idx]) session.logs[idx] = { weight: null, hit: null, notes: "" };

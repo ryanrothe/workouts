@@ -142,6 +142,27 @@
   .ex-suggest:active { filter: brightness(0.96); }
   .ex-suggest .sg-tap { font-weight: 600; opacity: 0.72; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; }
 
+  /* Garage substitution swap */
+  .ex-sub-note { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .ex-sub-note strong { color: var(--text-body); }
+  .ex-swap { display: none; margin-top: 8px; }
+  .ex-swap.open { display: flex; flex-wrap: wrap; gap: 6px; }
+  .swap-chip {
+    border: 1px solid var(--border);
+    background: var(--card-2);
+    color: var(--text-body);
+    border-radius: 999px;
+    padding: 6px 11px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    line-height: 1.3;
+    text-align: left;
+  }
+  .swap-chip.on { background: var(--primary); border-color: var(--primary); color: white; }
+  .swap-chip .sc-tag { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; margin-left: 4px; }
+
   /* Log editor — weight + did-you-hit-the-range */
   .log-weight-row { display: flex; align-items: center; gap: 6px; }
   .log-weight-row .log-weight { flex: 1; min-width: 0; }
@@ -296,6 +317,23 @@
           <li><strong>Amber — "Plateau: drop to 165 lb × 8-10":</strong> three logged sessions at the same weight with no successful one. It cuts ~10% and adds 2 reps to the range automatically.</li>
         </ul>
         <p>Suggestions only appear once there's a logged weight to work from, so bodyweight movements stay quiet until you start adding load to them. The <strong>Up Next</strong> stat tells you which day is due based on what you trained most recently — it rotates through the six, so a missed day doesn't throw off the cycle.</p>
+
+        <h3>Garage substitutions</h3>
+        <p>Cable and machine lifts carry a <strong>⇄ Sub</strong> button with 2-3 garage-friendly swaps — bands, dumbbells, kettlebells, dip bar. Rules:</p>
+        <ul>
+          <li><strong>A swap sticks.</strong> Once you sub a lift, every new session starts on that sub so training stays consistent week over week. Switching back to the program's lift (or another sub) is one tap in <strong>⇄ Sub</strong>, any time.</li>
+          <li><strong>Each variation keeps its own history.</strong> "Last:" and the weight suggestions only look at sessions where you did that same exercise — dips numbers never feed cable-stack suggestions.</li>
+          <li>Sets × reps stay as prescribed for whatever variation you're on.</li>
+          <li>Made the swap mid-workout without tapping it? Open the session, tap <strong>⇄ Sub</strong>, pick what you actually did — the logged weight follows the choice.</li>
+        </ul>
+
+        <h3>Bodyweight lifts and added weight</h3>
+        <p>Dips, pull-ups, calf raises, and hanging leg raises log <strong>added weight</strong>, not total weight — the field reads <strong>BW +</strong>. Three states:</p>
+        <ul>
+          <li><strong>Blank:</strong> untracked. No history, no suggestions.</li>
+          <li><strong>0:</strong> strict bodyweight, tracked. Hit the range at BW and the coach suggests <strong>"Try BW +5 lb"</strong> — time for the belt and a kettlebell.</li>
+          <li><strong>A number:</strong> pounds clipped on. Progression math runs on the added weight, same rules as the barbell lifts, and a plateau can drop you back to strict BW.</li>
+        </ul>
         <p>Rest timers are pre-set per exercise: <strong>2 min</strong> on squats and deadlifts, <strong>90s</strong> on the main lifts, <strong>60s</strong> on accessories.</p>
 
         <h3>The split</h3>
@@ -359,10 +397,10 @@ const EXERCISES = {
   db_skull:       { name: "Dumbbell Skull Crushers",          tag: "arms",   q: "dumbbell skull crusher triceps form" },
 
   /* Pull A */
-  pullup_neutral: { name: "Neutral Grip Pull-Ups",            tag: "pull",   q: "neutral grip pull up form" },
+  pullup_neutral: { name: "Neutral Grip Pull-Ups",            tag: "pull",   q: "neutral grip pull up form", bw: true },
   cable_row:      { name: "Seated Cable Rows",                tag: "pull",   q: "seated cable row form" },
   straight_arm:   { name: "Straight Arm Pulldowns",           tag: "pull",   q: "straight arm pulldown lat form" },
-  bw_calf:        { name: "Bodyweight Calf Raises",           tag: "calves", q: "bodyweight standing calf raise full range" },
+  bw_calf:        { name: "Bodyweight Calf Raises",           tag: "calves", q: "bodyweight standing calf raise full range", bw: true },
   db_lateral:     { name: "Dumbbell Lateral Raises",          tag: "shldr",  q: "dumbbell lateral raise strict form" },
 
   /* Legs A */
@@ -389,8 +427,25 @@ const EXERCISES = {
   bb_deadlift:    { name: "Barbell Deadlifts",                tag: "hinge",  q: "barbell conventional deadlift form" },
   goblet_squat:   { name: "Goblet Squats",                    tag: "legs",   q: "goblet squat form" },
   step_up:        { name: "Bench Step Ups",                   tag: "legs",   q: "dumbbell bench step up form" },
-  hang_leg:       { name: "Hanging Leg Raises",               tag: "core",   q: "hanging leg raise strict form" },
-  bb_shrug:       { name: "Barbell Shrugs",                   tag: "pull",   q: "barbell shrug trap form" }
+  hang_leg:       { name: "Hanging Leg Raises",               tag: "core",   q: "hanging leg raise strict form", bw: true },
+  bb_shrug:       { name: "Barbell Shrugs",                   tag: "pull",   q: "barbell shrug trap form" },
+
+  /* Garage substitutions — swapped in via ⇄ Sub when the cable setup isn't worth it.
+     Only referenced from `subs` arrays below, never scheduled directly. */
+  bw_dips:        { name: "Bodyweight Dips",                  tag: "arms",   q: "dip bar bodyweight dips triceps form", bw: true },
+  band_pushdown:  { name: "Band Tricep Pushdowns",            tag: "arms",   q: "resistance band tricep pushdown form" },
+  db_oh_tricep:   { name: "DB Overhead Tricep Extensions",    tag: "arms",   q: "dumbbell overhead tricep extension form" },
+  db_curl:        { name: "Dumbbell Curls",                   tag: "arms",   q: "dumbbell bicep curl strict form" },
+  band_curl:      { name: "Band Bicep Curls",                 tag: "arms",   q: "resistance band bicep curl form" },
+  conc_curl:      { name: "Concentration Curls",              tag: "arms",   q: "concentration curl form" },
+  band_1a_push:   { name: "One Arm Band Pushdowns",           tag: "arms",   q: "single arm band tricep pushdown form" },
+  kb_row:         { name: "Kettlebell Bent-Over Rows",        tag: "pull",   q: "kettlebell bent over row form" },
+  db_row:         { name: "One Arm Dumbbell Rows",            tag: "pull",   q: "one arm dumbbell row bench form" },
+  band_row:       { name: "Band Seated Rows",                 tag: "pull",   q: "resistance band seated row form" },
+  incline_db_row: { name: "Incline Bench DB Rows",            tag: "pull",   q: "chest supported incline dumbbell row form" },
+  band_straight:  { name: "Band Straight Arm Pulldowns",      tag: "pull",   q: "band straight arm pulldown lat form" },
+  db_pullover:    { name: "Dumbbell Pullovers",               tag: "pull",   q: "dumbbell pullover lat focus form" },
+  band_pulldown:  { name: "Band Lat Pulldowns",               tag: "pull",   q: "kneeling band lat pulldown form" }
 };
 
 /* Workout order IS the training cycle — "Up Next" rotates through it. */
@@ -417,8 +472,8 @@ const WORKOUTS = {
     focus: "Back · Calves · Side delts",
     exercises: [
       { id: "pullup_neutral", sets: "3", reps: "to failure", load: "Pulldowns are a fine sub",  rest: 90 },
-      { id: "cable_row",      sets: "3", reps: "8-10",       load: "",                          rest: 90 },
-      { id: "straight_arm",   sets: "3", reps: "12-14",      load: "Lats, not triceps",         rest: 60 },
+      { id: "cable_row",      sets: "3", reps: "8-10",       load: "",                          rest: 90, subs: ["kb_row", "band_row"] },
+      { id: "straight_arm",   sets: "3", reps: "12-14",      load: "Lats, not triceps",         rest: 60, subs: ["band_straight", "db_pullover"] },
       { id: "bw_calf",        sets: "3", reps: "35",         load: "Bodyweight, full range",    rest: 60 },
       { id: "db_lateral",     sets: "3", reps: "18-20",      load: "Light and strict",          rest: 60 }
     ]
@@ -432,8 +487,8 @@ const WORKOUTS = {
       { id: "bb_squat",    sets: "3", reps: "8-10",             load: "Hit parallel every rep",  rest: 120 },
       { id: "db_rdl",      sets: "3", reps: "12-15",            load: "Hinge, controlled descent", rest: 90 },
       { id: "walk_lunge",  sets: "3", reps: "10-12 steps / foot", load: "",                      rest: 90  },
-      { id: "rope_tricep", sets: "3", reps: "18-20",            load: "",                        rest: 60  },
-      { id: "rope_curl",   sets: "3", reps: "18-20",            load: "",                        rest: 60  }
+      { id: "rope_tricep", sets: "3", reps: "18-20",            load: "",                        rest: 60, subs: ["bw_dips", "band_pushdown", "db_oh_tricep"] },
+      { id: "rope_curl",   sets: "3", reps: "18-20",            load: "",                        rest: 60, subs: ["db_curl", "band_curl"] }
     ]
   },
   pushB: {
@@ -455,11 +510,11 @@ const WORKOUTS = {
     tab: "Pull B",
     focus: "Back · Machines and cables · Arms",
     exercises: [
-      { id: "neutral_pd",    sets: "3", reps: "10-12", load: "",                          rest: 90 },
-      { id: "horiz_row",     sets: "3", reps: "10-12", load: "Sub DB rows if no machine", rest: 90 },
-      { id: "chest_sup_row", sets: "3", reps: "10-12", load: "Chest stays pinned",        rest: 90 },
-      { id: "one_arm_push",  sets: "3", reps: "18-20", load: "Per arm",                   rest: 60 },
-      { id: "one_arm_curl",  sets: "3", reps: "18-20", load: "Per arm",                   rest: 60 }
+      { id: "neutral_pd",    sets: "3", reps: "10-12", load: "",                          rest: 90, subs: ["pullup_neutral", "band_pulldown"] },
+      { id: "horiz_row",     sets: "3", reps: "10-12", load: "Sub DB rows if no machine", rest: 90, subs: ["db_row", "band_row"] },
+      { id: "chest_sup_row", sets: "3", reps: "10-12", load: "Chest stays pinned",        rest: 90, subs: ["incline_db_row", "band_row"] },
+      { id: "one_arm_push",  sets: "3", reps: "18-20", load: "Per arm",                   rest: 60, subs: ["bw_dips", "band_1a_push"] },
+      { id: "one_arm_curl",  sets: "3", reps: "18-20", load: "Per arm",                   rest: 60, subs: ["conc_curl", "band_curl"] }
     ]
   },
   legsB: {
@@ -550,7 +605,17 @@ function sessionTs(s) {
 }
 
 function startSession(workout) {
-  const sess = { id: newSessionId(), date: todayISO(), completed: {}, logs: {} };
+  // Substitutions are sticky: a new session inherits the previous session's
+  // swaps so training stays consistent week over week. Switching a slot back
+  // to the program's lift is always one tap away.
+  const sess = { id: newSessionId(), date: todayISO(), completed: {}, logs: {}, subs: {} };
+  const prev = state.sessions[workout][0];
+  if (prev && prev.subs) {
+    WORKOUTS[workout].exercises.forEach((ex, i) => {
+      const sid = prev.subs[i];
+      if (sid && ex.subs && ex.subs.includes(sid)) sess.subs[i] = sid;
+    });
+  }
   state.sessions[workout].unshift(sess);
   state.activeSessionId[workout] = sess.id;
   saveState();
@@ -585,8 +650,13 @@ function parseWeight(w) {
 function fmtWeight(n) {
   return (Math.round(n * 10) / 10).toString().replace(/\.0$/, "");
 }
-function roundToIncrement(n) {
-  return Math.max(INCREMENT, Math.round(n / INCREMENT) * INCREMENT);
+/* Bodyweight lifts track ADDED weight (belt + kettlebell): 0 = strict BW. */
+function fmtLoad(n, isBw) {
+  if (!isBw) return `${fmtWeight(n)} lb`;
+  return n === 0 ? "BW" : `BW +${fmtWeight(n)} lb`;
+}
+function roundToIncrement(n, floor) {
+  return Math.max(floor ?? INCREMENT, Math.round(n / INCREMENT) * INCREMENT);
 }
 /* "6-8" → "8-10". Returns null for "to failure", "35", "10-12 steps / foot". */
 function bumpRange(reps) {
@@ -594,13 +664,23 @@ function bumpRange(reps) {
   return m ? `${parseInt(m[1],10) + 2}-${parseInt(m[2],10) + 2}` : null;
 }
 
-/* Prior sessions that logged a weight for this exercise, newest first. */
-function priorEntries(workout, exIdx, beforeSessionId) {
+/* The exercise actually performed in a slot: the session's sub if one was
+   chosen, otherwise the program's exercise. Old saves have no subs field. */
+function performedId(session, workout, exIdx) {
+  return (session.subs && session.subs[exIdx]) || WORKOUTS[workout].exercises[exIdx].id;
+}
+
+/* Prior sessions that logged a weight for this exercise, newest first.
+   Filtered to sessions where the same exercise was performed — a session
+   spent on a substitution never feeds the original lift's history, and
+   vice versa. */
+function priorEntries(workout, exIdx, beforeSessionId, pid) {
   const out = [];
   let foundCurrent = false;
   for (const s of state.sessions[workout]) {
     if (s.id === beforeSessionId) { foundCurrent = true; continue; }
     if (!foundCurrent) continue;
+    if (performedId(s, workout, exIdx) !== pid) continue;
     const log = s.logs[exIdx];
     const w = parseWeight(log && log.weight);
     if (w !== null) out.push({ weight: w, hit: log.hit === true, date: s.date });
@@ -608,14 +688,14 @@ function priorEntries(workout, exIdx, beforeSessionId) {
   return out;
 }
 
-function getLastLoggedLoad(workout, exIdx, beforeSessionId) {
-  return priorEntries(workout, exIdx, beforeSessionId)[0] || null;
+function getLastLoggedLoad(workout, exIdx, beforeSessionId, pid) {
+  return priorEntries(workout, exIdx, beforeSessionId, pid)[0] || null;
 }
 
 /* No prior numeric load → no suggestion. That's also what keeps bodyweight
    movements quiet until you actually start adding weight to them. */
-function suggestNext(workout, exIdx, beforeSessionId, ex) {
-  const hist = priorEntries(workout, exIdx, beforeSessionId);
+function suggestNext(workout, exIdx, beforeSessionId, ex, pid) {
+  const hist = priorEntries(workout, exIdx, beforeSessionId, pid);
   if (!hist.length) return null;
 
   if (hist.length >= PLATEAU_SESSIONS) {
@@ -624,7 +704,8 @@ function suggestNext(workout, exIdx, beforeSessionId, ex) {
     if (stuck) {
       return {
         type: "plateau",
-        weight: roundToIncrement(w[0].weight * 0.9),
+        // Added-weight lifts may drop all the way back to strict bodyweight.
+        weight: roundToIncrement(w[0].weight * 0.9, EXERCISES[pid].bw ? 0 : undefined),
         reps: bumpRange(ex.reps),
         from: w[0].weight
       };
@@ -792,16 +873,20 @@ function renderWorkout(workout) {
 }
 
 function renderExercise(workout, session, ex, idx) {
-  const exDef = EXERCISES[ex.id];
+  const pid = performedId(session, workout, idx);
+  const isSubbed = pid !== ex.id;
+  const exDef = EXERCISES[pid];
   const isDone = !!session.completed[idx];
   const log = session.logs[idx] || { weight: "", notes: "" };
-  const lastLoad = getLastLoggedLoad(workout, idx, session.id);
-  const sugg = suggestNext(workout, idx, session.id, ex);
+  const lastLoad = getLastLoggedLoad(workout, idx, session.id, pid);
+  const sugg = suggestNext(workout, idx, session.id, ex, pid);
   const restSecs = ex.rest || 60;
   const restText = restLabel(restSecs);
 
+  const isBwEx = !!exDef.bw;
+
   const lastHtml = lastLoad
-    ? `<div class="ex-last">Last (${shortDate(lastLoad.date)}): <strong>${fmtWeight(lastLoad.weight)} lb</strong>` +
+    ? `<div class="ex-last">Last (${shortDate(lastLoad.date)}): <strong>${fmtLoad(lastLoad.weight, isBwEx)}</strong>` +
       (lastLoad.hit
         ? ` · <span class="ex-hit-flag yes">hit the range</span>`
         : ` · <span class="ex-hit-flag no">missed</span>`) +
@@ -811,14 +896,29 @@ function renderExercise(workout, session, ex, idx) {
   let suggHtml = "";
   if (sugg) {
     const label =
-      sugg.type === "up"      ? `Try ${fmtWeight(sugg.weight)} lb` :
-      sugg.type === "hold"    ? `Hold ${fmtWeight(sugg.weight)} lb — beat your reps` :
-      /* plateau */             `Plateau: drop to ${fmtWeight(sugg.weight)} lb${sugg.reps ? ` × ${sugg.reps}` : ""}`;
+      sugg.type === "up"      ? `Try ${fmtLoad(sugg.weight, isBwEx)}` :
+      sugg.type === "hold"    ? `Hold ${fmtLoad(sugg.weight, isBwEx)}, beat your reps` :
+      /* plateau */             `Plateau: drop to ${fmtLoad(sugg.weight, isBwEx)}${sugg.reps ? ` × ${sugg.reps}` : ""}`;
     suggHtml = `<button class="ex-suggest ${sugg.type}" data-w="${sugg.weight}">${label}<span class="sg-tap">tap to use</span></button>`;
   }
 
   const hitVal = log.hit === true ? "yes" : (log.hit === false ? "no" : "");
   const weightVal = parseWeight(log.weight);
+
+  // Garage substitution: chips list the program's lift first, then its subs.
+  let swapBtnHtml = "", swapHtml = "", subNoteHtml = "";
+  if (ex.subs && ex.subs.length) {
+    swapBtnHtml = `<button class="btn swap-toggle">⇄ Sub</button>`;
+    swapHtml = `<div class="ex-swap">` +
+      [ex.id, ...ex.subs].map(id =>
+        `<button class="swap-chip ${id === pid ? "on" : ""}" data-ex="${id}">` +
+        `${EXERCISES[id].name}${id === ex.id ? `<span class="sc-tag">program</span>` : ""}</button>`
+      ).join("") +
+      `</div>`;
+  }
+  if (isSubbed) {
+    subNoteHtml = `<div class="ex-sub-note">Sub for <strong>${EXERCISES[ex.id].name}</strong> · carries forward weekly</div>`;
+  }
 
   const el = document.createElement("div");
   el.className = "exercise";
@@ -835,17 +935,21 @@ function renderExercise(workout, session, ex, idx) {
           <span class="ex-name">${exDef.name}</span>
         </div>
         <div class="ex-prescription"><strong>${ex.sets} × ${ex.reps}</strong>${ex.load ? " · " + ex.load : ""}</div>
+        ${subNoteHtml}
         ${lastHtml}
         ${suggHtml}
         <div class="ex-actions">
           <a class="btn" href="${v(exDef.q)}" target="_blank" rel="noopener">▶ Video</a>
+          ${swapBtnHtml}
           <button class="btn log-toggle">✎ Log</button>
           <button class="btn btn-timer rest-timer" data-default="${restText}">${restText}</button>
         </div>
+        ${swapHtml}
         <div class="ex-log">
           <div class="log-weight-row">
+            ${isBwEx ? `<span class="unit">BW +</span>` : ""}
             <input type="number" class="log-weight" inputmode="decimal" step="0.5" min="0"
-                   placeholder="Weight" value="${weightVal === null ? "" : weightVal}">
+                   placeholder="${isBwEx ? "Added lb · 0 = just BW" : "Weight"}" value="${weightVal === null ? "" : weightVal}">
             <span class="unit">lb</span>
           </div>
           <div class="hit-label">All ${ex.sets} sets inside ${ex.reps}?</div>
@@ -867,6 +971,21 @@ function renderExercise(workout, session, ex, idx) {
   el.querySelector(".log-toggle").onclick = () => {
     el.querySelector(".ex-log").classList.toggle("open");
   };
+
+  const swapToggle = el.querySelector(".swap-toggle");
+  if (swapToggle) {
+    swapToggle.onclick = () => el.querySelector(".ex-swap").classList.toggle("open");
+    el.querySelectorAll(".swap-chip").forEach(chip => {
+      chip.onclick = () => {
+        if (!session.subs) session.subs = {};   // sessions saved before subs existed
+        const chosen = chip.dataset.ex;
+        if (chosen === ex.id) delete session.subs[idx];
+        else session.subs[idx] = chosen;
+        saveState();
+        render(workout);
+      };
+    });
+  }
   if (weightVal !== null || log.notes || log.hit != null) el.querySelector(".ex-log").classList.add("open");
 
   function ensureLog() {

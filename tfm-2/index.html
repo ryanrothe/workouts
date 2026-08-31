@@ -1,0 +1,1650 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="TFM 2.0" />
+<meta name="theme-color" content="#b91c1c" />
+<link rel="manifest" href="../manifest.webmanifest" />
+<link rel="apple-touch-icon" href="../icon-180.png" />
+<link rel="icon" type="image/png" href="../favicon.png" />
+<title>The Functional Method 2.0 — JTM Fit</title>
+<link rel="stylesheet" href="../shared/styles.css" />
+<style>
+  /* TFM-specific styles. Shared design tokens come from ../shared/styles.css. */
+
+  .hero {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .hero-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .coach-badge {
+    display: inline-block;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border: 1px solid var(--primary-line);
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .stat {
+    background: var(--card-2);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    padding: 8px 6px;
+    text-align: center;
+  }
+  .stat-num { font-size: 17px; font-weight: 700; color: var(--primary); font-variant-numeric: tabular-nums; }
+  .stat-label { font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+
+  /* Week pill bar */
+  .week-bar {
+    display: flex; gap: 5px;
+    overflow-x: auto;
+    margin-bottom: 10px;
+    padding: 4px 2px;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .week-bar::-webkit-scrollbar { display: none; }
+  .week-pill {
+    flex-shrink: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 7px 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    cursor: pointer;
+    min-width: 46px;
+    text-align: center;
+    font-family: inherit;
+    font-variant-numeric: tabular-nums;
+  }
+  .week-pill.active { background: var(--primary); border-color: var(--primary); color: white; }
+  .week-pill.done { border-color: var(--success); background: var(--success-soft); color: var(--success); }
+  .week-pill.done.active { background: var(--success); color: white; }
+
+  .tab .due-dot[hidden] { display: none; }
+  .tab .due-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--primary);
+    margin-left: 5px;
+    vertical-align: 1px;
+  }
+  .tab.active .due-dot { background: white; }
+
+  /* Exercise tag color variants (extends .ex-tag from shared) */
+  .ex-tag.str    { background: #ffe9e0; color: #c2410c; }
+  .ex-tag.upper  { background: #e7f0fb; color: #1f63b8; }
+  .ex-tag.legs   { background: var(--success-soft); color: var(--success); }
+  .ex-tag.cplx   { background: #f1eafd; color: #6b3ed0; }
+  .ex-tag.fin    { background: #fdeaea; color: #b3261e; }
+  .ex-tag.core   { background: #f0f1f3; color: #6b7588; }
+  .ex-tag.mob    { background: var(--accent-soft); color: var(--accent); }
+
+  /* "Last:" reference + next-load suggestion */
+  .ex-hit-flag { font-weight: 700; }
+  .ex-hit-flag.yes { color: var(--success); }
+  .ex-hit-flag.no  { color: var(--danger); }
+
+  .ex-suggest {
+    display: inline-flex; align-items: center; gap: 5px;
+    margin-top: 5px;
+    border-radius: 6px;
+    padding: 4px 9px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    border: 1px solid transparent;
+    text-align: left;
+    line-height: 1.35;
+  }
+  .ex-suggest.up      { background: var(--success-soft); color: var(--success); border-color: var(--success-line); }
+  .ex-suggest.hold    { background: var(--card-2);       color: var(--text-body); border-color: var(--border); }
+  .ex-suggest.plateau { background: var(--warning-soft); color: var(--warning); border-color: #edd9a6; }
+  .ex-suggest:active { filter: brightness(0.96); }
+  .ex-suggest .sg-tap { font-weight: 600; opacity: 0.72; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* Complex / finisher movement lists */
+  .ex-detail {
+    margin: 6px 0 0;
+    padding: 8px 10px;
+    background: var(--card-2);
+    border: 1px solid var(--border-soft);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text-body);
+    line-height: 1.6;
+  }
+  .ex-detail .dt-line { display: block; }
+
+  /* Log editor — weight + did-you-hit-the-top */
+  .log-weight-row { display: flex; align-items: center; gap: 6px; }
+  .log-weight-row .log-weight { flex: 1; min-width: 0; }
+  .log-weight-row .unit { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .hit-label { font-size: 11px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+  .hit-row { display: flex; gap: 6px; }
+  .hit-btn {
+    flex: 1;
+    border: 1px solid var(--border);
+    background: var(--card-2);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 8px 6px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .hit-btn.on-yes { background: var(--success-soft); color: var(--success); border-color: var(--success-line); }
+  .hit-btn.on-no  { background: var(--danger-soft);  color: var(--danger);  border-color: #f3c8c4; }
+
+  /* Timer buttons */
+  .btn-timer {
+    font-variant-numeric: tabular-nums;
+    min-width: 78px;
+    justify-content: center;
+  }
+  .btn-timer.running {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+  .btn-timer.paused {
+    background: var(--warning-soft);
+    color: var(--warning);
+    border-color: #edd9a6;
+  }
+  .btn-timer.done {
+    background: var(--success);
+    color: white;
+    border-color: var(--success);
+    animation: timer-flash 0.6s ease-out;
+  }
+  @keyframes timer-flash {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+  .btn-timer-x { color: var(--danger); min-width: 0; }
+
+  /* Warm-up / cool-down compact checklists */
+  .prep {
+    margin: 8px 0;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    background: var(--card-2);
+    overflow: hidden;
+  }
+  .prep-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 12px;
+    cursor: pointer; user-select: none;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+  .prep-head .caret { font-size: 10px; }
+  .prep.collapsed .prep-body { display: none; }
+  .prep.collapsed .caret { transform: rotate(-90deg); }
+  .prep-body { padding: 2px 12px 10px; }
+  .prep-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 5px 0;
+    font-size: 12.5px; color: var(--text-body);
+    cursor: pointer;
+  }
+  .prep-check {
+    width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px;
+    border: 2px solid #c8cdd6; border-radius: 5px;
+    background: white;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .prep-check svg { width: 10px; height: 10px; opacity: 0; }
+  .prep-item.done .prep-check { background: var(--success); border-color: var(--success); }
+  .prep-item.done .prep-check svg { opacity: 1; }
+  .prep-item.done { color: var(--muted); text-decoration: line-through; }
+
+  .block-note {
+    font-size: 12px; color: var(--muted); line-height: 1.55;
+    margin: 4px 0 2px;
+  }
+  .block-label {
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--primary); margin: 12px 0 0;
+  }
+  .day-optional {
+    display: inline-block;
+    background: var(--warning-soft); color: var(--warning);
+    border-radius: 4px; padding: 1px 7px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+    margin-left: 6px; vertical-align: 1px;
+  }
+
+  .day-toolbar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+    font-size: 12px; color: var(--muted);
+  }
+  .btn-danger { color: var(--danger); border-color: #f3c8c4; }
+
+  .reset-link {
+    background: none; border: none; color: var(--muted);
+    font-size: 11px; cursor: pointer; padding: 4px 8px; text-decoration: underline;
+    font-family: inherit;
+  }
+
+  @media (max-width: 420px) {
+    .hero-stats { gap: 6px; }
+    .stat { padding: 6px 4px; }
+    .stat-num { font-size: 15px; }
+    .stat-label { font-size: 8.5px; }
+  }
+</style>
+</head>
+<body data-program="tfm-2">
+
+<header class="appbar">
+  <div class="appbar-inner">
+    <a class="appbar-back" href="../" aria-label="Back to Exercise Library">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="10 3 5 8 10 13"/></svg>
+      Library
+    </a>
+    <div class="appbar-title">
+      <div class="eyebrow">Program</div>
+      <div class="name" id="appbar-name"></div>
+    </div>
+  </div>
+  <div class="appbar-accent"></div>
+</header>
+
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <span class="coach-badge" id="hero-badge"></span>
+        <h1 style="margin-top:6px" id="hero-title"></h1>
+        <div class="hero-sub" id="hero-sub"></div>
+      </div>
+      <button class="reset-link" id="reset-btn" title="Reset all tracking">Reset</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num" id="stat-week">W1</div><div class="stat-label">Current Week</div></div>
+      <div class="stat"><div class="stat-num" id="stat-days">0</div><div class="stat-label">Days Done</div></div>
+      <div class="stat"><div class="stat-num" id="stat-thisweek">0 / 5</div><div class="stat-label">This Week</div></div>
+      <div class="stat"><div class="stat-num" id="stat-overall">0%</div><div class="stat-label">Overall</div></div>
+    </div>
+  </div>
+
+  <!-- WEEK PILLS -->
+  <div class="week-bar" id="week-bar"></div>
+
+  <!-- TABS — day tabs are injected before the Notes tab -->
+  <div class="tabs" id="tabs">
+    <button class="tab" data-pane="notes">Notes</button>
+  </div>
+
+  <!-- PANES — day panes are injected before the Notes pane -->
+  <div id="panes">
+    <div class="pane" id="pane-notes">
+      <div class="card" id="notes-card"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ===========================================================================
+   SHARED HELPERS — line parsing + row builders used by the PROGRAM data below.
+   Prescriptions are authored as near-verbatim PDF lines and parsed here, so
+   the data section stays a faithful transcription of the program.
+   =========================================================================== */
+const VIDEO_BASE = "https://www.youtube.com/results?search_query=";
+function v(q) { return VIDEO_BASE + encodeURIComponent(q + " exercise form"); }
+
+/* Names that log a weight get suggestions; the rest stay quiet until loaded. */
+const BW_RE = /pull.?up|chin.?up|push.?up|\bdip\b|dips\b|hanging|toe to bar|leg raise|jump through|l.?\s?sit|ring |parallette|bodyweight|body weight|burpee pull/i;
+const LOADED_RE = /^(kb|db|barbell|weighted|medicine ball|plate|kettlebell|dumbbell)|\b(kb|db|barbell)\b/i;
+/* Lower-body lifts progress in 10 lb jumps, everything else in 5. Judgment
+   call — cable/KB gear often moves in other increments; override in the log. */
+const LOWER_RE = /squat|deadlift|\brdl\b|lunge|step up|pistol|glute bridge|hip thrust|sumo|cossack|leg press/i;
+
+/* Strip parentheticals BEFORE number-hunting — "(4:2:1 tempo)" and
+   "(6 each side)" would otherwise poison the rep parse. */
+function parseLine(line) {
+  let per = false;
+  const notes = [];
+  let core = line;
+  core = core.replace(/\(([^)]*)\)/g, (_, inner) => {
+    if (/each (side|leg|arm)|alternating|on each/i.test(inner)) per = true;
+    else notes.push(inner.trim());
+    return " ";
+  }).replace(/\s+/g, " ").trim();
+
+  const m = core.match(/^(.+?)\s+(\d+(?:-\d+)?)\s*x\s*(.+)$/i);
+  if (!m) return { name: core, rx: "", per, notes, repTop: null, repRange: null, isMax: false };
+
+  const name = m[1].trim();
+  const sets = m[2];
+  let reps = m[3].trim();
+  const isMax = /max/i.test(reps);
+  let repTop = null, repRange = null;
+  const rr = reps.match(/^(\d+)\s*-\s*(\d+)$/);
+  const rf = reps.match(/^(\d+)$/);
+  if (rr) { repRange = `${rr[1]}-${rr[2]}`; repTop = parseInt(rr[2], 10); }
+  else if (rf) { repTop = parseInt(rf[1], 10); }
+
+  let rx = `${sets} × ${reps}`;
+  if (per) rx += " · each side";
+  if (notes.length) rx += " · " + notes.join(" · ");
+  return { name, rx, sets, per, notes, repTop, repRange, isMax };
+}
+
+/* r("DB Bench Press 3 x 8", 90) → a full trackable row. opts override anything. */
+function r(line, rest, tag, opts = {}) {
+  const p = parseLine(line);
+  const bw = !LOADED_RE.test(p.name) && BW_RE.test(p.name);
+  return Object.assign({
+    name: p.name,
+    rx: p.rx,
+    tag: tag || "str",
+    rest: rest || 90,
+    track: true,
+    bw,
+    lower: LOWER_RE.test(p.name),
+    repTop: p.repTop,
+    repRange: p.repRange,
+    isMax: p.isMax,
+    detail: null,
+    timer: null
+  }, opts);
+}
+
+/* A complex logs ONE weight (the bell/bar you ran the whole circuit with). */
+function complexRow(title, scheme, moves, rest, opts = {}) {
+  return Object.assign({
+    name: title, rx: scheme, tag: "cplx", rest: rest || 120,
+    track: true, bw: false, lower: false,
+    repTop: null, repRange: null, isMax: false,
+    detail: moves, timer: null
+  }, opts);
+}
+
+/* Untracked effort piece (ladders, AMRAPs, interval finishers). */
+function effortRow(title, scheme, moves, tag, timer, opts = {}) {
+  return Object.assign({
+    name: title, rx: scheme, tag: tag || "fin", rest: 60,
+    track: false, bw: false, lower: false,
+    repTop: null, repRange: null, isMax: false,
+    detail: moves || null, timer: timer || null
+  }, opts);
+}
+
+/* Timer specs */
+function tDown(secs, label)          { return { kind: "down",  secs, label }; }
+function tAccum(target, label)       { return { kind: "accum", target, label }; }
+function tInterval(segs, rounds, label) { return { kind: "interval", segs, rounds, label }; }
+function tWatch(label)               { return { kind: "watch", label }; }
+
+/* Mobility circuit day — one checkable row carrying the item list. */
+function mobilityDay(items, opts = {}) {
+  return Object.assign({
+    title: "Cardio / Core / Mobility",
+    duration: "30-45 mins",
+    optional: false,
+    warmup: null,
+    cooldown: null,
+    blocks: [{
+      label: "Circuit",
+      note: "3 sets · 60 seconds rest between sets · no rest between exercises. Slow, steady pace — breathe, open up.",
+      rows: [effortRow("Mobility Circuit", "3 rounds of the list below", items, "mob", tDown(60, "⏱ 60s rest"))]
+    }]
+  }, opts);
+}
+/* ===========================================================================
+   PROGRAM DATA — The Functional Method 2.0 (JTM Fit / John Madsen)
+   8 weeks · Mon Legs · Tue Full Body · Wed Mobility · Thu Upper Push/Pull ·
+   Fri Full Body (strength + KB complex) · Sat Mobility · Sun rest
+   Transcribed from TheFunctionalMethod-2.0.pdf.
+   =========================================================================== */
+
+const STR_NOTE = "All reps and sets of each movement before moving on. 2-5 min rest between the strength sets, 90-120s between the other movements. As heavy as possible with perfect form.";
+const FB_NOTE = "All reps and sets of each movement before moving on. As heavy as possible on the weighted movements with perfect form.";
+
+/* Warm-ups fork at week 5 (A = weeks 1-4, B = weeks 5-8). */
+const WU2A = {
+  mon: ["Lateral Band Walk x 25 (each side)", "Lunge w/ Psoas Reach x 10 (each side)", "Pike Fold to Squat Hold x 10", "Double Band Glute Bridge w/ 2s hold x 15", "Jumping Spider Lunge T Frame x 10 (each side)"],
+  tue: ["Inch Worm Push Up x 10", "Lunge w/ Psoas Reach x 10 (each side)", "Band In Front / Behind the Neck Press x 10", "Lateral Bear Crawl x 60 seconds", "High Knees x 60 seconds"],
+  thu: ["Walkouts x 10", "Band Pass Throughs x 15", "Superman Hold to Push Up x 10", "Band Pull Aparts x 15", "Band In Front / Behind the Neck Press x 10"],
+  fri: ["Inch Worm Push Ups x 10", "Band Pass Through x 15", "Foam Roller Lying Scap Openers x 10 (each side)", "Double Band Glute Bridge w/ 2s hold x 15", "World's Greatest Stretch x 5 (each side)"]
+};
+const WU2B = {
+  mon: ["Monster Walks x 15 (forward then backward)", "Spider Lunge T Frame Crawl x 10 (each side)", "Cossack Stretch x 10 (each side)", "Single Leg Bridge x 15 (each side)", "Body Clean x 5-8"],
+  tue: ["Monster Walks x 15 (forward then backward)", "Superman Hold to Push Up x 12", "Stretch Kick to Lunge x 10 (each leg)", "Scap Pull Ups x 15", "Body Clean to Tuck Jump x 5-8"],
+  thu: ["Band Pass Throughs x 15", "Scap Pull Ups x 15", "Swimmer Push Ups x 15", "Bent Row to External Rotation x 10", "Plank Reaches x 60 seconds"],
+  fri: ["Push Up Spider Lunge T Frame x 8", "Monster Walks x 15 (forward then backwards)", "Scap Pull Ups x 15", "Body Clean to Vertical Jump x 5-8", "Kettlebell Swings x 25"]
+};
+const CD2A = {
+  mon: ["Spider Lunge Stretch x 60-90s (each side)", "Banded Hamstring Stretch x 60-90s (each side)", "Pigeon Stretch w/ reaches x 60-90s (each side)"],
+  tue: ["Band Hip Flexor / Lat Stretch x 60-90s (each side)", "Child's Pose to Arch x 60-90s", "Pigeon Stretch w/ T Frame x 60-90s (each side)"],
+  thu: ["Box / Bench Lat Stretch x 60-90s (each side)", "Pigeon Stretch w/ T Frame x 60-90s (each side)", "Scorpions x 60-90s"],
+  fri: ["Spider Lunge Stretch x 60-90s (each side)", "Down Dog to Arch x 60-90s", "Pigeon Stretch w/ reaches x 60-90s (each side)"]
+};
+const CD2B = {
+  mon: ["Band Hip / Lat Stretch x 60-90s (each side)", "Band V Stretch x 60-90s", "Adductor Stretch x 60-90s (each side)"],
+  tue: ["Child's Pose Reach Through x 45-60s (each side)", "Band Tricep Stretch x 60-90s (each side)", "QL Stretch x 45-60s (each side)"],
+  thu: ["Box / Bench Lat Stretch x 60-90s", "Pec Stretch x 60-90s", "Pigeon Stretch w/ T Frame x 60-90s (each side)"],
+  fri: ["Child's Pose to Arch x 60-90s", "Foam Roller Thoracic Extensions x 60-90s", "Adductor Stretch x 60-90s (each side)"]
+};
+
+const CARDIO_PICK = "3-5 min cardio — row, assault bike, jump rope, ski erg or run (pick one per set)";
+const MOB2_A = [CARDIO_PICK, "Pike Fold to Squat Hold x 60s", "Prone Floor Angels x 60s", "Down Dog Toe Touch x 60s", "Foam Roller Thoracic Extensions x 60s", "Side Kick Throughs x 60s", "Hollow Body Hold x 60s"];
+const MOB2_B = [CARDIO_PICK, "Pike Fold to Squat Hold x 60s", "Single Arm Plank Hold x 60s (30s each side)", "Squat Hold x 60s", "Foam Roller Lying Scap Openers x 10 (each side)", "Candle Stick to Reach Through x 60s", "Child's Pose to Arch x 60s", "Hollow Rocks x 60s"];
+const MOB2_A_SAT = MOB2_A.slice(0, -1).concat(["Superman Lifts x 60s"]);
+const MOB2_B_SAT = MOB2_B.slice(0, -1).concat(["Superman Lift Complex x 60s"]);
+
+/* Recurring finishers */
+function ladder(a, b) {
+  return effortRow(`Ladder: ${a} + ${b}`, "10-9-8-…-2-1 of each, as fast as possible with perfect technique", [`${a} — 10 down to 1`, `${b} — 10 down to 1`], "fin", tWatch("⏱ Stopwatch"));
+}
+function tabata2(a, b) {
+  return effortRow(`${a} / ${b}`, "6 sets · 20s work / 10s rest, alternating movements", [a, b], "fin", tInterval([["Work", 20], ["Rest", 10]], 6, "⏱ 6×20/10"));
+}
+function amrap(mins, moves) {
+  return effortRow(`${mins}-Minute AMRAP`, "As many rounds as possible — rest as little as possible", moves, "fin", tDown(mins * 60, `⏱ ${mins}:00`));
+}
+
+function day2(title, duration, wu, note, rows, extras, cd) {
+  return {
+    title, duration, optional: false, warmup: wu, cooldown: cd,
+    blocks: [{ label: "Workout", note, rows }].concat(extras)
+  };
+}
+function fin(row)  { return { label: "Finisher — rest 2-3 minutes first", note: null, rows: [row] }; }
+function coreB(row) { return { label: "Core — rest 2-3 minutes first", note: null, rows: [row] }; }
+
+const W2 = [];
+
+/* ------------------------------- WEEK 1 -------------------------------- */
+W2.push({
+  mon: day2("Leg Day", "60-75 mins", WU2A.mon, STR_NOTE, [
+    r("Barbell Box Squat 3-4 x 5", 180, "legs"),
+    r("Barbell Deadlift 3-4 x 10", 180, "legs"),
+    r("KB Front Rack Step Up 3-4 x 8 (each leg)", 120, "legs"),
+    r("KB or DB RDL w/ 2 second pause 3-4 x 10", 120, "legs")
+  ], [fin(ladder("Goblet Squats", "Burpees")),
+      coreB(r("Ab Rollouts w/ 2 second pause 3-4 x 8-12", 75, "core"))], CD2A.mon),
+  tue: day2("Full Body", "60-75 mins", WU2A.tue, FB_NOTE, [
+    r("KB or DB Farmer's Carry 3-4 x 40 yards or 45 seconds", 105, "str"),
+    r("KB Clean + Cossack Squat 3-4 x 8 (each side)", 105, "str"),
+    r("Horizontal Bodyweight Row w/ 2 second hold 3-4 x 8-12", 105, "str"),
+    r("Jump Through to L-Sit 3-4 x 8-12", 105, "core"),
+    r("DB or KB Bridge Press 3-4 x 12", 105, "str"),
+    r("KB Single Arm Squat Clean Thruster 3-4 x 8 (each side)", 105, "str")
+  ], [fin(tabata2("Twisting Mountain Climbers", "Bridge Sit Ups"))], CD2A.tue),
+  wed: mobilityDay(MOB2_A),
+  thu: day2("Upper Body Push / Pull", "60-75 mins", WU2A.thu, STR_NOTE, [
+    r("Weighted Pull Ups 3-5 x 5", 180, "upper"),
+    r("Barbell Tempo Bench Press 3-4 x 8 (4:2:1 tempo)", 180, "upper"),
+    r("DB Bench Supported Alternating Arm Row 3-4 x 10 (each arm)", 120, "upper"),
+    r("DB Close Grip Bench Press 3-4 x 12", 120, "upper")
+  ], [fin(ladder("Pull Ups", "Weighted Push Ups"))], CD2A.thu),
+  fri: day2("Full Body", "60 mins", WU2A.fri, "Strength first, then the kettlebell complex, then the core finisher.", [
+    r("KB Turkish Get Up 5 x 1 (1 each side)", 150, "str"),
+    complexRow("Kettlebell Complex", "6-8 sets · 1-2 min rest — 1 deadlift + 1 row + 1 clean + 1 thruster = 1 rep · 5 reps per set", [
+      "Deadlift", "Row", "Clean", "Thruster"
+    ], 90)
+  ], [coreB(amrap(6, ["Skier Hops x 10 (5 each side)", "Tuck Ups x 10", "Toe Touchers x 10"]))], CD2A.fri),
+  sat: mobilityDay(MOB2_A_SAT)
+});
+
+/* ------------------------------- WEEK 2 -------------------------------- */
+W2.push({
+  mon: day2("Leg Day", "60-75 mins", WU2A.mon, STR_NOTE, [
+    r("Barbell Deadlift 3-4 x 5", 180, "legs"),
+    r("KB or Barbell Front Squat w/ 4 second negative 3-4 x 8", 180, "legs"),
+    r("Barbell or DB RDL 2 Position Deadlift 3-4 x 8", 120, "legs"),
+    r("Barbell Deficit Back Lunge 3-4 x 10 (each leg)", 120, "legs", { rx: "3-4 × 10 · each leg · 4 inch deficit" })
+  ], [fin(effortRow("Deadlifts + Jump Squats", "5 sets · 30s deadlifts straight into 30s jump squats · 60s rest", ["KB or DB Deadlift x 30s", "Bodyweight Jump Squats x 30s"], "fin", tInterval([["Deadlift", 30], ["Jump Squat", 30], ["Rest", 60]], 5, "⏱ 5×30/30"))),
+      coreB(r("Bench Leg Lift to Pulse 3-5 x 12-15 (slow tempo)", 75, "core", { track: false }))], CD2A.mon),
+  tue: day2("Full Body", "60-75 mins", WU2A.tue, FB_NOTE, [
+    r("KB or DB Farmer's Carry 3-4 x 40 yards or 45 seconds", 105, "str"),
+    r("KB Snatch Lunge 3-4 x 8 (each side)", 105, "str"),
+    r("Single Arm Bodyweight Rows 3-4 x 8 (each side)", 105, "str"),
+    r("L-Sit Hold 3-4 x Max Seconds", 105, "core"),
+    r("DB or KB Push Up Renegade Row w/ 2 second hold 3-4 x 12 (6 each side)", 105, "str"),
+    r("KB or DB Goblet Box Pistols 3-4 x 8 (each side)", 105, "str")
+  ], [fin(tabata2("Plank Walks", "Hollow Body Knee Tucks"))], CD2A.tue),
+  wed: mobilityDay(MOB2_B),
+  thu: day2("Upper Body Push / Pull", "60-75 mins", WU2A.thu, STR_NOTE, [
+    r("Barbell Bench Press 3-5 x 5", 180, "upper"),
+    r("DB Bench Supported Row w/ 2 second hold 3-4 x 10", 120, "upper"),
+    r("DB Single Arm Incline Bench Press 3-4 x 8 (each side)", 120, "upper"),
+    r("KB Gorilla Row 3-4 x 10 (each side)", 120, "upper")
+  ], [fin(amrap(10, ["Chin Up x 5", "Dip to Knee Raise x 10"]))], CD2A.thu),
+  fri: day2("Full Body", "60 mins", WU2A.fri, "Strength first, then the kettlebell complex, then the core finisher.", [
+    r("Barbell Step Up 5 x 5", 180, "str"),
+    complexRow("Kettlebell Complex", "6-8 sets · 1-2 min rest between sets", [
+      "Body Clean to Snatch x 2 (each side)", "Clean to Back Lunge x 4 (each side)", "Burpee Squat Clean Thruster x 6"
+    ], 90)
+  ], [coreB(amrap(6, ["Plank Breakdowns x 10", "V Up x 10", "Hollow Body Hold x 10s"]))], CD2A.fri),
+  sat: mobilityDay(MOB2_B_SAT)
+});
+
+/* ------------------------------- WEEK 3 -------------------------------- */
+W2.push({
+  mon: day2("Leg Day", "60-75 mins", WU2A.mon, STR_NOTE, [
+    r("Barbell Box Squat 3-4 x 5", 180, "legs"),
+    r("Barbell Sumo Deadlift 3-4 x 8", 180, "legs"),
+    r("KB or DB Goblet Bench Pistol 3-4 x 10 (each leg)", 120, "legs"),
+    r("Barbell Kickstand Deadlift 3-4 x 8 (each leg)", 120, "legs")
+  ], [fin(effortRow("KB Swing / Squat Clean / Jumping Deadlift", "3-4 sets · 20s each movement · 60-90s rest", ["KB Swings x 20s", "KB Squat Cleans x 20s", "KB Jumping Deadlifts x 20s"], "fin", tInterval([["Swings", 20], ["Squat Cleans", 20], ["Jump DL", 20], ["Rest", 75]], 4, "⏱ 4 rounds"))),
+      coreB(r("Band Pallof Press w/ Rotation 3-4 x 10 (each side)", 75, "core", { track: false }))], CD2A.mon),
+  tue: day2("Full Body", "60-75 mins", WU2A.tue, FB_NOTE, [
+    r("KB or DB Single Arm Farmer's Carry 3-4 x 40 yards or 45 seconds (each arm)", 105, "str"),
+    r("KB or DB Overhead Single Arm Step Up 3-4 x 10 (each side)", 105, "str"),
+    r("Chin Up w/ 4 second negative 3-4 x Max Reps", 105, "upper"),
+    r("DB or KB Supported Hollow Body Flutter Kicks 3-4 x 60 seconds", 105, "core"),
+    r("Explosive Push Up w/ 4 second negative 3-4 x Max Reps", 105, "upper"),
+    r("ISO Lunge Hammer Curls 3-4 x 10 (each side)", 105, "str")
+  ], [fin(tabata2("Plank Reach to Spider Knee", "V Up Complex"))], CD2A.tue),
+  wed: mobilityDay(MOB2_A),
+  thu: day2("Upper Body Push / Pull", "60-75 mins", WU2A.thu, STR_NOTE, [
+    r("Weighted Chin Ups 3-5 x 5", 180, "upper"),
+    r("Barbell Incline Bench Press 3-4 x 12", 120, "upper"),
+    r("DB Plank Row 3-4 x 12 (each side)", 120, "upper"),
+    r("DB Close Grip Bench Press w/ 4 second negative 3-4 x 12", 120, "upper")
+  ], [fin(ladder("Pull Ups", "Superman Push Ups"))], CD2A.thu),
+  fri: day2("Full Body", "60 mins", WU2A.fri, "Strength first, then the kettlebell complex, then the core finisher.", [
+    r("Barbell Glute Bridge 5 x 5", 180, "str"),
+    complexRow("Kettlebell Complex", "6-8 sets · 1-2 min rest — 3 full reps per side, alternating, no rest inside a set", [
+      "1 Snatch", "1 Row", "1 Clean Lunge", "1 Kneeling Press"
+    ], 90)
+  ], [coreB(amrap(6, ["Plank Reaches x 10 (each side)", "Bridge Sit Up x 10", "Hollow Rock x 10"]))], CD2A.fri),
+  sat: mobilityDay(MOB2_A_SAT)
+});
+
+/* ------------------------------- WEEK 4 -------------------------------- */
+W2.push({
+  mon: day2("Leg Day", "60-75 mins", WU2A.mon, STR_NOTE, [
+    r("Barbell Deadlift 3-4 x 5", 180, "legs"),
+    r("Barbell Back Squat w/ 4 second negative 3-4 x 8", 180, "legs"),
+    r("KB or DB Kickstand RDL Walk 3-4 x 10 (each side)", 120, "legs"),
+    r("Barbell Cossack Squat 3-4 x 8 (each side)", 120, "legs")
+  ], [fin(effortRow("Jumping Lunge / Jump Squat / ISO Hold", "3-5 sets · 45s rest between sets", ["Jumping Lunge x 10 (each leg)", "Jump Squat x 10", "ISO Squat Hold x 10s"], "fin", tInterval([["Work", 70], ["Rest", 45]], 4, "⏱ 4 rounds"))),
+      coreB(r("Weighted Side Plank Lifts 3-5 x 15-20", 75, "core"))], CD2A.mon),
+  tue: day2("Full Body", "60-75 mins", WU2A.tue, FB_NOTE, [
+    r("KB or DB Single Arm Farmer's Carry 3-4 x 40 yards or 45 seconds (each arm)", 105, "str"),
+    r("Barbell Clean + Press 3-4 x 8", 105, "str"),
+    r("Single Arm Bodyweight Row 3-4 x 8 (each arm)", 105, "str"),
+    r("Plank Skull Crushers 3-4 x 10-15", 105, "str"),
+    r("KB or DB Single Arm Bridge Press 3-4 x 10 (each side)", 105, "str"),
+    r("KB Front Rack Squat Get Ups 3-4 x 5 (each side)", 105, "str")
+  ], [fin(tabata2("Double Mountain Climber", "Hollow Body Scissor Kicks"))], CD2A.tue),
+  wed: mobilityDay(MOB2_B),
+  thu: day2("Upper Body Push / Pull", "60-75 mins", WU2A.thu, STR_NOTE, [
+    r("Barbell Bench Press 3-5 x 5", 180, "upper"),
+    r("Barbell Supinated Close Grip Row 3-4 x 10", 120, "upper"),
+    r("Barbell Incline Bench Press w/ 4 second negative 3-4 x 8", 120, "upper"),
+    r("DB or KB Quadruped Row 3-4 x 10 (each side)", 120, "upper")
+  ], [fin(effortRow("Chin Ups / KB Explosive Push Ups / Skier Hops", "3-5 sets · 20s each movement · 60-90s rest", ["Chin Ups x 20s", "KB Explosive Push Ups x 20s", "Skier Hops x 20s"], "fin", tInterval([["Chins", 20], ["Push Ups", 20], ["Skiers", 20], ["Rest", 75]], 4, "⏱ 4 rounds")))], CD2A.thu),
+  fri: day2("Full Body", "60 mins", WU2A.fri, "Strength first, then the kettlebell complex, then the core finisher.", [
+    r("Barbell Back Lunge 5 x 5", 180, "str"),
+    complexRow("Kettlebell Complex", "6-8 sets · 1-2 min rest between sets", [
+      "Burpee Clean x 5", "Gorilla Row x 7", "Front Squat x 9"
+    ], 90)
+  ], [coreB(amrap(6, ["Plank Walkouts x 10", "Side Plank Hip Lift x 10 (each side)", "Leg Lifts x 10"]))], CD2A.fri),
+  sat: mobilityDay(MOB2_B_SAT)
+});
+
+/* ------------------------------- WEEK 5 -------------------------------- */
+W2.push({
+  mon: day2("Legs", "60-75 mins", WU2B.mon, STR_NOTE, [
+    r("Barbell Front Squat 3-4 x 5", 180, "legs"),
+    r("Barbell Sumo Deadlift 3-4 x 10", 180, "legs"),
+    r("DB or KB Heels Elevated Goblet Squat w/ pause 3-4 x 10", 120, "legs"),
+    r("DB or KB Single Leg RDL w/ 4 second negative to kickstand 3-4 x 6 (each side)", 120, "legs")
+  ], [fin(ladder("Goblet Squats", "Burpees")),
+      coreB(r("Ab Rollouts w/ 2 second pause 3-4 x 8-12", 75, "core"))], CD2B.mon),
+  tue: day2("Full Body", "60-75 mins", WU2B.tue, FB_NOTE, [
+    r("KB or DB Front Rack Carry 3-4 x 40 yards or 45 seconds", 105, "str"),
+    r("KB Clean + Cossack Squat + Rotational Press 3-4 x 8 (each side)", 105, "str"),
+    r("Pull Ups w/ 4 second negative 3-4 x Max Reps", 105, "upper"),
+    r("Weighted Side Plank Lifts 3-4 x 15-20 (each side)", 105, "core"),
+    r("DB Push Up Renegade Row to Reverse Fly 3-4 x 12 (6 each side)", 105, "str"),
+    r("KB Burpee Clean + Front Squat 3-4 x 10", 105, "str")
+  ], [fin(tabata2("Twisting Mountain Climbers", "Bridge Sit Ups"))], CD2B.tue),
+  wed: mobilityDay(MOB2_A),
+  thu: day2("Upper Body Push / Pull", "60-75 mins", WU2B.thu, STR_NOTE, [
+    r("Weighted Pull Up 3-5 x 5", 180, "upper"),
+    r("DB or KB Single Arm Incline Bench Press 3-4 x 8", 120, "upper"),
+    r("DB Bench Supported Single Arm Row 3-4 x 10 (each side)", 120, "upper"),
+    r("Barbell Bench Press w/ 4 second negative 3-4 x 8", 180, "upper")
+  ], [fin(ladder("Pull Ups", "Weighted Push Ups"))], CD2B.thu),
+  fri: day2("Full Body", "60 mins", WU2B.fri, "Strength first, then the kettlebell complex, then the core finisher.", [
+    r("KB Turkish Get Up 5 x 1 (1 each side)", 150, "str"),
+    complexRow("Kettlebell Complex", "6-8 sets · 1-2 min rest between sets", [
+      "Overhead Lunge x 5 (each side)", "Double Clean + Front Squat x 5", "Sea Saw Press x 5 (each side)", "Renegade Row x 5 (each side)"
+    ], 90)
+  ], [coreB(amrap(6, ["Skier Hops x 10 (5 each side)", "Tuck Ups x 10", "Toe Touchers x 10"]))], CD2B.fri),
+  sat: mobilityDay(MOB2_A_SAT)
+});
+
+/* ------------------------------- WEEK 6 -------------------------------- */
+W2.push({
+  mon: day2("Legs", "60-75 mins", WU2B.mon, STR_NOTE, [
+    r("Barbell Sumo Deadlift 3-4 x 5", 180, "legs"),
+    r("Barbell Step Up 3-4 x 8 (each leg)", 180, "legs"),
+    r("KB or DB Kickstand RDL Walk 3-4 x 10 (each leg)", 120, "legs"),
+    r("DB or KB Heels Elevated Goblet Squat w/ pause 3-4 x 12", 120, "legs")
+  ], [fin(effortRow("Deadlifts + Jump Squats", "5 sets · 30s deadlifts straight into 30s jump squats · 60s rest", ["KB or DB Deadlift x 30s", "Bodyweight Jump Squats x 30s"], "fin", tInterval([["Deadlift", 30], ["Jump Squat", 30], ["Rest", 60]], 5, "⏱ 5×30/30"))),
+      coreB(r("Band Pallof Press to Rotation 3-4 x 10 (each side)", 75, "core", { track: false }))], CD2B.mon),
+  tue: day2("Full Body", "60-75 mins", WU2B.tue, FB_NOTE, [
+    r("KB or DB Front Rack Carry 3-4 x 40 yards or 45 seconds", 105, "str"),
+    r("DB Burpee Snatch 3-4 x 6 (each side)", 105, "str"),
+    r("Single Arm Bodyweight Rows 3-4 x 10", 105, "str"),
+    r("KB or DB Supported Hollow Body Scissor Kicks 3-4 x 60 seconds", 105, "core"),
+    r("KB or DB Single Leg Bridge Press 3-4 x 8 (each side)", 105, "str"),
+    r("KB Squat Clean to Step Up 3-4 x 8 (4 step ups each leg)", 105, "str")
+  ], [fin(tabata2("Plank Walks", "Hollow Body Knee Tucks"))], CD2B.tue),
+  wed: mobilityDay(MOB2_B),
+  thu: day2("Upper Body Push / Pull", "60-75 mins", WU2B.thu, STR_NOTE, [
+    r("Barbell Bench Press w/ 2 second pause 3-5 x 5", 180, "upper"),
+    r("DB Bench 2-for-1 Row 3-4 x 6", 120, "upper"),
+    r("DB Close Grip Bench Press w/ 4 second negative 3-4 x 12", 120, "upper"),
+    r("DB or KB Quadruped Row 3-4 x 12 (each side)", 120, "upper")
+  ], [fin(amrap(10, ["Chin Up x 5", "Dip to Knee Raise x 10"]))], CD2B.thu),
+  fri: day2("Full Body", "60 mins", WU2B.fri, "Strength first, then the kettlebell complex, then the core finisher.", [
+    r("Barbell Deficit Back Lunge 5 x 5 (4 inch deficit)", 180, "str"),
+    complexRow("Kettlebell Complex", "6-8 sets · 1-2 min rest — all reps on one arm, then the other", [
+      "Burpee Snatch x 3", "Single Leg RDL x 5", "Thruster x 7"
+    ], 90)
+  ], [coreB(amrap(6, ["Plank Breakdowns x 10", "V Up x 10", "Hollow Body Hold x 10s"]))], CD2B.fri),
+  sat: mobilityDay(MOB2_B_SAT)
+});
+
+/* ------------------------------- WEEK 7 -------------------------------- */
+W2.push({
+  mon: day2("Legs", "60-75 mins", WU2B.mon, STR_NOTE, [
+    r("Barbell Front Squat 3-4 x 5", 180, "legs"),
+    r("Barbell Sumo Deadlift 3-4 x 8", 180, "legs"),
+    r("Barbell Deficit Back Lunge 3-4 x 8 (each leg)", 120, "legs", { rx: "3-4 × 8 · each leg · 4 inch deficit" }),
+    r("KB or Barbell 2 Position Deadlift 3-4 x 8", 120, "legs")
+  ], [fin(effortRow("KB Swing / Squat Clean / Jumping Deadlift", "3-4 sets · 20s each movement · 60-90s rest", ["KB Swings x 20s", "KB Squat Cleans x 20s", "KB Jumping Deadlifts x 20s"], "fin", tInterval([["Swings", 20], ["Squat Cleans", 20], ["Jump DL", 20], ["Rest", 75]], 4, "⏱ 4 rounds"))),
+      coreB(r("Band Pallof Press to Rotation 3-4 x 10 (each side)", 75, "core", { track: false }))], CD2B.mon),
+  tue: day2("Full Body", "60-75 mins", WU2B.tue, FB_NOTE, [
+    r("KB or DB Single Arm Overhead Farmer's Carry 3-4 x 40 yards or 45 seconds", 105, "str"),
+    r("KB Burpee Clean to Push Press 3-4 x 10", 105, "str"),
+    r("Chin Up w/ 4 second negative 3-4 x Max Reps", 105, "upper"),
+    r("Dip Bar Leg Lifts 3-4 x 10-15", 105, "core"),
+    r("Weighted Push Ups w/ 4 second negative 3-4 x Max Reps", 105, "upper"),
+    r("DB Hammer Curl Lunge Switch 3-4 x 8 (each side)", 105, "str")
+  ], [fin(tabata2("Plank Reach to Spider Knee", "V Up Complex"))], CD2B.tue),
+  wed: mobilityDay(MOB2_A),
+  thu: day2("Upper Body Push / Pull", "60-75 mins", WU2B.thu, STR_NOTE, [
+    r("Weighted Chin Ups 3-5 x 5", 180, "upper"),
+    r("Barbell Tempo Bench Press 3-4 x 8 (4:2:1 tempo)", 180, "upper"),
+    r("DB Plank Row 3-4 x 12 (each side)", 120, "upper"),
+    r("DB Single Arm Bench Press 3-4 x 10", 120, "upper")
+  ], [fin(ladder("Pull Ups", "Superman Push Ups"))], CD2B.thu),
+  fri: day2("Full Body", "60 mins", WU2B.fri, "Strength first, then the kettlebell workout, then the core finisher.", [
+    r("Barbell Glute Bridge w/ 2 second pause 5 x 5", 180, "str"),
+    complexRow("Kettlebell Workout", "6-8 sets · 1-2 min rest between sets", [
+      "Lunge Switch Clean + Press x 3 (each side)", "Explosive Push Ups x 6 (each side)", "Jumping Deadlift x 9"
+    ], 90)
+  ], [coreB(amrap(6, ["Plank Reaches x 10 (each side)", "Bridge Sit Up x 10", "Hollow Rock x 10"]))], CD2B.fri),
+  sat: mobilityDay(MOB2_A_SAT)
+});
+
+/* ------------------------------- WEEK 8 -------------------------------- */
+W2.push({
+  mon: day2("Legs", "60-75 mins", WU2B.mon, STR_NOTE, [
+    r("Barbell Sumo Deadlift 3-4 x 5", 180, "legs"),
+    r("Barbell or KB Front Squat w/ 4 second negative 3-4 x 8", 180, "legs"),
+    r("Barbell or KB Single Leg RDL w/ 4 second negative 3-4 x 8 (each side)", 120, "legs"),
+    r("KB or DB Goblet Bench Pistols 3-4 x 8 (each side)", 120, "legs")
+  ], [fin(effortRow("Jumping Lunge / Jump Squat / ISO Hold", "3-5 sets · 45s rest between sets", ["Jumping Lunge x 10 (each leg)", "Jump Squat x 10", "ISO Squat Hold x 10s"], "fin", tInterval([["Work", 70], ["Rest", 45]], 4, "⏱ 4 rounds"))),
+      coreB(r("Weighted Side Plank Lifts 3-5 x 15-20", 75, "core"))], CD2B.mon),
+  tue: day2("Full Body", "60-75 mins", WU2B.tue, FB_NOTE, [
+    r("KB or DB Single Arm Overhead Farmer's Carry 3-4 x 40 yards or 45 seconds", 105, "str"),
+    r("KB Lunge Switch Clean + Press 3-4 x 8 (each side)", 105, "str"),
+    r("Horizontal Bodyweight Row w/ 2 second hold 3-4 x 10-12", 105, "str"),
+    r("Side Plank Star Lifts 3-4 x 10-20 (each side)", 105, "core"),
+    r("KB or DB Feet Elevated Push Up Renegade Row 3-4 x 5-8", 105, "str"),
+    r("KB Jumping Deadlift to Squat Clean 3-4 x 10", 105, "str")
+  ], [fin(tabata2("Double Mountain Climber", "Hollow Body Scissor Kicks"))], CD2B.tue),
+  wed: mobilityDay(MOB2_B),
+  thu: day2("Upper Body Push / Pull", "60-75 mins", WU2B.thu, STR_NOTE, [
+    r("Barbell Bench Press w/ 2 second pause 3-5 x 5", 180, "upper"),
+    r("Barbell Supinated Close Grip Bent Row 3-4 x 10", 120, "upper"),
+    r("DB Single Arm Incline Bench Press 3-4 x 10", 120, "upper"),
+    r("KB Gorilla Row 3-4 x 10 (each side)", 120, "upper")
+  ], [fin(effortRow("Chin Ups / KB Explosive Push Ups / Skier Hops", "3-5 sets · 20s each movement · 60s rest", ["Chin Ups x 20s", "KB Explosive Push Ups x 20s", "Skier Hops x 20s"], "fin", tInterval([["Chins", 20], ["Push Ups", 20], ["Skiers", 20], ["Rest", 60]], 4, "⏱ 4 rounds")))], CD2B.thu),
+  fri: day2("Full Body", "60 mins", WU2B.fri, "Strength first, then the kettlebell complex, then the core finisher.", [
+    r("Barbell Step Up 5 x 5", 180, "str"),
+    complexRow("Kettlebell Complex", "6-8 sets · 1-2 min rest between sets", [
+      "Thruster x 5", "Gorilla Row to Deadlift x 5", "Sea Saw Press x 5 (each side)", "Burpee Double Swing x 5"
+    ], 90)
+  ], [coreB(amrap(6, ["Plank Walkouts x 10", "Side Plank Hip Lift x 10 (each side)", "Leg Lifts x 10"]))], CD2B.fri),
+  sat: mobilityDay(MOB2_B_SAT)
+});
+
+const PROGRAM = {
+  slug: "tfm-2",
+  storageKey: "tfm2_v1",
+  appbarName: "The Functional Method 2.0",
+  heroTitle: "The Functional Method 2.0",
+  badge: "JTM Fit · John Madsen",
+  sub: "8-week functional strength · heavy top sets, finishers, KB complexes · Sunday rest",
+  dayOrder: ["mon", "tue", "wed", "thu", "fri", "sat"],
+  dayLabels: { mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat" },
+  requiredDays: ["mon", "tue", "wed", "thu", "fri", "sat"],
+  weeks: W2,
+  sourceNote: "Source: The Functional Method 2.0, JTM Fit / John Madsen. Prescriptions transcribed as written; Sunday is a rest day."
+};
+/* ===========================================================================
+   ENGINE — shared between TFM 1.0 and 2.0 trackers. State, time budget +
+   60-minute mode, progression coach, history, timers, rendering.
+   =========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   STATE
+   --------------------------------------------------------------------------- */
+const STORAGE_KEY = PROGRAM.storageKey;
+const NWEEKS = PROGRAM.weeks.length;
+let state = loadState();
+let uiWeek = null;   // week being viewed (defaults to current training week)
+
+function dayKey(w, d) { return `w${w}_${d}`; }
+
+function emptyState() {
+  return { sixty: false, days: {} };
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const p = JSON.parse(raw);
+      return { sixty: !!p.sixty, days: p.days && typeof p.days === "object" ? p.days : {} };
+    }
+  } catch (e) {}
+  return emptyState();
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  updateStats();
+}
+function dayState(w, d, create) {
+  const k = dayKey(w, d);
+  if (!state.days[k] && create) {
+    state.days[k] = { date: null, clockStart: null, clockStop: null, completed: {}, logs: {} };
+  }
+  return state.days[k] || null;
+}
+
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function shortDate(iso) {
+  if (!iso) return "—";
+  const [, m, d] = iso.split("-");
+  return `${parseInt(m, 10)}/${parseInt(d, 10)}`;
+}
+function stampDate(ds) { if (!ds.date) ds.date = todayISO(); }
+
+/* Flat list of the trackable/checkable "main" rows of a day. */
+function mainRows(w, d) {
+  const day = PROGRAM.weeks[w][d];
+  const out = [];
+  day.blocks.forEach((b, bi) => b.rows.forEach((row, ri) => out.push({ row, bi, ri, idx: out.length })));
+  return out;
+}
+function isDayComplete(w, d) {
+  const ds = dayState(w, d, false);
+  if (!ds) return false;
+  const rows = mainRows(w, d);
+  return rows.length > 0 && rows.every(r => ds.completed["m" + r.idx]);
+}
+function isWeekComplete(w) {
+  return PROGRAM.requiredDays.every(d => isDayComplete(w, d));
+}
+function currentWeek() {
+  for (let w = 0; w < NWEEKS; w++) if (!isWeekComplete(w)) return w;
+  return NWEEKS - 1;
+}
+function dueDay(w) {
+  for (const d of PROGRAM.requiredDays) if (!isDayComplete(w, d)) return d;
+  return PROGRAM.dayOrder[0];
+}
+
+/* ---------------------------------------------------------------------------
+   TIME BUDGET + 60-MINUTE MODE
+   The estimate is a planning model, not a promise: set work is inferred from
+   reps, rests from the program's own guidance.
+   --------------------------------------------------------------------------- */
+function setsFromRx(rx, sixty) {
+  const m = String(rx).match(/^(\d+)(?:-(\d+))?\s*×/);
+  if (!m) return 3;
+  const lo = parseInt(m[1], 10), hi = m[2] ? parseInt(m[2], 10) : lo;
+  return sixty ? lo : hi;   // 60-min mode runs ranged sets at the low end
+}
+function effRest(rest, sixty) {
+  if (!sixty) return rest;
+  if (rest >= 180) return 120;
+  if (rest >= 120) return 90;
+  if (rest >= 90) return 60;
+  return rest;
+}
+function rowWorkSecs(row) {
+  if (row.timer) {
+    const t = row.timer;
+    if (t.kind === "down") return t.secs + 20;
+    if (t.kind === "interval") return t.rounds * t.segs.reduce((n, s) => n + s[1], 0) + 20;
+    if (t.kind === "accum") return t.target * 2 + 20;
+    if (t.kind === "watch") return 300;
+  }
+  if (row.detail) return 90;                                 // complex set
+  const secMatch = String(row.rx).match(/(\d+)\s*seconds/i);
+  if (secMatch) return parseInt(secMatch[1], 10) + 15;
+  let work = row.isMax ? 40 : row.repTop ? Math.min(90, Math.max(25, row.repTop * 4)) : 40;
+  if (/each (side|leg|arm)/i.test(row.rx)) work = Math.round(work * 1.8);
+  return work;
+}
+/* rowSecs includes the rests (rest applies between sets AND exercises). */
+function rowSecs(row, sixty, setsOverride) {
+  const sets = setsOverride != null ? setsOverride : setsFromRx(row.rx, sixty);
+  if (row.timer) return rowWorkSecs(row) + effRest(60, sixty);
+  return sets * (rowWorkSecs(row) + effRest(row.rest, sixty));
+}
+function prepSecs(items, perItemBase, sixty, factor) {
+  if (!items) return 0;
+  let total = 0;
+  items.forEach(it => {
+    let s = perItemBase;
+    if (/2 minute/i.test(it)) s = 130;
+    if (/each (side|leg|arm)/i.test(it)) s = Math.round(s * 1.8);
+    total += s;
+  });
+  return Math.round(total * (sixty ? factor : 1));
+}
+
+/* Full plan for a day: total secs, per-main-row start offsets, sets overrides,
+   and a human list of what 60-min mode changed. */
+function dayPlan(w, d) {
+  const sixty = state.sixty;
+  const day = PROGRAM.weeks[w][d];
+  const rows = mainRows(w, d);
+  const trims = {};          // idx → sets to run
+  const adjustments = [];
+
+  function totalWith(trimMap) {
+    let t = 60;  // setup buffer
+    t += prepSecs(day.warmup, 50, sixty, 0.8);
+    const offsets = [];
+    day.blocks.forEach((b, bi) => {
+      if (bi > 0) t += sixty ? 120 : 150;   // between-block rest
+      b.rows.forEach(row => {
+        const idx = offsets.length;
+        offsets.push(t);
+        t += rowSecs(row, sixty, trimMap[idx]);
+      });
+    });
+    t += prepSecs(day.cooldown, 75, sixty, 0.5);
+    return { total: t, offsets };
+  }
+
+  let plan = totalWith(trims);
+
+  if (sixty) {
+    adjustments.push("Rests tightened one step (3:00→2:00, 2:00→1:30, 1:30→1:00)");
+    if (rows.some(x => /^\d+-\d+\s*×/.test(x.row.rx))) adjustments.push("Ranged sets run at the low end");
+    if (day.cooldown) adjustments.push("Cool-down holds halved — keep every stretch, shorter holds");
+    // Still over an hour? Trim a set off trailing accessories (never the first two lifts).
+    let guard = 10;
+    while (plan.total > 3600 && guard-- > 0) {
+      let trimmed = false;
+      for (let i = rows.length - 1; i >= 2; i--) {
+        const row = rows[i].row;
+        if (row.timer || row.detail) continue;
+        const cur = trims[i] != null ? trims[i] : setsFromRx(row.rx, true);
+        if (cur > 2) {
+          trims[i] = cur - 1;
+          adjustments.push(`${row.name}: ${cur - 1} sets`);
+          trimmed = true;
+          break;
+        }
+      }
+      if (!trimmed) break;
+      plan = totalWith(trims);
+    }
+    if (plan.total > 3600) {
+      adjustments.push("Still over — superset the last two accessories or trim the finisher");
+    }
+  }
+  return { total: plan.total, offsets: plan.offsets, trims, adjustments, sixty };
+}
+
+function fmtMins(secs) { return `~${Math.round(secs / 60)} min`; }
+
+/* ---------------------------------------------------------------------------
+   HISTORY + PROGRESSION COACH
+   Exercises recur across weeks under the same name, so history is looked up
+   by normalized name across every prior day of the program.
+     · hit the top of the rep range on all sets → +5 lb (upper) / +10 lb (lower)
+     · missed → hold the weight, beat the reps
+     · 3 logged outings at the same weight, none hit → −10%, add 2 reps
+   --------------------------------------------------------------------------- */
+const PLATEAU_SESSIONS = 3;
+function normName(n) { return String(n).toLowerCase().replace(/[^a-z0-9]/g, ""); }
+function parseWeight(x) {
+  if (typeof x === "number") return isFinite(x) ? x : null;
+  if (typeof x === "string") { const m = x.match(/\d+(\.\d+)?/); return m ? parseFloat(m[0]) : null; }
+  return null;
+}
+function fmtWeight(n) { return (Math.round(n * 10) / 10).toString().replace(/\.0$/, ""); }
+function fmtLoad(n, bw) { return bw ? (n === 0 ? "BW" : `BW +${fmtWeight(n)} lb`) : `${fmtWeight(n)} lb`; }
+function roundToInc(n, inc, floor) { return Math.max(floor != null ? floor : inc, Math.round(n / inc) * inc); }
+function bumpRange(range, top) {
+  if (range) { const m = range.match(/^(\d+)-(\d+)$/); if (m) return `${+m[1] + 2}-${+m[2] + 2}`; }
+  return top ? `${top + 2}` : null;
+}
+
+/* All prior logged entries for this exercise name, newest first. */
+function priorEntries(name, beforeW, beforeD) {
+  const key = normName(name);
+  const beforeDayIdx = PROGRAM.dayOrder.indexOf(beforeD);
+  const out = [];
+  for (let w = 0; w < NWEEKS; w++) {
+    for (const d of PROGRAM.dayOrder) {
+      const afterCurrent = w > beforeW || (w === beforeW && PROGRAM.dayOrder.indexOf(d) >= beforeDayIdx);
+      if (afterCurrent) continue;
+      const ds = dayState(w, d, false);
+      if (!ds) continue;
+      mainRows(w, d).forEach(({ row, idx }) => {
+        if (normName(row.name) !== key) return;
+        const log = ds.logs[idx];
+        const wt = parseWeight(log && log.weight);
+        if (wt !== null) out.push({ weight: wt, hit: log.hit === true, date: ds.date, week: w, day: d });
+      });
+    }
+  }
+  return out.reverse();
+}
+
+function suggestNext(row, w, d) {
+  if (row.isMax || !row.track) return null;
+  const hist = priorEntries(row.name, w, d);
+  if (!hist.length) return null;
+  const inc = row.lower ? 10 : 5;
+
+  if (hist.length >= PLATEAU_SESSIONS) {
+    const win = hist.slice(0, PLATEAU_SESSIONS);
+    if (win.every(e => e.weight === win[0].weight) && win.every(e => !e.hit)) {
+      return { type: "plateau", weight: roundToInc(win[0].weight * 0.9, inc, row.bw ? 0 : undefined), reps: bumpRange(row.repRange, row.repTop) };
+    }
+  }
+  const last = hist[0];
+  if (last.hit) return { type: "up", weight: last.weight + inc };
+  return { type: "hold", weight: last.weight };
+}
+
+/* ---------------------------------------------------------------------------
+   SHELL
+   --------------------------------------------------------------------------- */
+function buildShell() {
+  document.getElementById("appbar-name").textContent = PROGRAM.appbarName;
+  document.getElementById("hero-badge").textContent = PROGRAM.badge;
+  document.getElementById("hero-title").textContent = PROGRAM.heroTitle;
+  document.getElementById("hero-sub").textContent = PROGRAM.sub;
+
+  const tabsEl = document.getElementById("tabs");
+  const panesEl = document.getElementById("panes");
+  tabsEl.insertAdjacentHTML("afterbegin", PROGRAM.dayOrder.map(d =>
+    `<button class="tab" data-pane="${d}">${PROGRAM.dayLabels[d]}<span class="due-dot" hidden></span></button>`
+  ).join(""));
+  panesEl.insertAdjacentHTML("afterbegin", PROGRAM.dayOrder.map(d =>
+    `<div class="pane" id="pane-${d}"><div id="container-${d}"></div></div>`
+  ).join(""));
+
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".pane").forEach(p => p.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById("pane-" + tab.dataset.pane).classList.add("active");
+    };
+  });
+  buildNotes();
+}
+
+function renderWeekBar() {
+  const bar = document.getElementById("week-bar");
+  bar.innerHTML = "";
+  for (let w = 0; w < NWEEKS; w++) {
+    const b = document.createElement("button");
+    b.className = "week-pill" + (w === uiWeek ? " active" : "") + (isWeekComplete(w) ? " done" : "");
+    b.textContent = "W" + (w + 1);
+    b.onclick = () => { uiWeek = w; render(); };
+    bar.appendChild(b);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   DAY RENDER
+   --------------------------------------------------------------------------- */
+function renderDay(d) {
+  const w = uiWeek;
+  const day = PROGRAM.weeks[w][d];
+  const container = document.getElementById("container-" + d);
+  container.innerHTML = "";
+  const ds = dayState(w, d, false);
+  const rows = mainRows(w, d);
+  const done = rows.filter(x => ds && ds.completed["m" + x.idx]).length;
+  const plan = dayPlan(w, d);
+
+  // Toolbar: session clock + clear-day
+  const clockKey = dayKey(w, d);
+  const toolbar = document.createElement("div");
+  toolbar.className = "day-toolbar";
+  toolbar.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="btn btn-timer" id="clock-${d}" data-clockkey="${clockKey}">▶ Session clock</button>
+      <span id="clockstat-${d}"></span>
+    </div>
+    <button class="btn btn-danger" data-action="clear">Clear day</button>`;
+  toolbar.querySelector("[data-action=clear]").onclick = () => {
+    if (!ds) return;
+    if (confirm(`Clear Week ${w + 1} ${PROGRAM.dayLabels[d]}? Checks and logs for this day will be gone.`)) {
+      delete state.days[clockKey];
+      saveState(); render();
+    }
+  };
+  container.appendChild(toolbar);
+  wireClock(d, w, plan);
+
+  // Day card
+  const el = document.createElement("div");
+  el.className = "day";
+  const optHtml = day.optional ? `<span class="day-optional">Optional</span>` : "";
+  const est = fmtMins(plan.total);
+  const target = plan.sixty ? " · 60-min mode" : ` · listed ${day.duration}`;
+  el.innerHTML = `
+    <div class="day-header">
+      <div class="day-title">
+        <div class="day-name">Week ${w + 1} · ${PROGRAM.dayLabels[d]} · ${day.title}${optHtml}</div>
+        <div class="day-focus">Planned ${est}${target}${ds && ds.date ? ` · trained ${shortDate(ds.date)}` : ""}</div>
+      </div>
+      <div class="day-meta"><span class="day-chip ${done === rows.length && rows.length ? "complete" : ""}">${done} / ${rows.length}</span></div>
+    </div>
+    <div class="day-body"></div>`;
+  const body = el.querySelector(".day-body");
+
+  if (plan.sixty && plan.adjustments.length) {
+    const box = document.createElement("div");
+    box.className = "block-note";
+    box.innerHTML = `<strong style="color:var(--warning)">60-min plan:</strong> ` + plan.adjustments.join(" · ");
+    body.appendChild(box);
+  }
+
+  if (day.warmup) body.appendChild(renderPrep(w, d, "Warm-up", "wu", day.warmup));
+
+  let flatIdx = 0;
+  day.blocks.forEach((b, bi) => {
+    if (b.label) {
+      const lab = document.createElement("div");
+      lab.className = "block-label";
+      lab.textContent = b.label;
+      body.appendChild(lab);
+    }
+    if (b.note) {
+      const note = document.createElement("div");
+      note.className = "block-note";
+      note.textContent = b.note;
+      body.appendChild(note);
+    }
+    b.rows.forEach(row => {
+      body.appendChild(renderRow(w, d, row, flatIdx, plan));
+      flatIdx++;
+    });
+  });
+
+  if (day.cooldown) body.appendChild(renderPrep(w, d, plan.sixty ? "Cool-down — half holds" : "Cool-down", "cd", day.cooldown));
+  container.appendChild(el);
+}
+
+function renderPrep(w, d, title, prefix, items) {
+  const ds = dayState(w, d, false);
+  const doneCount = items.filter((_, i) => ds && ds.completed[prefix + i]).length;
+  const el = document.createElement("div");
+  el.className = "prep" + (doneCount === items.length && doneCount > 0 ? " collapsed" : "");
+  el.innerHTML = `
+    <div class="prep-head"><span>${title} · ${doneCount}/${items.length}</span><span class="caret">▼</span></div>
+    <div class="prep-body"></div>`;
+  el.querySelector(".prep-head").onclick = () => el.classList.toggle("collapsed");
+  const bodyEl = el.querySelector(".prep-body");
+  items.forEach((it, i) => {
+    const k = prefix + i;
+    const isDone = !!(ds && ds.completed[k]);
+    const item = document.createElement("div");
+    item.className = "prep-item" + (isDone ? " done" : "");
+    item.innerHTML = `<span class="prep-check"><svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8 7 12 13 4"/></svg></span><span>${it}</span>`;
+    item.onclick = () => {
+      const dstate = dayState(w, d, true);
+      dstate.completed[k] = !isDone;
+      saveState(); renderDay(d);
+    };
+    bodyEl.appendChild(item);
+  });
+  return el;
+}
+
+function tagLabel(t) {
+  return ({ str: "Strength", upper: "Upper", legs: "Legs", cplx: "Complex", fin: "Finisher", core: "Core", mob: "Mobility" }[t]) || t;
+}
+function escapeHtml(s) { return String(s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
+
+function renderRow(w, d, row, idx, plan) {
+  const ds = dayState(w, d, false);
+  const ck = "m" + idx;
+  const isDone = !!(ds && ds.completed[ck]);
+  const log = (ds && ds.logs[idx]) || { weight: "", notes: "", hit: null };
+  const weightVal = parseWeight(log.weight);
+  const sixty = plan.sixty;
+  const rest = effRest(row.rest, sixty);
+  const trimmedSets = plan.trims[idx];
+
+  // "Last:" reference across the whole program by exercise name
+  let lastHtml = "";
+  if (row.track) {
+    const hist = priorEntries(row.name, w, d);
+    if (hist.length) {
+      const L = hist[0];
+      lastHtml = `<div class="ex-last">Last (W${L.week + 1} ${PROGRAM.dayLabels[L.day]}${L.date ? " · " + shortDate(L.date) : ""}): <strong>${fmtLoad(L.weight, row.bw)}</strong>` +
+        (row.isMax ? "" : (L.hit ? ` · <span class="ex-hit-flag yes">hit the top</span>` : ` · <span class="ex-hit-flag no">missed</span>`)) + `</div>`;
+    }
+  }
+
+  // Coach suggestion
+  let suggHtml = "";
+  const sugg = suggestNext(row, w, d);
+  if (sugg) {
+    const label =
+      sugg.type === "up" ? `Try ${fmtLoad(sugg.weight, row.bw)}` :
+      sugg.type === "hold" ? `Hold ${fmtLoad(sugg.weight, row.bw)}, beat your reps` :
+      `Plateau: drop to ${fmtLoad(sugg.weight, row.bw)}${sugg.reps ? ` × ${sugg.reps}` : ""}`;
+    suggHtml = `<button class="ex-suggest ${sugg.type}" data-w="${sugg.weight}">${label}<span class="sg-tap">tap to use</span></button>`;
+  }
+
+  const detailHtml = row.detail
+    ? `<div class="ex-detail">${row.detail.map(m => `<span class="dt-line">• ${m}</span>`).join("")}</div>` : "";
+
+  let rx = row.rx;
+  if (trimmedSets != null) rx += ` · <span style="color:var(--warning);font-weight:700">60-min: ${trimmedSets} sets</span>`;
+  const startAt = plan.offsets[idx] != null ? Math.round(plan.offsets[idx] / 60) : null;
+  const paceHtml = startAt !== null ? `<span style="color:var(--muted);font-weight:400"> · start ~${startAt} min in</span>` : "";
+
+  // Timer button
+  let timerLabel, timerMode;
+  if (row.timer) { timerLabel = row.timer.label || "⏱"; timerMode = "special"; }
+  else { timerLabel = rest >= 120 ? `⏱ ${Math.round(rest / 60)}m` : `⏱ ${rest}s`; timerMode = "rest"; }
+
+  const hitVal = log.hit === true ? "yes" : (log.hit === false ? "no" : "");
+  const hitLabel = row.repRange ? `All sets at the top (${row.repTop})?` : row.repTop ? `All sets of ${row.repTop}?` : `Done as written?`;
+
+  const el = document.createElement("div");
+  el.className = "exercise";
+  el.innerHTML = `
+    <div class="ex-row">
+      <div class="ex-check ${isDone ? "done" : ""}">
+        <svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8 7 12 13 4"/></svg>
+      </div>
+      <div class="ex-info">
+        <div><span class="ex-tag ${row.tag}">${tagLabel(row.tag)}</span><span class="ex-name">${row.name}</span></div>
+        <div class="ex-prescription"><strong>${rx}</strong>${paceHtml}</div>
+        ${detailHtml}
+        ${lastHtml}
+        ${suggHtml}
+        <div class="ex-actions">
+          <a class="btn" href="${v(row.name)}" target="_blank" rel="noopener">▶ Video</a>
+          ${row.track ? `<button class="btn log-toggle">✎ Log</button>` : ""}
+          <button class="btn btn-timer row-timer" data-default="${timerLabel}">${timerLabel}</button>
+        </div>
+        ${row.track ? `
+        <div class="ex-log">
+          <div class="log-weight-row">
+            ${row.bw ? `<span class="unit">BW +</span>` : ""}
+            <input type="number" class="log-weight" inputmode="decimal" step="0.5" min="0"
+                   placeholder="${row.bw ? "Added lb · 0 = just BW" : "Weight"}" value="${weightVal === null ? "" : weightVal}">
+            <span class="unit">lb</span>
+          </div>
+          ${row.isMax ? "" : `
+          <div class="hit-label">${hitLabel}</div>
+          <div class="hit-row">
+            <button class="hit-btn hit-yes ${hitVal === "yes" ? "on-yes" : ""}">✓ Hit</button>
+            <button class="hit-btn hit-no ${hitVal === "no" ? "on-no" : ""}">✗ Missed</button>
+          </div>`}
+          <textarea class="log-notes" placeholder="Notes — reps hit, RPE, how it felt...">${escapeHtml(log.notes)}</textarea>
+        </div>` : ""}
+      </div>
+    </div>`;
+
+  el.querySelector(".ex-check").onclick = () => {
+    const dstate = dayState(w, d, true);
+    dstate.completed[ck] = !isDone;
+    if (!isDone) stampDate(dstate);
+    saveState(); renderDay(d); renderWeekBar();
+  };
+
+  function ensureLog() {
+    const dstate = dayState(w, d, true);
+    if (!dstate.logs[idx]) dstate.logs[idx] = { weight: null, hit: null, notes: "" };
+    stampDate(dstate);
+    return dstate.logs[idx];
+  }
+
+  if (row.track) {
+    el.querySelector(".log-toggle").onclick = () => el.querySelector(".ex-log").classList.toggle("open");
+    if (weightVal !== null || log.notes || log.hit != null) el.querySelector(".ex-log").classList.add("open");
+
+    const suggBtn = el.querySelector(".ex-suggest");
+    if (suggBtn) suggBtn.onclick = () => { ensureLog().weight = parseFloat(suggBtn.dataset.w); saveState(); renderDay(d); };
+
+    const yesBtn = el.querySelector(".hit-yes"), noBtn = el.querySelector(".hit-no");
+    if (yesBtn) yesBtn.onclick = () => { const l = ensureLog(); l.hit = l.hit === true ? null : true; saveState(); renderDay(d); };
+    if (noBtn)  noBtn.onclick  = () => { const l = ensureLog(); l.hit = l.hit === false ? null : false; saveState(); renderDay(d); };
+
+    // Typing must NOT re-render — that would blur the field mid-entry.
+    el.querySelector(".log-weight").addEventListener("input", e => {
+      const raw = e.target.value.trim();
+      ensureLog().weight = raw === "" ? null : parseFloat(raw);
+      saveState();
+    });
+    el.querySelector(".log-notes").addEventListener("input", e => { ensureLog().notes = e.target.value; saveState(); });
+  }
+
+  const tKey = `${dayKey(w, d)}_${idx}`;
+  const tBtn = el.querySelector(".row-timer");
+  reattachTimer(tKey, tBtn);
+  tBtn.onclick = () => {
+    if (activeTimers[tKey]) tapActiveTimer(tKey);
+    else if (timerMode === "special") startSpecialTimer(tKey, tBtn, row.timer);
+    else startCountdown(tKey, tBtn, rest, "rest");
+  };
+  return el;
+}
+
+/* ---------------------------------------------------------------------------
+   NOTES PANE
+   --------------------------------------------------------------------------- */
+function buildNotes() {
+  document.getElementById("notes-card").innerHTML = `
+    <h2>How this tracker works</h2>
+    <p><strong>${PROGRAM.heroTitle}</strong> runs ${NWEEKS} weeks. Pick the week with the pills, pick the day with the tabs, check exercises off as you go, and tap <strong>✎ Log</strong> to record the weight you used.</p>
+    <p>When you log, tap <strong>✓ Hit</strong> if every set landed at the <em>top of the rep range</em> — that one tap drives next week's weight suggestion:</p>
+    <ul>
+      <li><strong>Green — "Try 190 lb":</strong> you hit the top last time, so it adds 5 lb (10 lb on squat/deadlift/lunge patterns).</li>
+      <li><strong>Grey — "Hold 185 lb, beat your reps":</strong> you missed. Weight stays put; win the reps first.</li>
+      <li><strong>Amber — plateau:</strong> three logged outings at one weight with no successful one → cut ~10% and add 2 reps.</li>
+    </ul>
+    <p>The <strong>Last:</strong> line under each lift shows what you did the previous time that exercise appeared — any week, any day — so you never have to page back to know your starting weight.</p>
+    <h3>Timers</h3>
+    <ul>
+      <li><strong>⏱ 90s / 2m</strong> — rest countdown, beeps and buzzes at zero. Tap mid-run to cancel.</li>
+      <li><strong>⏱ 6×20/10</strong> — interval timer for tabata-style pieces. Beeps at every switch.</li>
+      <li><strong>⏱ Σ 2:00</strong> — accumulate timer for holds: run it while you hold, tap to pause when you break, tap ▶ to resume. Done at 2:00 total. ✕ resets.</li>
+      <li><strong>⏱ 6:00</strong> — AMRAP countdown.</li>
+      <li><strong>⏱ Stopwatch</strong> — for the 10-to-1 ladders. Tap to stop, tap again to reset; jot the time in Notes to race it next week.</li>
+    </ul>
+    <h3>60-minute mode</h3>
+    <p>The <strong>60-min</strong> toggle in the header re-plans every day to fit an hour, deterministically: rests tighten one step, ranged sets run at the low end, cool-down holds halve, and if a day is still over, it trims one set from the last accessories (never the first two lifts). The day header shows the re-planned time, each exercise gets a <em>"start ~N min in"</em> marker, and the <strong>Session clock</strong> tells you if you're ahead or behind that plan.</p>
+    <h3>Structure</h3>
+    <p>${PROGRAM.sub}. Wednesday${PROGRAM.requiredDays.includes("sat") ? " and Saturday are" : " is"} mobility circuit work — low effort on purpose. Sunday is rest.</p>
+    <div class="note-box">${PROGRAM.sourceNote}</div>`;
+}
+
+/* ---------------------------------------------------------------------------
+   STATS + HERO
+   --------------------------------------------------------------------------- */
+function updateStats() {
+  const cw = currentWeek();
+  document.getElementById("stat-week").textContent = "W" + (cw + 1);
+  let daysDone = 0;
+  for (let w = 0; w < NWEEKS; w++) PROGRAM.dayOrder.forEach(d => { if (isDayComplete(w, d)) daysDone++; });
+  document.getElementById("stat-days").textContent = daysDone;
+  const req = PROGRAM.requiredDays;
+  const thisWeek = req.filter(d => isDayComplete(cw, d)).length;
+  document.getElementById("stat-thisweek").textContent = `${thisWeek} / ${req.length}`;
+  let reqDone = 0;
+  for (let w = 0; w < NWEEKS; w++) req.forEach(d => { if (isDayComplete(w, d)) reqDone++; });
+  document.getElementById("stat-overall").textContent = Math.round(100 * reqDone / (NWEEKS * req.length)) + "%";
+
+  const due = dueDay(uiWeek != null ? uiWeek : cw);
+  document.querySelectorAll(".tab").forEach(tab => {
+    const dot = tab.querySelector(".due-dot");
+    if (dot) dot.hidden = tab.dataset.pane !== due;
+  });
+}
+
+function render() {
+  renderWeekBar();
+  PROGRAM.dayOrder.forEach(renderDay);
+  updateStats();
+}
+
+/* ---------------------------------------------------------------------------
+   SESSION CLOCK — elapsed vs the day plan, so mornings stay on schedule.
+   --------------------------------------------------------------------------- */
+const sessionClocks = {};   // dayKey → interval id (paint only; truth in state)
+
+function wireClock(d, w, plan) {
+  const btn = document.getElementById("clock-" + d);
+  const stat = document.getElementById("clockstat-" + d);
+  const key = dayKey(w, d);
+  const ds = dayState(w, d, false);
+
+  function paint() {
+    const cur = dayState(w, d, false);
+    if (!cur || !cur.clockStart) {
+      btn.textContent = "▶ Session clock";
+      btn.classList.remove("running");
+      stat.textContent = "";
+      return;
+    }
+    const elapsed = Math.round(((cur.clockStop || Date.now()) - cur.clockStart) / 1000);
+    btn.textContent = (cur.clockStop ? "■ " : "") + fmtClock(elapsed);
+    btn.classList.toggle("running", !cur.clockStop);
+    // Pace vs plan: planned offset of the first unchecked main row
+    const rows = mainRows(w, d);
+    let nextIdx = rows.findIndex(x => !(cur.completed["m" + x.idx]));
+    let msg = `target ${fmtMins(plan.total)}`;
+    if (nextIdx > 0) {
+      const planned = plan.offsets[nextIdx] != null ? plan.offsets[nextIdx] : plan.total;
+      const delta = Math.round((planned - elapsed) / 60);
+      msg = delta >= 1 ? `${delta} min ahead` : delta <= -1 ? `${-delta} min behind` : "on pace";
+      msg += ` · target ${fmtMins(plan.total)}`;
+    } else if (nextIdx === -1 && rows.length) {
+      msg = `done in ${fmtClock(elapsed)}`;
+    }
+    stat.textContent = msg;
+  }
+
+  function syncInterval() {
+    if (sessionClocks[key]) { clearInterval(sessionClocks[key]); delete sessionClocks[key]; }
+    const cur = dayState(w, d, false);
+    if (cur && cur.clockStart && !cur.clockStop) sessionClocks[key] = setInterval(paint, 1000);
+  }
+
+  btn.onclick = () => {
+    const cur = dayState(w, d, true);
+    if (!cur.clockStart) { cur.clockStart = Date.now(); cur.clockStop = null; stampDate(cur); }
+    else if (!cur.clockStop) { cur.clockStop = Date.now(); }
+    else { cur.clockStart = null; cur.clockStop = null; }
+    saveState(); syncInterval(); paint();
+  };
+
+  syncInterval();
+  paint();
+}
+function fmtClock(s) {
+  const m = Math.floor(s / 60), sec = s % 60;
+  return `${m}:${String(sec).padStart(2, "0")}`;
+}
+
+/* ---------------------------------------------------------------------------
+   TIMERS — countdown, interval, accumulate, stopwatch. One engine, one map.
+   --------------------------------------------------------------------------- */
+const activeTimers = {};
+let audioCtx = null;
+function ensureAudio() {
+  if (audioCtx) return audioCtx;
+  try { const AC = window.AudioContext || window.webkitAudioContext; if (AC) audioCtx = new AC(); } catch (e) {}
+  return audioCtx;
+}
+function tone(offsets, freqs) {
+  const ctx = ensureAudio();
+  if (ctx) {
+    const now = ctx.currentTime;
+    offsets.forEach((off, i) => {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.type = "sine"; osc.frequency.value = freqs[i] || 880;
+      gain.gain.setValueAtTime(0, now + off);
+      gain.gain.linearRampToValueAtTime(0.25, now + off + 0.01);
+      gain.gain.linearRampToValueAtTime(0, now + off + 0.14);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + off); osc.stop(now + off + 0.16);
+    });
+  }
+  if (navigator.vibrate) { try { navigator.vibrate(120); } catch (e) {} }
+}
+function beepDone() { tone([0, 0.18, 0.36], [880, 880, 1100]); if (navigator.vibrate) { try { navigator.vibrate([120, 80, 120, 80, 200]); } catch (e) {} } }
+function beepPhase() { tone([0], [990]); }
+
+/* No isConnected guard on the running paint — on re-render, reattachTimer hands
+   over the fresh button before it's appended, and we still want the countdown
+   text painted so it never flashes back to the default label. */
+function paintRunning(btn, text) {
+  if (!btn) return;
+  btn.classList.add("running"); btn.classList.remove("done", "paused");
+  btn.textContent = text;
+}
+function paintPaused(btn, text) {
+  if (!btn) return;
+  btn.classList.remove("running", "done"); btn.classList.add("paused");
+  btn.textContent = text;
+}
+function paintDone(btn) {
+  if (!btn || !btn.isConnected) return;
+  btn.classList.remove("running", "paused"); btn.classList.add("done");
+  btn.textContent = "Done!";
+  setTimeout(() => {
+    if (btn && btn.isConnected) { btn.classList.remove("done"); btn.textContent = btn.dataset.default || "⏱"; }
+  }, 1800);
+}
+function paintReset(btn) {
+  if (!btn || !btn.isConnected) return;
+  btn.classList.remove("running", "done", "paused");
+  btn.textContent = btn.dataset.default || "⏱";
+  removeResetX(btn);
+}
+function removeResetX(btn) {
+  const x = btn && btn.parentElement && btn.parentElement.querySelector(".btn-timer-x");
+  if (x) x.remove();
+}
+function addResetX(key, btn) {
+  if (!btn || !btn.isConnected || btn.parentElement.querySelector(".btn-timer-x")) return;
+  const x = document.createElement("button");
+  x.className = "btn btn-timer-x";
+  x.textContent = "✕";
+  x.onclick = () => { const t = activeTimers[key]; if (t) { clearInterval(t.iv); delete activeTimers[key]; } paintReset(btn); };
+  btn.insertAdjacentElement("afterend", x);
+}
+
+function startCountdown(key, btn, secs, sub) {
+  ensureAudio(); if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  const endsAt = Date.now() + secs * 1000;
+  paintRunning(btn, fmtClock(secs));
+  const iv = setInterval(() => {
+    const t = activeTimers[key]; if (!t) return;
+    const remaining = Math.round((t.endsAt - Date.now()) / 1000);
+    if (remaining <= 0) { clearInterval(t.iv); const b = t.btn; delete activeTimers[key]; paintDone(b); beepDone(); }
+    else paintRunning(t.btn, fmtClock(remaining));
+  }, 250);
+  activeTimers[key] = { mode: "down", endsAt, iv, btn };
+}
+
+function startSpecialTimer(key, btn, spec) {
+  ensureAudio(); if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  if (spec.kind === "down") return startCountdown(key, btn, spec.secs);
+
+  if (spec.kind === "interval") {
+    const sched = [];
+    for (let r = 0; r < spec.rounds; r++) spec.segs.forEach(([label, secs]) => sched.push({ label, secs, round: r + 1 }));
+    const t = { mode: "interval", btn, sched, si: 0, phaseEnds: Date.now() + sched[0].secs * 1000, rounds: spec.rounds };
+    paintRunning(btn, phaseText(t, sched[0].secs));
+    t.iv = setInterval(() => {
+      const cur = activeTimers[key]; if (!cur) return;
+      let remaining = Math.round((cur.phaseEnds - Date.now()) / 1000);
+      if (remaining <= 0) {
+        cur.si++;
+        if (cur.si >= cur.sched.length) {
+          clearInterval(cur.iv); const b = cur.btn; delete activeTimers[key]; paintDone(b); beepDone(); return;
+        }
+        beepPhase();
+        cur.phaseEnds = Date.now() + cur.sched[cur.si].secs * 1000;
+        remaining = cur.sched[cur.si].secs;
+      }
+      paintRunning(cur.btn, phaseText(cur, remaining));
+    }, 250);
+    activeTimers[key] = t;
+    return;
+  }
+
+  if (spec.kind === "accum") {
+    const t = { mode: "accum", btn, target: spec.target, accum: 0, running: true, last: Date.now() };
+    paintRunning(btn, "Σ " + fmtClock(spec.target));
+    t.iv = setInterval(() => {
+      const cur = activeTimers[key]; if (!cur) return;
+      if (cur.running) {
+        const now = Date.now();
+        cur.accum = (cur.accum || 0) + (now - cur.last);
+        cur.last = now;
+        const remaining = Math.max(0, cur.target - Math.round(cur.accum / 1000));
+        if (remaining <= 0) { clearInterval(cur.iv); const b = cur.btn; delete activeTimers[key]; removeResetX(b); paintDone(b); beepDone(); }
+        else paintRunning(cur.btn, "Σ " + fmtClock(remaining));
+      }
+    }, 250);
+    activeTimers[key] = t;
+    return;
+  }
+
+  if (spec.kind === "watch") {
+    const t = { mode: "watch", btn, startedAt: Date.now(), stopped: null };
+    paintRunning(btn, "0:00");
+    t.iv = setInterval(() => {
+      const cur = activeTimers[key]; if (!cur || cur.stopped != null) return;
+      paintRunning(cur.btn, fmtClock(Math.round((Date.now() - cur.startedAt) / 1000)));
+    }, 250);
+    activeTimers[key] = t;
+  }
+}
+
+function phaseText(t, remaining) {
+  const seg = t.sched[t.si];
+  return `${seg.label.slice(0, 4)} ${fmtClock(remaining)} · ${seg.round}/${t.rounds}`;
+}
+
+/* A tap on a live timer: countdown/interval cancel; accumulate pauses/resumes;
+   stopwatch stops, then resets. */
+function tapActiveTimer(key) {
+  const t = activeTimers[key];
+  if (!t) return;
+  if (t.mode === "accum") {
+    if (t.running) {
+      t.accum = (t.accum || 0) + (Date.now() - t.last);
+      t.running = false;
+      paintPaused(t.btn, "▶ Σ " + fmtClock(Math.max(0, t.target - Math.round(t.accum / 1000))));
+      addResetX(key, t.btn);
+    } else {
+      t.running = true; t.last = Date.now();
+      removeResetX(t.btn);
+      paintRunning(t.btn, "Σ " + fmtClock(Math.max(0, t.target - Math.round(t.accum / 1000))));
+    }
+    return;
+  }
+  if (t.mode === "watch") {
+    if (t.stopped == null) {
+      t.stopped = Date.now();
+      paintPaused(t.btn, "■ " + fmtClock(Math.round((t.stopped - t.startedAt) / 1000)));
+    } else {
+      clearInterval(t.iv); delete activeTimers[key]; paintReset(t.btn);
+    }
+    return;
+  }
+  clearInterval(t.iv);
+  const btn = t.btn;
+  delete activeTimers[key];
+  paintReset(btn);
+}
+
+function reattachTimer(key, btn) {
+  const t = activeTimers[key];
+  if (!btn) return;
+  if (!t) return;
+  t.btn = btn;
+  if (t.mode === "down") {
+    const remaining = Math.round((t.endsAt - Date.now()) / 1000);
+    if (remaining > 0) paintRunning(btn, fmtClock(remaining));
+  } else if (t.mode === "interval") {
+    paintRunning(btn, phaseText(t, Math.max(0, Math.round((t.phaseEnds - Date.now()) / 1000))));
+  } else if (t.mode === "accum") {
+    const remaining = Math.max(0, t.target - Math.round(((t.accum || 0) + (t.running ? Date.now() - t.last : 0)) / 1000));
+    if (t.running) paintRunning(btn, "Σ " + fmtClock(remaining));
+    else { paintPaused(btn, "▶ Σ " + fmtClock(remaining)); addResetX(key, btn); }
+  } else if (t.mode === "watch") {
+    if (t.stopped == null) paintRunning(btn, fmtClock(Math.round((Date.now() - t.startedAt) / 1000)));
+    else paintPaused(btn, "■ " + fmtClock(Math.round((t.stopped - t.startedAt) / 1000)));
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   WIRING
+   --------------------------------------------------------------------------- */
+document.getElementById("reset-btn").onclick = () => {
+  if (confirm("Reset ALL tracking for this program? Every check, log, and clock across all weeks will be cleared.")) {
+    state = emptyState(); saveState(); render();
+  }
+};
+
+/* 60-min toggle lives next to the hero stats. */
+(function addSixtyToggle() {
+  const hero = document.querySelector(".hero");
+  const btn = document.createElement("button");
+  btn.className = "btn";
+  btn.id = "sixty-btn";
+  btn.style.marginTop = "10px";
+  function paint() {
+    btn.textContent = state.sixty ? "⏱ 60-min mode: ON" : "⏱ 60-min mode: off";
+    btn.style.background = state.sixty ? "var(--warning-soft)" : "";
+    btn.style.color = state.sixty ? "var(--warning)" : "";
+    btn.style.borderColor = state.sixty ? "#edd9a6" : "";
+  }
+  btn.onclick = () => { state.sixty = !state.sixty; saveState(); paint(); render(); };
+  paint();
+  hero.appendChild(btn);
+})();
+
+buildShell();
+uiWeek = currentWeek();
+render();
+
+/* Land on the day that's due in the current week. */
+(function openDueTab() {
+  const tab = document.querySelector(`.tab[data-pane="${dueDay(uiWeek)}"]`);
+  if (tab) tab.click();
+})();
+</script>
+</body>
+</html>

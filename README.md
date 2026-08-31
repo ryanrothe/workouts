@@ -1,6 +1,6 @@
 # Exercise Library
 
-One PWA that wraps seven workout programs: **Hyrox Home Engine**, **Achilles Rebuild**, **Athletic AF**, **Hotel Workouts** (Madsen upper/lower split), **KB Shred**, **6-Day PPL**, and **Full Body Aesthetics**.
+One PWA that wraps nine workout programs: **The Functional Method 1.0**, **The Functional Method 2.0**, **Hyrox Home Engine**, **Achilles Rebuild**, **Athletic AF**, **Hotel Workouts** (Madsen upper/lower split), **KB Shred**, **6-Day PPL**, and **Full Body Aesthetics**.
 
 Launcher at the root picks a program. Each sub-app keeps its own data, its own features, and its own per-program accent color — but they share one design system, one PWA shell, and one home-screen icon.
 
@@ -8,6 +8,8 @@ Launcher at the root picks a program. Each sub-app keeps its own data, its own f
 
 | Program | Length | Cadence | Focus |
 |---|---|---|---|
+| **The Functional Method 1.0** | 8 weeks | 4×/week + 2 mobility | JTM Fit (John Madsen) functional strength — Mon full body, Tue upper, Thu KB/DB complexes, Fri legs, Wed/Sat mobility circuits. Week-phased with per-exercise weight logging, cross-week "Last:" recall by exercise name, automatic load progression (hit the top of the range → +5/+10 lb), rest/interval/accumulate timers, a session pacing clock, and a **60-minute mode** that re-plans each day to fit an hour. |
+| **The Functional Method 2.0** | 8 weeks | 6×/week | JTM Fit sequel — heavy top sets (3-5×5), ladders and AMRAP finishers, KB complexes, mobility circuits. Same tracker engine as 1.0: progression coach, timers, session clock, 60-minute mode. |
 | **Hyrox Home Engine** | 12 weeks | 4×/week | Hyrox-style conditioning on a home gym. Low-impact cardio (no programmed running), creative sled substitutes, a travel/hotel mode that swaps every exercise inline, and a Benchmarks tab that charts engine tests across the test weeks. |
 | **Achilles Rebuild** | 12 weeks | 3×/week | Tendon-specific post-rupture rehab — isometrics, HSR, plyo progression, self-assessment. |
 | **Athletic AF** | 5 phases + Wk 17 | — | Strength + conditioning. Per-set logging, PR detection, plate calculator, history, export/import. |
@@ -20,7 +22,7 @@ Launcher at the root picks a program. Each sub-app keeps its own data, its own f
 
 ```
 exercise-library/
-├── index.html              ← Launcher (7 program tiles; PPL first)
+├── index.html              ← Launcher (9 program tiles; TFM 1.0/2.0 first)
 ├── manifest.webmanifest    ← PWA manifest — installs as "Exercise Library"
 ├── sw.js                   ← Shared service worker (offline cache)
 ├── icon-180.png            ← Dumbbell icon — used by iOS Add to Home Screen
@@ -29,6 +31,10 @@ exercise-library/
 ├── favicon.png             ← Browser-tab favicon (64×64)
 ├── shared/
 │   └── styles.css          ← Design tokens + shared components (appbar, cards, buttons, day card, exercise rows)
+├── tfm-1/
+│   └── index.html          ← The Functional Method 1.0 — 8-week JTM Fit program (self-contained)
+├── tfm-2/
+│   └── index.html          ← The Functional Method 2.0 — 8-week JTM Fit sequel (self-contained)
 ├── hyrox/
 │   └── index.html          ← Hyrox Home Engine — 12-week build, travel mode + benchmark charts (self-contained)
 ├── achilles/
@@ -65,6 +71,8 @@ The merge **preserves all logged data**. Each sub-app keeps its original `localS
 
 | Sub-app | Key | What it holds |
 |---|---|---|
+| The Functional Method 1.0 | `tfm1_v1` | 60-min-mode flag; per week/day: date, session clock, checks (warm-up/main/cool-down), weight + hit-the-range + notes logs |
+| The Functional Method 2.0 | `tfm2_v1` | Same shape as TFM 1.0 |
 | Hyrox | `hyrox_home_v1` | Current week, travel-mode flag, checked exercises, per-exercise logs, benchmark + simulation times |
 | Achilles | `achilles_program_v1` | Current week, checked exercises, weight/notes logs, self-assess scores |
 | Athletic AF | `athleticAF.v1` | Current week + day, per-set logs, full session history, PR records |

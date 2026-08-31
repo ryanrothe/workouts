@@ -155,6 +155,15 @@
     font-size: 11px; cursor: pointer; padding: 4px 8px; text-decoration: underline;
     font-family: inherit;
   }
+
+  /* Session clock */
+  .btn-timer { font-variant-numeric: tabular-nums; min-width: 78px; justify-content: center; }
+  .btn-timer.running { background: var(--primary); color: white; border-color: var(--primary); }
+  .day-clock-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 0 2px;
+    font-size: 12px; color: var(--muted);
+  }
   .ref-list { font-size: 11.5px; color: var(--muted); line-height: 1.55; }
   .ref-list li { margin-bottom: 6px; }
 
@@ -543,19 +552,112 @@ let state = loadState();
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (!p.clocks) p.clocks = {};
+      return p;
+    }
   } catch (e) {}
   return {
     currentWeek: 1,
     completed: {},
     logs: {},
     expanded: {},
-    assessments: {}
+    assessments: {},
+    clocks: {}
   };
 }
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
   updateStats();
+}
+
+/* ===========================================================================
+   TIME MODEL + SESSION CLOCK — pacing backport (2026-08-30).
+   No 60-min compression here on purpose: every day already fits inside an
+   hour, and rest between heavy isometric / HSR sets is part of the tendon
+   protocol — cutting it would degrade the stimulus, not just the schedule.
+   =========================================================================== */
+const REST_BY_TAG = { warm: 15, mob: 15, iso: 75, hsr: 105, ecc: 90, acc: 60, plyo: 60 };
+const SETUP_ALLOW = 120;
+
+function exWorkSecs(ex) {
+  const reps = String(ex.reps);
+  const perSide = /\/\s*(leg|side|arm)|each/i.test(reps);
+  let m, work;
+  if ((m = reps.match(/(\d+)\s*min/i))) work = parseInt(m[1], 10) * 60;
+  else if ((m = reps.match(/(\d+)\s*s\b/)) || (m = reps.match(/(\d+)\s*sec/i))) {
+    work = parseInt(m[1], 10);
+    if (perSide) work *= 2;
+  }
+  else if (/max|yd|length/i.test(reps)) work = 40;
+  else if ((m = reps.match(/(\d+)/))) {
+    const tempo = /@\s*\d\s*-\s*\d\s*-\s*\d|4-sec/i.test(reps + " " + (ex.load || ""));
+    work = Math.min(120, Math.max(20, parseInt(m[1], 10) * (tempo ? 7 : 4)));
+    if (perSide) work = Math.round(work * 1.8);
+  }
+  else work = 40;
+  return work;
+}
+function dayPlan(dayKey) {
+  const day = DAYS[dayKey];
+  let t = SETUP_ALLOW;
+  const offsets = [];
+  day.exercises.forEach(ex => {
+    offsets.push(t);
+    const sets = parseInt(ex.sets, 10) || 3;
+    const tag = EXERCISES[ex.id].tag;
+    t += sets * (exWorkSecs(ex) + (REST_BY_TAG[tag] != null ? REST_BY_TAG[tag] : 60));
+  });
+  return { total: t, offsets };
+}
+function fmtMins(secs) { return `~${Math.round(secs / 60)} min`; }
+function fmtClock(s) {
+  const m = Math.floor(s / 60), sec = s % 60;
+  return `${m}:${String(sec).padStart(2, "0")}`;
+}
+
+const sessionClockIvs = {};
+function wireDayClock(clockKey, dayKey, btn, stat) {
+  const plan = dayPlan(dayKey);
+  function paint() {
+    const c = state.clocks[clockKey];
+    if (!c || !c.start) {
+      btn.textContent = "▶ Session clock";
+      btn.classList.remove("running");
+      stat.textContent = `plan ${fmtMins(plan.total)}`;
+      return;
+    }
+    const elapsed = Math.round(((c.stop || Date.now()) - c.start) / 1000);
+    btn.textContent = (c.stop ? "■ " : "") + fmtClock(elapsed);
+    btn.classList.toggle("running", !c.stop);
+    const exs = DAYS[dayKey].exercises;
+    let nextIdx = exs.findIndex((_, i) => !state.completed[`${state.currentWeek}_${dayKey}_${i}`]);
+    let msg = `plan ${fmtMins(plan.total)}`;
+    if (nextIdx > 0) {
+      const planned = plan.offsets[nextIdx] != null ? plan.offsets[nextIdx] : plan.total;
+      const delta = Math.round((planned - elapsed) / 60);
+      msg = (delta >= 1 ? `${delta} min ahead` : delta <= -1 ? `${-delta} min behind` : "on pace") + ` · plan ${fmtMins(plan.total)}`;
+    } else if (nextIdx === -1 && exs.length) {
+      msg = `done in ${fmtClock(elapsed)}`;
+    }
+    stat.textContent = msg;
+  }
+  function syncInterval() {
+    if (sessionClockIvs[clockKey]) { clearInterval(sessionClockIvs[clockKey]); delete sessionClockIvs[clockKey]; }
+    const c = state.clocks[clockKey];
+    if (c && c.start && !c.stop) sessionClockIvs[clockKey] = setInterval(paint, 1000);
+  }
+  btn.onclick = (e) => {
+    e.stopPropagation();
+    let c = state.clocks[clockKey];
+    if (!c || !c.start) { state.clocks[clockKey] = { start: Date.now(), stop: null }; }
+    else if (!c.stop) { c.stop = Date.now(); }
+    else { delete state.clocks[clockKey]; }
+    saveState(); syncInterval(); paint();
+  };
+  syncInterval();
+  paint();
 }
 
 /* ===========================================================================
@@ -606,20 +708,26 @@ function renderDays() {
     const total = day.exercises.length;
     const isFullyDone = completed === total;
 
+    const plan = dayPlan(dayKey);
     const dayEl = document.createElement("div");
     dayEl.className = "day" + (isExpanded ? "" : " collapsed");
     dayEl.innerHTML = `
       <div class="day-header">
         <div class="day-title">
           <div class="day-name">${day.name}</div>
-          <div class="day-focus">${day.focus}</div>
+          <div class="day-focus">${day.focus} · plan ${fmtMins(plan.total)}</div>
         </div>
         <div class="day-meta">
           <span class="day-chip ${isFullyDone ? "complete" : ""}">${completed} / ${total}</span>
           <span class="caret">▼</span>
         </div>
       </div>
-      <div class="day-body"></div>
+      <div class="day-body">
+        <div class="day-clock-row">
+          <button class="btn btn-timer" data-role="clock">▶ Session clock</button>
+          <span data-role="clockstat"></span>
+        </div>
+      </div>
     `;
     dayEl.querySelector(".day-header").onclick = () => {
       state.expanded[dayId] = !isExpanded;
@@ -627,18 +735,23 @@ function renderDays() {
       renderDays();
     };
     const body = dayEl.querySelector(".day-body");
+    wireDayClock(`${state.currentWeek}_${dayKey}`, dayKey,
+      body.querySelector("[data-role=clock]"),
+      body.querySelector("[data-role=clockstat]"));
     day.exercises.forEach((ex, idx) => {
-      body.appendChild(renderExercise(ex, idx, dayKey));
+      body.appendChild(renderExercise(ex, idx, dayKey, plan));
     });
     container.appendChild(dayEl);
   });
 }
 
-function renderExercise(ex, idx, dayKey) {
+function renderExercise(ex, idx, dayKey, plan) {
   const exDef = EXERCISES[ex.id];
   const stateKey = `${state.currentWeek}_${dayKey}_${idx}`;
   const isDone = !!state.completed[stateKey];
   const log = state.logs[stateKey] || { weight: "", notes: "" };
+  const paceHtml = plan && plan.offsets[idx] != null
+    ? `<span style="color:var(--muted);font-weight:400"> · start ~${Math.round(plan.offsets[idx] / 60)} min in</span>` : "";
 
   const el = document.createElement("div");
   el.className = "exercise";
@@ -654,7 +767,7 @@ function renderExercise(ex, idx, dayKey) {
           <span class="ex-tag ${exDef.tag}">${tagLabel(exDef.tag)}</span>
           <span class="ex-name">${exDef.name}</span>
         </div>
-        <div class="ex-prescription"><strong>${ex.sets} × ${ex.reps}</strong>${ex.load ? " · " + ex.load : ""}</div>
+        <div class="ex-prescription"><strong>${ex.sets} × ${ex.reps}</strong>${ex.load ? " · " + ex.load : ""}${paceHtml}</div>
         <div class="ex-actions">
           <a class="btn" href="${v(exDef.q)}" target="_blank" rel="noopener">▶ Video</a>
           <button class="btn log-toggle">✎ Log</button>
@@ -851,7 +964,7 @@ document.querySelectorAll(".tab").forEach(tab => {
 
 document.getElementById("reset-btn").onclick = () => {
   if (confirm("Reset all program tracking? Logs, checks, and assessments will be cleared.")) {
-    state = { currentWeek: 1, completed: {}, logs: {}, expanded: {}, assessments: {} };
+    state = { currentWeek: 1, completed: {}, logs: {}, expanded: {}, assessments: {}, clocks: {} };
     saveState();
     renderAll();
   }

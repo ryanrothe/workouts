@@ -353,9 +353,14 @@ let STATE = null;
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (p.sixty === undefined) p.sixty = false;
+      if (!p.clocks) p.clocks = {};
+      return p;
+    }
   } catch (e) { console.error(e); }
-  return { currentWeekId: null, currentDayIdx: 0, log: {}, sessions: [] };
+  return { currentWeekId: null, currentDayIdx: 0, log: {}, sessions: [], sixty: false, clocks: {} };
 }
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); } catch(e){ console.error(e); }
@@ -550,6 +555,85 @@ function suggestFor(ex, sig) {
            label: `Hold ${w} ${PROGRAM.unit} — get all ${t.target}s` };
 }
 
+/* ---------------- time budget + 60-min mode + session clock ----------------
+   Backported from the TFM trackers (2026-08-30). The plan is a model built
+   from set counts, parsed rep targets, and the program's rest prescriptions;
+   60-min mode tightens each rest one step and every timer follows suit. */
+const SETUP_ALLOW = 300;
+
+function effRestSecs(rest) {
+  if (!STATE.sixty) return rest;
+  if (rest >= 180) return 120;
+  if (rest >= 120) return 90;
+  if (rest >= 90) return 60;
+  return rest;
+}
+function exWorkSecs(ex) {
+  if (ex.checklist) return 150;
+  const t = parseTarget(ex.details);
+  if (t.kind === 'fixed' || t.kind === 'range') return Math.min(90, Math.max(25, t.target * 4));
+  return 40;
+}
+function dayPlanAAF() {
+  const d = currentDay();
+  let t = SETUP_ALLOW;
+  const offsets = [];
+  d.exercises.forEach(ex => {
+    offsets.push(t);
+    if (ex.checklist) { t += exWorkSecs(ex); return; }
+    const rest = effRestSecs(parseRestToSeconds(ex.rest) || 90);
+    t += (ex.set_count || 3) * (exWorkSecs(ex) + rest);
+  });
+  return { total: t, offsets };
+}
+let currentPlan = null;   // set by renderDay, read by renderExercise
+
+const sessionClockIvs = {};
+function wireDayClock(clockKey, plan, btn, stat) {
+  function paint() {
+    const c = STATE.clocks[clockKey];
+    if (!c || !c.start) {
+      btn.textContent = '▶ Clock';
+      btn.classList.remove('primary');
+      stat.textContent = `plan ~${Math.round(plan.total / 60)} min`;
+      return;
+    }
+    const elapsed = Math.round(((c.stop || Date.now()) - c.start) / 1000);
+    btn.textContent = (c.stop ? '■ ' : '') + fmtTime(elapsed);
+    btn.classList.toggle('primary', !c.stop);
+    const w = currentWeek(), d = currentDay();
+    let nextIdx = d.exercises.findIndex((ex, ei) => {
+      const l = STATE.log[w.id]?.[STATE.currentDayIdx]?.[ei];
+      if (ex.checklist) return !(l && l.checked);
+      const doneSets = l && l.sets ? l.sets.filter(s => s && s.done).length : 0;
+      return doneSets < ex.set_count;
+    });
+    let msg = `plan ~${Math.round(plan.total / 60)} min`;
+    if (nextIdx > 0) {
+      const planned = plan.offsets[nextIdx] != null ? plan.offsets[nextIdx] : plan.total;
+      const delta = Math.round((planned - elapsed) / 60);
+      msg = (delta >= 1 ? `${delta} min ahead` : delta <= -1 ? `${-delta} min behind` : 'on pace') + ` · plan ~${Math.round(plan.total / 60)} min`;
+    } else if (nextIdx === -1 && d.exercises.length) {
+      msg = `done in ${fmtTime(elapsed)}`;
+    }
+    stat.textContent = msg;
+  }
+  function syncInterval() {
+    if (sessionClockIvs[clockKey]) { clearInterval(sessionClockIvs[clockKey]); delete sessionClockIvs[clockKey]; }
+    const c = STATE.clocks[clockKey];
+    if (c && c.start && !c.stop) sessionClockIvs[clockKey] = setInterval(paint, 1000);
+  }
+  btn.onclick = () => {
+    const c = STATE.clocks[clockKey];
+    if (!c || !c.start) { STATE.clocks[clockKey] = { start: Date.now(), stop: null }; }
+    else if (!c.stop) { c.stop = Date.now(); }
+    else { delete STATE.clocks[clockKey]; }
+    saveState(); syncInterval(); paint();
+  };
+  syncInterval();
+  paint();
+}
+
 /* ---------------- render ---------------- */
 function renderTopbar() {
   const w = currentWeek();
@@ -584,10 +668,23 @@ function renderDay() {
   const d = currentDay();
   const prog = dayProgress(w.id, d, STATE.currentDayIdx);
 
+  currentPlan = dayPlanAAF();
   main.appendChild(el('div', {class: 'day-header'},
     el('h2', {}, `${d.day} — ${d.focus || ''}`)
   ));
   main.appendChild(el('div', {class: 'progress'}, el('div', {style: `width:${Math.round(prog*100)}%`})));
+
+  // Pacing row: session clock + planned time + 60-min mode toggle
+  const clockBtn = el('button', {class: 'pill-btn'}, '▶ Clock');
+  const clockStat = el('span', {class: 'muted', style: 'font-size:12px'}, '');
+  const sixtyBtn = el('button', {
+    class: 'pill-btn',
+    style: STATE.sixty ? 'background:var(--warning-soft);color:var(--warning);border-color:#edd9a6' : '',
+    onclick: () => { STATE.sixty = !STATE.sixty; saveState(); render(); }
+  }, STATE.sixty ? '⏱ 60-min: ON' : '⏱ 60-min: off');
+  main.appendChild(el('div', {style: 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 14px'},
+    clockBtn, clockStat, sixtyBtn));
+  wireDayClock(`${w.id}_${STATE.currentDayIdx}`, currentPlan, clockBtn, clockStat);
 
   if (d.notes && d.notes.length) {
     d.notes.forEach(n => main.appendChild(el('div', {class: 'day-note'}, n)));
@@ -616,7 +713,12 @@ function renderExercise(ex, exIdx, weekId) {
       el('div', {class:'ex-title'}, ex.name),
       el('div', {class:'ex-meta'},
         ex.checklist ? el('span', {}, 'Checklist') : el('span', {}, el('b', {}, ex.set_count), ' sets'),
-        ex.rest ? el('span', {}, 'Rest: ', el('b', {}, ex.rest)) : null,
+        ex.rest ? el('span', {}, 'Rest: ', el('b', {},
+          STATE.sixty && effRestSecs(parseRestToSeconds(ex.rest)) !== parseRestToSeconds(ex.rest)
+            ? `${ex.rest} → ${fmtTime(effRestSecs(parseRestToSeconds(ex.rest)))}`
+            : ex.rest)) : null,
+        currentPlan && currentPlan.offsets[exIdx] != null
+          ? el('span', {}, `start ~${Math.round(currentPlan.offsets[exIdx] / 60)} min in`) : null,
       )
     ),
     ex.details ? el('button', {class:'ex-toggle-details', 'aria-label':'Toggle details',
@@ -706,7 +808,7 @@ function renderExercise(ex, exIdx, weekId) {
               reps, weight, isPR: wasPR
             });
             if (wasPR && weight > 0) toast(`PR! ${ex.name}`);
-            const restSec = parseRestToSeconds(ex.rest);
+            const restSec = effRestSecs(parseRestToSeconds(ex.rest));
             if (restSec > 0) startRest(restSec, ex.name);
           } else {
             for (let j = STATE.sessions.length - 1; j >= 0; j--) {
@@ -737,7 +839,7 @@ function renderExercise(ex, exIdx, weekId) {
       'Plates'
     ),
     el('button', {onclick: () => {
-      const rs = parseRestToSeconds(ex.rest) || 90;
+      const rs = effRestSecs(parseRestToSeconds(ex.rest) || 90);
       startRest(rs, ex.name);
     }},
       el('span', {html:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>'}),
@@ -847,7 +949,7 @@ function openMenu() {
       el('hr', {class:'hr'}),
       el('button', {class:'pill-btn', style:'color:var(--danger);border-color:#f3c8c4', onclick: () => {
         if (confirm('Reset ALL tracking data? This cannot be undone.')) {
-          STATE = { currentWeekId: PROGRAM.weeks[0].id, currentDayIdx: 0, log: {}, sessions: [] };
+          STATE = { currentWeekId: PROGRAM.weeks[0].id, currentDayIdx: 0, log: {}, sessions: [], sixty: false, clocks: {} };
           saveState(); render(); closeModal(); toast('All data reset');
         }
       }}, 'Reset all data'),

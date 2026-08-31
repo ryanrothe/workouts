@@ -89,6 +89,11 @@
   .sub-table td .trav { color: var(--primary); display:block; margin-top:3px; font-size:11.5px; }
   .reset-link { background: none; border: none; color: var(--muted); font-size: 11px; cursor: pointer; padding: 4px 8px; text-decoration: underline; font-family: inherit; }
 
+  /* Session clock */
+  .btn-timer { font-variant-numeric: tabular-nums; min-width: 78px; justify-content: center; }
+  .btn-timer.running { background: var(--primary); color: white; border-color: var(--primary); }
+  .day-clock-row { display: flex; align-items: center; gap: 8px; padding: 8px 0 2px; font-size: 12px; color: var(--muted); }
+
   /* Benchmarks */
   .bm-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; box-shadow: var(--shadow); }
   .bm-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
@@ -506,8 +511,8 @@ const BM_COLS = [1, 4, 8, 12];
 const STORAGE_KEY = "hyrox_home_v1";
 let state = loadState();
 function loadState(){
-  try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) return JSON.parse(raw); } catch(e){}
-  return { currentWeek:1, travel:false, completed:{}, logs:{}, expanded:{}, bench:{}, sim:{} };
+  try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) { const p = JSON.parse(raw); if (!p.clocks) p.clocks = {}; return p; } } catch(e){}
+  return { currentWeek:1, travel:false, completed:{}, logs:{}, expanded:{}, bench:{}, sim:{}, clocks:{} };
 }
 function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} updateStats(); }
 
@@ -533,6 +538,63 @@ function fmtTime(totalSec){
 }
 function escapeAttr(s){ return String(s||"").replace(/"/g,"&quot;"); }
 function escapeHtml(s){ return String(s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+/* ===========================================================================
+   SESSION CLOCK — pacing backport (2026-08-30). Conditioning program: the
+   intervals ARE the workout and their rests are programmed stimulus, so
+   there's no 60-min compression here — just a clock against a per-day
+   time target so the morning stays on schedule.
+   =========================================================================== */
+const DAY_TARGET_MIN = {   // phase id → [A, B, C, D] target minutes
+  1: [50, 40, 50, 55],
+  2: [50, 45, 55, 60],
+  3: [45, 45, 45, 75]
+};
+function dayTargetSecs(wk, di){
+  const w = WEEKS[wk];
+  const mins = (DAY_TARGET_MIN[w.phase.id] || [50, 45, 50, 60])[di] || 50;
+  return mins * 60;
+}
+function fmtClock(s){
+  const m = Math.floor(s / 60), sec = s % 60;
+  return `${m}:${String(sec).padStart(2, "0")}`;
+}
+const sessionClockIvs = {};
+function wireDayClock(wk, di, btn, stat){
+  const clockKey = `${wk}_${di}`;
+  const target = dayTargetSecs(wk, di);
+  function paint(){
+    const c = state.clocks[clockKey];
+    if (!c || !c.start){
+      btn.textContent = "▶ Session clock";
+      btn.classList.remove("running");
+      stat.textContent = `target ~${Math.round(target / 60)} min`;
+      return;
+    }
+    const elapsed = Math.round(((c.stop || Date.now()) - c.start) / 1000);
+    btn.textContent = (c.stop ? "■ " : "") + fmtClock(elapsed);
+    btn.classList.toggle("running", !c.stop);
+    const left = Math.round((target - elapsed) / 60);
+    stat.textContent = isDayComplete(wk, di)
+      ? `done in ${fmtClock(elapsed)}`
+      : (left >= 0 ? `${left} min left of ~${Math.round(target / 60)}` : `${-left} min over ~${Math.round(target / 60)}`);
+  }
+  function syncInterval(){
+    if (sessionClockIvs[clockKey]){ clearInterval(sessionClockIvs[clockKey]); delete sessionClockIvs[clockKey]; }
+    const c = state.clocks[clockKey];
+    if (c && c.start && !c.stop) sessionClockIvs[clockKey] = setInterval(paint, 1000);
+  }
+  btn.onclick = (e) => {
+    e.stopPropagation();
+    const c = state.clocks[clockKey];
+    if (!c || !c.start){ state.clocks[clockKey] = { start: Date.now(), stop: null }; }
+    else if (!c.stop){ c.stop = Date.now(); }
+    else { delete state.clocks[clockKey]; }
+    saveState(); syncInterval(); paint();
+  };
+  syncInterval();
+  paint();
+}
 
 /* ===========================================================================
    RENDER — PROGRAM
@@ -591,6 +653,11 @@ function renderDays(){
       <div class="day-body"></div>`;
     el.querySelector(".day-header").onclick = () => { state.expanded[dayId] = !isExpanded; saveState(); renderDays(); };
     const body = el.querySelector(".day-body");
+    const clockRow = document.createElement("div");
+    clockRow.className = "day-clock-row";
+    clockRow.innerHTML = `<button class="btn btn-timer" data-role="clock" style="display:inline-flex;align-items:center;border:1px solid var(--border);background:var(--card-2);border-radius:6px;padding:5px 9px;font-size:11.5px;font-weight:600;cursor:pointer">▶ Session clock</button><span data-role="clockstat"></span>`;
+    body.appendChild(clockRow);
+    wireDayClock(w.week, di, clockRow.querySelector("[data-role=clock]"), clockRow.querySelector("[data-role=clockstat]"));
     let idx = 0;
     day.blocks.forEach(block => {
       const lab = document.createElement("h4");
@@ -784,7 +851,7 @@ document.getElementById("travel-switch").onclick = () => { state.travel = !state
 
 document.getElementById("reset-btn").onclick = () => {
   if (confirm("Reset all Hyrox tracking? Checks, logs, and benchmark times will be cleared.")){
-    state = { currentWeek:1, travel:false, completed:{}, logs:{}, expanded:{}, bench:{}, sim:{} };
+    state = { currentWeek:1, travel:false, completed:{}, logs:{}, expanded:{}, bench:{}, sim:{}, clocks:{} };
     saveState(); renderAll();
   }
 };

@@ -362,9 +362,14 @@ let STATE = null;
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (p.sixty === undefined) p.sixty = false;
+      if (!p.clocks) p.clocks = {};
+      return p;
+    }
   } catch(e) {}
-  return { currentWeek: 'w1', currentDay: 'Day 1', logs: {} };
+  return { currentWeek: 'w1', currentDay: 'Day 1', logs: {}, sixty: false, clocks: {} };
 }
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); } catch(e) {}
@@ -402,6 +407,85 @@ function setLog(weekId, dayId, data) {
 }
 
 function dayDone(weekId, day) { return !!getLog(weekId, day.day).done; }
+
+/* ── time budget + 60-min mode + session clock (backported 2026-08-30) ──
+   KB rests are already short, so the compression ladder is one small step:
+   60s→45s, 45s→30s. Superset members share their rest (rest once per round),
+   so the plan counts half a rest per superset exercise. */
+const SETUP_ALLOW = 300;
+function effRestSecs(rest) {
+  if (!STATE.sixty) return rest;
+  if (rest >= 60) return 45;
+  if (rest >= 45) return 30;
+  return rest;
+}
+function exWorkSecs(ex) {
+  const reps = String(ex.reps || '');
+  const nums = reps.match(/\d+/g);
+  let work = nums ? Math.min(90, Math.max(25, parseInt(nums[nums.length - 1], 10) * 4)) : 40;
+  if (/each side|each leg|each arm/i.test(reps)) work = Math.round(work * 1.8);
+  return work;
+}
+function dayPlanKB(d) {
+  if (d.conditioning || !d.exercises || !d.exercises.length) return { total: 1800, offsets: [], cond: true };
+  let t = SETUP_ALLOW;
+  const offsets = [];
+  d.exercises.forEach(ex => {
+    offsets.push(t);
+    const rest = effRestSecs(parseInt(ex.rest) || 60) * (ex.superset ? 0.5 : 1);
+    t += (ex.sets || 3) * (exWorkSecs(ex) + rest);
+  });
+  return { total: t, offsets, cond: false };
+}
+let currentPlanKB = null;
+
+const sessionClockIvs = {};
+function wireDayClock(clockKey, d, plan, btn, stat) {
+  function paint() {
+    const c = STATE.clocks[clockKey];
+    const planTxt = `plan ~${Math.round(plan.total / 60)} min`;
+    if (!c || !c.start) {
+      btn.textContent = '▶ Clock';
+      btn.classList.remove('running');
+      stat.textContent = planTxt;
+      return;
+    }
+    const elapsed = Math.round(((c.stop || Date.now()) - c.start) / 1000);
+    btn.textContent = (c.stop ? '■ ' : '') + fmtTime(elapsed);
+    btn.classList.toggle('running', !c.stop);
+    let msg = planTxt;
+    if (!plan.cond && d.exercises) {
+      const log = getLog(STATE.currentWeek, d.day);
+      let nextIdx = d.exercises.findIndex((ex, ei) => {
+        const exLog = (log.exercises || {})[ei] || {};
+        for (let i = 0; i < ex.sets; i++) if (!exLog[`s${i}`]) return true;
+        return false;
+      });
+      if (nextIdx > 0) {
+        const planned = plan.offsets[nextIdx] != null ? plan.offsets[nextIdx] : plan.total;
+        const delta = Math.round((planned - elapsed) / 60);
+        msg = (delta >= 1 ? `${delta} min ahead` : delta <= -1 ? `${-delta} min behind` : 'on pace') + ` · ${planTxt}`;
+      } else if (nextIdx === -1) {
+        msg = `done in ${fmtTime(elapsed)}`;
+      }
+    }
+    stat.textContent = msg;
+  }
+  function syncInterval() {
+    if (sessionClockIvs[clockKey]) { clearInterval(sessionClockIvs[clockKey]); delete sessionClockIvs[clockKey]; }
+    const c = STATE.clocks[clockKey];
+    if (c && c.start && !c.stop) sessionClockIvs[clockKey] = setInterval(paint, 1000);
+  }
+  btn.onclick = () => {
+    const c = STATE.clocks[clockKey];
+    if (!c || !c.start) { STATE.clocks[clockKey] = { start: Date.now(), stop: null }; }
+    else if (!c.stop) { c.stop = Date.now(); }
+    else { delete STATE.clocks[clockKey]; }
+    saveState(); syncInterval(); paint();
+  };
+  syncInterval();
+  paint();
+}
 
 function weekProgress(week) {
   if (!week.days.length) return 0;
@@ -542,6 +626,19 @@ function renderDayContent() {
   if (d.label) header.appendChild(el('div', { class: 'day-sublabel' }, d.label));
   wrapper.appendChild(header);
 
+  // Pacing row: session clock + planned time + 60-min mode toggle
+  currentPlanKB = dayPlanKB(d);
+  const clockBtn = el('button', { class: 'timer-btn', style: 'margin:0' }, '▶ Clock');
+  const clockStat = el('span', { style: 'font-size:12px;color:var(--muted)' }, '');
+  const sixtyBtn = el('button', {
+    class: 'timer-btn',
+    style: 'margin:0' + (STATE.sixty ? ';background:var(--warning-soft);color:var(--warning);border-color:#edd9a6' : ''),
+    onclick: () => { STATE.sixty = !STATE.sixty; saveState(); render(); }
+  }, STATE.sixty ? '⏱ 60-min: ON' : '⏱ 60-min: off');
+  wrapper.appendChild(el('div', { style: 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px' },
+    clockBtn, clockStat, sixtyBtn));
+  wireDayClock(`${w.id}_${d.day}`, d, currentPlanKB, clockBtn, clockStat);
+
   // Type badge
   if (d.conditioning) {
     wrapper.appendChild(el('div', { class: 'cond-badge' }, '⚡ Circuit / Conditioning'));
@@ -597,7 +694,7 @@ function buildExCard(w, d, exIdx, ex, log, subLabel, isSubCard) {
   const exLog = (log.exercises || {})[exIdx] || {};
   const allChecked = Array.from({ length: ex.sets }, (_, i) => !!(exLog[`s${i}`]));
   const exDone = ex.sets > 0 && allChecked.every(Boolean);
-  const restSecs = parseInt(ex.rest) || 60;
+  const restSecs = effRestSecs(parseInt(ex.rest) || 60);
 
   const card = el('div', { class: `ex-card${isSubCard ? ' sub-card' : ''}${exDone ? ' done-card' : ''}` });
 
@@ -607,8 +704,11 @@ function buildExCard(w, d, exIdx, ex, log, subLabel, isSubCard) {
   head.appendChild(el('div', { class: 'ex-name' }, cleanName(ex.name)));
   card.appendChild(head);
 
-  // Prescription + notes
-  const presc = fmtPrescription(ex);
+  // Prescription + notes (+ planned start marker)
+  let presc = fmtPrescription(ex);
+  if (currentPlanKB && !currentPlanKB.cond && currentPlanKB.offsets[exIdx] != null) {
+    presc += (presc ? ' · ' : '') + `start ~${Math.round(currentPlanKB.offsets[exIdx] / 60)} min in`;
+  }
   if (presc) card.appendChild(el('div', { class: 'ex-prescription' }, presc));
   if (ex.notes) card.appendChild(el('div', { class: 'ex-notes-text' }, ex.notes));
 
@@ -885,7 +985,7 @@ function doImport() {
 }
 function doReset() {
   if (!confirm('Delete all your logged data? This cannot be undone.')) return;
-  STATE = { currentWeek: 'w1', currentDay: 'Day 1', logs: {} };
+  STATE = { currentWeek: 'w1', currentDay: 'Day 1', logs: {}, sixty: false, clocks: {} };
   saveState(); render(); toast('Data cleared');
 }
 

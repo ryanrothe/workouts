@@ -233,6 +233,7 @@
       <h2>How this tracker works</h2>
       <p>Two workouts, both from John Madsen. Tap <strong>Upper Body</strong> or <strong>Legs</strong> to switch between them. Within each, tap the <strong>+ New</strong> pill to start a new dated session — check off exercises as you finish them, and log the weight you used in the box that opens when you tap <strong>✎ Log</strong>.</p>
       <p>Your last session's load shows up under each exercise as a reference so you know what to beat (or match).</p>
+      <p>Each workout header shows a <strong>planned time</strong> and every exercise a <em>"start ~N min in"</em> marker. Tap <strong>▶ Clock</strong> in the session toolbar when you start — it survives reloads and reports pace against the plan once you check off your first exercise. The <strong>⏱ 60-min mode</strong> toggle tightens every rest one step (90s→60s, 60s→45s) and recomputes the plan and the rest timers; sets and reps stay as written.</p>
 
       <h3>Upper Body — original message</h3>
       <div class="quote-box">
@@ -291,28 +292,29 @@ const EXERCISES = {
   hang_leg:      { name: "Hanging Leg Raise",                          tag: "core",  q: "hanging leg raise strict" }
 };
 
+/* `work` = modeled seconds of actual lifting per set, for the time plan. */
 const WORKOUTS = {
   upper: {
     name: "Upper Body",
     focus: "Push · Pull · Shoulders · Arms",
     exercises: [
-      { id: "plyo_pushup",   sets: "3",  reps: "10",            load: "60 sec rest between sets" },
-      { id: "max_pushup",    sets: "1",  reps: "AMRAP",         load: "5 minutes total — break as needed" },
-      { id: "db_incline",    sets: "3",  reps: "max reps",      load: "Heaviest DBs possible" },
-      { id: "db_lat_raise",  sets: "3",  reps: "15",            load: "Strict — superset with side raise" },
-      { id: "db_side_raise", sets: "3",  reps: "15",            load: "Straight into this from lateral raise" },
-      { id: "pullup_wave",   sets: "7",  reps: "waves (2/3/5)", load: "1 wave = 2 + 3 + 5 reps. 70 reps total." },
-      { id: "db_hammer",     sets: "4",  reps: "6",             load: "Heavy, controlled" }
+      { id: "plyo_pushup",   sets: "3",  reps: "10",            load: "60 sec rest between sets", work: 25 },
+      { id: "max_pushup",    sets: "1",  reps: "AMRAP",         load: "5 minutes total — break as needed", work: 300 },
+      { id: "db_incline",    sets: "3",  reps: "max reps",      load: "Heaviest DBs possible", work: 40 },
+      { id: "db_lat_raise",  sets: "3",  reps: "15",            load: "Strict — superset with side raise", work: 35 },
+      { id: "db_side_raise", sets: "3",  reps: "15",            load: "Straight into this from lateral raise", work: 35 },
+      { id: "pullup_wave",   sets: "7",  reps: "waves (2/3/5)", load: "1 wave = 2 + 3 + 5 reps. 70 reps total.", work: 45, rest: 75 },
+      { id: "db_hammer",     sets: "4",  reps: "6",             load: "Heavy, controlled", work: 25 }
     ]
   },
   lower: {
     name: "Legs",
     focus: "Quads · Glutes · Hamstrings · Core",
     exercises: [
-      { id: "goblet_tempo",  sets: "5",  reps: "10",            load: "6s eccentric · 6s pause at bottom" },
-      { id: "bulgarian",     sets: "7",  reps: "7 / leg",       load: "" },
-      { id: "db_rdl",        sets: "7",  reps: "7",             load: "Hinge focus, controlled descent" },
-      { id: "hang_leg",      sets: "7",  reps: "7",             load: "Strict, no swinging" }
+      { id: "goblet_tempo",  sets: "5",  reps: "10",            load: "6s eccentric · 6s pause at bottom", work: 140 },
+      { id: "bulgarian",     sets: "7",  reps: "7 / leg",       load: "", work: 70 },
+      { id: "db_rdl",        sets: "7",  reps: "7",             load: "Hinge focus, controlled descent", work: 30 },
+      { id: "hang_leg",      sets: "7",  reps: "7",             load: "Strict, no swinging", work: 25 }
     ]
   }
 };
@@ -326,11 +328,16 @@ let state = loadState();
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (p.sixty === undefined) p.sixty = false;
+      return p;
+    }
   } catch (e) {}
   return {
     sessions: { upper: [], lower: [] },
-    activeSessionId: { upper: null, lower: null }
+    activeSessionId: { upper: null, lower: null },
+    sixty: false
   };
 }
 function saveState() {
@@ -404,6 +411,74 @@ function deleteSession(workout, sessionId) {
 }
 
 /* ===========================================================================
+   TIME BUDGET + 60-MIN MODE — backported from the TFM/PPL trackers (2026-08-30).
+   Session clock + planned time + pace markers; the toggle tightens rests.
+   =========================================================================== */
+const SETUP_ALLOW = 240;   // hotel gyms: find the DBs, quick warm-up
+
+function effRestSecs(rest) {
+  if (!state.sixty) return rest;
+  if (rest >= 90) return 60;
+  if (rest >= 60) return 45;
+  return rest;
+}
+function workoutPlan(workout) {
+  let t = SETUP_ALLOW;
+  const offsets = [];
+  WORKOUTS[workout].exercises.forEach(ex => {
+    offsets.push(t);
+    const sets = parseInt(ex.sets, 10) || 3;
+    t += sets * ((ex.work || 40) + effRestSecs(ex.rest || 60));
+  });
+  return { total: t, offsets };
+}
+function fmtMins(secs) { return `~${Math.round(secs / 60)} min`; }
+function fmtClock(s) {
+  const m = Math.floor(s / 60), sec = s % 60;
+  return `${m}:${String(sec).padStart(2, "0")}`;
+}
+
+/* Session clock — clockStart/clockStop live on the session, survive reloads. */
+const sessionClockIvs = {};
+
+function wireSessionClock(workout, session, plan, btn, stat) {
+  function paint() {
+    if (!session.clockStart) {
+      btn.textContent = "▶ Clock";
+      btn.classList.remove("running");
+      stat.textContent = "";
+      return;
+    }
+    const elapsed = Math.round(((session.clockStop || Date.now()) - session.clockStart) / 1000);
+    btn.textContent = (session.clockStop ? "■ " : "") + fmtClock(elapsed);
+    btn.classList.toggle("running", !session.clockStop);
+    const exs = WORKOUTS[workout].exercises;
+    let nextIdx = exs.findIndex((_, i) => !session.completed[i]);
+    let msg = `target ${fmtMins(plan.total)}`;
+    if (nextIdx > 0) {
+      const planned = plan.offsets[nextIdx] != null ? plan.offsets[nextIdx] : plan.total;
+      const delta = Math.round((planned - elapsed) / 60);
+      msg = (delta >= 1 ? `${delta} min ahead` : delta <= -1 ? `${-delta} min behind` : "on pace") + ` · target ${fmtMins(plan.total)}`;
+    } else if (nextIdx === -1 && exs.length) {
+      msg = `done in ${fmtClock(elapsed)}`;
+    }
+    stat.textContent = msg;
+  }
+  function syncInterval() {
+    if (sessionClockIvs[workout]) { clearInterval(sessionClockIvs[workout]); delete sessionClockIvs[workout]; }
+    if (session.clockStart && !session.clockStop) sessionClockIvs[workout] = setInterval(paint, 1000);
+  }
+  btn.onclick = () => {
+    if (!session.clockStart) { session.clockStart = Date.now(); session.clockStop = null; }
+    else if (!session.clockStop) { session.clockStop = Date.now(); }
+    else { session.clockStart = null; session.clockStop = null; }
+    saveState(); syncInterval(); paint();
+  };
+  syncInterval();
+  paint();
+}
+
+/* ===========================================================================
    RENDER
    =========================================================================== */
 function renderSessionBar(workout) {
@@ -456,16 +531,22 @@ function renderWorkout(workout) {
   const completed = Object.values(session.completed).filter(Boolean).length;
   const total = w.exercises.length;
   const isFullyDone = completed === total;
+  const plan = workoutPlan(workout);
 
   const toolbar = document.createElement("div");
   toolbar.className = "session-toolbar";
   toolbar.innerHTML = `
     <div class="left">
       <span>Session on <strong style="color:var(--text)">${session.date}</strong></span>
+      <button class="btn btn-timer" data-action="clock">▶ Clock</button>
+      <span data-role="clockstat"></span>
     </div>
     <button class="btn btn-danger" data-action="delete">Delete session</button>
   `;
   toolbar.querySelector("[data-action=delete]").onclick = () => deleteSession(workout, session.id);
+  wireSessionClock(workout, session, plan,
+    toolbar.querySelector("[data-action=clock]"),
+    toolbar.querySelector("[data-role=clockstat]"));
   container.appendChild(toolbar);
 
   const dayEl = document.createElement("div");
@@ -474,7 +555,7 @@ function renderWorkout(workout) {
     <div class="day-header">
       <div class="day-title">
         <div class="day-name">${w.name}</div>
-        <div class="day-focus">${w.focus}</div>
+        <div class="day-focus">${w.focus} · planned ${fmtMins(plan.total)}${state.sixty ? " · 60-min mode" : ""}</div>
       </div>
       <div class="day-meta">
         <span class="day-chip ${isFullyDone ? "complete" : ""}">${completed} / ${total}</span>
@@ -494,6 +575,11 @@ function renderExercise(workout, session, ex, idx) {
   const isDone = !!session.completed[idx];
   const log = session.logs[idx] || { weight: "", notes: "" };
   const lastLoad = getLastLoggedLoad(workout, idx, session.id);
+  const restSecs = effRestSecs(ex.rest || 60);
+  const restLabel = `⏱ ${restSecs}s`;
+  const planOffset = workoutPlan(workout).offsets[idx];
+  const paceHtml = planOffset != null
+    ? `<span style="color:var(--muted);font-weight:400"> · start ~${Math.round(planOffset / 60)} min in</span>` : "";
 
   const el = document.createElement("div");
   el.className = "exercise";
@@ -509,12 +595,12 @@ function renderExercise(workout, session, ex, idx) {
           <span class="ex-tag ${exDef.tag}">${tagLabel(exDef.tag)}</span>
           <span class="ex-name">${exDef.name}</span>
         </div>
-        <div class="ex-prescription"><strong>${ex.sets} × ${ex.reps}</strong>${ex.load ? " · " + ex.load : ""}</div>
+        <div class="ex-prescription"><strong>${ex.sets} × ${ex.reps}</strong>${ex.load ? " · " + ex.load : ""}${paceHtml}</div>
         ${lastLoad ? `<div class="ex-last">Last (${shortDate(lastLoad.date)}): <strong>${escapeHtml(lastLoad.weight)}</strong></div>` : ""}
         <div class="ex-actions">
           <a class="btn" href="${v(exDef.q)}" target="_blank" rel="noopener">▶ Video</a>
           <button class="btn log-toggle">✎ Log</button>
-          <button class="btn btn-timer rest-timer" data-default="⏱ 60s">⏱ 60s</button>
+          <button class="btn btn-timer rest-timer" data-default="${restLabel}">${restLabel}</button>
         </div>
         <div class="ex-log">
           <input type="text" class="log-weight" placeholder="Weight / load (e.g. 50 lb DBs, BW+25)" value="${escapeAttr(log.weight)}">
@@ -537,7 +623,7 @@ function renderExercise(workout, session, ex, idx) {
   const timerKey = `${workout}_${session.id}_${idx}`;
   const timerBtn = el.querySelector(".rest-timer");
   reattachTimer(timerKey, timerBtn);
-  timerBtn.onclick = () => toggleRestTimer(timerKey, timerBtn);
+  timerBtn.onclick = () => toggleRestTimer(timerKey, timerBtn, restSecs);
 
   el.querySelector(".log-weight").addEventListener("input", e => {
     if (!session.logs[idx]) session.logs[idx] = { weight: "", notes: "" };
@@ -625,8 +711,11 @@ function formatTimer(s) {
   return `${m}:${String(sec).padStart(2, "0")}`;
 }
 
+/* No isConnected guard here on purpose: on re-render, reattachTimer hands us the
+   fresh button before it's been appended, and we still want the countdown text
+   painted so it never flashes back to the default label. */
 function paintTimer(btn, remaining) {
-  if (!btn || !btn.isConnected) return;
+  if (!btn) return;
   btn.classList.add("running");
   btn.classList.remove("done");
   btn.textContent = formatTimer(remaining);
@@ -651,12 +740,13 @@ function paintTimerReset(btn) {
   btn.textContent = btn.dataset.default || "⏱ 60s";
 }
 
-function startRestTimer(key, btn) {
+function startRestTimer(key, btn, secs) {
   ensureAudio();
   if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
 
-  const endsAt = Date.now() + REST_SECONDS * 1000;
-  paintTimer(btn, REST_SECONDS);
+  const restSecs = secs || REST_SECONDS;
+  const endsAt = Date.now() + restSecs * 1000;
+  paintTimer(btn, restSecs);
 
   const intervalId = setInterval(() => {
     const t = activeTimers[key];
@@ -685,9 +775,9 @@ function cancelRestTimer(key) {
   paintTimerReset(btn);
 }
 
-function toggleRestTimer(key, btn) {
+function toggleRestTimer(key, btn, secs) {
   if (activeTimers[key]) cancelRestTimer(key);
-  else startRestTimer(key, btn);
+  else startRestTimer(key, btn, secs);
 }
 
 function reattachTimer(key, btn) {
@@ -715,11 +805,30 @@ document.querySelectorAll(".tab").forEach(tab => {
 
 document.getElementById("reset-btn").onclick = () => {
   if (confirm("Reset all tracking? Every session, log, and check across both workouts will be cleared.")) {
-    state = { sessions: { upper: [], lower: [] }, activeSessionId: { upper: null, lower: null } };
+    state = { sessions: { upper: [], lower: [] }, activeSessionId: { upper: null, lower: null }, sixty: false };
     saveState();
     render();
   }
 };
+
+/* 60-min mode toggle (backported 2026-08-30): tightens rests one step
+   (90s→60s, 60s→45s) and recomputes the plan, markers, and rest timers. */
+(function addSixtyToggle() {
+  const hero = document.querySelector(".hero");
+  const btn = document.createElement("button");
+  btn.className = "btn";
+  btn.id = "sixty-btn";
+  btn.style.marginTop = "10px";
+  function paint() {
+    btn.textContent = state.sixty ? "⏱ 60-min mode: ON" : "⏱ 60-min mode: off";
+    btn.style.background = state.sixty ? "var(--warning-soft)" : "";
+    btn.style.color = state.sixty ? "var(--warning)" : "";
+    btn.style.borderColor = state.sixty ? "#edd9a6" : "";
+  }
+  btn.onclick = () => { state.sixty = !state.sixty; saveState(); paint(); render(); };
+  paint();
+  hero.appendChild(btn);
+})();
 
 render();
 </script>

@@ -386,9 +386,14 @@ let STATE = null;
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (p.sixty === undefined) p.sixty = false;
+      if (!p.clocks) p.clocks = {};
+      return p;
+    }
   } catch(e) {}
-  return { currentWeek: 'w1', currentDay: 'Monday', logs: {} };
+  return { currentWeek: 'w1', currentDay: 'Monday', logs: {}, sixty: false, clocks: {} };
 }
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); } catch(e) {}
@@ -516,6 +521,80 @@ function renderHero() {
   main.appendChild(progressBar);
 }
 
+/* ── time budget + 60-min mode + session clock (backported 2026-08-30) ──
+   FBA rests are a fixed 60s; 60-min mode runs them at 45s. The plan parses
+   rep targets out of each prescription string. */
+const SETUP_ALLOW = 300;
+function effRestSecs() { return STATE.sixty ? 45 : REST_SECONDS; }
+function restBtnLabel() { return `⏱ ${effRestSecs()}s`; }
+function exWorkSecs(ex) {
+  const p = String(ex.prescription || '');
+  const m = p.match(/x\s*(\d+)(?:\s*-\s*(\d+))?/i);
+  let work = m ? Math.min(90, Math.max(25, parseInt(m[2] || m[1], 10) * 4)) : 40;
+  if (/ea\.|each/i.test(p)) work = Math.round(work * 1.8);
+  return work;
+}
+function dayPlanFBA(d) {
+  if (d.rest) return { total: 0, offsets: [], cond: true };
+  if (d.conditioning || !d.exercises || d.exercises.length < 2) return { total: 1500, offsets: [], cond: true };
+  let t = SETUP_ALLOW;
+  const offsets = [];
+  d.exercises.forEach(ex => {
+    offsets.push(t);
+    t += (ex.sets || 3) * (exWorkSecs(ex) + effRestSecs());
+  });
+  return { total: t, offsets, cond: false };
+}
+let currentPlanFBA = null;
+
+const sessionClockIvs = {};
+function wireDayClock(clockKey, d, plan, btn, stat) {
+  function paint() {
+    const c = STATE.clocks[clockKey];
+    const planTxt = `plan ~${Math.round(plan.total / 60)} min`;
+    if (!c || !c.start) {
+      btn.textContent = '▶ Clock';
+      btn.classList.remove('running');
+      stat.textContent = planTxt;
+      return;
+    }
+    const elapsed = Math.round(((c.stop || Date.now()) - c.start) / 1000);
+    btn.textContent = (c.stop ? '■ ' : '') + fmtTime(elapsed);
+    btn.classList.toggle('running', !c.stop);
+    let msg = planTxt;
+    if (!plan.cond && d.exercises) {
+      const log = getLog(STATE.currentWeek, d.day);
+      let nextIdx = d.exercises.findIndex((ex, ei) => {
+        const exLog = (log.exercises || {})[ei] || {};
+        for (let i = 0; i < ex.sets; i++) if (!exLog[`s${i}`]) return true;
+        return false;
+      });
+      if (nextIdx > 0) {
+        const planned = plan.offsets[nextIdx] != null ? plan.offsets[nextIdx] : plan.total;
+        const delta = Math.round((planned - elapsed) / 60);
+        msg = (delta >= 1 ? `${delta} min ahead` : delta <= -1 ? `${-delta} min behind` : 'on pace') + ` · ${planTxt}`;
+      } else if (nextIdx === -1) {
+        msg = `done in ${fmtTime(elapsed)}`;
+      }
+    }
+    stat.textContent = msg;
+  }
+  function syncInterval() {
+    if (sessionClockIvs[clockKey]) { clearInterval(sessionClockIvs[clockKey]); delete sessionClockIvs[clockKey]; }
+    const c = STATE.clocks[clockKey];
+    if (c && c.start && !c.stop) sessionClockIvs[clockKey] = setInterval(paint, 1000);
+  }
+  btn.onclick = () => {
+    const c = STATE.clocks[clockKey];
+    if (!c || !c.start) { STATE.clocks[clockKey] = { start: Date.now(), stop: null }; }
+    else if (!c.stop) { c.stop = Date.now(); }
+    else { delete STATE.clocks[clockKey]; }
+    saveState(); syncInterval(); paint();
+  };
+  syncInterval();
+  paint();
+}
+
 function renderDayContent() {
   const w = currentWeek();
   const d = currentDay();
@@ -533,6 +612,20 @@ function renderDayContent() {
     header.appendChild(el('div', {class:'day-sublabel'}, d.dayLabel));
   }
   wrapper.appendChild(header);
+
+  currentPlanFBA = dayPlanFBA(d);
+  if (!d.rest) {
+    const clockBtn = el('button', {class:'timer-btn', style:'margin:0'}, '▶ Clock');
+    const clockStat = el('span', {style:'font-size:12px;color:var(--muted)'}, '');
+    const sixtyBtn = el('button', {
+      class: 'timer-btn',
+      style: 'margin:0' + (STATE.sixty ? ';background:var(--warning-soft);color:var(--warning);border-color:#edd9a6' : ''),
+      onclick: () => { STATE.sixty = !STATE.sixty; saveState(); render(); }
+    }, STATE.sixty ? '⏱ 60-min: ON' : '⏱ 60-min: off');
+    wrapper.appendChild(el('div', {style:'display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px'},
+      clockBtn, clockStat, sixtyBtn));
+    wireDayClock(`${w.id}_${d.day}`, d, currentPlanFBA, clockBtn, clockStat);
+  }
 
   if (d.rest) {
     wrapper.appendChild(el('div', {class:'rest-card'},
@@ -565,7 +658,11 @@ function renderStructured(w, d, wrapper, log) {
     const nameEl = el('div', {class:'ex-name'}, ex.name);
     card.appendChild(el('div', {class:'ex-head'}, badge, nameEl));
 
-    if (ex.prescription) card.appendChild(el('div', {class:'ex-prescription'}, ex.prescription));
+    let prescText = ex.prescription || '';
+    if (currentPlanFBA && !currentPlanFBA.cond && currentPlanFBA.offsets[exIdx] != null) {
+      prescText += (prescText ? ' · ' : '') + `start ~${Math.round(currentPlanFBA.offsets[exIdx] / 60)} min in`;
+    }
+    if (prescText) card.appendChild(el('div', {class:'ex-prescription'}, prescText));
 
     // Set rows
     const setsEl = el('div', {class:'sets'});
@@ -616,7 +713,7 @@ function renderStructured(w, d, wrapper, log) {
 
     // Timer
     const timerKey = `${w.id}_${d.day}_${exIdx}`;
-    const timerBtn = el('button', {class:'timer-btn', 'data-timer':timerKey}, '⏱ 60s');
+    const timerBtn = el('button', {class:'timer-btn', 'data-timer':timerKey}, restBtnLabel());
     timerBtn.addEventListener('click', () => {
       ensureAudio();
       if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
@@ -751,10 +848,11 @@ function fmtTime(s) {
   return `${m}:${String(sec).padStart(2,'0')}`;
 }
 function startRestTimer(key, btn) {
-  const endsAt = Date.now() + REST_SECONDS * 1000;
-  if (btn) { btn.classList.add('running'); btn.textContent = fmtTime(REST_SECONDS); }
+  const restSecs = effRestSecs();
+  const endsAt = Date.now() + restSecs * 1000;
+  if (btn) { btn.classList.add('running'); btn.textContent = fmtTime(restSecs); }
   $('#restBar').classList.add('visible');
-  $('#restTime').textContent = fmtTime(REST_SECONDS);
+  $('#restTime').textContent = fmtTime(restSecs);
   $('#restDesc').textContent = 'Rest';
   const intervalId = setInterval(() => {
     const t = activeTimers[key]; if (!t) return;
@@ -765,7 +863,7 @@ function startRestTimer(key, btn) {
       clearInterval(t.intervalId);
       const b = t.btn;
       delete activeTimers[key];
-      if (b && b.isConnected) { b.classList.remove('running'); b.classList.add('done'); b.textContent = 'Done!'; setTimeout(() => { if (b.isConnected) { b.classList.remove('done'); b.textContent = '⏱ 60s'; } }, 1800); }
+      if (b && b.isConnected) { b.classList.remove('running'); b.classList.add('done'); b.textContent = 'Done!'; setTimeout(() => { if (b.isConnected) { b.classList.remove('done'); b.textContent = restBtnLabel(); } }, 1800); }
       beep();
       setTimeout(() => { if (!Object.keys(activeTimers).length) $('#restBar').classList.remove('visible'); }, 1000);
     }
@@ -777,7 +875,7 @@ function cancelRestTimer(key) {
   clearInterval(t.intervalId);
   const b = t.btn;
   delete activeTimers[key];
-  if (b && b.isConnected) { b.classList.remove('running','done'); b.textContent = '⏱ 60s'; }
+  if (b && b.isConnected) { b.classList.remove('running','done'); b.textContent = restBtnLabel(); }
   if (!Object.keys(activeTimers).length) $('#restBar').classList.remove('visible');
 }
 function reattachTimer(key, btn) {
@@ -912,7 +1010,7 @@ function doImport() {
 }
 function doReset() {
   if (!confirm('Delete all your logged data? This cannot be undone.')) return;
-  STATE = { currentWeek:'w1', currentDay:'Monday', logs:{} };
+  STATE = { currentWeek:'w1', currentDay:'Monday', logs:{}, sixty: false, clocks: {} };
   saveState(); render(); toast('Data cleared');
 }
 

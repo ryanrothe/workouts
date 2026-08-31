@@ -336,6 +336,11 @@
         </ul>
         <p>Rest timers are pre-set per exercise: <strong>2 min</strong> on squats and deadlifts, <strong>90s</strong> on the main lifts, <strong>60s</strong> on accessories.</p>
 
+        <h3>Pacing: planned time, 60-min mode, and the session clock</h3>
+        <p>Each workout header shows a <strong>planned time</strong> — a model built from the sets, rep targets, and rest prescriptions, plus a warm-up/setup allowance. Every exercise carries a <em>"start ~N min in"</em> marker so you know where you should be.</p>
+        <p>The <strong>⏱ 60-min mode</strong> toggle in the header tightens every rest one step (2:00→1:30, 90s→60s, 60s→45s) and recomputes the plan, the markers, and the rest timers to match. PPL days already fit inside an hour — this is the "move faster today" lever, not a program change. Sets and reps stay as written.</p>
+        <p>Tap <strong>▶ Clock</strong> in the session toolbar when you start lifting. It runs with the session (survives reloads), and once you've checked off your first exercise it reports pace against the plan — <em>"3 min ahead"</em>, <em>"on pace"</em>, <em>"4 min behind"</em>. Tap to stop, tap again to reset.</p>
+
         <h3>The split</h3>
         <ul>
           <li><strong>Push A (Mon)</strong> — barbell, heavy. Low reps on the presses.</li>
@@ -545,7 +550,7 @@ let autoOpenLog = null;
 function emptyState() {
   const sessions = {}, active = {};
   WORKOUT_ORDER.forEach(k => { sessions[k] = []; active[k] = null; });
-  return { sessions, activeSessionId: active };
+  return { sessions, activeSessionId: active, sixty: false };
 }
 
 function loadState() {
@@ -559,6 +564,7 @@ function loadState() {
         if (Array.isArray(parsed.sessions?.[k])) base.sessions[k] = parsed.sessions[k];
         if (parsed.activeSessionId?.[k]) base.activeSessionId[k] = parsed.activeSessionId[k];
       });
+      base.sixty = !!parsed.sixty;
       return base;
     }
   } catch (e) {}
@@ -746,6 +752,90 @@ function nextUpKey() {
 }
 
 /* ===========================================================================
+   TIME BUDGET + 60-MIN MODE — backported from the TFM trackers (2026-08-30).
+   A planning model, not a promise: set work is inferred from the rep target,
+   rests from the program's own prescriptions. PPL days already fit an hour;
+   the toggle's value here is pacing — tighter rests, a planned finish time,
+   "start ~N min in" markers, and the session clock's ahead/behind readout.
+   =========================================================================== */
+const SETUP_ALLOW = 360;   // warm-up sets + plate changes + getting to the rack
+
+function effRestSecs(rest) {
+  if (!state.sixty) return rest;
+  if (rest >= 120) return 90;
+  if (rest >= 90) return 60;
+  return 45;
+}
+function exWorkSecs(ex) {
+  const reps = String(ex.reps);
+  if (/failure/i.test(reps)) return 45;
+  const nums = reps.match(/\d+/g);
+  let work = nums ? Math.min(90, Math.max(25, parseInt(nums[nums.length - 1], 10) * 4)) : 40;
+  if (/foot|leg|arm/i.test(reps)) work = Math.round(work * 1.8);
+  return work;
+}
+/* Total planned seconds + the offset at which each exercise should start. */
+function workoutPlan(workout) {
+  let t = SETUP_ALLOW;
+  const offsets = [];
+  WORKOUTS[workout].exercises.forEach(ex => {
+    offsets.push(t);
+    const sets = parseInt(ex.sets, 10) || 3;
+    t += sets * (exWorkSecs(ex) + effRestSecs(ex.rest || 60));
+  });
+  return { total: t, offsets };
+}
+function fmtMins(secs) { return `~${Math.round(secs / 60)} min`; }
+function fmtClock(s) {
+  const m = Math.floor(s / 60), sec = s % 60;
+  return `${m}:${String(sec).padStart(2, "0")}`;
+}
+
+/* ---------------------------------------------------------------------------
+   SESSION CLOCK — start it when you start lifting; it compares elapsed time
+   to the plan (first unchecked exercise's planned start) and reports pace.
+   clockStart/clockStop live on the session object, so it survives reloads.
+   --------------------------------------------------------------------------- */
+const sessionClockIvs = {};   // workout → interval id (paint only; truth in state)
+
+function wireSessionClock(workout, session, plan, btn, stat) {
+  function paint() {
+    if (!session.clockStart) {
+      btn.textContent = "▶ Clock";
+      btn.classList.remove("running");
+      stat.textContent = "";
+      return;
+    }
+    const elapsed = Math.round(((session.clockStop || Date.now()) - session.clockStart) / 1000);
+    btn.textContent = (session.clockStop ? "■ " : "") + fmtClock(elapsed);
+    btn.classList.toggle("running", !session.clockStop);
+    const exs = WORKOUTS[workout].exercises;
+    let nextIdx = exs.findIndex((_, i) => !session.completed[i]);
+    let msg = `target ${fmtMins(plan.total)}`;
+    if (nextIdx > 0) {
+      const planned = plan.offsets[nextIdx] != null ? plan.offsets[nextIdx] : plan.total;
+      const delta = Math.round((planned - elapsed) / 60);
+      msg = (delta >= 1 ? `${delta} min ahead` : delta <= -1 ? `${-delta} min behind` : "on pace") + ` · target ${fmtMins(plan.total)}`;
+    } else if (nextIdx === -1 && exs.length) {
+      msg = `done in ${fmtClock(elapsed)}`;
+    }
+    stat.textContent = msg;
+  }
+  function syncInterval() {
+    if (sessionClockIvs[workout]) { clearInterval(sessionClockIvs[workout]); delete sessionClockIvs[workout]; }
+    if (session.clockStart && !session.clockStop) sessionClockIvs[workout] = setInterval(paint, 1000);
+  }
+  btn.onclick = () => {
+    if (!session.clockStart) { session.clockStart = Date.now(); session.clockStop = null; }
+    else if (!session.clockStop) { session.clockStop = Date.now(); }
+    else { session.clockStart = null; session.clockStop = null; }
+    saveState(); syncInterval(); paint();
+  };
+  syncInterval();
+  paint();
+}
+
+/* ===========================================================================
    SHELL — build one tab + one pane per workout, ahead of the static Notes pane
    =========================================================================== */
 function buildShell() {
@@ -844,15 +934,22 @@ function renderWorkout(workout) {
   const total = w.exercises.length;
   const isFullyDone = completed === total;
 
+  const plan = workoutPlan(workout);
+
   const toolbar = document.createElement("div");
   toolbar.className = "session-toolbar";
   toolbar.innerHTML = `
     <div class="left">
       <span>Session on <strong style="color:var(--text)">${session.date}</strong></span>
+      <button class="btn btn-timer" data-action="clock">▶ Clock</button>
+      <span data-role="clockstat"></span>
     </div>
     <button class="btn btn-danger" data-action="delete">Delete session</button>
   `;
   toolbar.querySelector("[data-action=delete]").onclick = () => deleteSession(workout, session.id);
+  wireSessionClock(workout, session, plan,
+    toolbar.querySelector("[data-action=clock]"),
+    toolbar.querySelector("[data-role=clockstat]"));
   container.appendChild(toolbar);
 
   const dayEl = document.createElement("div");
@@ -861,7 +958,7 @@ function renderWorkout(workout) {
     <div class="day-header">
       <div class="day-title">
         <div class="day-name">${w.day} · ${w.name}</div>
-        <div class="day-focus">${w.focus}</div>
+        <div class="day-focus">${w.focus} · planned ${fmtMins(plan.total)}${state.sixty ? " · 60-min mode" : ""}</div>
       </div>
       <div class="day-meta">
         <span class="day-chip ${isFullyDone ? "complete" : ""}">${completed} / ${total}</span>
@@ -884,8 +981,11 @@ function renderExercise(workout, session, ex, idx) {
   const log = session.logs[idx] || { weight: "", notes: "" };
   const lastLoad = getLastLoggedLoad(workout, idx, session.id, pid);
   const sugg = suggestNext(workout, idx, session.id, ex, pid);
-  const restSecs = ex.rest || 60;
+  const restSecs = effRestSecs(ex.rest || 60);
   const restText = restLabel(restSecs);
+  const planOffset = workoutPlan(workout).offsets[idx];
+  const paceHtml = planOffset != null
+    ? `<span style="color:var(--muted);font-weight:400"> · start ~${Math.round(planOffset / 60)} min in</span>` : "";
 
   const isBwEx = !!exDef.bw;
 
@@ -938,7 +1038,7 @@ function renderExercise(workout, session, ex, idx) {
           <span class="ex-tag ${exDef.tag}">${tagLabel(exDef.tag)}</span>
           <span class="ex-name">${exDef.name}</span>
         </div>
-        <div class="ex-prescription"><strong>${ex.sets} × ${ex.reps}</strong>${ex.load ? " · " + ex.load : ""}</div>
+        <div class="ex-prescription"><strong>${ex.sets} × ${ex.reps}</strong>${ex.load ? " · " + ex.load : ""}${paceHtml}</div>
         ${subNoteHtml}
         ${lastHtml}
         ${suggHtml}
@@ -1221,6 +1321,26 @@ document.getElementById("reset-btn").onclick = () => {
     render();
   }
 };
+
+/* 60-min mode toggle (backported from the TFM trackers). PPL days already fit
+   an hour, so here it's a pace lever: rests tighten one step and the plan,
+   pace markers, and session clock all recompute against the faster schedule. */
+(function addSixtyToggle() {
+  const hero = document.querySelector(".hero");
+  const btn = document.createElement("button");
+  btn.className = "btn";
+  btn.id = "sixty-btn";
+  btn.style.marginTop = "10px";
+  function paint() {
+    btn.textContent = state.sixty ? "⏱ 60-min mode: ON" : "⏱ 60-min mode: off";
+    btn.style.background = state.sixty ? "var(--warning-soft)" : "";
+    btn.style.color = state.sixty ? "var(--warning)" : "";
+    btn.style.borderColor = state.sixty ? "#edd9a6" : "";
+  }
+  btn.onclick = () => { state.sixty = !state.sixty; saveState(); paint(); render(); };
+  paint();
+  hero.appendChild(btn);
+})();
 
 buildShell();
 buildSourceQuote();

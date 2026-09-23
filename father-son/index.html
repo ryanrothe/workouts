@@ -624,32 +624,33 @@ const FIN = {
     ]
   }
 };
-function blockOf(w) { return w < 4 ? 1 : w < 8 ? 2 : 3; }
+function blockOf(w) { return w <= 4 ? 1 : w <= 8 ? 2 : 3; }   // w is the week number; W0 is Day 1
 function finMenu(w, d) { return FIN[d][blockOf(w)]; }
 
 /* ===========================================================================
    PHASES + weekly coaching note (index = week - 1)
    =========================================================================== */
 const BLOCKS = [
-  { name: "Learn", weeks: "Weeks 1-4 · Sep 21 to Oct 18", theme: "Own the positions. Cross-country in season: 2 sets on legs, tempo reps, stuck landings." },
-  { name: "Build", weeks: "Weeks 5-8 · Oct 19 to Nov 15", theme: "Add load and reps. Weeks 5-6 are the championship stretch: upper progresses, legs hold. Weeks 7-8 legs open to 3 sets." },
-  { name: "Express", weeks: "Weeks 9-12 · Nov 16 to Dec 13", theme: "Be fast. Club soccer still in season, so a one-sport dose: jumps capped at 40 contacts, 3 strength sets, DB bench, pull-up attempts." }
+  { name: "Learn", weeks: "W1-4 · Sep 28 to Oct 25", theme: "Own the positions. Cross-country in season: 2 sets on legs, tempo reps, stuck landings. W4 opens the championship stretch." },
+  { name: "Build", weeks: "W5-8 · Oct 26 to Nov 22", theme: "Add load and reps. W5 is the last championship week (XC ends about Oct 31): upper progresses, legs hold. W6-8 legs open to 3 sets." },
+  { name: "Express", weeks: "W9-12 · Nov 23 to Dec 20", theme: "Be fast. Club soccer runs to early December, so W9-10 stay a one-sport dose: jumps capped at 40 contacts. W11-12 are the first post-season weeks. Then a full rest week." }
 ];
 const WEEK_NOTES = [
-  "<strong>Day 1 is Wednesday.</strong> The tests are the workout. They are the starting line, not scores. Pencil the height mark on the wall, both of you, and enter every number under Benchmarks.",
+  "<strong>W0 · Day 1 is Wednesday.</strong> The tests are the workout. They are the starting line, not scores. Pencil the height mark on the wall, both of you, and enter every number under Benchmarks.",
   "<strong>First full week.</strong> Tempo and positions. Deadlift the bell, no swings yet. Nordics start at 2 × 3 (Ryan holds the ankles). One coaching cue per set.",
   "<strong>Same loads, cleaner reps.</strong> Last KB deadlift week. Nordics 2 × 4. If a landing is loud, lower the box.",
-  "<strong>Benchmark week, lighter.</strong> Swings begin: 18 lb two-hand, hips drive, arms along for the ride. Nordics 2 × 5. Enter W4 numbers under Benchmarks.",
-  "<strong>Build begins, championship stretch.</strong> Upper progresses (rows to 3 × 10, press +5 if hit). Legs hold at 2 sets. Sunday lights out by 9.",
-  "<strong>Championship stretch continues.</strong> Monday can be the short version. Wednesday stays at 2 sets. Race well.",
+  "<strong>Swings begin.</strong> 18 lb two-hand, hips drive, arms along for the ride. If it looks like a squat, back to the deadlift. Nordics 2 × 5.",
+  "<strong>Benchmark week, lighter.</strong> Championship stretch begins: Monday can be the short version. Enter W4 numbers under Benchmarks.",
+  "<strong>Last championship week.</strong> Upper progresses (rows to 3 × 10, press +5 if hit). Legs hold at 2 sets. Sunday lights out by 9. Race well.",
   "<strong>Cross-country is over.</strong> Legs open to 3 sets. Son moves to the 24 in box if the 18 in landings are silent. Ryan adds pogos and depth drops.",
+  "<strong>Build.</strong> Heavier goblet and swings if the chips say so. Nordics 3 × 5. Still 2 reps in the tank.",
   "<strong>Benchmark week, lighter.</strong> 5-10-5 shuttle joins the tests. Enter W8 numbers. Check the height mark: half an inch a month means peak growth.",
-  "<strong>Express begins.</strong> Jumps capped at 40 contacts. DB bench enters once floor push-ups reach 15 clean. Pull-up singles if at step 4.",
+  "<strong>Express begins.</strong> Jumps capped at 40 contacts while soccer is on. DB bench enters once floor push-ups reach 15 clean. Pull-up singles if at step 4.",
   "<strong>Reactive work,</strong> only if the height mark says he is not in peak growth. Otherwise hold the jump volume flat. Airdyne sprints as the finisher.",
-  "<strong>Heaviest week of the cycle.</strong> Still 2 reps in the tank on every set. Nothing grinds.",
-  "<strong>Final benchmark week.</strong> Enter W12 numbers and compare to Day 1. Then one full rest week when soccer ends, and Cycle 2 in the winter window."
+  "<strong>Soccer is done, or nearly.</strong> Heaviest week of the cycle. Still 2 reps in the tank. Nothing grinds.",
+  "<strong>Final benchmark week.</strong> Enter W12 numbers and compare to Day 1. Then one full rest week, and Cycle 2 in the winter window."
 ];
-const BENCH_WEEKS = [1, 4, 8, 12];
+const BENCH_WEEKS = [0, 4, 8, 12];
 
 /* ===========================================================================
    PROGRAM DATA. 12 weeks. Week 1 has only Wednesday (Day 1).
@@ -705,11 +706,11 @@ function monday(w) {
 
 function wednesday(w) {
   const b = blockOf(w);
-  const sets = (w <= 6) ? 2 : 3;         // weeks 1-6 (index 0-5) in-season 2 sets; week 7+ opens to 3
+  const sets = (w <= 5) ? 2 : 3;         // W1-5 in season (XC ends ~Oct 31, end of W5): 2 sets; W6+ opens to 3
   const S = `${sets} x`;
   const sonBox = w >= 6 ? "24 in" : "18 in";
   const ryanBox = w >= 6 ? "30 in" : "24 in";
-  const nordic = Math.min(3 + (w - 1), b === 3 ? 6 : 5);   // 2x3 in week 2, +1 a week
+  const nordic = Math.min(2 + w, b === 3 ? 6 : 5);          // 2x3 in W1, +1 a week, capped
   const nordicSets = w >= 6 ? 3 : 2;
   const blocks = [];
 
@@ -728,7 +729,7 @@ function wednesday(w) {
   const aRows = [
     duo(`Goblet Squat ${S} 8 (3-second lower)`, `KB Goblet Squat ${S} 8 (3-second lower)`, 90, "legs", { cue: "Son 15-20 lb DB. Ryan 70 lb bell. Earn the next weight with no wobble." })
   ];
-  if (w <= 3) aRows.push(duo(`KB Deadlift ${S} 8`, `KB Deadlift ${S} 8`, 90, "legs", { cue: "Teach the hinge before the swing. Son 35 lb. Ryan 100 lb. Flat back every rep." }));
+  if (w <= 2) aRows.push(duo(`KB Deadlift ${S} 8`, `KB Deadlift ${S} 8`, 90, "legs", { cue: "Teach the hinge before the swing. Son 35 lb. Ryan 100 lb. Flat back every rep." }));
   else aRows.push(duo(`KB Swing ${S} 10`, `KB Swing ${S} 10`, 90, "legs", { cue: "Son's ladder: 18 lb two-hand 3 × 10, then 3 × 15, then one-arm 3 × 8 each, then 35 lb 3 × 6. Ryan 70 lb. If it looks like a squat, he is not ready." }));
   blocks.push({ label: "A · Squat and hinge", note: "Superset. Rest 90 s after the pair.", rows: aRows });
 
@@ -748,9 +749,9 @@ function wednesday(w) {
     duo("DB Farmer Carry 2 x 1 (2 trips · 25 lb each hand)", "KB Farmer Carry 2 x 1 (2 trips · 70 lb each hand)", 60, "core", { cue: "Tall posture the whole way." }),
     duo("Dead Bug 2 x 6 (each side)", "Dead Bug 2 x 8 (each side)", 30, "core", { track: false })
   ]});
-  const isBench = BENCH_WEEKS.includes(w + 1);
+  const isBench = BENCH_WEEKS.includes(w);
   if (isBench && w > 0) blocks.push({ label: "Benchmark week", note: "Lighter session. Run the tests after the warm-up, then the strength work at 2 sets.", rows: [
-    effort("Benchmark tests", `Enter W${w + 1} numbers under the Benchmarks tab`, "test", { detail: ["Dead hang for time", "Controlled negative for time", "Max clean push-ups at current level", "Broad jump, best of 3", "Single-leg hop, left and right", "Pull-up attempt", "Height mark on the wall"].concat(w + 1 >= 8 ? ["5-10-5 cone shuttle"] : []) })
+    effort("Benchmark tests", `Enter W${w} numbers under the Benchmarks tab`, "test", { detail: ["Dead hang for time", "Controlled negative for time", "Max clean push-ups at current level", "Broad jump, best of 3", "Single-leg hop, left and right", "Pull-up attempt", "Height mark on the wall"].concat(w >= 8 ? ["5-10-5 cone shuttle"] : []) })
   ]});
   return { title: "Lower", duration: "35-40 min", warmup: WU.wed, blocks, finNote: "Wednesday finisher: both of you. Competitive one week, cooperative the next. He picks." };
 }
@@ -782,7 +783,7 @@ function day1() {
 }
 
 const WEEKS = [];
-for (let w = 0; w < 12; w++) {
+for (let w = 0; w <= 12; w++) {   // index == week number: W0 is Day 1, W1-12 are full weeks
   WEEKS.push({ mon: w === 0 ? null : monday(w), wed: w === 0 ? day1() : wednesday(w) });
 }
 
@@ -800,11 +801,12 @@ const PROGRAM = {
 const STORAGE_KEY = PROGRAM.storageKey;
 const NWEEKS = PROGRAM.weeks.length;
 let state = loadState();
+try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}   // persist any load-time migration at once
 let uiWeek = null;
 
 function dayKey(w, d) { return `w${w}_${d}`; }
 function emptyState() {
-  return { lifter: "son", days: {}, tracks: { son: { pullup: 0, pushup: 0 }, ryan: { pullup: 0, pushup: 0 } }, bench: { son: {}, ryan: {} } };
+  return { lifter: "son", renumbered: true, days: {}, tracks: { son: { pullup: 0, pushup: 0 }, ryan: { pullup: 0, pushup: 0 } }, bench: { son: {}, ryan: {} } };
 }
 function loadState() {
   try {
@@ -817,7 +819,9 @@ function loadState() {
       LIFTERS.forEach(l => {
         if (p.tracks && p.tracks[l]) s.tracks[l] = Object.assign(s.tracks[l], p.tracks[l]);
         if (p.bench && p.bench[l]) s.bench[l] = p.bench[l];
+        if (s.bench[l]["1"] && !s.bench[l]["0"] && !p.renumbered) { s.bench[l]["0"] = s.bench[l]["1"]; delete s.bench[l]["1"]; }   // Day 1 moved from W1 to W0 on 2026-09-22
       });
+      s.renumbered = true;
       return s;
     }
   } catch (e) {}
@@ -1066,9 +1070,9 @@ function renderWeekBar() {
   bar.innerHTML = "";
   for (let w = 0; w < NWEEKS; w++) {
     const b = document.createElement("button");
-    b.className = "week-pill" + (w === uiWeek ? " active" : "") + (isWeekComplete(w, L()) ? " done" : "") + (BENCH_WEEKS.includes(w + 1) ? " bench" : "");
-    b.textContent = "W" + (w + 1);
-    b.title = BENCH_WEEKS.includes(w + 1) ? "Benchmark week" : "";
+    b.className = "week-pill" + (w === uiWeek ? " active" : "") + (isWeekComplete(w, L()) ? " done" : "") + (BENCH_WEEKS.includes(w) ? " bench" : "");
+    b.textContent = "W" + w;
+    b.title = w === 0 ? "Day 1" : BENCH_WEEKS.includes(w) ? "Benchmark week" : "";
     b.onclick = () => { uiWeek = w; render(); };
     bar.appendChild(b);
   }
@@ -1077,8 +1081,8 @@ function renderPhase() {
   const w = uiWeek;
   const blk = BLOCKS[blockOf(w) - 1];
   document.getElementById("phase-card").innerHTML = `
-    <div class="phase-name">Block ${blockOf(w)} · <span>${blk.name}</span> · Week ${w + 1}</div>
-    <div class="phase-dates">${blk.weeks}</div>
+    <div class="phase-name">${w === 0 ? "Week 0 · <span>Day 1</span>" : `Block ${blockOf(w)} · <span>${blk.name}</span> · Week ${w}`}</div>
+    <div class="phase-dates">${w === 0 ? "Sep 21 to Sep 27 · records on Wednesday" : blk.weeks}</div>
     <div class="phase-note">${WEEK_NOTES[w]}</div>
     <div class="phase-note" style="color:var(--muted);font-size:11.5px">${blk.theme}</div>`;
 }
@@ -1092,7 +1096,7 @@ function renderDay(d) {
   const container = document.getElementById("container-" + d);
   container.innerHTML = "";
   if (!day) {
-    container.innerHTML = `<div class="card"><h2>No Monday in Week 1</h2><p>Day 1 is Wednesday September 23. The first full Monday upper session is September 28, in Week 2.</p></div>`;
+    container.innerHTML = `<div class="card"><h2>No Monday in Week 0</h2><p>Day 1 is Wednesday September 23. The first full Monday upper session is September 28, Week 1.</p></div>`;
     return;
   }
   const ds = dayState(w, d, false);
@@ -1112,7 +1116,7 @@ function renderDay(d) {
     <button class="btn btn-danger" data-action="clear">Clear ${LIFTER_LABEL[L()]}'s day</button>`;
   toolbar.querySelector("[data-action=clear]").onclick = () => {
     if (!ds) return;
-    if (confirm(`Clear Week ${w + 1} ${PROGRAM.dayLabels[d]} for ${LIFTER_LABEL[L()]}? Checks, logs and the finisher result go. The other lifter's day stays.`)) {
+    if (confirm(`Clear Week ${w} ${PROGRAM.dayLabels[d]} for ${LIFTER_LABEL[L()]}? Checks, logs and the finisher result go. The other lifter's day stays.`)) {
       ds.per[L()] = emptyPer();
       saveState(); render();
     }
@@ -1125,7 +1129,7 @@ function renderDay(d) {
   el.innerHTML = `
     <div class="day-header">
       <div class="day-title">
-        <div class="day-name">Week ${w + 1} · ${PROGRAM.dayLabels[d]} · ${day.title}</div>
+        <div class="day-name">Week ${w} · ${PROGRAM.dayLabels[d]} · ${day.title}</div>
         <div class="day-focus">${LIFTER_LABEL[L()]} · planned ${fmtMins(plan.total)} · listed ${day.duration}${ds && ds.date ? ` · trained ${shortDate(ds.date)}` : ""}</div>
       </div>
       <div class="day-meta"><span class="day-chip ${done === rows.length && rows.length ? "complete" : ""}">${done} / ${rows.length}</span></div>
@@ -1240,7 +1244,7 @@ function renderRow(w, d, row, key, plan) {
     const hist = priorEntries(p.name, w, d);
     if (hist.length) {
       const Lst = hist[0];
-      lastHtml = `<div class="ex-last">Last (W${Lst.week + 1} ${PROGRAM.dayLabels[Lst.day]}${Lst.date ? " · " + shortDate(Lst.date) : ""}): <strong>${fmtLoad(Lst.weight, p.bw)}</strong>` +
+      lastHtml = `<div class="ex-last">Last (W${Lst.week} ${PROGRAM.dayLabels[Lst.day]}${Lst.date ? " · " + shortDate(Lst.date) : ""}): <strong>${fmtLoad(Lst.weight, p.bw)}</strong>` +
         (p.isMax ? "" : (Lst.hit ? ` · <span class="ex-hit-flag yes">hit</span>` : ` · <span class="ex-hit-flag no">missed</span>`)) + `</div>`;
     }
   }
@@ -1363,7 +1367,7 @@ function renderFinisher(w, d, day) {
   const menu = w === 0 ? [{ name: "Plank high-fives", how: "Face to face in a plank, alternate hand slaps to 20.", hc: "Cooperative", unit: "slaps", coop: true }] : finMenu(w, d);
   const wrap = document.createElement("div");
   const judge = d === "mon" && L() === "son";
-  wrap.innerHTML = `<div class="block-label">Finisher · ${w === 0 ? "cooperative" : "Block " + blockOf(w)}</div><div class="block-note">${day.finNote}</div>`;
+  wrap.innerHTML = `<div class="block-label">Finisher · ${w === 0 ? "Day 1, cooperative" : "Block " + blockOf(w)}</div><div class="block-note">${day.finNote}</div>`;
   const menuEl = document.createElement("div");
   menuEl.className = "fin-menu";
   menu.forEach(f => {
@@ -1432,16 +1436,16 @@ function renderBench() {
   const l = L();
   const card = document.getElementById("bench-card");
   const cols = BENCH_WEEKS;
-  const colLabel = wk => wk === 1 ? "Day 1" : `W${wk}`;
+  const colLabel = wk => wk === 0 ? "Day 1" : `W${wk}`;
   let html = `<h2>Benchmarks · ${LIFTER_LABEL[l]}</h2><p>Four numbers with no maxes, taken on Day 1 and in weeks 4, 8 and 12. The small figure under each cell is the change from Day 1.</p><div class="bench-wrap"><table class="bench"><tr><th>Test</th>${cols.map(c => `<th>${colLabel(c)}</th>`).join("")}</tr>`;
   BENCH_METRICS.forEach(m => {
     html += `<tr><td>${m.label}<small>${m.unit}${m.sub ? " · " + m.sub : ""}</small></td>`;
-    const base = benchVal(l, 1, m.k);
+    const base = benchVal(l, 0, m.k);
     cols.forEach(wk => {
       if (m.cols && !m.cols.includes(wk)) { html += `<td class="na">·</td>`; return; }
       const val = benchVal(l, wk, m.k);
       let delta = "";
-      if (wk !== 1 && val != null && base != null) {
+      if (wk !== 0 && val != null && base != null) {
         const diff = val - base;
         const good = m.lower ? diff < 0 : diff > 0;
         const cls = diff === 0 ? "flat" : good ? "up" : "down";
@@ -1492,7 +1496,7 @@ function renderRecords() {
     rows.forEach(({ l, hist }) => {
       const best = lowerIsBetter(name) ? Math.min(...hist.map(e => e.result)) : Math.max(...hist.map(e => e.result));
       html += `<div class="rec-best">${LIFTER_LABEL[l]}: <strong>${fmtWeight(best)} ${unit}</strong> best of ${hist.length}</div>`;
-      html += `<div class="rec-hist">${hist.map(e => `W${e.week + 1} ${PROGRAM.dayLabels[e.day]}${e.date ? " " + shortDate(e.date) : ""}: ${fmtWeight(e.result)}`).join(" · ")}</div>`;
+      html += `<div class="rec-hist">${hist.map(e => `W${e.week} ${PROGRAM.dayLabels[e.day]}${e.date ? " " + shortDate(e.date) : ""}: ${fmtWeight(e.result)}`).join(" · ")}</div>`;
     });
     html += `</div>`;
   });
@@ -1532,7 +1536,7 @@ function buildNotes() {
   document.getElementById("notes-card").innerHTML = `
     <h2>How this tracker works</h2>
     <p><strong>Two lifters, one phone.</strong> The Son / Ryan toggle at the top switches every check, load, track, benchmark and finisher result to that person. Both of you check off the same session standing at the same phone.</p>
-    <p><strong>Week pills</strong> pick the week, <strong>Mon / Wed</strong> pick the session. Week 1 has only Wednesday: Day 1. Pills with an amber underline are benchmark weeks.</p>
+    <p><strong>Week pills</strong> pick the week, <strong>Mon / Wed</strong> pick the session. Week 0 is this week and has only Wednesday: Day 1. W1 to W12 are the full weeks. Pills with an amber underline are benchmark weeks.</p>
     <h3>The two tracks</h3>
     <p>The pull-up step and the push-up level live in the hero card and drive the A block on Mondays. When the promotion rule under the track is met, tap <strong>▲ Promote</strong>. Tap ▼ if a level turns out too early. Growth can push a level back and that is normal.</p>
     <h3>Loads and the coach</h3>
@@ -1557,7 +1561,7 @@ function buildNotes() {
    =========================================================================== */
 function updateStats() {
   const cw = currentWeek();
-  document.getElementById("stat-week").textContent = "W" + (cw + 1);
+  document.getElementById("stat-week").textContent = "W" + cw;
   let daysDone = 0, total = 0;
   for (let w = 0; w < NWEEKS; w++) PROGRAM.dayOrder.forEach(d => { if (!hasDay(w, d)) return; total++; if (isDayComplete(w, d, L())) daysDone++; });
   document.getElementById("stat-days").textContent = daysDone;

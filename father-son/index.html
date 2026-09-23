@@ -219,6 +219,16 @@
   .hit-btn.on-yes { background: var(--success-soft); color: var(--success); border-color: var(--success-line); }
   .hit-btn.on-no  { background: var(--danger-soft);  color: var(--danger);  border-color: #f3c8c4; }
 
+  /* Set grid */
+  .set-grid { margin-bottom: 8px; }
+  .set-head, .set-row { display: grid; grid-template-columns: 34px 1fr 1fr; gap: 6px; align-items: center; }
+  .set-head { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; padding: 0 2px 4px; }
+  .set-row { margin-bottom: 5px; }
+  .set-n { font-size: 12px; font-weight: 700; color: var(--muted); text-align: center; }
+  .set-row input { width: 100%; min-width: 0; text-align: center; font-size: 15px; padding: 9px 4px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-variant-numeric: tabular-nums; background: var(--card); }
+  .set-tools { display: flex; gap: 6px; margin-top: 4px; }
+  .set-tools .btn { flex: 1; justify-content: center; }
+
   /* Timer buttons */
   .btn-timer { font-variant-numeric: tabular-nums; min-width: 78px; justify-content: center; }
   .btn-timer.running { background: var(--primary); color: white; border-color: var(--primary); }
@@ -489,16 +499,18 @@ function parseLine(line) {
   const sets = m[2];
   let reps = m[3].trim();
   const isMax = /max/i.test(reps);
+  const timed = /seconds?$/i.test(reps);
+  const repsNum = reps.replace(/\s*seconds?$/i, "");
   let repTop = null, repRange = null;
-  const rr = reps.match(/^(\d+)\s*-\s*(\d+)$/);
-  const rf = reps.match(/^(\d+)$/);
+  const rr = repsNum.match(/^(\d+)\s*-\s*(\d+)$/);
+  const rf = repsNum.match(/^(\d+)$/);
   if (rr) { repRange = `${rr[1]}-${rr[2]}`; repTop = parseInt(rr[2], 10); }
   else if (rf) { repTop = parseInt(rf[1], 10); }
 
-  let rx = `${sets} × ${reps}`;
+  let rx = `${sets} × ${timed ? repsNum + " s" : reps}`;
   if (per) rx += " · each side";
   if (notes.length) rx += " · " + notes.join(" · ");
-  return { name, rx, sets, per, notes, repTop, repRange, isMax };
+  return { name, rx, sets: parseInt(String(sets).split("-").pop(), 10), per, notes, repTop, repRange, isMax, unit: timed ? "s" : "reps" };
 }
 
 function side(line, loaded) {
@@ -509,7 +521,8 @@ function side(line, loaded) {
     bw: !isLoaded && BW_RE.test(p.name),
     loaded: isLoaded,
     lower: LOWER_RE.test(p.name),
-    repTop: p.repTop, repRange: p.repRange, isMax: p.isMax
+    repTop: p.repTop, repRange: p.repRange, isMax: p.isMax,
+    sets: p.sets || 1, unit: p.unit || "reps"
   };
 }
 
@@ -554,33 +567,33 @@ const TRACKS = {
   pullup: {
     label: "Pull-up",
     son: [
-      { name: "Dead hang + scap pulls", rx: "3 × 15-30 s hang · 3 × 5 scap pulls", promote: "Hang 30 s on all three sets, then move to negatives" },
-      { name: "Negatives", rx: "3 × 3-5 · jump to the top, lower 3-5 s", promote: "3 × 5 controlled 5-second lowers, then band-assisted" },
-      { name: "Band-assisted pull-ups + flexed-arm hang", rx: "3 × 3-5 · then one flexed-arm hang for time", promote: "3 × 5 on the lightest band, then singles" },
-      { name: "Pull-up singles", rx: "5 × 1 · full rest · then build to a set of 2", promote: "Two clean reps in one set: goal met" }
+      { name: "Dead hang + scap pulls", rx: "3 × 15-30 s hang · 3 × 5 scap pulls", t: 30, u: "s", sets: 3, promote: "Hang 30 s on all three sets, then move to negatives" },
+      { name: "Negatives", rx: "3 × 3-5 · jump to the top, lower 3-5 s", t: 5, u: "reps", sets: 3, promote: "3 × 5 controlled 5-second lowers, then band-assisted" },
+      { name: "Band-assisted pull-ups + flexed-arm hang", rx: "3 × 3-5 · then one flexed-arm hang for time", t: 5, u: "reps", sets: 3, promote: "3 × 5 on the lightest band, then singles" },
+      { name: "Pull-up singles", rx: "5 × 1 · full rest · then build to a set of 2", t: 1, u: "reps", sets: 5, goal: sets => sets.some(r => r >= 2), promote: "Two clean reps in one set: goal met" }
     ],
     ryan: [
-      { name: "Strict pull-ups", rx: "3 × 6-8", promote: "3 × 8 clean, then add load" },
-      { name: "Weighted pull-ups", rx: "3 × 5 · +10 lb", promote: "3 × 5 clean, then +25" },
-      { name: "Weighted pull-ups, heavy", rx: "3 × 5 · +25 lb", promote: "3 × 5 clean, then +45 or 1 × max strict" },
-      { name: "Weighted pull-ups, +45", rx: "3 × 3-5 · +45 lb", promote: "Top of the cycle" }
+      { name: "Strict pull-ups", rx: "3 × 6-8", t: 8, u: "reps", sets: 3, promote: "3 × 8 clean, then add load" },
+      { name: "Weighted pull-ups", rx: "3 × 5 · +10 lb", t: 5, u: "reps", sets: 3, loaded: true, promote: "3 × 5 clean, then +25" },
+      { name: "Weighted pull-ups, heavy", rx: "3 × 5 · +25 lb", t: 5, u: "reps", sets: 3, loaded: true, promote: "3 × 5 clean, then +45 or 1 × max strict" },
+      { name: "Weighted pull-ups, +45", rx: "3 × 3-5 · +45 lb", t: 5, u: "reps", sets: 3, loaded: true, promote: "Top of the cycle" }
     ]
   },
   pushup: {
     label: "Push-up",
     son: [
-      { name: "Push-ups, hands on the 30 in box", rx: "3 × submax · stop 2 short", promote: "3 × 10 clean earns the 24 in box" },
-      { name: "Push-ups, hands on the 24 in box", rx: "3 × submax · stop 2 short", promote: "3 × 10 clean earns the 18 in box" },
-      { name: "Push-ups, hands on the 18 in box", rx: "3 × submax · stop 2 short", promote: "3 × 10 clean earns the low bar" },
-      { name: "Push-ups, hands on the low bar in the uprights", rx: "3 × submax · stop 2 short", promote: "3 × 10 clean earns the floor" },
-      { name: "Floor push-ups", rx: "3 × submax · stop 2 short", promote: "3 × 10 clean earns feet on the bench. 15 clean unlocks DB bench" },
-      { name: "Push-ups, feet on the flat bench", rx: "3 × submax · then tempo and pause reps", promote: "Top of the cycle" }
+      { name: "Push-ups, hands on the 30 in box", rx: "3 × submax · stop 2 short", t: 10, u: "reps", sets: 3, promote: "3 × 10 clean earns the 24 in box" },
+      { name: "Push-ups, hands on the 24 in box", rx: "3 × submax · stop 2 short", t: 10, u: "reps", sets: 3, promote: "3 × 10 clean earns the 18 in box" },
+      { name: "Push-ups, hands on the 18 in box", rx: "3 × submax · stop 2 short", t: 10, u: "reps", sets: 3, promote: "3 × 10 clean earns the low bar" },
+      { name: "Push-ups, hands on the low bar in the uprights", rx: "3 × submax · stop 2 short", t: 10, u: "reps", sets: 3, promote: "3 × 10 clean earns the floor" },
+      { name: "Floor push-ups", rx: "3 × submax · stop 2 short", t: 10, u: "reps", sets: 3, promote: "3 × 10 clean earns feet on the bench. 15 clean unlocks DB bench" },
+      { name: "Push-ups, feet on the flat bench", rx: "3 × submax · then tempo and pause reps", t: 12, u: "reps", sets: 3, promote: "Top of the cycle" }
     ],
     ryan: [
-      { name: "Floor push-ups", rx: "3 × 15", promote: "3 × 15 clean, then feet up" },
-      { name: "Push-ups, feet on the flat bench", rx: "3 × 12-15", promote: "3 × 15 clean, then dips" },
-      { name: "Dips", rx: "3 × 8-10", promote: "3 × 10 clean, then weighted" },
-      { name: "Weighted dips", rx: "3 × 6-8 · +25 lb", promote: "Top of the cycle" }
+      { name: "Floor push-ups", rx: "3 × 15", t: 15, u: "reps", sets: 3, promote: "3 × 15 clean, then feet up" },
+      { name: "Push-ups, feet on the flat bench", rx: "3 × 12-15", t: 15, u: "reps", sets: 3, promote: "3 × 15 clean, then dips" },
+      { name: "Dips", rx: "3 × 8-10", t: 10, u: "reps", sets: 3, promote: "3 × 10 clean, then weighted" },
+      { name: "Weighted dips", rx: "3 × 6-8 · +25 lb", t: 8, u: "reps", sets: 3, loaded: true, promote: "Top of the cycle" }
     ]
   }
 };
@@ -851,7 +864,72 @@ function loadState() {
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
   updateStats();
+  scheduleSync();
 }
+
+/* ---------------------------------------------------------------------------
+   SYNC. Local storage stays the source of truth; every save also pushes the
+   state to the workout-sync Worker so Karl can read it. Fire-and-forget,
+   retried on the next save. The device token is generated once and survives
+   Reset. It shows on the Notes tab.
+   --------------------------------------------------------------------------- */
+const SYNC_URL = "https://workout-sync.ryanrothe.workers.dev/v1/" + PROGRAM.slug;
+const TOKEN_KEY = PROGRAM.storageKey + "_sync_token";
+function syncToken() {
+  let t = null;
+  try { t = localStorage.getItem(TOKEN_KEY); } catch (e) {}
+  if (!t || !/^[a-f0-9]{24}$/.test(t)) {
+    const bytes = new Uint8Array(12);
+    (window.crypto || window.msCrypto).getRandomValues(bytes);
+    t = Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
+    try { localStorage.setItem(TOKEN_KEY, t); } catch (e) {}
+  }
+  return t;
+}
+let syncTimer = null;
+let syncStatus = { at: null, ok: null, msg: "not yet" };
+function scheduleSync() { clearTimeout(syncTimer); syncTimer = setTimeout(pushSync, 1500); }
+function syncCatalog() {
+  const cat = {};
+  Object.keys(state.days).forEach(k => {
+    const m = k.match(/^w(\d+)_(\w+)$/); if (!m) return;
+    const w = parseInt(m[1], 10), d = m[2];
+    const day = PROGRAM.weeks[w] && PROGRAM.weeks[w][d]; if (!day) return;
+    cat[k] = {};
+    day.blocks.forEach((b, bi) => b.rows.forEach((row, ri) => {
+      const key = `b${bi}r${ri}`;
+      const logged = LIFTERS.some(l => state.days[k].per && state.days[k].per[l] && state.days[k].per[l].logs && state.days[k].per[l].logs[key]);
+      if (!logged) return;
+      const stepOf = l => { const lg = state.days[k].per[l] && state.days[k].per[l].logs[key]; return lg && lg.step != null ? lg.step : undefined; };
+      cat[k][key] = { son: resolve(row, "son", stepOf("son")).name, ryan: resolve(row, "ryan", stepOf("ryan")).name };
+    }));
+  });
+  return cat;
+}
+async function pushSync() {
+  clearTimeout(syncTimer); syncTimer = null;
+  const payload = { program: PROGRAM.slug, savedAt: new Date().toISOString(), ua: navigator.userAgent, state, catalog: syncCatalog() };
+  try {
+    const r = await fetch(`${SYNC_URL}/${syncToken()}`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(payload), keepalive: true });
+    syncStatus = { at: Date.now(), ok: r.ok, msg: r.ok ? "synced" : `server said ${r.status}` };
+  } catch (e) {
+    syncStatus = { at: Date.now(), ok: false, msg: "offline, will retry on the next save" };
+  }
+  paintSync();
+}
+async function pullSync(token) {
+  const r = await fetch(`${SYNC_URL}/${token}`);
+  if (!r.ok) throw new Error(r.status === 404 ? "no data for that token" : `server said ${r.status}`);
+  return r.json();
+}
+function paintSync() {
+  const el = document.getElementById("sync-status");
+  if (!el) return;
+  const when = syncStatus.at ? new Date(syncStatus.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "";
+  el.textContent = syncStatus.ok === null ? "Sync: " + syncStatus.msg : `Sync: ${syncStatus.msg}${when ? " · " + when : ""}`;
+  el.style.color = syncStatus.ok === false ? "var(--danger)" : "var(--muted)";
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && syncTimer) pushSync(); });
 function L() { return state.lifter; }
 function dayState(w, d, create) {
   const k = dayKey(w, d);
@@ -963,16 +1041,37 @@ function dayPlan(w, d) {
 function fmtMins(secs) { return `~${Math.round(secs / 60)} min`; }
 
 /* The active lifter's view of a row. */
-function resolve(row, lifter) {
+function resolve(row, lifter, pinnedStep) {
   const l = lifter || L();
   if (row.kind === "track") {
     const steps = TRACKS[row.trackKind][l];
-    const i = Math.min(state.tracks[l][row.trackKind], steps.length - 1);
+    const i = Math.min(pinnedStep != null ? pinnedStep : state.tracks[l][row.trackKind], steps.length - 1);
     const st = steps[i];
-    return { name: st.name, rx: `${row.sets} sets · ${st.rx}`, bw: true, loaded: false, lower: false, repTop: null, repRange: null, isMax: false, step: i, steps: steps.length, promote: st.promote };
+    return { name: st.name, rx: `${st.sets} sets · ${st.rx}`, bw: !st.loaded, loaded: !!st.loaded, lower: false, repTop: st.t, repRange: null, isMax: false,
+             sets: st.sets, unit: st.u, goal: st.goal || null, step: i, steps: steps.length, promote: st.promote, next: steps[i + 1] ? steps[i + 1].name : null };
   }
   return row.per[l];
 }
+/* Rows that take a set grid: everything except effort pieces. */
+function loggable(row) { return row.kind !== "effort"; }
+/* One log per row: { sets: [{ r, w }], notes }. Older logs ({ weight, hit, notes }) fold in. */
+function normLog(log, nSets) {
+  const out = { sets: [], notes: (log && log.notes) || "" };
+  if (log && log.step != null) out.step = log.step;
+  if (log && Array.isArray(log.sets)) out.sets = log.sets.map(x => ({ r: x && x.r != null ? x.r : null, w: x && x.w != null ? x.w : null }));
+  else if (log && log.weight != null) out.sets = [{ r: null, w: parseWeight(log.weight) }];
+  while (out.sets.length < nSets) out.sets.push({ r: null, w: null });
+  return out;
+}
+function setsHit(sets, p) {
+  const filled = sets.filter(x => x.r != null);
+  if (!filled.length) return null;                 // nothing logged yet
+  if (p.goal) return p.goal(sets.map(x => x.r == null ? 0 : x.r));
+  if (p.repTop == null) return null;               // no target to judge against
+  return sets.slice(0, p.sets).every(x => x.r != null && x.r >= p.repTop);
+}
+function setsWeight(sets) { const w = sets.map(x => x.w).filter(x => x != null); return w.length ? Math.max(...w) : null; }
+function fmtSets(sets, unit) { return sets.map(x => x.r == null ? "–" : x.r).join(", ") + (unit === "s" ? " s" : ""); }
 
 /* ===========================================================================
    HISTORY + PROGRESSION COACH, per lifter, by exercise name.
@@ -1008,30 +1107,50 @@ function priorEntries(name, beforeW, beforeD, lifter) {
       const ps = ds.per[l];
       const day = PROGRAM.weeks[w][d];
       day.blocks.forEach((b, bi) => b.rows.forEach((row, ri) => {
-        if (row.kind !== "duo") return;
-        if (normName(row.per[l].name) !== key) return;
-        const log = ps.logs[`b${bi}r${ri}`];
-        const wt = parseWeight(log && log.weight);
-        if (wt !== null) out.push({ weight: wt, hit: log.hit === true, date: ds.date, week: w, day: d });
+        if (!loggable(row)) return;
+        const raw = ps.logs[`b${bi}r${ri}`];
+        if (!raw) return;
+        const pr = resolve(row, l, raw.step);
+        if (normName(pr.name) !== key) return;
+        const log = normLog(raw, pr.sets);
+        const any = log.sets.some(x => x.r != null || x.w != null);
+        if (!any) return;
+        out.push({ sets: log.sets, weight: setsWeight(log.sets), hit: setsHit(log.sets, pr), unit: pr.unit, date: ds.date, week: w, day: d });
       }));
     }
   }
   return out.reverse();
 }
+/* Loaded rows: +inc after a hit, hold after a miss, plateau after 3 misses at one weight.
+   Bodyweight rows: add a rep (or 5 s) after a hit, hold after a miss.
+   Track rows: a hit means the promotion rule is met. No log, no suggestion. */
 function suggestNext(row, p, w, d) {
-  if (row.kind !== "duo" || !row.track || p.isMax) return null;
+  if (!loggable(row) || p.isMax) return null;
   const hist = priorEntries(p.name, w, d);
   if (!hist.length) return null;
-  const inc = L() === "son" ? 5 : (p.lower ? 10 : 5);
-  if (hist.length >= PLATEAU_SESSIONS) {
-    const win = hist.slice(0, PLATEAU_SESSIONS);
-    if (win.every(e => e.weight === win[0].weight) && win.every(e => !e.hit)) {
-      return { type: "plateau", weight: roundToInc(win[0].weight * 0.9, inc, p.bw ? 0 : undefined), reps: bumpRange(p.repRange, p.repTop) };
-    }
-  }
   const last = hist[0];
-  if (last.hit) return { type: "up", weight: last.weight + inc };
-  return { type: "hold", weight: last.weight };
+  if (row.kind === "track") {
+    if (last.hit === true) return { type: "promote", label: p.next ? `Promotion earned: ${p.next}` : "Goal met. Top of the track" };
+    if (last.hit === false) return { type: "hold", label: `Beat last: ${fmtSets(last.sets, p.unit)}` };
+    return null;
+  }
+  if (p.loaded && last.weight != null) {
+    const inc = L() === "son" ? 5 : (p.lower ? 10 : 5);
+    if (hist.length >= PLATEAU_SESSIONS) {
+      const win = hist.slice(0, PLATEAU_SESSIONS);
+      if (win.every(e => e.weight === win[0].weight) && win.every(e => e.hit === false)) {
+        return { type: "plateau", weight: roundToInc(win[0].weight * 0.9, inc, p.bw ? 0 : undefined), reps: bumpRange(p.repRange, p.repTop), label: `Plateau: drop to ${fmtLoad(roundToInc(win[0].weight * 0.9, inc, p.bw ? 0 : undefined), p.bw)}${bumpRange(p.repRange, p.repTop) ? ` × ${bumpRange(p.repRange, p.repTop)}` : ""}` };
+      }
+    }
+    if (last.hit === true) return { type: "up", weight: last.weight + inc, label: `Try ${fmtLoad(last.weight + inc, p.bw)}` };
+    if (last.hit === false) return { type: "hold", weight: last.weight, label: `Hold ${fmtLoad(last.weight, p.bw)}, beat your reps` };
+    return { type: "hold", weight: last.weight, label: `Last: ${fmtLoad(last.weight, p.bw)}` };
+  }
+  if (p.repTop == null) return null;
+  const step = p.unit === "s" ? 5 : 1;
+  if (last.hit === true) return { type: "up", reps: p.repTop + step, label: `Add ${p.unit === "s" ? "5 s" : "a rep"}: ${p.sets} × ${p.repTop + step}` };
+  if (last.hit === false) return { type: "hold", label: `Hold ${p.sets} × ${p.repTop}, clean it up` };
+  return null;
 }
 
 /* ===========================================================================
@@ -1254,30 +1373,25 @@ function escapeHtml(s) { return String(s || "").replace(/[&<>]/g, c => ({ "&": "
 
 function renderRow(w, d, row, key, plan) {
   const ps = perState(w, d, false);
-  const p = resolve(row);
+  const rawLog = ps && ps.logs[key];
+  const p = resolve(row, null, rawLog && rawLog.step != null ? rawLog.step : undefined);
   const isDone = !!(ps && ps.completed[key]);
-  const log = (ps && ps.logs[key]) || { weight: "", notes: "", hit: null };
-  const weightVal = parseWeight(log.weight);
-  const track = row.kind === "duo" && row.track;
+  const canLog = loggable(row);
+  const log = normLog(ps && ps.logs[key], canLog ? p.sets : 0);
+  const hasLog = log.sets.some(x => x.r != null || x.w != null);
 
   let lastHtml = "";
-  if (track) {
+  let sugg = null;
+  if (canLog) {
     const hist = priorEntries(p.name, w, d);
     if (hist.length) {
       const Lst = hist[0];
-      lastHtml = `<div class="ex-last">Last (W${Lst.week} ${PROGRAM.dayLabels[Lst.day]}${Lst.date ? " · " + shortDate(Lst.date) : ""}): <strong>${fmtLoad(Lst.weight, p.bw)}</strong>` +
-        (p.isMax ? "" : (Lst.hit ? ` · <span class="ex-hit-flag yes">hit</span>` : ` · <span class="ex-hit-flag no">missed</span>`)) + `</div>`;
+      const flag = Lst.hit === true ? ` · <span class="ex-hit-flag yes">hit</span>` : Lst.hit === false ? ` · <span class="ex-hit-flag no">short</span>` : "";
+      lastHtml = `<div class="ex-last">Last (W${Lst.week} ${PROGRAM.dayLabels[Lst.day]}${Lst.date ? " · " + shortDate(Lst.date) : ""}): <strong>${fmtSets(Lst.sets, Lst.unit)}${Lst.weight != null ? " @ " + fmtLoad(Lst.weight, p.bw) : ""}</strong>${flag}</div>`;
     }
+    sugg = suggestNext(row, p, w, d);
   }
-  let suggHtml = "";
-  const sugg = track ? suggestNext(row, p, w, d) : null;
-  if (sugg) {
-    const label =
-      sugg.type === "up" ? `Try ${fmtLoad(sugg.weight, p.bw)}` :
-      sugg.type === "hold" ? `Hold ${fmtLoad(sugg.weight, p.bw)}, beat your reps` :
-      `Plateau: drop to ${fmtLoad(sugg.weight, p.bw)}${sugg.reps ? ` × ${sugg.reps}` : ""}`;
-    suggHtml = `<button class="ex-suggest ${sugg.type}" data-w="${sugg.weight}">${label}<span class="sg-tap">tap to use</span></button>`;
-  }
+  const suggHtml = sugg ? `<button class="ex-suggest ${sugg.type === "promote" ? "up" : sugg.type}">${sugg.label}<span class="sg-tap">${sugg.type === "promote" ? "tap to promote" : sugg.weight != null || sugg.reps != null ? "tap to fill" : ""}</span></button>` : "";
   const detailHtml = row.detail ? `<div class="ex-detail">${row.detail.map(m => `<span class="dt-line">• ${m}</span>`).join("")}</div>` : "";
   const cueHtml = row.cue ? `<div class="ex-cue">${row.cue}</div>` : (row.kind === "track" ? `<div class="ex-cue"><strong>Promote when:</strong> ${p.promote}</div>` : "");
   const startAt = plan.offsets[key] != null ? Math.round(plan.offsets[key] / 60) : null;
@@ -1287,8 +1401,21 @@ function renderRow(w, d, row, key, plan) {
   if (row.timer) { timerLabel = row.timer.label || "⏱"; timerMode = "special"; }
   else { timerLabel = row.rest >= 120 ? `⏱ ${Math.round(row.rest / 60)}m` : `⏱ ${row.rest}s`; timerMode = "rest"; }
 
-  const hitVal = log.hit === true ? "yes" : (log.hit === false ? "no" : "");
-  const hitLabel = p.repRange ? `All sets at the top (${p.repTop})?` : p.repTop ? `All sets of ${p.repTop}?` : `Done as written?`;
+  const unitLabel = p.unit === "s" ? "s" : "reps";
+  const gridHtml = canLog ? `
+    <div class="set-grid">
+      <div class="set-head"><span>Set</span><span>${unitLabel}${p.repTop != null ? ` · target ${p.repTop}` : ""}</span>${p.loaded ? `<span>lb${p.bw ? " added" : ""}</span>` : "<span></span>"}</div>
+      ${log.sets.map((x, i) => `
+      <div class="set-row">
+        <span class="set-n">${i + 1}</span>
+        <input type="number" class="set-r" inputmode="numeric" min="0" step="1" data-i="${i}" placeholder="${p.repTop != null ? p.repTop : "–"}" value="${x.r == null ? "" : x.r}">
+        ${p.loaded ? `<input type="number" class="set-w" inputmode="decimal" min="0" step="0.5" data-i="${i}" placeholder="lb" value="${x.w == null ? "" : x.w}">` : "<span></span>"}
+      </div>`).join("")}
+      <div class="set-tools">
+        ${p.repTop != null ? `<button class="btn set-fill">= ${p.sets} × ${p.repTop}${p.loaded && (sugg && sugg.weight != null) ? " @ " + fmtWeight(sugg.weight) : ""}</button>` : ""}
+        <button class="btn set-clear">Clear</button>
+      </div>
+    </div>` : "";
 
   const el = document.createElement("div");
   el.className = "exercise";
@@ -1306,24 +1433,12 @@ function renderRow(w, d, row, key, plan) {
         ${suggHtml}
         <div class="ex-actions">
           <a class="btn" href="${v(p.name)}" target="_blank" rel="noopener">▶ Video</a>
-          ${track ? `<button class="btn log-toggle">✎ Log</button>` : `<button class="btn log-toggle">✎ Note</button>`}
+          <button class="btn log-toggle">${canLog ? "✎ Log sets" : "✎ Note"}</button>
           <button class="btn btn-timer row-timer" data-default="${timerLabel}">${timerLabel}</button>
         </div>
         <div class="ex-log">
-          ${track ? `
-          <div class="log-weight-row">
-            ${p.bw ? `<span class="unit">BW +</span>` : ""}
-            <input type="number" class="log-weight" inputmode="decimal" step="0.5" min="0"
-                   placeholder="${p.bw ? "Added lb · 0 = just BW" : "Weight"}" value="${weightVal === null ? "" : weightVal}">
-            <span class="unit">lb</span>
-          </div>
-          ${p.isMax ? "" : `
-          <div class="hit-label">${hitLabel}</div>
-          <div class="hit-row">
-            <button class="hit-btn hit-yes ${hitVal === "yes" ? "on-yes" : ""}">✓ Hit</button>
-            <button class="hit-btn hit-no ${hitVal === "no" ? "on-no" : ""}">✗ Missed</button>
-          </div>`}` : ""}
-          <textarea class="log-notes" placeholder="${row.kind === "track" ? "Reps or seconds per set, how it looked..." : "Notes: reps, how it felt, what to fix..."}">${escapeHtml(log.notes)}</textarea>
+          ${gridHtml}
+          <textarea class="log-notes" placeholder="${canLog ? "Notes: form, tempo, how it felt..." : "Notes..."}">${escapeHtml(log.notes)}</textarea>
         </div>
       </div>
     </div>`;
@@ -1337,19 +1452,48 @@ function renderRow(w, d, row, key, plan) {
   function ensureLog() {
     const cur = dayState(w, d, true);
     const pp = cur.per[L()];
-    if (!pp.logs[key]) pp.logs[key] = { weight: null, hit: null, notes: "" };
+    const keepStep = pp.logs[key] && pp.logs[key].step != null ? pp.logs[key].step : (row.kind === "track" ? p.step : undefined);
+    pp.logs[key] = normLog(pp.logs[key], canLog ? p.sets : 0);
+    if (keepStep != null) pp.logs[key].step = keepStep;   // a track log stays with the step it was done at
     stampDate(cur);
     return pp.logs[key];
   }
   el.querySelector(".log-toggle").onclick = () => el.querySelector(".ex-log").classList.toggle("open");
-  if (weightVal !== null || log.notes || log.hit != null) el.querySelector(".ex-log").classList.add("open");
+  if (hasLog || log.notes) el.querySelector(".ex-log").classList.add("open");
+
   const suggBtn = el.querySelector(".ex-suggest");
-  if (suggBtn) suggBtn.onclick = () => { ensureLog().weight = parseFloat(suggBtn.dataset.w); saveState(); renderDay(d); };
-  const yesBtn = el.querySelector(".hit-yes"), noBtn = el.querySelector(".hit-no");
-  if (yesBtn) yesBtn.onclick = () => { const l = ensureLog(); l.hit = l.hit === true ? null : true; saveState(); renderDay(d); };
-  if (noBtn)  noBtn.onclick  = () => { const l = ensureLog(); l.hit = l.hit === false ? null : false; saveState(); renderDay(d); };
-  const wIn = el.querySelector(".log-weight");
-  if (wIn) wIn.addEventListener("input", e => { const raw = e.target.value.trim(); ensureLog().weight = raw === "" ? null : parseFloat(raw); saveState(); });
+  if (suggBtn && sugg) suggBtn.onclick = () => {
+    if (sugg.type === "promote") {
+      const kind = row.trackKind, steps = TRACKS[kind][L()], i = state.tracks[L()][kind];
+      if (i + 1 < steps.length && confirm(`Promote ${LIFTER_LABEL[L()]} to ${steps[i + 1].name}?`)) { state.tracks[L()][kind] = i + 1; saveState(); render(); }
+      return;
+    }
+    const lg = ensureLog();
+    lg.sets.forEach(x => {
+      if (sugg.weight != null) x.w = sugg.weight;
+      if (sugg.reps != null && p.unit !== "s") x.r = parseInt(String(sugg.reps).split("-").pop(), 10);
+      if (sugg.reps != null && p.unit === "s") x.r = sugg.reps;
+    });
+    saveState(); renderDay(d);
+    el.querySelector(".ex-log") && el.querySelector(".ex-log").classList.add("open");
+  };
+  const fillBtn = el.querySelector(".set-fill");
+  if (fillBtn) fillBtn.onclick = () => {
+    const lg = ensureLog();
+    lg.sets.forEach(x => { if (x.r == null) x.r = p.repTop; if (p.loaded && x.w == null && sugg && sugg.weight != null) x.w = sugg.weight; });
+    saveState(); renderDay(d);
+  };
+  const clearBtn = el.querySelector(".set-clear");
+  if (clearBtn) clearBtn.onclick = () => { const lg = ensureLog(); lg.sets.forEach(x => { x.r = null; x.w = null; }); saveState(); renderDay(d); };
+  // Typing must NOT re-render: it would blur the field mid-entry.
+  el.querySelectorAll(".set-r").forEach(inp => inp.addEventListener("input", e => {
+    const i = parseInt(e.target.dataset.i, 10), raw = e.target.value.trim();
+    ensureLog().sets[i].r = raw === "" ? null : parseInt(raw, 10); saveState();
+  }));
+  el.querySelectorAll(".set-w").forEach(inp => inp.addEventListener("input", e => {
+    const i = parseInt(e.target.dataset.i, 10), raw = e.target.value.trim();
+    ensureLog().sets[i].w = raw === "" ? null : parseFloat(raw); saveState();
+  }));
   el.querySelector(".log-notes").addEventListener("input", e => { ensureLog().notes = e.target.value; saveState(); });
 
   const tKey = `${dayKey(w, d)}_${L()}_${key}`;
@@ -1560,8 +1704,9 @@ function buildNotes() {
     <p><strong>Week pills</strong> pick the week, <strong>Mon / Wed</strong> pick the session. Week 0 is this week and has only Wednesday: Day 1. W1 to W12 are the full weeks. Pills with an amber underline are benchmark weeks.</p>
     <h3>The two tracks</h3>
     <p>The pull-up step and the push-up level live in the hero card and drive the A block on Mondays. When the promotion rule under the track is met, tap <strong>▲ Promote</strong>. Tap ▼ if a level turns out too early. Growth can push a level back and that is normal.</p>
-    <h3>Loads and the coach</h3>
-    <p>Tap <strong>✎ Log</strong> on a loaded lift, enter the weight, and tap <strong>✓ Hit</strong> if every set landed at the top. Next time that lift appears you get a chip: green adds 5 lb (10 on Ryan's lower lifts), grey holds and says beat the reps, amber flags a plateau after three misses at one weight. Bodyweight rows stay quiet until a load is logged. The Son's coach fires on about six rows, which is right for a bodyweight program.</p>
+    <h3>Logging sets and the coach</h3>
+    <p>Tap <strong>✎ Log sets</strong> on any row and enter reps (or seconds on timed rows) for every set, plus the weight on loaded rows. The <strong>= 3 × 8</strong> button fills the targets in one tap; type over what was different. A hit is inferred: every set at or above the target. No extra tap.</p>
+    <p>Next time that row appears, the <strong>Last</strong> line shows the sets you did ("5, 4, 4 @ 15 lb · short") and a chip says what to do: green adds 5 lb on loaded rows (10 on Ryan's lower lifts) or a rep on bodyweight rows, grey holds, amber flags a plateau after three misses at one weight. On the two tracks a hit means <strong>Promotion earned</strong>, and tapping the chip promotes.</p>
     <h3>Readiness and short Monday</h3>
     <p>Wednesday opens with <strong>legs, 1 to 5</strong>. A 1 or 2 turns the jump block off and reminds you to drop a set. Monday has a <strong>Short Monday</strong> toggle that collapses the session to the two tracks: for a late Sunday, a championship week, or a rough morning.</p>
     <h3>Finishers and records</h3>
@@ -1574,6 +1719,13 @@ function buildNotes() {
       <li><strong>⏱ Stopwatch</strong> for the hang and negative tests. Tap to stop, tap again to reset.</li>
       <li><strong>Session clock</strong> in the day toolbar tells you if you are ahead of or behind the planned time.</li>
     </ul>
+    <h3>Sync to Karl</h3>
+    <p>Every save also posts this program's data to a private sync endpoint so Karl can read it and coach from it. The phone stays the source of truth; if the post fails it retries on the next save.</p>
+    <p><strong>Device token:</strong> <code id="sync-token" style="user-select:all;font-size:13px">${syncToken()}</code><br><span id="sync-status" style="font-size:12px;color:var(--muted)">Sync: not yet</span></p>
+    <div class="ex-actions" style="margin-top:6px">
+      <button class="btn" id="sync-now">↑ Sync now</button>
+      <button class="btn" id="sync-restore">↓ Restore from a token</button>
+    </div>
     <div class="note-box">Designed 2026-09-21 for a 13-year-old cross-country and club soccer athlete and his dad. Cycle 2 (winter, no competing sport) is where volume, the barbell and full plyo dose belong.</div>`;
 }
 
@@ -1774,6 +1926,19 @@ document.getElementById("reset-btn").onclick = () => {
 buildShell();
 uiWeek = currentWeek();
 render();
+document.getElementById("sync-now").onclick = () => { syncStatus = { at: null, ok: null, msg: "sending…" }; paintSync(); pushSync(); };
+document.getElementById("sync-restore").onclick = async () => {
+  const t = prompt("Paste the device token from the other phone (24 characters). This REPLACES everything on this phone with that phone's data.");
+  if (!t || !/^[a-f0-9]{24}$/.test(t.trim())) { if (t) alert("That is not a 24-character token."); return; }
+  try {
+    const payload = await pullSync(t.trim());
+    if (!payload.state || !confirm(`Found data saved ${payload.savedAt}. Replace this phone's data with it?`)) return;
+    try { localStorage.setItem(TOKEN_KEY, t.trim()); } catch (e) {}
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(payload.state)); } catch (e) {}
+    location.reload();
+  } catch (e) { alert("Restore failed: " + e.message); }
+};
+pushSync();
 (function openDueTab() {
   const tab = document.querySelector(`.tab[data-pane="${dueDay(uiWeek)}"]`);
   if (tab) tab.click();

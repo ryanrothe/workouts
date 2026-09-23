@@ -8,7 +8,7 @@ Launcher at the root picks a program. Each sub-app keeps its own data, its own f
 
 | Program | Length | Cadence | Focus |
 |---|---|---|---|
-| **Father & Son Strength** | 12 weeks | 2×/week | Ryan and his 13-year-old son, cross-country and club soccer in season. Mon upper (meet day), Wed lower. Two lifters on one tracker with a Son / Ryan toggle; pull-up step and push-up level tracks; readiness check and short-Monday mode; finisher menus with PRs; Day 1 / W4 / W8 / W12 benchmarks with L/R symmetry. Progression coach on loaded rows, timers, session clock. |
+| **Father & Son Strength** | 12 weeks | 2×/week | Ryan and his 13-year-old son, cross-country and club soccer in season. Mon upper (meet day), Wed lower. Two lifters on one tracker with a Son / Ryan toggle; per-set integer logging with inferred hits and a coach on every row; pull-up step and push-up level tracks; readiness check and short-Monday mode; finisher menus with PRs; Day 1 / W4 / W8 / W12 benchmarks with L/R symmetry. Timers, session clock. Pushes its state to the `workout-sync` Worker so Karl can read it (Notes tab shows the device token). |
 | **The Functional Method 1.0** | 8 weeks | 4×/week + 2 mobility | JTM Fit (John Madsen) functional strength — Mon full body, Tue upper, Thu KB/DB complexes, Fri legs, Wed/Sat mobility circuits. Week-phased with per-exercise weight logging, cross-week "Last:" recall by exercise name, automatic load progression (hit the top of the range → +5/+10 lb), rest/interval/accumulate timers, a session pacing clock, and a **60-minute mode** that re-plans each day to fit an hour. |
 | **The Functional Method 2.0** | 8 weeks | 6×/week | JTM Fit sequel — heavy top sets (3-5×5), ladders and AMRAP finishers, KB complexes, mobility circuits. Same tracker engine as 1.0: progression coach, timers, session clock, 60-minute mode. |
 | **Hyrox Home Engine** | 12 weeks | 4×/week | Hyrox-style conditioning on a home gym. Low-impact cardio (no programmed running), creative sled substitutes, a travel/hotel mode that swaps every exercise inline, and a Benchmarks tab that charts engine tests across the test weeks. |
@@ -74,7 +74,7 @@ The merge **preserves all logged data**. Each sub-app keeps its original `localS
 
 | Sub-app | Key | What it holds |
 |---|---|---|
-| Father & Son Strength | `father_son_v1` | Active lifter; per week/day: date, session clock, readiness, short-Monday flag, warm-up checks, and per lifter: checks, weight + hit + notes logs, finisher pick/result; per lifter: pull-up step, push-up level, benchmark table |
+| Father & Son Strength | `father_son_v1` (+ `father_son_v1_sync_token`) | Active lifter; per week/day: date, session clock, readiness, short-Monday flag, warm-up checks, and per lifter: checks, weight + hit + notes logs, finisher pick/result; per lifter: pull-up step, push-up level, benchmark table |
 | The Functional Method 1.0 | `tfm1_v1` | 60-min-mode flag; per week/day: date, session clock, checks (warm-up/main/cool-down), weight + hit-the-range + notes logs |
 | The Functional Method 2.0 | `tfm2_v1` | Same shape as TFM 1.0 |
 | Hyrox | `hyrox_home_v1` | Current week, travel-mode flag, checked exercises, per-exercise logs, benchmark + simulation times |

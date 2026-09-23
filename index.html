@@ -116,6 +116,7 @@
   }
 
   /* Per-tile accents (override CSS variables locally) */
+  .tile.tile-father-son        { --tile-accent: #4338ca; --tile-accent-soft: #eef0ff; }
   .tile.tile-tfm-1             { --tile-accent: #0e7490; --tile-accent-soft: #e0f4f8; }
   .tile.tile-tfm-2             { --tile-accent: #b91c1c; --tile-accent-soft: #fdecec; }
   .tile.tile-hyrox             { --tile-accent: #c8860a; --tile-accent-soft: #fbeecb; }
@@ -164,13 +165,38 @@
     </div>
     <div class="lh-text">
       <h1>Exercise Library</h1>
-      <div class="sub">Nine programs, one place. Pick one to start.</div>
+      <div class="sub">Ten programs, one place. Pick one to start.</div>
     </div>
   </div>
 
   <div class="launcher-section-label">Programs</div>
 
   <div class="tile-stack">
+
+    <a class="tile tile-father-son" href="father-son/">
+      <div class="tile-stripe"></div>
+      <div class="tile-body">
+        <div class="tile-icon" aria-hidden="true">
+          <!-- two figures, one tall one short: father and son -->
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="7" r="3"/>
+            <path d="M11 10v9M11 19l-3 8M11 19l3 8M6 14l5-2 5 2"/>
+            <circle cx="23" cy="13" r="2.4"/>
+            <path d="M23 15.5v6M23 21.5l-2.3 5.5M23 21.5l2.3 5.5M19.5 18.5l3.5-1.5 3.5 1.5"/>
+          </svg>
+        </div>
+        <div class="tile-text">
+          <div class="tile-name">Father &amp; Son Strength</div>
+          <div class="tile-sub">12-week garage base for a young athlete. Two lifters, one session.</div>
+          <div class="tile-meta">
+            <span class="tile-tag">Strength</span>
+            <span class="tile-tag">Athletic</span>
+            <span class="tile-tag">Duo</span>
+          </div>
+        </div>
+        <div class="tile-chev">›</div>
+      </div>
+    </a>
 
     <a class="tile tile-tfm-1" href="tfm-1/">
       <div class="tile-stripe"></div>

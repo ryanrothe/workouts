@@ -1,0 +1,1758 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Father & Son" />
+<meta name="theme-color" content="#4338ca" />
+<link rel="manifest" href="../manifest.webmanifest" />
+<link rel="apple-touch-icon" href="../icon-180.png" />
+<link rel="icon" type="image/png" href="../favicon.png" />
+<title>Father & Son Strength</title>
+<link rel="stylesheet" href="../shared/styles.css" />
+<style>
+  /* Father & Son specific styles. Shared design tokens come from ../shared/styles.css. */
+
+  .hero {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .hero-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .coach-badge {
+    display: inline-block;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border: 1px solid var(--primary-line);
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .stat {
+    background: var(--card-2);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    padding: 8px 6px;
+    text-align: center;
+  }
+  .stat-num { font-size: 17px; font-weight: 700; color: var(--primary); font-variant-numeric: tabular-nums; }
+  .stat-label { font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+
+  /* Lifter toggle: who is this phone tracking right now */
+  .lifter-bar {
+    display: flex; gap: 6px; margin-top: 12px;
+    background: var(--card-2);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    padding: 4px;
+  }
+  .lifter-btn {
+    flex: 1;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 10px 6px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    min-height: var(--tap);
+  }
+  .lifter-btn.active { background: var(--primary); color: white; }
+  .lifter-hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+  /* Progress tracks: the pull-up step and the push-up level */
+  .tracks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .track {
+    background: var(--card-2);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+  }
+  .track-kind { font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+  .track-step { font-size: 13px; font-weight: 700; color: var(--text); margin-top: 2px; line-height: 1.3; }
+  .track-pos { font-size: 11px; color: var(--primary); font-weight: 700; margin-top: 2px; }
+  .track-rule { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+  .track-btns { display: flex; gap: 6px; margin-top: 8px; }
+  .track-btns .btn { flex: 1; justify-content: center; padding: 6px 4px; font-size: 12px; min-height: 36px; }
+  .track.maxed .track-pos { color: var(--success); }
+  @media (max-width: 420px) { .tracks { grid-template-columns: 1fr; } }
+
+  /* Week pill bar */
+  .week-bar {
+    display: flex; gap: 5px;
+    overflow-x: auto;
+    margin-bottom: 10px;
+    padding: 4px 2px;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .week-bar::-webkit-scrollbar { display: none; }
+  .week-pill {
+    flex-shrink: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 7px 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    cursor: pointer;
+    min-width: 46px;
+    text-align: center;
+    font-family: inherit;
+    font-variant-numeric: tabular-nums;
+  }
+  .week-pill.active { background: var(--primary); border-color: var(--primary); color: white; }
+  .week-pill.done { border-color: var(--success); background: var(--success-soft); color: var(--success); }
+  .week-pill.done.active { background: var(--success); color: white; }
+  .week-pill.bench { box-shadow: inset 0 -3px 0 var(--warning); }
+
+  /* Phase card under the pills */
+  .phase {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+  .phase-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .phase-name span { color: var(--primary); }
+  .phase-dates { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .phase-note { font-size: 12.5px; color: var(--text-body); line-height: 1.5; margin-top: 6px; }
+  .phase-note strong { color: var(--primary); }
+
+  .tab .due-dot[hidden] { display: none; }
+  .tab .due-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--primary);
+    margin-left: 5px;
+    vertical-align: 1px;
+  }
+  .tab.active .due-dot { background: white; }
+
+  /* Exercise tag color variants (extends .ex-tag from shared) */
+  .ex-tag.power  { background: #ffe9e0; color: #c2410c; }
+  .ex-tag.pull   { background: #e7f0fb; color: #1f63b8; }
+  .ex-tag.push   { background: #fdf0f6; color: #be185d; }
+  .ex-tag.legs   { background: var(--success-soft); color: var(--success); }
+  .ex-tag.armor  { background: #f1eafd; color: #6b3ed0; }
+  .ex-tag.core   { background: #f0f1f3; color: #6b7588; }
+  .ex-tag.skill  { background: var(--accent-soft); color: var(--accent); }
+  .ex-tag.test   { background: var(--warning-soft); color: var(--warning); }
+  .ex-tag.arms   { background: #fdeaea; color: #b3261e; }
+
+  /* "Last:" reference + next-load suggestion */
+  .ex-hit-flag { font-weight: 700; }
+  .ex-hit-flag.yes { color: var(--success); }
+  .ex-hit-flag.no  { color: var(--danger); }
+  .ex-suggest {
+    display: inline-flex; align-items: center; gap: 5px;
+    margin-top: 5px;
+    border-radius: 6px;
+    padding: 4px 9px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    border: 1px solid transparent;
+    text-align: left;
+    line-height: 1.35;
+  }
+  .ex-suggest.up      { background: var(--success-soft); color: var(--success); border-color: var(--success-line); }
+  .ex-suggest.hold    { background: var(--card-2);       color: var(--text-body); border-color: var(--border); }
+  .ex-suggest.plateau { background: var(--warning-soft); color: var(--warning); border-color: #edd9a6; }
+  .ex-suggest:active { filter: brightness(0.96); }
+  .ex-suggest .sg-tap { font-weight: 600; opacity: 0.72; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  .ex-detail {
+    margin: 6px 0 0;
+    padding: 8px 10px;
+    background: var(--card-2);
+    border: 1px solid var(--border-soft);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text-body);
+    line-height: 1.6;
+  }
+  .ex-detail .dt-line { display: block; }
+  .ex-cue { font-size: 11.5px; color: var(--accent); margin-top: 4px; line-height: 1.4; }
+  .ex-cue strong { color: var(--accent); }
+
+  /* Log editor: weight + did-you-hit */
+  .log-weight-row { display: flex; align-items: center; gap: 6px; }
+  .log-weight-row .log-weight { flex: 1; min-width: 0; }
+  .log-weight-row .unit { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .hit-label { font-size: 11px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+  .hit-row { display: flex; gap: 6px; }
+  .hit-btn {
+    flex: 1;
+    border: 1px solid var(--border);
+    background: var(--card-2);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 8px 6px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .hit-btn.on-yes { background: var(--success-soft); color: var(--success); border-color: var(--success-line); }
+  .hit-btn.on-no  { background: var(--danger-soft);  color: var(--danger);  border-color: #f3c8c4; }
+
+  /* Timer buttons */
+  .btn-timer { font-variant-numeric: tabular-nums; min-width: 78px; justify-content: center; }
+  .btn-timer.running { background: var(--primary); color: white; border-color: var(--primary); }
+  .btn-timer.paused { background: var(--warning-soft); color: var(--warning); border-color: #edd9a6; }
+  .btn-timer.done { background: var(--success); color: white; border-color: var(--success); animation: timer-flash 0.6s ease-out; }
+  @keyframes timer-flash { 0% { transform: scale(1); } 30% { transform: scale(1.08); } 100% { transform: scale(1); } }
+  .btn-timer-x { color: var(--danger); min-width: 0; }
+
+  /* Warm-up checklist */
+  .prep {
+    margin: 8px 0;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    background: var(--card-2);
+    overflow: hidden;
+  }
+  .prep-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 12px;
+    cursor: pointer; user-select: none;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+  .prep-head .caret { font-size: 10px; }
+  .prep.collapsed .prep-body { display: none; }
+  .prep.collapsed .caret { transform: rotate(-90deg); }
+  .prep-body { padding: 2px 12px 10px; }
+  .prep-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 5px 0;
+    font-size: 12.5px; color: var(--text-body);
+    cursor: pointer;
+  }
+  .prep-check {
+    width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px;
+    border: 2px solid #c8cdd6; border-radius: 5px;
+    background: white;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .prep-check svg { width: 10px; height: 10px; opacity: 0; }
+  .prep-item.done .prep-check { background: var(--success); border-color: var(--success); }
+  .prep-item.done .prep-check svg { opacity: 1; }
+  .prep-item.done { color: var(--muted); text-decoration: line-through; }
+
+  .block-note { font-size: 12px; color: var(--muted); line-height: 1.55; margin: 4px 0 2px; }
+  .block-label {
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--primary); margin: 12px 0 0;
+  }
+  .block-off {
+    margin: 8px 0;
+    padding: 9px 12px;
+    background: var(--warning-soft);
+    border: 1px solid #edd9a6;
+    border-radius: var(--radius-sm);
+    font-size: 12px; color: var(--warning); line-height: 1.5;
+  }
+
+  .day-toolbar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+    font-size: 12px; color: var(--muted);
+    flex-wrap: wrap; gap: 6px;
+  }
+  .reset-link {
+    background: none; border: none; color: var(--muted);
+    font-size: 11px; cursor: pointer; padding: 4px 8px; text-decoration: underline;
+    font-family: inherit;
+  }
+
+  /* Readiness + short-Monday controls at the top of a day card */
+  .ctl {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 9px 0 4px;
+    flex-wrap: wrap;
+  }
+  .ctl-label { font-size: 12px; font-weight: 700; color: var(--text-body); }
+  .ctl-sub { font-size: 11px; color: var(--muted); font-weight: 400; display: block; margin-top: 1px; }
+  .ready-row { display: flex; gap: 5px; }
+  .ready-btn {
+    width: 38px; height: 38px;
+    border: 1px solid var(--border);
+    background: var(--card-2);
+    color: var(--muted);
+    border-radius: 8px;
+    font-size: 14px; font-weight: 700; font-family: inherit;
+    cursor: pointer;
+  }
+  .ready-btn.on { background: var(--primary); color: white; border-color: var(--primary); }
+  .ready-btn.on.low { background: var(--warning); border-color: var(--warning); }
+  .toggle-btn.on { background: var(--warning-soft); color: var(--warning); border-color: #edd9a6; }
+
+  /* Finisher picker */
+  .fin-menu { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+  .fin-opt {
+    text-align: left;
+    border: 1px solid var(--border);
+    background: var(--card-2);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    font-family: inherit;
+    cursor: pointer;
+    color: var(--text-body);
+  }
+  .fin-opt.on { border-color: var(--primary); background: var(--primary-soft); }
+  .fin-opt .fo-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .fin-opt .fo-how { font-size: 11.5px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+  .fin-opt .fo-hc { font-size: 11px; color: var(--primary); margin-top: 2px; font-weight: 600; }
+  .fin-opt.coop .fo-hc { color: var(--accent); }
+  .fin-result { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+  .fin-result input { flex: 1; min-width: 0; }
+  .fin-result .unit { font-size: 12px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  .pr-flag {
+    display: inline-block; margin-left: 6px;
+    background: var(--success-soft); color: var(--success);
+    border-radius: 4px; padding: 1px 6px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+  }
+
+  /* Benchmarks table */
+  .bench-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table.bench { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 460px; }
+  table.bench th, table.bench td { padding: 7px 6px; border-bottom: 1px solid var(--border-soft); text-align: center; vertical-align: middle; }
+  table.bench th { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+  table.bench td:first-child, table.bench th:first-child { text-align: left; }
+  table.bench td:first-child { font-weight: 600; color: var(--text); white-space: nowrap; }
+  table.bench td:first-child small { display: block; font-weight: 400; color: var(--muted); font-size: 10.5px; }
+  table.bench input {
+    width: 64px; text-align: center;
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 7px 4px; font-size: 13px; font-family: inherit;
+    font-variant-numeric: tabular-nums;
+    background: var(--card);
+  }
+  table.bench .delta { display: block; font-size: 10px; margin-top: 2px; font-weight: 700; }
+  table.bench .delta.up { color: var(--success); }
+  table.bench .delta.down { color: var(--danger); }
+  table.bench .delta.flat { color: var(--muted); }
+  table.bench tr.computed td { color: var(--text-body); background: var(--card-2); }
+  table.bench tr.computed td:first-child { color: var(--muted); }
+  table.bench td.na { color: var(--border); }
+
+  /* Records */
+  .rec { padding: 10px 0; border-bottom: 1px solid var(--border-soft); }
+  .rec:last-child { border-bottom: none; }
+  .rec-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .rec-best { font-size: 12.5px; color: var(--text-body); margin-top: 2px; }
+  .rec-best strong { color: var(--primary); }
+  .rec-hist { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+
+  .card h2 { margin: 0 0 8px; font-size: 16px; }
+  .card h3 { margin: 14px 0 6px; font-size: 13.5px; }
+  .card p, .card li { font-size: 13px; line-height: 1.55; color: var(--text-body); }
+  .card ul { padding-left: 18px; margin: 4px 0 8px; }
+  .src { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 10px; }
+
+  @media (max-width: 420px) {
+    .hero-stats { gap: 6px; }
+    .stat { padding: 6px 4px; }
+    .stat-num { font-size: 15px; }
+    .stat-label { font-size: 8.5px; }
+  }
+</style>
+</head>
+<body data-program="father-son">
+
+<header class="appbar">
+  <div class="appbar-inner">
+    <a class="appbar-back" href="../" aria-label="Back to Exercise Library">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="10 3 5 8 10 13"/></svg>
+      Library
+    </a>
+    <div class="appbar-title">
+      <div class="eyebrow">Program</div>
+      <div class="name">Father &amp; Son Strength</div>
+    </div>
+  </div>
+  <div class="appbar-accent"></div>
+</header>
+
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <span class="coach-badge">Garage · Two Lifters</span>
+        <h1 style="margin-top:6px">Father &amp; Son Strength</h1>
+        <div class="hero-sub">12-week base for a young athlete · Mon upper (meet day) · Wed lower · never to failure</div>
+      </div>
+      <button class="reset-link" id="reset-btn" title="Reset all tracking">Reset</button>
+    </div>
+
+    <div class="lifter-bar" id="lifter-bar">
+      <button class="lifter-btn" data-lifter="son">Son</button>
+      <button class="lifter-btn" data-lifter="ryan">Ryan</button>
+    </div>
+    <div class="lifter-hint" id="lifter-hint"></div>
+
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num" id="stat-week">W1</div><div class="stat-label">Current Week</div></div>
+      <div class="stat"><div class="stat-num" id="stat-days">0</div><div class="stat-label">Sessions Done</div></div>
+      <div class="stat"><div class="stat-num" id="stat-thisweek">0 / 2</div><div class="stat-label">This Week</div></div>
+      <div class="stat"><div class="stat-num" id="stat-overall">0%</div><div class="stat-label">Overall</div></div>
+    </div>
+
+    <div class="tracks" id="tracks"></div>
+  </div>
+
+  <!-- WEEK PILLS -->
+  <div class="week-bar" id="week-bar"></div>
+
+  <!-- PHASE CARD -->
+  <div class="phase" id="phase-card"></div>
+
+  <!-- TABS -->
+  <div class="tabs" id="tabs">
+    <button class="tab" data-pane="mon">Mon<span class="due-dot" hidden></span></button>
+    <button class="tab" data-pane="wed">Wed<span class="due-dot" hidden></span></button>
+    <button class="tab" data-pane="bench">Benchmarks</button>
+    <button class="tab" data-pane="records">Records</button>
+    <button class="tab" data-pane="principles">Principles</button>
+    <button class="tab" data-pane="notes">Notes</button>
+  </div>
+
+  <div id="panes">
+    <div class="pane" id="pane-mon"><div id="container-mon"></div></div>
+    <div class="pane" id="pane-wed"><div id="container-wed"></div></div>
+    <div class="pane" id="pane-bench"><div class="card" id="bench-card"></div></div>
+    <div class="pane" id="pane-records"><div class="card" id="records-card"></div></div>
+    <div class="pane" id="pane-principles"><div class="card" id="principles-card"></div></div>
+    <div class="pane" id="pane-notes"><div class="card" id="notes-card"></div></div>
+  </div>
+
+</div>
+
+<script>
+/* ===========================================================================
+   HELPERS. Every row carries TWO prescriptions (son / ryan). The active
+   lifter decides which one renders and which history it reads.
+   =========================================================================== */
+const VIDEO_BASE = "https://www.youtube.com/results?search_query=";
+function v(q) { return VIDEO_BASE + encodeURIComponent(q + " exercise form"); }
+
+const LIFTERS = ["son", "ryan"];
+const LIFTER_LABEL = { son: "Son", ryan: "Ryan" };
+
+const BW_RE = /pull.?up|chin.?up|push.?up|\bdip\b|dips\b|hanging|hollow|plank|nordic|copenhagen|bodyweight|dead bug|lunge \(bw\)|calf raise \(bw\)/i;
+const LOADED_RE = /^(kb|db|weighted|med ball|medicine ball|plate|kettlebell|dumbbell|goblet)|\b(kb|db)\b/i;
+const LOWER_RE = /squat|deadlift|\brdl\b|lunge|step up|split|calf|swing|carry/i;
+
+/* Strip parentheticals before number-hunting, then read "Name S x R". */
+function parseLine(line) {
+  let per = false;
+  const notes = [];
+  let core = line;
+  core = core.replace(/\(([^)]*)\)/g, (_, inner) => {
+    if (/each (side|leg|arm)|alternating|on each/i.test(inner)) per = true;
+    else notes.push(inner.trim());
+    return " ";
+  }).replace(/\s+/g, " ").trim();
+
+  const m = core.match(/^(.+?)\s+(\d+(?:-\d+)?)\s*x\s*(.+)$/i);
+  if (!m) return { name: core, rx: notes.join(" · "), per, notes, repTop: null, repRange: null, isMax: false };
+
+  const name = m[1].trim();
+  const sets = m[2];
+  let reps = m[3].trim();
+  const isMax = /max/i.test(reps);
+  let repTop = null, repRange = null;
+  const rr = reps.match(/^(\d+)\s*-\s*(\d+)$/);
+  const rf = reps.match(/^(\d+)$/);
+  if (rr) { repRange = `${rr[1]}-${rr[2]}`; repTop = parseInt(rr[2], 10); }
+  else if (rf) { repTop = parseInt(rf[1], 10); }
+
+  let rx = `${sets} × ${reps}`;
+  if (per) rx += " · each side";
+  if (notes.length) rx += " · " + notes.join(" · ");
+  return { name, rx, sets, per, notes, repTop, repRange, isMax };
+}
+
+function side(line, loaded) {
+  const p = parseLine(line);
+  const isLoaded = loaded != null ? loaded : LOADED_RE.test(p.name);
+  return {
+    name: p.name, rx: p.rx,
+    bw: !isLoaded && BW_RE.test(p.name),
+    loaded: isLoaded,
+    lower: LOWER_RE.test(p.name),
+    repTop: p.repTop, repRange: p.repRange, isMax: p.isMax
+  };
+}
+
+/* duo("Goblet Squat 2 x 8 (3-second lower)", "KB Goblet Squat 2 x 8 (3-second lower)", 90, "legs", {cue: "..."}) */
+function duo(sonLine, ryanLine, rest, tag, opts = {}) {
+  const o = Object.assign({}, opts);
+  const row = {
+    kind: "duo",
+    tag: tag || "legs",
+    rest: rest || 90,
+    track: o.track != null ? o.track : true,
+    timer: o.timer || null,
+    detail: o.detail || null,
+    cue: o.cue || null,
+    per: {
+      son: side(sonLine, o.sonLoaded),
+      ryan: side(ryanLine || sonLine, o.ryanLoaded)
+    }
+  };
+  if (o.sonLoaded === false) row.per.son.loaded = false;
+  if (o.ryanLoaded === false) row.per.ryan.loaded = false;
+  return row;
+}
+/* A track row reads its name and prescription from the lifter's current step. */
+function trackRow(kind, sets) {
+  return { kind: "track", trackKind: kind, sets: sets || 3, tag: kind === "pullup" ? "pull" : "push", rest: 90, track: false, timer: null, detail: null };
+}
+/* Checkable, untracked effort piece (ladders, tests, circuits). */
+function effort(name, rx, tag, opts = {}) {
+  return { kind: "effort", tag: tag || "skill", rest: opts.rest || 60, track: false, timer: opts.timer || null, detail: opts.detail || null, cue: opts.cue || null,
+    per: { son: { name, rx: opts.sonRx || rx, bw: true, loaded: false, lower: false, repTop: null, repRange: null, isMax: false },
+           ryan: { name: opts.ryanName || name, rx: opts.ryanRx || rx, bw: true, loaded: false, lower: false, repTop: null, repRange: null, isMax: false } } };
+}
+function tDown(secs, label) { return { kind: "down", secs, label }; }
+function tInterval(segs, rounds, label) { return { kind: "interval", segs, rounds, label }; }
+function tWatch(label) { return { kind: "watch", label }; }
+
+/* ===========================================================================
+   PROGRESS TRACKS. The two real progress markers of the program.
+   =========================================================================== */
+const TRACKS = {
+  pullup: {
+    label: "Pull-up",
+    son: [
+      { name: "Dead hang + scap pulls", rx: "3 × 15-30 s hang · 3 × 5 scap pulls", promote: "Hang 30 s on all three sets, then move to negatives" },
+      { name: "Negatives", rx: "3 × 3-5 · jump to the top, lower 3-5 s", promote: "3 × 5 controlled 5-second lowers, then band-assisted" },
+      { name: "Band-assisted pull-ups + flexed-arm hang", rx: "3 × 3-5 · then one flexed-arm hang for time", promote: "3 × 5 on the lightest band, then singles" },
+      { name: "Pull-up singles", rx: "5 × 1 · full rest · then build to a set of 2", promote: "Two clean reps in one set: goal met" }
+    ],
+    ryan: [
+      { name: "Strict pull-ups", rx: "3 × 6-8", promote: "3 × 8 clean, then add load" },
+      { name: "Weighted pull-ups", rx: "3 × 5 · +10 lb", promote: "3 × 5 clean, then +25" },
+      { name: "Weighted pull-ups, heavy", rx: "3 × 5 · +25 lb", promote: "3 × 5 clean, then +45 or 1 × max strict" },
+      { name: "Weighted pull-ups, +45", rx: "3 × 3-5 · +45 lb", promote: "Top of the cycle" }
+    ]
+  },
+  pushup: {
+    label: "Push-up",
+    son: [
+      { name: "Push-ups, hands on the 30 in box", rx: "3 × submax · stop 2 short", promote: "3 × 10 clean earns the 24 in box" },
+      { name: "Push-ups, hands on the 24 in box", rx: "3 × submax · stop 2 short", promote: "3 × 10 clean earns the 18 in box" },
+      { name: "Push-ups, hands on the 18 in box", rx: "3 × submax · stop 2 short", promote: "3 × 10 clean earns the low bar" },
+      { name: "Push-ups, hands on the low bar in the uprights", rx: "3 × submax · stop 2 short", promote: "3 × 10 clean earns the floor" },
+      { name: "Floor push-ups", rx: "3 × submax · stop 2 short", promote: "3 × 10 clean earns feet on the bench. 15 clean unlocks DB bench" },
+      { name: "Push-ups, feet on the flat bench", rx: "3 × submax · then tempo and pause reps", promote: "Top of the cycle" }
+    ],
+    ryan: [
+      { name: "Floor push-ups", rx: "3 × 15", promote: "3 × 15 clean, then feet up" },
+      { name: "Push-ups, feet on the flat bench", rx: "3 × 12-15", promote: "3 × 15 clean, then dips" },
+      { name: "Dips", rx: "3 × 8-10", promote: "3 × 10 clean, then weighted" },
+      { name: "Weighted dips", rx: "3 × 6-8 · +25 lb", promote: "Top of the cycle" }
+    ]
+  }
+};
+
+/* ===========================================================================
+   FINISHER MENUS. He picks from three. Monday: Ryan does it, Son judges.
+   =========================================================================== */
+const FIN = {
+  mon: {
+    1: [
+      { name: "Dead hang duel", how: "Longest hang wins.", hc: "Ryan starts 15 s late", unit: "s", coop: false },
+      { name: "Hollow hold-off", how: "Longest clean hollow hold.", hc: "Ryan holds a 10 lb plate overhead", unit: "s", coop: false },
+      { name: "Plank high-fives", how: "Face to face in a plank, alternate hand slaps to 20.", hc: "Cooperative", unit: "slaps", coop: true }
+    ],
+    2: [
+      { name: "I go, you go push-up ladder", how: "1 rep, then 2, up to 5 and back down, alternating.", hc: "Each at your own push-up level", unit: "reps total", coop: false },
+      { name: "Flexed-arm hang", how: "Chin over the bar for time.", hc: "Feeds the pull-up directly", unit: "s", coop: false },
+      { name: "Dead hang duel", how: "Longest hang wins.", hc: "Ryan starts 15 s late", unit: "s", coop: false }
+    ],
+    3: [
+      { name: "Max clean push-ups", how: "One set, form breaks and it ends.", hc: "Each at your own level", unit: "reps", coop: false },
+      { name: "I go, you go push-up ladder", how: "1 rep, then 2, up to 5 and back down, alternating.", hc: "Each at your own push-up level", unit: "reps total", coop: false },
+      { name: "Flexed-arm hang", how: "Chin over the bar for time.", hc: "Feeds the pull-up directly", unit: "s", coop: false }
+    ]
+  },
+  wed: {
+    1: [
+      { name: "Stick-it game", how: "5 box jumps, one point per silent, stuck landing.", hc: "Rewards quality over height", unit: "pts", coop: false },
+      { name: "Wall sit duel", how: "Longest wall sit.", hc: "Ryan holds a 35 lb KB in his lap", unit: "s", coop: false },
+      { name: "Balance and toss", how: "Single-leg stance, toss a ball back and forth to 20 catches.", hc: "Cooperative · good ankle work", unit: "catches", coop: true }
+    ],
+    2: [
+      { name: "Swing EMOM", how: "10 swings at the top of each minute for 4 minutes.", hc: "Own bell. Never the week of a big meet", unit: "swings", coop: false },
+      { name: "Ladder time trial", how: "One pattern, timed. Only clean runs count.", hc: "Race your own PR", unit: "s", coop: false },
+      { name: "Stick-it game", how: "5 box jumps, one point per silent, stuck landing.", hc: "Rewards quality over height", unit: "pts", coop: false }
+    ],
+    3: [
+      { name: "Broad jump best of 3", how: "Tape on the floor. Best of three.", hc: "Scored as a ratio to own height", unit: "in", coop: false },
+      { name: "Airdyne 10 s sprint", how: "4 × 10 s all out, 50 s easy. Best 10 s counts.", hc: "Zero impact, pure fast twitch", unit: "cal or watts", coop: false },
+      { name: "Ladder time trial", how: "One pattern, timed. Only clean runs count.", hc: "Race your own PR", unit: "s", coop: false }
+    ]
+  }
+};
+function blockOf(w) { return w < 4 ? 1 : w < 8 ? 2 : 3; }
+function finMenu(w, d) { return FIN[d][blockOf(w)]; }
+
+/* ===========================================================================
+   PHASES + weekly coaching note (index = week - 1)
+   =========================================================================== */
+const BLOCKS = [
+  { name: "Learn", weeks: "Weeks 1-4 · Sep 21 to Oct 18", theme: "Own the positions. Cross-country in season: 2 sets on legs, tempo reps, stuck landings." },
+  { name: "Build", weeks: "Weeks 5-8 · Oct 19 to Nov 15", theme: "Add load and reps. Weeks 5-6 are the championship stretch: upper progresses, legs hold. Weeks 7-8 legs open to 3 sets." },
+  { name: "Express", weeks: "Weeks 9-12 · Nov 16 to Dec 13", theme: "Be fast. Club soccer still in season, so a one-sport dose: jumps capped at 40 contacts, 3 strength sets, DB bench, pull-up attempts." }
+];
+const WEEK_NOTES = [
+  "<strong>Day 1 is Wednesday.</strong> The tests are the workout. They are the starting line, not scores. Pencil the height mark on the wall, both of you, and enter every number under Benchmarks.",
+  "<strong>First full week.</strong> Tempo and positions. Deadlift the bell, no swings yet. Nordics start at 2 × 3 (Ryan holds the ankles). One coaching cue per set.",
+  "<strong>Same loads, cleaner reps.</strong> Last KB deadlift week. Nordics 2 × 4. If a landing is loud, lower the box.",
+  "<strong>Benchmark week, lighter.</strong> Swings begin: 18 lb two-hand, hips drive, arms along for the ride. Nordics 2 × 5. Enter W4 numbers under Benchmarks.",
+  "<strong>Build begins, championship stretch.</strong> Upper progresses (rows to 3 × 10, press +5 if hit). Legs hold at 2 sets. Sunday lights out by 9.",
+  "<strong>Championship stretch continues.</strong> Monday can be the short version. Wednesday stays at 2 sets. Race well.",
+  "<strong>Cross-country is over.</strong> Legs open to 3 sets. Son moves to the 24 in box if the 18 in landings are silent. Ryan adds pogos and depth drops.",
+  "<strong>Benchmark week, lighter.</strong> 5-10-5 shuttle joins the tests. Enter W8 numbers. Check the height mark: half an inch a month means peak growth.",
+  "<strong>Express begins.</strong> Jumps capped at 40 contacts. DB bench enters once floor push-ups reach 15 clean. Pull-up singles if at step 4.",
+  "<strong>Reactive work,</strong> only if the height mark says he is not in peak growth. Otherwise hold the jump volume flat. Airdyne sprints as the finisher.",
+  "<strong>Heaviest week of the cycle.</strong> Still 2 reps in the tank on every set. Nothing grinds.",
+  "<strong>Final benchmark week.</strong> Enter W12 numbers and compare to Day 1. Then one full rest week when soccer ends, and Cycle 2 in the winter window."
+];
+const BENCH_WEEKS = [1, 4, 8, 12];
+
+/* ===========================================================================
+   PROGRAM DATA. 12 weeks. Week 1 has only Wednesday (Day 1).
+   Block flags: essential (kept in short Monday), plyo (dropped at readiness 1-2).
+   =========================================================================== */
+const WU = {
+  mon: ["Band pull-aparts × 15", "Scap push-ups × 10", "Dead hang × 20 s", "Couch stretch × 30 s (each side)", "Arm circles × 10 each way"],
+  wed: ["Jump rope × 2 minutes", "Leg swings × 10 (each side)", "Glute bridges × 10", "World's greatest stretch × 5 (each side)", "Couch stretch × 30 s (each side)", "Calf stretch × 30 s (each side)"],
+  day1: ["Jump rope contest: 30 s without a miss, best of 3", "Band pull-aparts × 15", "Scap push-ups × 10", "Arm circles × 10 each way", "One dead hang each, easy, to wake the grip"]
+};
+const LADDER = ["Ickey shuffle × 2 passes", "Lateral two-in × 2 passes", "In-in-out-out × 2 passes", "Single-leg hops × 2 passes (each leg)"];
+
+function monday(w) {
+  const b = blockOf(w);
+  const sets = b === 1 ? 3 : 3;
+  const rowRx = b === 1 ? "3 x 8" : b === 2 ? "3 x 10" : "3 x 10";
+  const pressRx = b === 1 ? "3 x 6-8" : "3 x 8";
+  const csRx = b === 1 ? "2 x 8" : "3 x 8";
+  const blocks = [];
+
+  blocks.push({ label: "Power", note: "Fast and crisp. Full rest between throws. Chest pass to each other.", rows: [
+    duo("Med Ball Chest Pass 3 x 5 (10 lb)", "Med Ball Chest Pass 3 x 5 (20 lb)", 60, "power", { track: false }),
+    duo("Med Ball Overhead Slam 3 x 5 (10 lb)", "Med Ball Overhead Slam 3 x 5 (20 lb)", 60, "power", { track: false })
+  ]});
+  blocks.push({ label: "A · The two tracks", essential: true, note: "Fresh first. Pull-up step and push-up level come from the hero card; promote there when the rule is met.", rows: [
+    trackRow("pullup", sets),
+    trackRow("pushup", sets)
+  ]});
+  const bRows = [
+    duo(`Inverted Row ${rowRx} (bar in the uprights)`, `Inverted Row ${rowRx} (feet on the bench)`, 90, "pull", { track: false, cue: "Progress by lowering the bar or walking the feet forward. Body straight as a plank." }),
+    duo(`Half-Kneeling DB Overhead Press ${pressRx} (each side)`, `Half-Kneeling DB Overhead Press ${pressRx} (each side)`, 90, "push", { cue: "Son starts at 10 lb. Ryan 30 lb. No body English." })
+  ];
+  blocks.push({ label: "B · Row and press", note: "Superset. Rest 90 s after the pair.", rows: bRows });
+  const cRows = [
+    duo(`Chest-Supported DB Row ${csRx} (on the incline bench)`, `Chest-Supported DB Row ${csRx} (on the incline bench)`, 75, "pull", { cue: "Son starts at 15 lb. Ryan 40 lb. The bench stops the body swing." })
+  ];
+  if (b === 3) cRows.unshift(duo("DB Floor Press 3 x 8", "DB Bench Press 3 x 8", 90, "push", { cue: "Enters once floor push-ups reach 15 clean. Son 15-20 lb. Ryan 60s. Barbell waits for Cycle 2." }));
+  if (b === 3) cRows.push(duo("Rotational Med Ball Throw 3 x 5 (each side · 10 lb)", "Rotational Med Ball Throw 3 x 5 (each side · 15 lb)", 60, "power", { track: false, cue: "For soccer. Hips turn first, arms follow." }));
+  blocks.push({ label: "C", note: null, rows: cRows });
+  blocks.push({ label: "Arms", note: "For the buy-in. Two easy sets.", rows: [
+    duo("DB Curl 2 x 10", "DB Curl 2 x 10", 45, "arms", { cue: "Son 10 lb. Ryan 25 lb." }),
+    effort("Band Pushdown", "2 × 10", "arms", { rest: 45 })
+  ]});
+  blocks.push({ label: "Core", note: null, rows: [
+    duo("Hollow Hold 3 x 15-20 seconds", "Hollow Hold 3 x 30 seconds", 45, "core", { track: false, cue: "The hollow feeds the pull-up. Low back glued to the floor." }),
+    duo("DB Suitcase Carry 2 x 1 (2 trips · 25 lb)", "KB Suitcase Carry 2 x 1 (2 trips · 70 lb)", 60, "core", { cue: "Tall, no lean. Switch hands each trip." })
+  ]});
+  return {
+    title: "Upper", duration: "40-45 min", warmup: WU.mon, blocks,
+    finNote: "Monday finisher: Ryan does it, Son judges and counts. No extra fatigue on race day. Competitive finishers for both live on Wednesday."
+  };
+}
+
+function wednesday(w) {
+  const b = blockOf(w);
+  const sets = (w <= 6) ? 2 : 3;         // weeks 1-6 (index 0-5) in-season 2 sets; week 7+ opens to 3
+  const S = `${sets} x`;
+  const sonBox = w >= 6 ? "24 in" : "18 in";
+  const ryanBox = w >= 6 ? "30 in" : "24 in";
+  const nordic = Math.min(3 + (w - 1), b === 3 ? 6 : 5);   // 2x3 in week 2, +1 a week
+  const nordicSets = w >= 6 ? 3 : 2;
+  const blocks = [];
+
+  blocks.push({ label: "Ladder", note: "Footwork and coordination. Not a conditioning piece.", rows: [
+    effort("Speed Ladder", "4 patterns · 2 passes each", "skill", { detail: LADDER, rest: 30 })
+  ]});
+  const plyo = [
+    duo(`Box Jump 3 x 3 (${sonBox} · step down)`, `Box Jump 3 x 3 (${ryanBox} · step down)`, 60, "power", { track: false, cue: "Land in the same quarter squat you took off from. Knees to the chest means the box is too high." }),
+    duo("Broad Jump 3 x 3 (stuck landing)", "Broad Jump 3 x 3 (stuck landing)", 60, "power", { track: false, cue: "Silent landing. Hold it for a two-count." }),
+    duo("Lateral Bound 2 x 3 (each side · stick)", "Lateral Bound 2 x 3 (each side · stick)", 60, "power", { track: false })
+  ];
+  if (b >= 2) plyo.push(duo("Pogo Hops 2 x 8 (only if not in peak growth)", "Pogo Hops 3 x 10", 45, "power", { track: false, cue: "Short ground contact. Stiff ankle, quiet feet." }));
+  if (b >= 2) plyo.push(duo("Depth Drop 2 x 3 (from the 18 in box · stick · Block 3 only)", `Depth Drop 3 x 3 (from the 18 in box${b === 3 ? " into a jump" : " · stick"})`, 60, "power", { track: false, cue: "Ryan's reactive rebuild. Step off, land, stick. Block 3: land and jump." }));
+  blocks.push({ label: "Plyo", plyo: true, note: `In-season cap: ${b === 3 ? "40" : "20 to 30"} ground contacts. Readiness 1 or 2 turns this block off.`, rows: plyo });
+
+  const aRows = [
+    duo(`Goblet Squat ${S} 8 (3-second lower)`, `KB Goblet Squat ${S} 8 (3-second lower)`, 90, "legs", { cue: "Son 15-20 lb DB. Ryan 70 lb bell. Earn the next weight with no wobble." })
+  ];
+  if (w <= 3) aRows.push(duo(`KB Deadlift ${S} 8`, `KB Deadlift ${S} 8`, 90, "legs", { cue: "Teach the hinge before the swing. Son 35 lb. Ryan 100 lb. Flat back every rep." }));
+  else aRows.push(duo(`KB Swing ${S} 10`, `KB Swing ${S} 10`, 90, "legs", { cue: "Son's ladder: 18 lb two-hand 3 × 10, then 3 × 15, then one-arm 3 × 8 each, then 35 lb 3 × 6. Ryan 70 lb. If it looks like a squat, he is not ready." }));
+  blocks.push({ label: "A · Squat and hinge", note: "Superset. Rest 90 s after the pair.", rows: aRows });
+
+  const bRows = b === 3
+    ? [ duo(`Bulgarian Split Squat ${S} 6 (each side · rear foot on the bench)`, `DB Bulgarian Split Squat ${S} 6 (each side)`, 90, "legs", { cue: "Son bodyweight, then 10 lb DBs. Ryan 40s." }),
+        duo(`Single-Leg RDL ${S} 6 (each side)`, `KB Single-Leg RDL ${S} 6 (each side)`, 90, "legs", { cue: "Son 10-15 lb. Ryan 35 lb bell." }) ]
+    : [ duo(`Reverse Lunge ${S} 6 (each side)`, `DB Reverse Lunge ${S} 6 (each side)`, 90, "legs", { cue: b === 1 ? "Son bodyweight first. Ryan 30 lb DBs." : "Son adds 10 lb DBs when 2 × 6 is clean. Ryan 35s." }),
+        duo(`Single-Leg RDL ${S} 6 (each side)`, `KB Single-Leg RDL ${S} 6 (each side)`, 90, "legs", { cue: b === 1 ? "Son bodyweight, hips square. Ryan 35 lb bell." : "Son 10-15 lb. Ryan 35 lb bell." }) ];
+  blocks.push({ label: "B · Single leg", note: "Superset. Rest 90 s after the pair.", rows: bRows });
+
+  blocks.push({ label: "Armor", note: "The best-evidenced injury prevention a runner and soccer player can do. Nordics cause real soreness at first; add one rep a week.", rows: [
+    duo(`Nordic Hamstring Lower ${nordicSets} x ${nordic} (Ryan holds the ankles)`, `Nordic Hamstring Lower ${nordicSets} x ${nordic}`, 90, "armor", { track: false, cue: "Lower as slowly as possible. Hands catch. Hips stay open." }),
+    duo(`Copenhagen Plank 2 x ${b === 3 ? 20 : 15} seconds (each side · knee on the flat bench)`, `Copenhagen Plank 2 x ${b === 3 ? 30 : 20} seconds (each side · foot on the flat bench)`, 45, "armor", { track: false }),
+    duo("Calf Raise (BW) 2 x 12 (on a bumper edge)", "Heavy Calf Raise 3 x 8 (3-second lower · straight knee, then bent knee)", 60, "armor", { cue: "Ryan: this is the Achilles spring work. 70 lb bell or heavy DBs, slow lower." })
+  ]});
+  blocks.push({ label: "Finish", note: null, rows: [
+    duo("DB Farmer Carry 2 x 1 (2 trips · 25 lb each hand)", "KB Farmer Carry 2 x 1 (2 trips · 70 lb each hand)", 60, "core", { cue: "Tall posture the whole way." }),
+    duo("Dead Bug 2 x 6 (each side)", "Dead Bug 2 x 8 (each side)", 30, "core", { track: false })
+  ]});
+  const isBench = BENCH_WEEKS.includes(w + 1);
+  if (isBench && w > 0) blocks.push({ label: "Benchmark week", note: "Lighter session. Run the tests after the warm-up, then the strength work at 2 sets.", rows: [
+    effort("Benchmark tests", `Enter W${w + 1} numbers under the Benchmarks tab`, "test", { detail: ["Dead hang for time", "Controlled negative for time", "Max clean push-ups at current level", "Broad jump, best of 3", "Single-leg hop, left and right", "Pull-up attempt", "Height mark on the wall"].concat(w + 1 >= 8 ? ["5-10-5 cone shuttle"] : []) })
+  ]});
+  return { title: "Lower", duration: "35-40 min", warmup: WU.wed, blocks, finNote: "Wednesday finisher: both of you. Competitive one week, cooperative the next. He picks." };
+}
+
+function day1() {
+  return {
+    title: "Day 1 · Records", duration: "about 40 min", warmup: WU.day1,
+    blocks: [
+      { label: "Height mark", note: "Pencil on the garage wall, name and date. Both of you. First of every month from here.", rows: [
+        effort("Height mark on the wall", "Both names, both dates", "test")
+      ]},
+      { label: "Day 1 records", note: "Contests with handicaps. Rest about 2 minutes between tests. Enter every number under the Benchmarks tab, Day 1 column.", rows: [
+        effort("Dead hang", "Max time, one attempt each", "test", { detail: ["Ryan starts 15 s after Son"], timer: tWatch("⏱ Stopwatch") }),
+        effort("Pull-up negative", "Jump to chin over the bar, lower as slowly as possible. Count the seconds out loud.", "test", { detail: ["Ryan does a weighted one"], timer: tWatch("⏱ Stopwatch") }),
+        effort("Max clean push-ups", "Floor. Under 5 clean, retest on the 18 in box. That sets the push-up level.", "test", { detail: ["Ryan: feet on the bench"] }),
+        effort("Broad jump", "Best of 3, tape on the floor", "test", { detail: ["Scored as a ratio to height"] }),
+        effort("Single-leg hop", "Left and right, best of 2 each", "test", { detail: ["Ryan: this is the Achilles number. Left vs right gap is what to close."] })
+      ]},
+      { label: "Teach the Monday movements", note: "Two easy sets each, technique only, nothing near hard. One cue per set.", rows: [
+        duo("Inverted Row 2 x 6-8 (bar in the uprights)", "Inverted Row 2 x 6-8 (feet on the bench)", 60, "pull", { track: false, cue: "Body straight as a plank. Pull the bar to the chest." }),
+        effort("Push-ups at your level", "2 × 6-8", "push", { rest: 60, cue: "Level comes from the test above. Elbows at 45 degrees, chest to the target." }),
+        duo("Half-Kneeling DB Overhead Press 2 x 6-8 (each side)", "Half-Kneeling DB Overhead Press 2 x 6-8 (each side)", 60, "push", { cue: "Son 10 lb. Ryan 30 lb." }),
+        duo("Hollow Hold 2 x 15 seconds", "Hollow Hold 2 x 20 seconds", 45, "core", { track: false }),
+        duo("Med Ball Chest Pass 2 x 5 (10 lb)", "Med Ball Chest Pass 2 x 5 (20 lb)", 45, "power", { track: false, cue: "The one he will want more of." })
+      ]}
+    ],
+    finNote: "Day 1 finisher: cooperative. Then sign the whiteboard, both names, both sets of numbers, the date."
+  };
+}
+
+const WEEKS = [];
+for (let w = 0; w < 12; w++) {
+  WEEKS.push({ mon: w === 0 ? null : monday(w), wed: w === 0 ? day1() : wednesday(w) });
+}
+
+const PROGRAM = {
+  slug: "father-son",
+  storageKey: "father_son_v1",
+  dayOrder: ["mon", "wed"],
+  dayLabels: { mon: "Mon", wed: "Wed" },
+  weeks: WEEKS
+};
+
+/* ===========================================================================
+   STATE. One key, everything namespaced per lifter where it differs.
+   =========================================================================== */
+const STORAGE_KEY = PROGRAM.storageKey;
+const NWEEKS = PROGRAM.weeks.length;
+let state = loadState();
+let uiWeek = null;
+
+function dayKey(w, d) { return `w${w}_${d}`; }
+function emptyState() {
+  return { lifter: "son", days: {}, tracks: { son: { pullup: 0, pushup: 0 }, ryan: { pullup: 0, pushup: 0 } }, bench: { son: {}, ryan: {} } };
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const p = JSON.parse(raw);
+      const s = emptyState();
+      if (LIFTERS.includes(p.lifter)) s.lifter = p.lifter;
+      if (p.days && typeof p.days === "object") s.days = p.days;
+      LIFTERS.forEach(l => {
+        if (p.tracks && p.tracks[l]) s.tracks[l] = Object.assign(s.tracks[l], p.tracks[l]);
+        if (p.bench && p.bench[l]) s.bench[l] = p.bench[l];
+      });
+      return s;
+    }
+  } catch (e) {}
+  return emptyState();
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  updateStats();
+}
+function L() { return state.lifter; }
+function dayState(w, d, create) {
+  const k = dayKey(w, d);
+  if (!state.days[k] && create) {
+    state.days[k] = { date: null, clockStart: null, clockStop: null, readiness: null, short: false, prep: {}, per: { son: emptyPer(), ryan: emptyPer() } };
+  }
+  const ds = state.days[k] || null;
+  if (ds) { if (!ds.per) ds.per = { son: emptyPer(), ryan: emptyPer() }; if (!ds.prep) ds.prep = {}; LIFTERS.forEach(l => { if (!ds.per[l]) ds.per[l] = emptyPer(); }); }
+  return ds;
+}
+function emptyPer() { return { completed: {}, logs: {}, fin: { pick: null, result: null, notes: "" } }; }
+function perState(w, d, create, lifter) {
+  const ds = dayState(w, d, create);
+  return ds ? ds.per[lifter || L()] : null;
+}
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function shortDate(iso) {
+  if (!iso) return "—";
+  const [, m, d] = iso.split("-");
+  return `${parseInt(m, 10)}/${parseInt(d, 10)}`;
+}
+function stampDate(ds) { if (!ds.date) ds.date = todayISO(); }
+
+/* Blocks that are ON for this day given readiness and the short toggle. */
+function activeBlocks(w, d) {
+  const day = PROGRAM.weeks[w][d];
+  if (!day) return [];
+  const ds = dayState(w, d, false);
+  const low = ds && ds.readiness != null && ds.readiness <= 2;
+  const short = ds && ds.short;
+  return day.blocks.map((b, bi) => ({ b, bi })).filter(({ b }) => {
+    if (short && d === "mon" && !b.essential) return false;
+    if (low && b.plyo) return false;
+    return true;
+  });
+}
+/* Rows with STABLE keys (block index + row index) so a hidden block never shifts a log. */
+function mainRows(w, d) {
+  const out = [];
+  activeBlocks(w, d).forEach(({ b, bi }) => b.rows.forEach((row, ri) => out.push({ row, bi, ri, key: `b${bi}r${ri}` })));
+  return out;
+}
+function isDayComplete(w, d, lifter) {
+  const day = PROGRAM.weeks[w][d];
+  if (!day) return true;   // no session that day (week 1 Monday)
+  const ps = perState(w, d, false, lifter);
+  if (!ps) return false;
+  const rows = mainRows(w, d);
+  return rows.length > 0 && rows.every(r => ps.completed[r.key]);
+}
+function hasDay(w, d) { return !!PROGRAM.weeks[w][d]; }
+function isWeekComplete(w, lifter) { return PROGRAM.dayOrder.every(d => isDayComplete(w, d, lifter)); }
+function currentWeek() {
+  for (let w = 0; w < NWEEKS; w++) if (!isWeekComplete(w, L())) return w;
+  return NWEEKS - 1;
+}
+function dueDay(w) {
+  for (const d of PROGRAM.dayOrder) if (hasDay(w, d) && !isDayComplete(w, d, L())) return d;
+  return hasDay(w, "mon") ? "mon" : "wed";
+}
+
+/* ===========================================================================
+   TIME PLAN. A planning model for the session clock, not a promise.
+   =========================================================================== */
+function setsFromRx(rx) {
+  const m = String(rx).match(/^(\d+)(?:-(\d+))?\s*×/);
+  if (!m) return 3;
+  return m[2] ? parseInt(m[2], 10) : parseInt(m[1], 10);
+}
+function rowWorkSecs(row, p) {
+  if (row.timer) {
+    const t = row.timer;
+    if (t.kind === "down") return t.secs + 20;
+    if (t.kind === "interval") return t.rounds * t.segs.reduce((n, s) => n + s[1], 0) + 20;
+    if (t.kind === "watch") return 120;
+  }
+  if (row.kind === "effort") return row.detail ? 150 : 60;
+  const secMatch = String(p.rx).match(/(\d+)\s*seconds/i);
+  if (secMatch) return parseInt(secMatch[1], 10) + 15;
+  let work = p.isMax ? 40 : p.repTop ? Math.min(90, Math.max(25, p.repTop * 4)) : 40;
+  if (/each side/i.test(p.rx)) work = Math.round(work * 1.8);
+  return work;
+}
+function rowSecs(row, p, restFactor) {
+  const rest = Math.round(row.rest * (restFactor || 1));   // supersets share one rest per pair
+  if (row.kind === "track") return row.sets * (45 + rest);
+  if (row.kind === "effort") return rowWorkSecs(row, p) + rest;
+  return setsFromRx(p.rx) * (rowWorkSecs(row, p) + rest);
+}
+function dayPlan(w, d) {
+  const day = PROGRAM.weeks[w][d];
+  const offsets = {};
+  let t = 60;
+  if (day.warmup) t += day.warmup.length * 30;
+  activeBlocks(w, d).forEach(({ b, bi }, i) => {
+    if (i > 0) t += 30;
+    const paired = /superset|the two tracks/i.test(b.note || "") ? 0.5 : 1;
+    b.rows.forEach((row, ri) => {
+      offsets[`b${bi}r${ri}`] = t;
+      t += rowSecs(row, resolve(row), paired);
+    });
+  });
+  t += 180; // finisher
+  return { total: t, offsets };
+}
+function fmtMins(secs) { return `~${Math.round(secs / 60)} min`; }
+
+/* The active lifter's view of a row. */
+function resolve(row, lifter) {
+  const l = lifter || L();
+  if (row.kind === "track") {
+    const steps = TRACKS[row.trackKind][l];
+    const i = Math.min(state.tracks[l][row.trackKind], steps.length - 1);
+    const st = steps[i];
+    return { name: st.name, rx: `${row.sets} sets · ${st.rx}`, bw: true, loaded: false, lower: false, repTop: null, repRange: null, isMax: false, step: i, steps: steps.length, promote: st.promote };
+  }
+  return row.per[l];
+}
+
+/* ===========================================================================
+   HISTORY + PROGRESSION COACH, per lifter, by exercise name.
+   Son: +5 lb flat. Ryan: +5 upper / +10 lower. Miss holds. 3 misses at one
+   weight: plateau, drop 10%, add 2 reps. No logged weight, no suggestion.
+   =========================================================================== */
+const PLATEAU_SESSIONS = 3;
+function normName(n) { return String(n).toLowerCase().replace(/[^a-z0-9]/g, ""); }
+function parseWeight(x) {
+  if (typeof x === "number") return isFinite(x) ? x : null;
+  if (typeof x === "string") { const m = x.match(/\d+(\.\d+)?/); return m ? parseFloat(m[0]) : null; }
+  return null;
+}
+function fmtWeight(n) { return (Math.round(n * 10) / 10).toString().replace(/\.0$/, ""); }
+function fmtLoad(n, bw) { return bw ? (n === 0 ? "BW" : `BW +${fmtWeight(n)} lb`) : `${fmtWeight(n)} lb`; }
+function roundToInc(n, inc, floor) { return Math.max(floor != null ? floor : inc, Math.round(n / inc) * inc); }
+function bumpRange(range, top) {
+  if (range) { const m = range.match(/^(\d+)-(\d+)$/); if (m) return `${+m[1] + 2}-${+m[2] + 2}`; }
+  return top ? `${top + 2}` : null;
+}
+function priorEntries(name, beforeW, beforeD, lifter) {
+  const key = normName(name);
+  const l = lifter || L();
+  const beforeDayIdx = PROGRAM.dayOrder.indexOf(beforeD);
+  const out = [];
+  for (let w = 0; w < NWEEKS; w++) {
+    for (const d of PROGRAM.dayOrder) {
+      if (!hasDay(w, d)) continue;
+      const afterCurrent = w > beforeW || (w === beforeW && PROGRAM.dayOrder.indexOf(d) >= beforeDayIdx);
+      if (afterCurrent) continue;
+      const ds = dayState(w, d, false);
+      if (!ds) continue;
+      const ps = ds.per[l];
+      const day = PROGRAM.weeks[w][d];
+      day.blocks.forEach((b, bi) => b.rows.forEach((row, ri) => {
+        if (row.kind !== "duo") return;
+        if (normName(row.per[l].name) !== key) return;
+        const log = ps.logs[`b${bi}r${ri}`];
+        const wt = parseWeight(log && log.weight);
+        if (wt !== null) out.push({ weight: wt, hit: log.hit === true, date: ds.date, week: w, day: d });
+      }));
+    }
+  }
+  return out.reverse();
+}
+function suggestNext(row, p, w, d) {
+  if (row.kind !== "duo" || !row.track || p.isMax) return null;
+  const hist = priorEntries(p.name, w, d);
+  if (!hist.length) return null;
+  const inc = L() === "son" ? 5 : (p.lower ? 10 : 5);
+  if (hist.length >= PLATEAU_SESSIONS) {
+    const win = hist.slice(0, PLATEAU_SESSIONS);
+    if (win.every(e => e.weight === win[0].weight) && win.every(e => !e.hit)) {
+      return { type: "plateau", weight: roundToInc(win[0].weight * 0.9, inc, p.bw ? 0 : undefined), reps: bumpRange(p.repRange, p.repTop) };
+    }
+  }
+  const last = hist[0];
+  if (last.hit) return { type: "up", weight: last.weight + inc };
+  return { type: "hold", weight: last.weight };
+}
+
+/* ===========================================================================
+   SHELL
+   =========================================================================== */
+function buildShell() {
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".pane").forEach(p => p.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById("pane-" + tab.dataset.pane).classList.add("active");
+    };
+  });
+  document.querySelectorAll(".lifter-btn").forEach(btn => {
+    btn.onclick = () => { state.lifter = btn.dataset.lifter; saveState(); render(); };   // same week: they train together
+  });
+  buildPrinciples();
+  buildNotes();
+}
+function renderLifter() {
+  document.querySelectorAll(".lifter-btn").forEach(b => b.classList.toggle("active", b.dataset.lifter === L()));
+  document.getElementById("lifter-hint").textContent = L() === "son"
+    ? "Tracking Son. Every check, load and record below is his."
+    : "Tracking Ryan. Same session, your own prescriptions and loads.";
+}
+function renderTracks() {
+  const el = document.getElementById("tracks");
+  el.innerHTML = "";
+  ["pullup", "pushup"].forEach(kind => {
+    const steps = TRACKS[kind][L()];
+    const i = Math.min(state.tracks[L()][kind], steps.length - 1);
+    const st = steps[i];
+    const maxed = i === steps.length - 1;
+    const card = document.createElement("div");
+    card.className = "track" + (maxed ? " maxed" : "");
+    card.innerHTML = `
+      <div class="track-kind">${TRACKS[kind].label} track</div>
+      <div class="track-step">${st.name}</div>
+      <div class="track-pos">${kind === "pullup" ? "Step" : "Level"} ${i + 1} of ${steps.length}${maxed ? " · top" : ""}</div>
+      <div class="track-rule">${st.promote}</div>
+      <div class="track-btns">
+        <button class="btn" data-dir="-1" ${i === 0 ? "disabled" : ""}>▼ Back</button>
+        <button class="btn btn-primary" data-dir="1" ${maxed ? "disabled" : ""}>▲ Promote</button>
+      </div>`;
+    card.querySelectorAll("[data-dir]").forEach(b => b.onclick = () => {
+      const n = i + parseInt(b.dataset.dir, 10);
+      if (n < 0 || n >= steps.length) return;
+      if (b.dataset.dir === "1" && !confirm(`Promote ${LIFTER_LABEL[L()]} to ${kind === "pullup" ? "step" : "level"} ${n + 1}: ${steps[n].name}?`)) return;
+      state.tracks[L()][kind] = n; saveState(); render();
+    });
+    el.appendChild(card);
+  });
+}
+function renderWeekBar() {
+  const bar = document.getElementById("week-bar");
+  bar.innerHTML = "";
+  for (let w = 0; w < NWEEKS; w++) {
+    const b = document.createElement("button");
+    b.className = "week-pill" + (w === uiWeek ? " active" : "") + (isWeekComplete(w, L()) ? " done" : "") + (BENCH_WEEKS.includes(w + 1) ? " bench" : "");
+    b.textContent = "W" + (w + 1);
+    b.title = BENCH_WEEKS.includes(w + 1) ? "Benchmark week" : "";
+    b.onclick = () => { uiWeek = w; render(); };
+    bar.appendChild(b);
+  }
+}
+function renderPhase() {
+  const w = uiWeek;
+  const blk = BLOCKS[blockOf(w) - 1];
+  document.getElementById("phase-card").innerHTML = `
+    <div class="phase-name">Block ${blockOf(w)} · <span>${blk.name}</span> · Week ${w + 1}</div>
+    <div class="phase-dates">${blk.weeks}</div>
+    <div class="phase-note">${WEEK_NOTES[w]}</div>
+    <div class="phase-note" style="color:var(--muted);font-size:11.5px">${blk.theme}</div>`;
+}
+
+/* ===========================================================================
+   DAY RENDER
+   =========================================================================== */
+function renderDay(d) {
+  const w = uiWeek;
+  const day = PROGRAM.weeks[w][d];
+  const container = document.getElementById("container-" + d);
+  container.innerHTML = "";
+  if (!day) {
+    container.innerHTML = `<div class="card"><h2>No Monday in Week 1</h2><p>Day 1 is Wednesday September 23. The first full Monday upper session is September 28, in Week 2.</p></div>`;
+    return;
+  }
+  const ds = dayState(w, d, false);
+  const ps = perState(w, d, false);
+  const rows = mainRows(w, d);
+  const done = rows.filter(x => ps && ps.completed[x.key]).length;
+  const plan = dayPlan(w, d);
+  const clockKey = dayKey(w, d);
+
+  const toolbar = document.createElement("div");
+  toolbar.className = "day-toolbar";
+  toolbar.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="btn btn-timer" id="clock-${d}" data-clockkey="${clockKey}">▶ Session clock</button>
+      <span id="clockstat-${d}"></span>
+    </div>
+    <button class="btn btn-danger" data-action="clear">Clear ${LIFTER_LABEL[L()]}'s day</button>`;
+  toolbar.querySelector("[data-action=clear]").onclick = () => {
+    if (!ds) return;
+    if (confirm(`Clear Week ${w + 1} ${PROGRAM.dayLabels[d]} for ${LIFTER_LABEL[L()]}? Checks, logs and the finisher result go. The other lifter's day stays.`)) {
+      ds.per[L()] = emptyPer();
+      saveState(); render();
+    }
+  };
+  container.appendChild(toolbar);
+  wireClock(d, w, plan);
+
+  const el = document.createElement("div");
+  el.className = "day";
+  el.innerHTML = `
+    <div class="day-header">
+      <div class="day-title">
+        <div class="day-name">Week ${w + 1} · ${PROGRAM.dayLabels[d]} · ${day.title}</div>
+        <div class="day-focus">${LIFTER_LABEL[L()]} · planned ${fmtMins(plan.total)} · listed ${day.duration}${ds && ds.date ? ` · trained ${shortDate(ds.date)}` : ""}</div>
+      </div>
+      <div class="day-meta"><span class="day-chip ${done === rows.length && rows.length ? "complete" : ""}">${done} / ${rows.length}</span></div>
+    </div>
+    <div class="day-body"></div>`;
+  const body = el.querySelector(".day-body");
+
+  // Readiness (Wednesday) or short-Monday toggle
+  if (d === "wed" && w > 0) body.appendChild(renderReadiness(w, d));
+  if (d === "mon") body.appendChild(renderShortToggle(w, d));
+
+  if (day.warmup) body.appendChild(renderPrep(w, d, "Warm-up", "wu", day.warmup));
+
+  const low = ds && ds.readiness != null && ds.readiness <= 2;
+  const short = ds && ds.short;
+  day.blocks.forEach((b, bi) => {
+    const on = activeBlocks(w, d).some(x => x.bi === bi);
+    if (!on) {
+      const off = document.createElement("div");
+      off.className = "block-off";
+      off.textContent = b.plyo && low ? `${b.label} is off today: readiness ${ds.readiness}. Run one fewer set on the strength pairs too.` : `${b.label} skipped: short Monday.`;
+      body.appendChild(off);
+      return;
+    }
+    if (b.label) {
+      const lab = document.createElement("div");
+      lab.className = "block-label";
+      lab.textContent = b.label;
+      body.appendChild(lab);
+    }
+    if (b.note) {
+      const note = document.createElement("div");
+      note.className = "block-note";
+      note.textContent = b.note;
+      body.appendChild(note);
+    }
+    b.rows.forEach((row, ri) => body.appendChild(renderRow(w, d, row, `b${bi}r${ri}`, plan)));
+  });
+
+  if (!short) body.appendChild(renderFinisher(w, d, day));
+  else {
+    const off = document.createElement("div"); off.className = "block-off"; off.textContent = "Finisher skipped: short Monday."; body.appendChild(off);
+  }
+  container.appendChild(el);
+}
+
+function renderReadiness(w, d) {
+  const ds = dayState(w, d, false);
+  const val = ds ? ds.readiness : null;
+  const el = document.createElement("div");
+  el.className = "ctl";
+  el.innerHTML = `
+    <div class="ctl-label">Legs today, 1 to 5?<span class="ctl-sub">1 or 2 turns the jump block off and drops a set.</span></div>
+    <div class="ready-row">${[1, 2, 3, 4, 5].map(n => `<button class="ready-btn ${val === n ? "on" : ""} ${n <= 2 ? "low" : ""}" data-n="${n}">${n}</button>`).join("")}</div>`;
+  el.querySelectorAll(".ready-btn").forEach(b => b.onclick = () => {
+    const cur = dayState(w, d, true);
+    const n = parseInt(b.dataset.n, 10);
+    cur.readiness = cur.readiness === n ? null : n;
+    stampDate(cur);
+    saveState(); render();
+  });
+  return el;
+}
+function renderShortToggle(w, d) {
+  const ds = dayState(w, d, false);
+  const on = !!(ds && ds.short);
+  const el = document.createElement("div");
+  el.className = "ctl";
+  el.innerHTML = `
+    <div class="ctl-label">Short Monday<span class="ctl-sub">Late night, championship week, or a 1 or 2 on the legs: just the two tracks, 15 minutes.</span></div>
+    <button class="btn toggle-btn ${on ? "on" : ""}">${on ? "ON · tracks only" : "off"}</button>`;
+  el.querySelector("button").onclick = () => { const cur = dayState(w, d, true); cur.short = !cur.short; saveState(); render(); };
+  return el;
+}
+function renderPrep(w, d, title, prefix, items) {
+  const ds = dayState(w, d, false);
+  const doneCount = items.filter((_, i) => ds && ds.prep[prefix + i]).length;
+  const el = document.createElement("div");
+  el.className = "prep" + (doneCount === items.length && doneCount > 0 ? " collapsed" : "");
+  el.innerHTML = `
+    <div class="prep-head"><span>${title} · ${doneCount}/${items.length}</span><span class="caret">▼</span></div>
+    <div class="prep-body"></div>`;
+  el.querySelector(".prep-head").onclick = () => el.classList.toggle("collapsed");
+  const bodyEl = el.querySelector(".prep-body");
+  items.forEach((it, i) => {
+    const k = prefix + i;
+    const isDone = !!(ds && ds.prep[k]);
+    const item = document.createElement("div");
+    item.className = "prep-item" + (isDone ? " done" : "");
+    item.innerHTML = `<span class="prep-check"><svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8 7 12 13 4"/></svg></span><span>${it}</span>`;
+    item.onclick = () => { const cur = dayState(w, d, true); cur.prep[k] = !isDone; saveState(); renderDay(d); };
+    bodyEl.appendChild(item);
+  });
+  return el;
+}
+
+function tagLabel(t) {
+  return ({ power: "Power", pull: "Pull", push: "Push", legs: "Legs", armor: "Armor", core: "Core", skill: "Skill", test: "Test", arms: "Arms" }[t]) || t;
+}
+function escapeHtml(s) { return String(s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
+
+function renderRow(w, d, row, key, plan) {
+  const ps = perState(w, d, false);
+  const p = resolve(row);
+  const isDone = !!(ps && ps.completed[key]);
+  const log = (ps && ps.logs[key]) || { weight: "", notes: "", hit: null };
+  const weightVal = parseWeight(log.weight);
+  const track = row.kind === "duo" && row.track;
+
+  let lastHtml = "";
+  if (track) {
+    const hist = priorEntries(p.name, w, d);
+    if (hist.length) {
+      const Lst = hist[0];
+      lastHtml = `<div class="ex-last">Last (W${Lst.week + 1} ${PROGRAM.dayLabels[Lst.day]}${Lst.date ? " · " + shortDate(Lst.date) : ""}): <strong>${fmtLoad(Lst.weight, p.bw)}</strong>` +
+        (p.isMax ? "" : (Lst.hit ? ` · <span class="ex-hit-flag yes">hit</span>` : ` · <span class="ex-hit-flag no">missed</span>`)) + `</div>`;
+    }
+  }
+  let suggHtml = "";
+  const sugg = track ? suggestNext(row, p, w, d) : null;
+  if (sugg) {
+    const label =
+      sugg.type === "up" ? `Try ${fmtLoad(sugg.weight, p.bw)}` :
+      sugg.type === "hold" ? `Hold ${fmtLoad(sugg.weight, p.bw)}, beat your reps` :
+      `Plateau: drop to ${fmtLoad(sugg.weight, p.bw)}${sugg.reps ? ` × ${sugg.reps}` : ""}`;
+    suggHtml = `<button class="ex-suggest ${sugg.type}" data-w="${sugg.weight}">${label}<span class="sg-tap">tap to use</span></button>`;
+  }
+  const detailHtml = row.detail ? `<div class="ex-detail">${row.detail.map(m => `<span class="dt-line">• ${m}</span>`).join("")}</div>` : "";
+  const cueHtml = row.cue ? `<div class="ex-cue">${row.cue}</div>` : (row.kind === "track" ? `<div class="ex-cue"><strong>Promote when:</strong> ${p.promote}</div>` : "");
+  const startAt = plan.offsets[key] != null ? Math.round(plan.offsets[key] / 60) : null;
+  const paceHtml = startAt !== null ? `<span style="color:var(--muted);font-weight:400"> · start ~${startAt} min in</span>` : "";
+
+  let timerLabel, timerMode;
+  if (row.timer) { timerLabel = row.timer.label || "⏱"; timerMode = "special"; }
+  else { timerLabel = row.rest >= 120 ? `⏱ ${Math.round(row.rest / 60)}m` : `⏱ ${row.rest}s`; timerMode = "rest"; }
+
+  const hitVal = log.hit === true ? "yes" : (log.hit === false ? "no" : "");
+  const hitLabel = p.repRange ? `All sets at the top (${p.repTop})?` : p.repTop ? `All sets of ${p.repTop}?` : `Done as written?`;
+
+  const el = document.createElement("div");
+  el.className = "exercise";
+  el.innerHTML = `
+    <div class="ex-row">
+      <div class="ex-check ${isDone ? "done" : ""}">
+        <svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8 7 12 13 4"/></svg>
+      </div>
+      <div class="ex-info">
+        <div><span class="ex-tag ${row.tag}">${tagLabel(row.tag)}</span><span class="ex-name">${p.name}</span></div>
+        <div class="ex-prescription"><strong>${p.rx}</strong>${paceHtml}</div>
+        ${detailHtml}
+        ${cueHtml}
+        ${lastHtml}
+        ${suggHtml}
+        <div class="ex-actions">
+          <a class="btn" href="${v(p.name)}" target="_blank" rel="noopener">▶ Video</a>
+          ${track ? `<button class="btn log-toggle">✎ Log</button>` : `<button class="btn log-toggle">✎ Note</button>`}
+          <button class="btn btn-timer row-timer" data-default="${timerLabel}">${timerLabel}</button>
+        </div>
+        <div class="ex-log">
+          ${track ? `
+          <div class="log-weight-row">
+            ${p.bw ? `<span class="unit">BW +</span>` : ""}
+            <input type="number" class="log-weight" inputmode="decimal" step="0.5" min="0"
+                   placeholder="${p.bw ? "Added lb · 0 = just BW" : "Weight"}" value="${weightVal === null ? "" : weightVal}">
+            <span class="unit">lb</span>
+          </div>
+          ${p.isMax ? "" : `
+          <div class="hit-label">${hitLabel}</div>
+          <div class="hit-row">
+            <button class="hit-btn hit-yes ${hitVal === "yes" ? "on-yes" : ""}">✓ Hit</button>
+            <button class="hit-btn hit-no ${hitVal === "no" ? "on-no" : ""}">✗ Missed</button>
+          </div>`}` : ""}
+          <textarea class="log-notes" placeholder="${row.kind === "track" ? "Reps or seconds per set, how it looked..." : "Notes: reps, how it felt, what to fix..."}">${escapeHtml(log.notes)}</textarea>
+        </div>
+      </div>
+    </div>`;
+
+  el.querySelector(".ex-check").onclick = () => {
+    const cur = dayState(w, d, true);
+    cur.per[L()].completed[key] = !isDone;
+    if (!isDone) stampDate(cur);
+    saveState(); renderDay(d); renderWeekBar();
+  };
+  function ensureLog() {
+    const cur = dayState(w, d, true);
+    const pp = cur.per[L()];
+    if (!pp.logs[key]) pp.logs[key] = { weight: null, hit: null, notes: "" };
+    stampDate(cur);
+    return pp.logs[key];
+  }
+  el.querySelector(".log-toggle").onclick = () => el.querySelector(".ex-log").classList.toggle("open");
+  if (weightVal !== null || log.notes || log.hit != null) el.querySelector(".ex-log").classList.add("open");
+  const suggBtn = el.querySelector(".ex-suggest");
+  if (suggBtn) suggBtn.onclick = () => { ensureLog().weight = parseFloat(suggBtn.dataset.w); saveState(); renderDay(d); };
+  const yesBtn = el.querySelector(".hit-yes"), noBtn = el.querySelector(".hit-no");
+  if (yesBtn) yesBtn.onclick = () => { const l = ensureLog(); l.hit = l.hit === true ? null : true; saveState(); renderDay(d); };
+  if (noBtn)  noBtn.onclick  = () => { const l = ensureLog(); l.hit = l.hit === false ? null : false; saveState(); renderDay(d); };
+  const wIn = el.querySelector(".log-weight");
+  if (wIn) wIn.addEventListener("input", e => { const raw = e.target.value.trim(); ensureLog().weight = raw === "" ? null : parseFloat(raw); saveState(); });
+  el.querySelector(".log-notes").addEventListener("input", e => { ensureLog().notes = e.target.value; saveState(); });
+
+  const tKey = `${dayKey(w, d)}_${L()}_${key}`;
+  const tBtn = el.querySelector(".row-timer");
+  reattachTimer(tKey, tBtn);
+  tBtn.onclick = () => {
+    if (activeTimers[tKey]) tapActiveTimer(tKey);
+    else if (timerMode === "special") startSpecialTimer(tKey, tBtn, row.timer);
+    else startCountdown(tKey, tBtn, row.rest, "rest");
+  };
+  return el;
+}
+
+/* ===========================================================================
+   FINISHER: pick from the block's menu, log a result, flag a PR.
+   =========================================================================== */
+function finEntries(name, lifter) {
+  const out = [];
+  for (let w = 0; w < NWEEKS; w++) for (const d of PROGRAM.dayOrder) {
+    const ds = dayState(w, d, false);
+    if (!ds) continue;
+    const f = ds.per[lifter].fin;
+    if (f && f.pick === name && f.result != null && f.result !== "") out.push({ week: w, day: d, date: ds.date, result: parseFloat(f.result), notes: f.notes });
+  }
+  return out;
+}
+function finUnit(name) {
+  for (const d of ["mon", "wed"]) for (const b of [1, 2, 3]) for (const f of FIN[d][b]) if (f.name === name) return f.unit;
+  return "";
+}
+function lowerIsBetter(name) { return /time trial|shuttle/i.test(name); }
+function renderFinisher(w, d, day) {
+  const ds = dayState(w, d, false);
+  const ps = perState(w, d, false);
+  const fin = (ps && ps.fin) || { pick: null, result: null, notes: "" };
+  const menu = w === 0 ? [{ name: "Plank high-fives", how: "Face to face in a plank, alternate hand slaps to 20.", hc: "Cooperative", unit: "slaps", coop: true }] : finMenu(w, d);
+  const wrap = document.createElement("div");
+  const judge = d === "mon" && L() === "son";
+  wrap.innerHTML = `<div class="block-label">Finisher · ${w === 0 ? "cooperative" : "Block " + blockOf(w)}</div><div class="block-note">${day.finNote}</div>`;
+  const menuEl = document.createElement("div");
+  menuEl.className = "fin-menu";
+  menu.forEach(f => {
+    const b = document.createElement("button");
+    b.className = "fin-opt" + (fin.pick === f.name ? " on" : "") + (f.coop ? " coop" : "");
+    b.innerHTML = `<div class="fo-name">${f.name}</div><div class="fo-how">${f.how}</div><div class="fo-hc">${f.hc}</div>`;
+    b.onclick = () => {
+      const cur = dayState(w, d, true);
+      LIFTERS.forEach(l => { if (!cur.per[l].fin.pick || cur.per[l].fin.pick !== f.name) { if (l === L() || !cur.per[l].fin.result) cur.per[l].fin.pick = f.name; } });
+      stampDate(cur);
+      saveState(); renderDay(d);
+    };
+    menuEl.appendChild(b);
+  });
+  wrap.appendChild(menuEl);
+  if (fin.pick) {
+    const unit = finUnit(fin.pick) || "";
+    const hist = finEntries(fin.pick, L()).filter(e => !(e.week === w && e.day === d));
+    const cur = fin.result != null && fin.result !== "" ? parseFloat(fin.result) : null;
+    let isPR = false;
+    if (cur != null && hist.length) {
+      const best = lowerIsBetter(fin.pick) ? Math.min(...hist.map(e => e.result)) : Math.max(...hist.map(e => e.result));
+      isPR = lowerIsBetter(fin.pick) ? cur < best : cur > best;
+    } else if (cur != null && !hist.length) isPR = true;
+    const res = document.createElement("div");
+    if (judge) {
+      res.className = "block-note";
+      res.innerHTML = `<strong>Son judges today.</strong> Count Dad's reps, call the no-reps, run the clock. Switch to Ryan to log his result.`;
+    } else {
+      res.className = "fin-result";
+      res.innerHTML = `<span class="unit">${LIFTER_LABEL[L()]}'s result</span><input type="number" inputmode="decimal" step="0.1" placeholder="${unit}" value="${fin.result == null ? "" : fin.result}"><span class="unit">${unit}${isPR ? '<span class="pr-flag">PR</span>' : ""}</span>`;
+      res.querySelector("input").addEventListener("change", e => {
+        const c = dayState(w, d, true);
+        c.per[L()].fin.result = e.target.value === "" ? null : e.target.value;
+        stampDate(c); saveState(); renderDay(d);
+      });
+    }
+    wrap.appendChild(res);
+    if (hist.length) {
+      const best = lowerIsBetter(fin.pick) ? Math.min(...hist.map(e => e.result)) : Math.max(...hist.map(e => e.result));
+      const bn = document.createElement("div"); bn.className = "ex-last"; bn.style.marginTop = "6px";
+      bn.innerHTML = `${LIFTER_LABEL[L()]}'s best so far: <strong>${fmtWeight(best)} ${unit}</strong> · ${hist.length} logged`;
+      wrap.appendChild(bn);
+    }
+  }
+  return wrap;
+}
+
+/* ===========================================================================
+   BENCHMARKS TAB
+   =========================================================================== */
+const BENCH_METRICS = [
+  { k: "hang", label: "Dead hang", unit: "s" },
+  { k: "neg", label: "Negative", unit: "s", sub: "controlled lower" },
+  { k: "pushLevel", label: "Push-up level", unit: "1-6", sub: "Ryan: 1-4" },
+  { k: "pushReps", label: "Clean push-ups", unit: "reps", sub: "at that level" },
+  { k: "pullup", label: "Pull-up attempt", unit: "reps" },
+  { k: "broad", label: "Broad jump", unit: "in" },
+  { k: "hopL", label: "SL hop left", unit: "in" },
+  { k: "hopR", label: "SL hop right", unit: "in" },
+  { k: "height", label: "Height", unit: "in", sub: "wall mark" },
+  { k: "shuttle", label: "5-10-5", unit: "s", cols: [8, 12], lower: true }
+];
+function benchVal(l, wk, k) { const b = state.bench[l][String(wk)]; return b && b[k] != null && b[k] !== "" ? parseFloat(b[k]) : null; }
+function renderBench() {
+  const l = L();
+  const card = document.getElementById("bench-card");
+  const cols = BENCH_WEEKS;
+  const colLabel = wk => wk === 1 ? "Day 1" : `W${wk}`;
+  let html = `<h2>Benchmarks · ${LIFTER_LABEL[l]}</h2><p>Four numbers with no maxes, taken on Day 1 and in weeks 4, 8 and 12. The small figure under each cell is the change from Day 1.</p><div class="bench-wrap"><table class="bench"><tr><th>Test</th>${cols.map(c => `<th>${colLabel(c)}</th>`).join("")}</tr>`;
+  BENCH_METRICS.forEach(m => {
+    html += `<tr><td>${m.label}<small>${m.unit}${m.sub ? " · " + m.sub : ""}</small></td>`;
+    const base = benchVal(l, 1, m.k);
+    cols.forEach(wk => {
+      if (m.cols && !m.cols.includes(wk)) { html += `<td class="na">·</td>`; return; }
+      const val = benchVal(l, wk, m.k);
+      let delta = "";
+      if (wk !== 1 && val != null && base != null) {
+        const diff = val - base;
+        const good = m.lower ? diff < 0 : diff > 0;
+        const cls = diff === 0 ? "flat" : good ? "up" : "down";
+        delta = `<span class="delta ${cls}">${diff > 0 ? "+" : ""}${fmtWeight(diff)}</span>`;
+      }
+      html += `<td><input type="number" inputmode="decimal" step="0.5" data-wk="${wk}" data-k="${m.k}" value="${val == null ? "" : val}" placeholder="–">${delta}</td>`;
+    });
+    html += `</tr>`;
+  });
+  // Computed rows
+  html += `<tr class="computed"><td>L / R symmetry<small>smaller ÷ larger hop</small></td>`;
+  cols.forEach(wk => {
+    const a = benchVal(l, wk, "hopL"), b = benchVal(l, wk, "hopR");
+    html += `<td>${a != null && b != null && Math.max(a, b) > 0 ? Math.round(100 * Math.min(a, b) / Math.max(a, b)) + "%" : "–"}</td>`;
+  });
+  html += `</tr><tr class="computed"><td>Broad jump ÷ height<small>ratio</small></td>`;
+  cols.forEach(wk => {
+    const a = benchVal(l, wk, "broad"), h = benchVal(l, wk, "height");
+    html += `<td>${a != null && h ? (a / h).toFixed(2) : "–"}</td>`;
+  });
+  html += `</tr></table></div>
+    <div class="note-box">Symmetry within about 10% (90%+) means the two legs are even. Ryan: that is the Achilles number. Son: a growth spurt of about half an inch a month in the height row means hold the jump volume flat.</div>`;
+  card.innerHTML = html;
+  card.querySelectorAll("input[data-wk]").forEach(inp => inp.addEventListener("change", e => {
+    const wk = e.target.dataset.wk, k = e.target.dataset.k;
+    if (!state.bench[l][wk]) state.bench[l][wk] = {};
+    state.bench[l][wk][k] = e.target.value === "" ? null : e.target.value;
+    saveState(); renderBench();
+  }));
+}
+
+/* ===========================================================================
+   RECORDS TAB: best finisher result per lifter, with history.
+   =========================================================================== */
+function renderRecords() {
+  const card = document.getElementById("records-card");
+  const names = new Set();
+  ["mon", "wed"].forEach(d => [1, 2, 3].forEach(b => FIN[d][b].forEach(f => names.add(f.name))));
+  names.add("Plank high-fives");
+  let html = `<h2>Records</h2><p>Every finisher result, both lifters. The whiteboard, kept.</p>`;
+  let any = false;
+  names.forEach(name => {
+    const unit = finUnit(name);
+    const rows = LIFTERS.map(l => ({ l, hist: finEntries(name, l) })).filter(x => x.hist.length);
+    if (!rows.length) return;
+    any = true;
+    html += `<div class="rec"><div class="rec-name">${name}</div>`;
+    rows.forEach(({ l, hist }) => {
+      const best = lowerIsBetter(name) ? Math.min(...hist.map(e => e.result)) : Math.max(...hist.map(e => e.result));
+      html += `<div class="rec-best">${LIFTER_LABEL[l]}: <strong>${fmtWeight(best)} ${unit}</strong> best of ${hist.length}</div>`;
+      html += `<div class="rec-hist">${hist.map(e => `W${e.week + 1} ${PROGRAM.dayLabels[e.day]}${e.date ? " " + shortDate(e.date) : ""}: ${fmtWeight(e.result)}`).join(" · ")}</div>`;
+    });
+    html += `</div>`;
+  });
+  if (!any) html += `<div class="note-box">No finisher results yet. Pick a finisher at the bottom of a session and log the result there.</div>`;
+  card.innerHTML = html;
+}
+
+/* ===========================================================================
+   PRINCIPLES + NOTES
+   =========================================================================== */
+function buildPrinciples() {
+  document.getElementById("principles-card").innerHTML = `
+    <h2>Why the program looks like this</h2>
+    <h3>Strength training is safe and useful for a 13-year-old, done this way</h3>
+    <p>The NSCA position statement and the 2014 international consensus on youth resistance training both say the same thing: supervised, technique-first strength work is safe for adolescents and improves performance and injury resistance. The risk sits in unsupervised maxing and poor form, not in the training itself. So: never to failure, two reps in the tank, one cue per set.</p>
+    <h3>Gains at this age are mostly neural</h3>
+    <p>Before and during puberty the body gets stronger by learning to recruit what it already has, more than by adding muscle. Clean reps in the 6 to 12 range build that. Heavy low-rep sets add little right now and cost technique. The barbell waits for Cycle 2.</p>
+    <h3>The growth spurt changes the rules</h3>
+    <p>Boys typically hit peak height velocity around 13.5 to 14. Limbs lengthen before control catches up, so coordination dips and a swing that looked clean in week 3 can look clumsy in week 7. That is growth, not regression. Tell him in advance. Bones outgrow muscles, so quads, hip flexors and calves tighten: the couch and calf stretches stay in every warm-up. If the height mark moves about half an inch a month, hold jump volume flat.</p>
+    <h3>Growth-plate pain rule</h3>
+    <p>Runners and jumpers his age are the classic profile for Osgood-Schlatter (pain on the bump below the kneecap) and Sever's (heel pain). If either spot hurts, jumps come out that day, no pushing through. If it lingers past a week or two, it goes to his doctor.</p>
+    <h3>He already runs thousands of ground contacts a week</h3>
+    <p>Cross-country and club soccer supply the conditioning and most of the impact. The garage adds what they do not: strength, landing mechanics and armor. Jumps are capped (20 to 30 contacts in season, 40 in Block 3), landings are stuck and silent, and the ladder is footwork, not speed. Fast-twitch work comes from jumps, swings and med ball throws.</p>
+    <h3>Armor is the highest-value block</h3>
+    <p>Nordic hamstring lowers and Copenhagen planks are the best-evidenced exercises for cutting hamstring and groin injuries in field-sport athletes. They start tiny (2 × 3) because they cause real soreness in beginners and he has practice that afternoon.</p>
+    <h3>Sleep is part of the program</h3>
+    <p>A 6:00 a.m. session on a race day costs sleep unless bedtime moves up. A teen athlete needs 8 to 10 hours. Sunday lights out by 9:00, or Monday becomes the short version.</p>
+    <h3>Monday is upper only, and it is fine</h3>
+    <p>A submax pull and push session twelve hours before a race costs the legs nothing. The guardrails are intensity and sleep, not minutes. Stop at the first slow rep. Championship weeks run the short version.</p>
+    <h3>Ryan's column</h3>
+    <p>Same movements, harder progressions, and a rebuild target of his own: the Achilles is healed, the explosion is not fully back. Tendon stiffness returns through heavy, slow calf work (the 3 × 8 with a 3-second lower). Reactive ability returns through short ground contacts (pogos, depth drops). The single-leg hop, left against right, is the honest measure.</p>
+    <h3>The success metric</h3>
+    <p>He asked for this. The number that matters is whether he wants to come back next week. He picks the finisher and the music. Handicaps let him win. One cue per set, not five.</p>
+    <div class="src">Sources: Faigenbaum et al., NSCA position statement on youth resistance training (2009); Lloyd et al., international consensus on youth resistance training (2014); Balyi, Long-Term Athlete Development; van der Horst et al. on Nordic hamstring exercise in amateur soccer (2015); Harøy et al. on the Copenhagen adduction programme (2019); American Academy of Sleep Medicine consensus on adolescent sleep (2016).</div>`;
+}
+function buildNotes() {
+  document.getElementById("notes-card").innerHTML = `
+    <h2>How this tracker works</h2>
+    <p><strong>Two lifters, one phone.</strong> The Son / Ryan toggle at the top switches every check, load, track, benchmark and finisher result to that person. Both of you check off the same session standing at the same phone.</p>
+    <p><strong>Week pills</strong> pick the week, <strong>Mon / Wed</strong> pick the session. Week 1 has only Wednesday: Day 1. Pills with an amber underline are benchmark weeks.</p>
+    <h3>The two tracks</h3>
+    <p>The pull-up step and the push-up level live in the hero card and drive the A block on Mondays. When the promotion rule under the track is met, tap <strong>▲ Promote</strong>. Tap ▼ if a level turns out too early. Growth can push a level back and that is normal.</p>
+    <h3>Loads and the coach</h3>
+    <p>Tap <strong>✎ Log</strong> on a loaded lift, enter the weight, and tap <strong>✓ Hit</strong> if every set landed at the top. Next time that lift appears you get a chip: green adds 5 lb (10 on Ryan's lower lifts), grey holds and says beat the reps, amber flags a plateau after three misses at one weight. Bodyweight rows stay quiet until a load is logged. The Son's coach fires on about six rows, which is right for a bodyweight program.</p>
+    <h3>Readiness and short Monday</h3>
+    <p>Wednesday opens with <strong>legs, 1 to 5</strong>. A 1 or 2 turns the jump block off and reminds you to drop a set. Monday has a <strong>Short Monday</strong> toggle that collapses the session to the two tracks: for a late Sunday, a championship week, or a rough morning.</p>
+    <h3>Finishers and records</h3>
+    <p>Every session ends with a pick from three. Log the result and the app flags a PR against that lifter's history. The Records tab is the whiteboard. Monday finishers are Ryan's, with Son as judge; Wednesday is both.</p>
+    <h3>Benchmarks</h3>
+    <p>Day 1, W4, W8, W12. Dead hang, negative, push-up level and reps, pull-up attempt, broad jump, single-leg hop left and right, height, and the 5-10-5 from W8. The delta under each cell is against Day 1. Symmetry and jump-to-height ratio are computed.</p>
+    <h3>Timers</h3>
+    <ul>
+      <li><strong>⏱ 90s</strong> rest countdown, beeps and buzzes at zero. Tap mid-run to cancel.</li>
+      <li><strong>⏱ Stopwatch</strong> for the hang and negative tests. Tap to stop, tap again to reset.</li>
+      <li><strong>Session clock</strong> in the day toolbar tells you if you are ahead of or behind the planned time.</li>
+    </ul>
+    <div class="note-box">Designed 2026-09-21 for a 13-year-old cross-country and club soccer athlete and his dad. Cycle 2 (winter, no competing sport) is where volume, the barbell and full plyo dose belong.</div>`;
+}
+
+/* ===========================================================================
+   STATS
+   =========================================================================== */
+function updateStats() {
+  const cw = currentWeek();
+  document.getElementById("stat-week").textContent = "W" + (cw + 1);
+  let daysDone = 0, total = 0;
+  for (let w = 0; w < NWEEKS; w++) PROGRAM.dayOrder.forEach(d => { if (!hasDay(w, d)) return; total++; if (isDayComplete(w, d, L())) daysDone++; });
+  document.getElementById("stat-days").textContent = daysDone;
+  const wk = uiWeek != null ? uiWeek : cw;
+  const wkDays = PROGRAM.dayOrder.filter(d => hasDay(wk, d));
+  const thisWeek = wkDays.filter(d => isDayComplete(wk, d, L())).length;
+  document.getElementById("stat-thisweek").textContent = `${thisWeek} / ${wkDays.length}`;
+  document.getElementById("stat-overall").textContent = Math.round(100 * daysDone / total) + "%";
+  const due = dueDay(wk);
+  document.querySelectorAll(".tab").forEach(tab => {
+    const dot = tab.querySelector(".due-dot");
+    if (dot) dot.hidden = tab.dataset.pane !== due;
+  });
+}
+function render() {
+  renderLifter();
+  renderTracks();
+  renderWeekBar();
+  renderPhase();
+  PROGRAM.dayOrder.forEach(renderDay);
+  renderBench();
+  renderRecords();
+  updateStats();
+}
+
+/* ===========================================================================
+   SESSION CLOCK
+   =========================================================================== */
+const sessionClocks = {};
+function wireClock(d, w, plan) {
+  const btn = document.getElementById("clock-" + d);
+  const stat = document.getElementById("clockstat-" + d);
+  const key = dayKey(w, d);
+  function paint() {
+    const cur = dayState(w, d, false);
+    if (!cur || !cur.clockStart) { btn.textContent = "▶ Session clock"; btn.classList.remove("running"); stat.textContent = ""; return; }
+    const elapsed = Math.round(((cur.clockStop || Date.now()) - cur.clockStart) / 1000);
+    btn.textContent = (cur.clockStop ? "■ " : "") + fmtClock(elapsed);
+    btn.classList.toggle("running", !cur.clockStop);
+    const rows = mainRows(w, d);
+    const ps = cur.per[L()];
+    const next = rows.find(x => !ps.completed[x.key]);
+    let msg = `target ${fmtMins(plan.total)}`;
+    if (next && rows.indexOf(next) > 0) {
+      const planned = plan.offsets[next.key] != null ? plan.offsets[next.key] : plan.total;
+      const delta = Math.round((planned - elapsed) / 60);
+      msg = (delta >= 1 ? `${delta} min ahead` : delta <= -1 ? `${-delta} min behind` : "on pace") + ` · target ${fmtMins(plan.total)}`;
+    } else if (!next && rows.length) msg = `done in ${fmtClock(elapsed)}`;
+    stat.textContent = msg;
+  }
+  function syncInterval() {
+    if (sessionClocks[key]) { clearInterval(sessionClocks[key]); delete sessionClocks[key]; }
+    const cur = dayState(w, d, false);
+    if (cur && cur.clockStart && !cur.clockStop) sessionClocks[key] = setInterval(paint, 1000);
+  }
+  btn.onclick = () => {
+    const cur = dayState(w, d, true);
+    if (!cur.clockStart) { cur.clockStart = Date.now(); cur.clockStop = null; stampDate(cur); }
+    else if (!cur.clockStop) { cur.clockStop = Date.now(); }
+    else { cur.clockStart = null; cur.clockStop = null; }
+    saveState(); syncInterval(); paint();
+  };
+  syncInterval();
+  paint();
+}
+function fmtClock(s) { const m = Math.floor(s / 60), sec = s % 60; return `${m}:${String(sec).padStart(2, "0")}`; }
+
+/* ===========================================================================
+   TIMERS: countdown, interval, stopwatch. One engine, one map.
+   =========================================================================== */
+const activeTimers = {};
+let audioCtx = null;
+function ensureAudio() {
+  if (audioCtx) return audioCtx;
+  try { const AC = window.AudioContext || window.webkitAudioContext; if (AC) audioCtx = new AC(); } catch (e) {}
+  return audioCtx;
+}
+function tone(offsets, freqs) {
+  const ctx = ensureAudio();
+  if (ctx) {
+    const now = ctx.currentTime;
+    offsets.forEach((off, i) => {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.type = "sine"; osc.frequency.value = freqs[i] || 880;
+      gain.gain.setValueAtTime(0, now + off);
+      gain.gain.linearRampToValueAtTime(0.25, now + off + 0.01);
+      gain.gain.linearRampToValueAtTime(0, now + off + 0.14);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + off); osc.stop(now + off + 0.16);
+    });
+  }
+  if (navigator.vibrate) { try { navigator.vibrate(120); } catch (e) {} }
+}
+function beepDone() { tone([0, 0.18, 0.36], [880, 880, 1100]); if (navigator.vibrate) { try { navigator.vibrate([120, 80, 120, 80, 200]); } catch (e) {} } }
+function beepPhase() { tone([0], [990]); }
+function paintRunning(btn, text) { if (!btn) return; btn.classList.add("running"); btn.classList.remove("done", "paused"); btn.textContent = text; }
+function paintPaused(btn, text) { if (!btn) return; btn.classList.remove("running", "done"); btn.classList.add("paused"); btn.textContent = text; }
+function paintDone(btn) {
+  if (!btn || !btn.isConnected) return;
+  btn.classList.remove("running", "paused"); btn.classList.add("done");
+  btn.textContent = "Done!";
+  setTimeout(() => { if (btn && btn.isConnected) { btn.classList.remove("done"); btn.textContent = btn.dataset.default || "⏱"; } }, 1800);
+}
+function paintReset(btn) {
+  if (!btn || !btn.isConnected) return;
+  btn.classList.remove("running", "done", "paused");
+  btn.textContent = btn.dataset.default || "⏱";
+}
+function startCountdown(key, btn, secs) {
+  ensureAudio(); if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  const endsAt = Date.now() + secs * 1000;
+  paintRunning(btn, fmtClock(secs));
+  const iv = setInterval(() => {
+    const t = activeTimers[key]; if (!t) return;
+    const remaining = Math.round((t.endsAt - Date.now()) / 1000);
+    if (remaining <= 0) { clearInterval(t.iv); const b = t.btn; delete activeTimers[key]; paintDone(b); beepDone(); }
+    else paintRunning(t.btn, fmtClock(remaining));
+  }, 250);
+  activeTimers[key] = { mode: "down", endsAt, iv, btn };
+}
+function startSpecialTimer(key, btn, spec) {
+  ensureAudio(); if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  if (spec.kind === "down") return startCountdown(key, btn, spec.secs);
+  if (spec.kind === "interval") {
+    const sched = [];
+    for (let r = 0; r < spec.rounds; r++) spec.segs.forEach(([label, secs]) => sched.push({ label, secs, round: r + 1 }));
+    const t = { mode: "interval", btn, sched, si: 0, phaseEnds: Date.now() + sched[0].secs * 1000, rounds: spec.rounds };
+    paintRunning(btn, phaseText(t, sched[0].secs));
+    t.iv = setInterval(() => {
+      const cur = activeTimers[key]; if (!cur) return;
+      let remaining = Math.round((cur.phaseEnds - Date.now()) / 1000);
+      if (remaining <= 0) {
+        cur.si++;
+        if (cur.si >= cur.sched.length) { clearInterval(cur.iv); const b = cur.btn; delete activeTimers[key]; paintDone(b); beepDone(); return; }
+        beepPhase();
+        cur.phaseEnds = Date.now() + cur.sched[cur.si].secs * 1000;
+        remaining = cur.sched[cur.si].secs;
+      }
+      paintRunning(cur.btn, phaseText(cur, remaining));
+    }, 250);
+    activeTimers[key] = t;
+    return;
+  }
+  if (spec.kind === "watch") {
+    const t = { mode: "watch", btn, startedAt: Date.now(), stopped: null };
+    paintRunning(btn, "0:00");
+    t.iv = setInterval(() => {
+      const cur = activeTimers[key]; if (!cur || cur.stopped != null) return;
+      paintRunning(cur.btn, fmtClock(Math.round((Date.now() - cur.startedAt) / 1000)));
+    }, 250);
+    activeTimers[key] = t;
+  }
+}
+function phaseText(t, remaining) { const seg = t.sched[t.si]; return `${seg.label.slice(0, 4)} ${fmtClock(remaining)} · ${seg.round}/${t.rounds}`; }
+function tapActiveTimer(key) {
+  const t = activeTimers[key];
+  if (!t) return;
+  if (t.mode === "watch") {
+    if (t.stopped == null) { t.stopped = Date.now(); paintPaused(t.btn, "■ " + fmtClock(Math.round((t.stopped - t.startedAt) / 1000))); }
+    else { clearInterval(t.iv); delete activeTimers[key]; paintReset(t.btn); }
+    return;
+  }
+  clearInterval(t.iv);
+  const btn = t.btn;
+  delete activeTimers[key];
+  paintReset(btn);
+}
+function reattachTimer(key, btn) {
+  const t = activeTimers[key];
+  if (!btn || !t) return;
+  t.btn = btn;
+  if (t.mode === "down") { const remaining = Math.round((t.endsAt - Date.now()) / 1000); if (remaining > 0) paintRunning(btn, fmtClock(remaining)); }
+  else if (t.mode === "interval") paintRunning(btn, phaseText(t, Math.max(0, Math.round((t.phaseEnds - Date.now()) / 1000))));
+  else if (t.mode === "watch") {
+    if (t.stopped == null) paintRunning(btn, fmtClock(Math.round((Date.now() - t.startedAt) / 1000)));
+    else paintPaused(btn, "■ " + fmtClock(Math.round((t.stopped - t.startedAt) / 1000)));
+  }
+}
+
+/* ===========================================================================
+   WIRING
+   =========================================================================== */
+document.getElementById("reset-btn").onclick = () => {
+  if (confirm("Reset ALL tracking for both lifters? Every check, log, track, benchmark and record will be cleared.")) {
+    state = emptyState(); saveState(); uiWeek = 0; render();
+  }
+};
+
+buildShell();
+uiWeek = currentWeek();
+render();
+(function openDueTab() {
+  const tab = document.querySelector(`.tab[data-pane="${dueDay(uiWeek)}"]`);
+  if (tab) tab.click();
+})();
+</script>
+</body>
+</html>

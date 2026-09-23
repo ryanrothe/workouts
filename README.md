@@ -1,6 +1,6 @@
 # Exercise Library
 
-One PWA that wraps nine workout programs: **The Functional Method 1.0**, **The Functional Method 2.0**, **Hyrox Home Engine**, **Achilles Rebuild**, **Athletic AF**, **Hotel Workouts** (Madsen upper/lower split), **KB Shred**, **6-Day PPL**, and **Full Body Aesthetics**.
+One PWA that wraps ten workout programs: **Father & Son Strength**, **The Functional Method 1.0**, **The Functional Method 2.0**, **Hyrox Home Engine**, **Achilles Rebuild**, **Athletic AF**, **Hotel Workouts** (Madsen upper/lower split), **KB Shred**, **6-Day PPL**, and **Full Body Aesthetics**.
 
 Launcher at the root picks a program. Each sub-app keeps its own data, its own features, and its own per-program accent color — but they share one design system, one PWA shell, and one home-screen icon.
 
@@ -8,6 +8,7 @@ Launcher at the root picks a program. Each sub-app keeps its own data, its own f
 
 | Program | Length | Cadence | Focus |
 |---|---|---|---|
+| **Father & Son Strength** | 12 weeks | 2×/week | Ryan and his 13-year-old son, cross-country and club soccer in season. Mon upper (meet day), Wed lower. Two lifters on one tracker with a Son / Ryan toggle; pull-up step and push-up level tracks; readiness check and short-Monday mode; finisher menus with PRs; Day 1 / W4 / W8 / W12 benchmarks with L/R symmetry. Progression coach on loaded rows, timers, session clock. |
 | **The Functional Method 1.0** | 8 weeks | 4×/week + 2 mobility | JTM Fit (John Madsen) functional strength — Mon full body, Tue upper, Thu KB/DB complexes, Fri legs, Wed/Sat mobility circuits. Week-phased with per-exercise weight logging, cross-week "Last:" recall by exercise name, automatic load progression (hit the top of the range → +5/+10 lb), rest/interval/accumulate timers, a session pacing clock, and a **60-minute mode** that re-plans each day to fit an hour. |
 | **The Functional Method 2.0** | 8 weeks | 6×/week | JTM Fit sequel — heavy top sets (3-5×5), ladders and AMRAP finishers, KB complexes, mobility circuits. Same tracker engine as 1.0: progression coach, timers, session clock, 60-minute mode. |
 | **Hyrox Home Engine** | 12 weeks | 4×/week | Hyrox-style conditioning on a home gym. Low-impact cardio (no programmed running), creative sled substitutes, a travel/hotel mode that swaps every exercise inline, and a Benchmarks tab that charts engine tests across the test weeks. |
@@ -22,7 +23,7 @@ Launcher at the root picks a program. Each sub-app keeps its own data, its own f
 
 ```
 exercise-library/
-├── index.html              ← Launcher (9 program tiles; TFM 1.0/2.0 first)
+├── index.html              ← Launcher (10 program tiles; Father & Son first, then TFM 1.0/2.0)
 ├── manifest.webmanifest    ← PWA manifest — installs as "Exercise Library"
 ├── sw.js                   ← Shared service worker (offline cache)
 ├── icon-180.png            ← Dumbbell icon — used by iOS Add to Home Screen
@@ -31,6 +32,8 @@ exercise-library/
 ├── favicon.png             ← Browser-tab favicon (64×64)
 ├── shared/
 │   └── styles.css          ← Design tokens + shared components (appbar, cards, buttons, day card, exercise rows)
+├── father-son/
+│   └── index.html          ← Father & Son Strength — 12-week two-lifter program (self-contained)
 ├── tfm-1/
 │   └── index.html          ← The Functional Method 1.0 — 8-week JTM Fit program (self-contained)
 ├── tfm-2/
@@ -71,6 +74,7 @@ The merge **preserves all logged data**. Each sub-app keeps its original `localS
 
 | Sub-app | Key | What it holds |
 |---|---|---|
+| Father & Son Strength | `father_son_v1` | Active lifter; per week/day: date, session clock, readiness, short-Monday flag, warm-up checks, and per lifter: checks, weight + hit + notes logs, finisher pick/result; per lifter: pull-up step, push-up level, benchmark table |
 | The Functional Method 1.0 | `tfm1_v1` | 60-min-mode flag; per week/day: date, session clock, checks (warm-up/main/cool-down), weight + hit-the-range + notes logs |
 | The Functional Method 2.0 | `tfm2_v1` | Same shape as TFM 1.0 |
 | Hyrox | `hyrox_home_v1` | Current week, travel-mode flag, checked exercises, per-exercise logs, benchmark + simulation times |

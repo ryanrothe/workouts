@@ -92,6 +92,11 @@ body[data-program="tfm-2"] {
   --primary-soft: #fdecec;
   --primary-line: #f3b8b8;
 }
+body[data-program="father-son"] {
+  --primary:      #4338ca;     /* indigo — Father & Son Strength */
+  --primary-soft: #eef0ff;
+  --primary-line: #c7c9f5;
+}
 body[data-program="launcher"] {
   --primary:      #1a1f2b;     /* neutral charcoal for the menu */
   --primary-soft: #eef0f4;

@@ -2,12 +2,14 @@
    Caches the launcher + all three sub-apps + shared styles + program data + icons.
    Network-first for HTML, cache-first for static assets. */
 
-const CACHE = 'exercise-library-v13';
+const CACHE = 'exercise-library-v14';
 const PRECACHE = [
   './',
   './index.html',
   './manifest.webmanifest',
   './shared/styles.css',
+  './father-son/',
+  './father-son/index.html',
   './tfm-1/',
   './tfm-1/index.html',
   './tfm-2/',

@@ -722,9 +722,10 @@ function wednesday(w) {
     duo("Broad Jump 3 x 3 (stuck landing)", "Broad Jump 3 x 3 (stuck landing)", 60, "power", { track: false, cue: "Silent landing. Hold it for a two-count." }),
     duo("Lateral Bound 2 x 3 (each side · stick)", "Lateral Bound 2 x 3 (each side · stick)", 60, "power", { track: false })
   ];
+  plyo.push(duo("Single-Leg Hop 2 x 3 (each side · stick)", "Left-Leg Hop 2 x 5 (stick)", 60, "power", { track: false, cue: "Son: both sides, quiet landings. Ryan: left only until the hop gap closes; retest at W4, target 85% by W8, 90% by W12." }));
   if (b >= 2) plyo.push(duo("Pogo Hops 2 x 8 (only if not in peak growth)", "Pogo Hops 3 x 10", 45, "power", { track: false, cue: "Short ground contact. Stiff ankle, quiet feet." }));
   if (b >= 2) plyo.push(duo("Depth Drop 2 x 3 (from the 18 in box · stick · Block 3 only)", `Depth Drop 3 x 3 (from the 18 in box${b === 3 ? " into a jump" : " · stick"})`, 60, "power", { track: false, cue: "Ryan's reactive rebuild. Step off, land, stick. Block 3: land and jump." }));
-  blocks.push({ label: "Plyo", plyo: true, note: `In-season cap: ${b === 3 ? "40" : "20 to 30"} ground contacts. Readiness 1 or 2 turns this block off.`, rows: plyo });
+  blocks.push({ label: "Plyo", plyo: true, note: `In-season cap: ${b === 3 ? "40" : "20 to 30"} ground contacts for Son. Readiness 1 or 2 turns this block off.`, rows: plyo });
 
   const aRows = [
     duo(`Goblet Squat ${S} 8 (3-second lower)`, `KB Goblet Squat ${S} 8 (3-second lower)`, 90, "legs", { cue: "Son 15-20 lb DB. Ryan 70 lb bell. Earn the next weight with no wobble." })
@@ -743,7 +744,7 @@ function wednesday(w) {
   blocks.push({ label: "Armor", note: "The best-evidenced injury prevention a runner and soccer player can do. Nordics cause real soreness at first; add one rep a week.", rows: [
     duo(`Nordic Hamstring Lower ${nordicSets} x ${nordic} (Ryan holds the ankles)`, `Nordic Hamstring Lower ${nordicSets} x ${nordic}`, 90, "armor", { track: false, cue: "Lower as slowly as possible. Hands catch. Hips stay open." }),
     duo(`Copenhagen Plank 2 x ${b === 3 ? 20 : 15} seconds (each side · knee on the flat bench)`, `Copenhagen Plank 2 x ${b === 3 ? 30 : 20} seconds (each side · foot on the flat bench)`, 45, "armor", { track: false }),
-    duo("Calf Raise (BW) 2 x 12 (on a bumper edge)", "Heavy Calf Raise 3 x 8 (3-second lower · straight knee, then bent knee)", 60, "armor", { cue: "Ryan: this is the Achilles spring work. 70 lb bell or heavy DBs, slow lower." })
+    duo("Calf Raise (BW) 2 x 12 (on a bumper edge)", "Heavy Calf Raise 3 x 8 (3-second lower · straight knee, then bent knee)", 60, "armor", { cue: "Ryan: this is the Achilles spring work. 70 lb bell or heavy DBs, slow lower. Extra set on the LEFT until the hop gap closes (Day 1: L 48 vs R 63, 76%)." })
   ]});
   blocks.push({ label: "Finish", note: null, rows: [
     duo("DB Farmer Carry 2 x 1 (2 trips · 25 lb each hand)", "KB Farmer Carry 2 x 1 (2 trips · 70 lb each hand)", 60, "core", { cue: "Tall posture the whole way." }),
@@ -798,6 +799,13 @@ const PROGRAM = {
 /* ===========================================================================
    STATE. One key, everything namespaced per lifter where it differs.
    =========================================================================== */
+/* Day 1 results, 2026-09-23. Seeded once into the Day 1 column and the track starting
+   steps; anything already entered by hand wins. */
+const DAY1 = {
+  son:  { hang: 58, neg: 4,  pushLevel: 3, pushReps: 6,  broad: 68.5, hopL: 62.5, hopR: 58, height: 64.5 },
+  ryan: { hang: 65, neg: 31, pushLevel: 3, pushReps: 32, broad: 84.5, hopL: 48,   hopR: 63, height: 76 }
+};
+const DAY1_TRACKS = { son: { pullup: 1, pushup: 2 }, ryan: { pullup: 1, pushup: 2 } };   // 0-based: son negatives + 18 in box; Ryan weighted +10 + dips
 const STORAGE_KEY = PROGRAM.storageKey;
 const NWEEKS = PROGRAM.weeks.length;
 let state = loadState();
@@ -806,7 +814,19 @@ let uiWeek = null;
 
 function dayKey(w, d) { return `w${w}_${d}`; }
 function emptyState() {
-  return { lifter: "son", renumbered: true, days: {}, tracks: { son: { pullup: 0, pushup: 0 }, ryan: { pullup: 0, pushup: 0 } }, bench: { son: {}, ryan: {} } };
+  const s = { lifter: "son", renumbered: true, days: {}, tracks: { son: { pullup: 0, pushup: 0 }, ryan: { pullup: 0, pushup: 0 } }, bench: { son: {}, ryan: {} } };
+  seedDay1(s, {});
+  return s;
+}
+function seedDay1(s, p) {
+  if (p.seededDay1) { s.seededDay1 = true; return; }
+  LIFTERS.forEach(l => {
+    const cell = Object.assign({}, s.bench[l]["0"] || {});
+    Object.keys(DAY1[l]).forEach(k => { if (cell[k] == null || cell[k] === "") cell[k] = DAY1[l][k]; });
+    s.bench[l]["0"] = cell;
+    Object.keys(DAY1_TRACKS[l]).forEach(k => { if (!s.tracks[l][k]) s.tracks[l][k] = DAY1_TRACKS[l][k]; });
+  });
+  s.seededDay1 = true;
 }
 function loadState() {
   try {
@@ -822,6 +842,7 @@ function loadState() {
         if (s.bench[l]["1"] && !s.bench[l]["0"] && !p.renumbered) { s.bench[l]["0"] = s.bench[l]["1"]; delete s.bench[l]["1"]; }   // Day 1 moved from W1 to W0 on 2026-09-22
       });
       s.renumbered = true;
+      seedDay1(s, p);
       return s;
     }
   } catch (e) {}

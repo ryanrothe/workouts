@@ -351,6 +351,51 @@ p { margin: 0 0 8px; }
 .ex-log textarea { resize: vertical; min-height: 44px; }
 
 /* ============================================================================
+   Set grid + coach chip (shared/setlog.js). Prefixed sl- so they never
+   collide with a program's own .set-row styles.
+   ============================================================================ */
+.ex-hit-flag { font-weight: 700; }
+.ex-hit-flag.yes { color: var(--success); }
+.ex-hit-flag.no  { color: var(--danger); }
+.ex-suggest {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-top: 5px;
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  border: 1px solid transparent;
+  text-align: left;
+  line-height: 1.35;
+}
+.ex-suggest.up      { background: var(--success-soft); color: var(--success); border-color: var(--success-line); }
+.ex-suggest.hold    { background: var(--card-2);       color: var(--text-body); border-color: var(--border); }
+.ex-suggest.plateau { background: var(--warning-soft); color: var(--warning); border-color: #edd9a6; }
+.ex-suggest:active { filter: brightness(0.96); }
+.ex-suggest .sg-tap { font-weight: 600; opacity: 0.72; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+.sl-grid { margin-bottom: 8px; }
+.sl-head, .sl-row { display: grid; gap: 6px; align-items: center; }
+.sl-c1 .sl-head, .sl-c1 .sl-row { grid-template-columns: 34px 1fr; }
+.sl-c2 .sl-head, .sl-c2 .sl-row { grid-template-columns: 34px 1fr 1fr; }
+.sl-head { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; padding: 0 2px 4px; }
+.sl-row { margin-bottom: 5px; }
+.sl-row.sl-opt { opacity: 0.6; }
+.sl-n { font-size: 12px; font-weight: 700; color: var(--muted); text-align: center; }
+.ex-log .sl-row input, .sl-row input {
+  width: 100%; min-width: 0; text-align: center;
+  font-size: 16px; padding: 9px 4px;
+  border: 1px solid var(--border); border-radius: 6px;
+  font-family: inherit; font-variant-numeric: tabular-nums;
+  background: var(--card); color: var(--text);
+}
+.sl-row input:focus { outline: none; border-color: var(--primary); }
+.sl-tools { display: flex; gap: 6px; margin-top: 4px; }
+.sl-tools .btn { flex: 1; justify-content: center; }
+
+/* ============================================================================
    Tabs (Achilles + Hotel use these)
    ============================================================================ */
 .tabs {

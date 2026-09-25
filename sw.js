@@ -1,13 +1,15 @@
 /* Exercise Library — shared service worker for offline use.
    Caches the launcher + all three sub-apps + shared styles + program data + icons.
-   Network-first for HTML, cache-first for static assets. */
+   Network-first for HTML, scripts, styles and program data (so a deploy never pairs a
+   new page with an old shared/setlog.js); cache-first for images and the manifest. */
 
-const CACHE = 'exercise-library-v17';
+const CACHE = 'exercise-library-v18';
 const PRECACHE = [
   './',
   './index.html',
   './manifest.webmanifest',
   './shared/styles.css',
+  './shared/setlog.js',
   './father-son/',
   './father-son/index.html',
   './tfm-1/',
@@ -39,7 +41,8 @@ const PRECACHE = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE).catch(() => {}))
+    // cache: 'reload' skips the browser's HTTP cache, so a deploy never precaches a stale copy.
+    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE.map((u) => new Request(u, { cache: 'reload' }))).catch(() => {}))
   );
   self.skipWaiting();
 });
@@ -62,22 +65,25 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
 
   const isHTML = req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html');
+  const isCode = /\.(js|css|json)$/.test(url.pathname);
 
-  if (isHTML) {
-    // Network-first for HTML — fall back to cache when offline.
+  if (isHTML || isCode) {
+    // Network-first for HTML and code — fall back to cache when offline. 'no-cache'
+    // revalidates with the server (a cheap 304) instead of trusting the HTTP cache.
+    const fresh = isHTML ? new Request(req.url, { cache: 'no-cache', credentials: 'same-origin' }) : new Request(req, { cache: 'no-cache' });
     event.respondWith(
-      fetch(req)
+      fetch(fresh)
         .then((resp) => {
           const copy = resp.clone();
           caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
           return resp;
         })
-        .catch(() => caches.match(req).then((m) => m || caches.match('./index.html')))
+        .catch(() => caches.match(req).then((m) => m || (isHTML ? caches.match('./index.html') : undefined)))
     );
     return;
   }
 
-  // Cache-first for static assets (CSS, JS, JSON, images, manifest).
+  // Cache-first for images and the manifest.
   event.respondWith(
     caches.match(req).then((m) => {
       if (m) return m;

@@ -101,29 +101,7 @@
   .ex-tag.core   { background: #f0f1f3; color: #6b7588; }
   .ex-tag.mob    { background: var(--accent-soft); color: var(--accent); }
 
-  /* "Last:" reference + next-load suggestion */
-  .ex-hit-flag { font-weight: 700; }
-  .ex-hit-flag.yes { color: var(--success); }
-  .ex-hit-flag.no  { color: var(--danger); }
-
-  .ex-suggest {
-    display: inline-flex; align-items: center; gap: 5px;
-    margin-top: 5px;
-    border-radius: 6px;
-    padding: 4px 9px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    border: 1px solid transparent;
-    text-align: left;
-    line-height: 1.35;
-  }
-  .ex-suggest.up      { background: var(--success-soft); color: var(--success); border-color: var(--success-line); }
-  .ex-suggest.hold    { background: var(--card-2);       color: var(--text-body); border-color: var(--border); }
-  .ex-suggest.plateau { background: var(--warning-soft); color: var(--warning); border-color: #edd9a6; }
-  .ex-suggest:active { filter: brightness(0.96); }
-  .ex-suggest .sg-tap { font-weight: 600; opacity: 0.72; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; }
+  /* "Last:" line, coach chip and set grid styles live in ../shared/styles.css (SetLog). */
 
   /* Complex / finisher movement lists */
   .ex-detail {
@@ -137,27 +115,6 @@
     line-height: 1.6;
   }
   .ex-detail .dt-line { display: block; }
-
-  /* Log editor — weight + did-you-hit-the-top */
-  .log-weight-row { display: flex; align-items: center; gap: 6px; }
-  .log-weight-row .log-weight { flex: 1; min-width: 0; }
-  .log-weight-row .unit { font-size: 12px; color: var(--muted); font-weight: 600; }
-  .hit-label { font-size: 11px; color: var(--muted); font-weight: 600; margin-top: 2px; }
-  .hit-row { display: flex; gap: 6px; }
-  .hit-btn {
-    flex: 1;
-    border: 1px solid var(--border);
-    background: var(--card-2);
-    color: var(--muted);
-    border-radius: 6px;
-    padding: 8px 6px;
-    font-size: 12px;
-    font-weight: 600;
-    font-family: inherit;
-    cursor: pointer;
-  }
-  .hit-btn.on-yes { background: var(--success-soft); color: var(--success); border-color: var(--success-line); }
-  .hit-btn.on-no  { background: var(--danger-soft);  color: var(--danger);  border-color: #f3c8c4; }
 
   /* Timer buttons */
   .btn-timer {
@@ -315,7 +272,12 @@
 
 </div>
 
+<script src="../shared/setlog.js"></script>
 <script>
+/* Set logging, the coach and sync come from ../shared/setlog.js. */
+const SL = window.SetLog;
+const { normName, parseWeight, fmtWeight, fmtLoad } = SL;
+
 /* ===========================================================================
    SHARED HELPERS — line parsing + row builders used by the PROGRAM data below.
    Prescriptions are authored as near-verbatim PDF lines and parsed here, so
@@ -330,6 +292,9 @@ const LOADED_RE = /^(kb|db|barbell|weighted|medicine ball|plate|kettlebell|dumbb
 /* Lower-body lifts progress in 10 lb jumps, everything else in 5. Judgment
    call — cable/KB gear often moves in other increments; override in the log. */
 const LOWER_RE = /squat|deadlift|\brdl\b|lunge|step up|pistol|glute bridge|hip thrust|sumo|cossack|leg press/i;
+/* Rows with no weight column: jumps, burpees, plank variations. Everything else logs
+   a weight (added weight on bodyweight rows: blank = untracked, 0 = strict BW). */
+const NOLOAD_RE = /jump|body clean|burpee|elevator|star lift|sprint/i;
 
 /* Strip parentheticals BEFORE number-hunting — "(4:2:1 tempo)" and
    "(6 each side)" would otherwise poison the rep parse. */
@@ -366,6 +331,9 @@ function parseLine(line) {
 function r(line, rest, tag, opts = {}) {
   const p = parseLine(line);
   const bw = !LOADED_RE.test(p.name) && BW_RE.test(p.name);
+  const ss = SL.parseSets(p.sets, 3);
+  // Timed rows ("3-4 x 40 yards or 45 seconds") log seconds per set.
+  const timed = p.repTop == null && !p.isMax ? SL.parseReps(p.rx.split("×").slice(1).join("×")) : null;
   return Object.assign({
     name: p.name,
     rx: p.rx,
@@ -373,21 +341,26 @@ function r(line, rest, tag, opts = {}) {
     rest: rest || 90,
     track: true,
     bw,
+    loaded: !NOLOAD_RE.test(p.name),
     lower: LOWER_RE.test(p.name),
-    repTop: p.repTop,
-    repRange: p.repRange,
+    repTop: timed && timed.unit === "s" ? timed.repTop : p.repTop,
+    repRange: timed && timed.unit === "s" ? timed.repRange : p.repRange,
     isMax: p.isMax,
+    unit: timed && timed.unit === "s" ? "s" : "reps",
+    sets: ss.sets, minSets: ss.minSets,
     detail: null,
     timer: null
   }, opts);
 }
 
-/* A complex logs ONE weight (the bell/bar you ran the whole circuit with). */
+/* A complex logs the weight per round (the bell/bar you ran the circuit with). */
 function complexRow(title, scheme, moves, rest, opts = {}) {
+  const ss = SL.parseSets(scheme, 5);
   return Object.assign({
     name: title, rx: scheme, tag: "cplx", rest: rest || 120,
-    track: true, bw: false, lower: false,
-    repTop: null, repRange: null, isMax: false,
+    track: true, bw: false, loaded: true, lower: false,
+    repTop: null, repRange: null, isMax: false, unit: "none",
+    sets: ss.sets, minSets: ss.minSets,
     detail: moves, timer: null
   }, opts);
 }
@@ -789,6 +762,7 @@ function loadState() {
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
   updateStats();
+  SL.sync.schedule();
 }
 function dayState(w, d, create) {
   const k = dayKey(w, d);
@@ -946,24 +920,25 @@ function fmtMins(secs) { return `~${Math.round(secs / 60)} min`; }
 /* ---------------------------------------------------------------------------
    HISTORY + PROGRESSION COACH
    Exercises recur across weeks under the same name, so history is looked up
-   by normalized name across every prior day of the program.
-     · hit the top of the rep range on all sets → +5 lb (upper) / +10 lb (lower)
+   by normalized name across every prior day of the program. Each set logs
+   reps (or seconds) and weight; a hit is inferred (every set at the target).
+   The rules live in SetLog.suggest:
+     · hit → +5 lb (upper) / +10 lb (lower)
      · missed → hold the weight, beat the reps
      · 3 logged outings at the same weight, none hit → −10%, add 2 reps
+     · bodyweight rows add a rep after a hit; max rows show "beat last"
+   Older logs ({ weight, hit }) fold in at read time and keep their hit.
    --------------------------------------------------------------------------- */
-const PLATEAU_SESSIONS = 3;
-function normName(n) { return String(n).toLowerCase().replace(/[^a-z0-9]/g, ""); }
-function parseWeight(x) {
-  if (typeof x === "number") return isFinite(x) ? x : null;
-  if (typeof x === "string") { const m = x.match(/\d+(\.\d+)?/); return m ? parseFloat(m[0]) : null; }
-  return null;
-}
-function fmtWeight(n) { return (Math.round(n * 10) / 10).toString().replace(/\.0$/, ""); }
-function fmtLoad(n, bw) { return bw ? (n === 0 ? "BW" : `BW +${fmtWeight(n)} lb`) : `${fmtWeight(n)} lb`; }
-function roundToInc(n, inc, floor) { return Math.max(floor != null ? floor : inc, Math.round(n / inc) * inc); }
-function bumpRange(range, top) {
-  if (range) { const m = range.match(/^(\d+)-(\d+)$/); if (m) return `${+m[1] + 2}-${+m[2] + 2}`; }
-  return top ? `${top + 2}` : null;
+/* The spec SetLog reads. plan (optional) applies 60-min mode's set count. */
+function specOf(row, plan, idx) {
+  let sets = row.sets || 3, minSets = row.minSets || sets;
+  if (plan) {
+    if (plan.trims && plan.trims[idx] != null) sets = plan.trims[idx];
+    else if (plan.sixty) sets = minSets;
+    minSets = Math.min(minSets, sets);
+  }
+  return { name: row.name, sets, minSets, repTop: row.repTop, repRange: row.repRange, isMax: row.isMax,
+           unit: row.unit || "reps", loaded: !!row.loaded, bw: !!row.bw, lower: !!row.lower };
 }
 
 /* All prior logged entries for this exercise name, newest first. */
@@ -978,32 +953,49 @@ function priorEntries(name, beforeW, beforeD) {
       const ds = dayState(w, d, false);
       if (!ds) continue;
       mainRows(w, d).forEach(({ row, idx }) => {
-        if (normName(row.name) !== key) return;
-        const log = ds.logs[idx];
-        const wt = parseWeight(log && log.weight);
-        if (wt !== null) out.push({ weight: wt, hit: log.hit === true, date: ds.date, week: w, day: d });
+        if (!row.track || normName(row.name) !== key) return;
+        const spec = specOf(row);
+        const log = SL.normLog(ds.logs[idx], spec.sets);
+        if (!SL.hasSets(log)) return;
+        out.push(SL.entry(log, spec, { date: ds.date, week: w, day: d }));
       });
     }
   }
   return out.reverse();
 }
 
-function suggestNext(row, w, d) {
-  if (row.isMax || !row.track) return null;
-  const hist = priorEntries(row.name, w, d);
-  if (!hist.length) return null;
-  const inc = row.lower ? 10 : 5;
-
-  if (hist.length >= PLATEAU_SESSIONS) {
-    const win = hist.slice(0, PLATEAU_SESSIONS);
-    if (win.every(e => e.weight === win[0].weight) && win.every(e => !e.hit)) {
-      return { type: "plateau", weight: roundToInc(win[0].weight * 0.9, inc, row.bw ? 0 : undefined), reps: bumpRange(row.repRange, row.repTop) };
-    }
-  }
-  const last = hist[0];
-  if (last.hit) return { type: "up", weight: last.weight + inc };
-  return { type: "hold", weight: last.weight };
+function suggestNext(row, w, d, spec) {
+  if (!row.track) return null;
+  return SL.suggest(priorEntries(row.name, w, d), spec || specOf(row));
 }
+
+/* ---------------------------------------------------------------------------
+   SYNC. Transport and device token live in ../shared/setlog.js. The payload is
+   the raw state plus the flat `entries` list every program shares.
+   --------------------------------------------------------------------------- */
+function syncEntries() {
+  const out = [];
+  for (let w = 0; w < NWEEKS; w++) PROGRAM.dayOrder.forEach(d => {
+    const ds = dayState(w, d, false); if (!ds) return;
+    mainRows(w, d).forEach(({ row, idx }) => {
+      const raw = ds.logs[idx];
+      if (!raw) return;
+      const spec = specOf(row);
+      const log = SL.normLog(raw, row.track ? spec.sets : 0);
+      if (!SL.hasData(log)) return;
+      out.push({ date: ds.date, where: `W${w + 1} ${PROGRAM.dayLabels[d]}`, week: w + 1, day: d, exercise: row.name, rx: row.rx,
+                 unit: spec.unit, target: spec.repTop, loaded: spec.loaded, bw: spec.bw,
+                 sets: SL.hasSets(log) ? log.sets : [], hit: row.track ? SL.hit(log, spec) : null, notes: log.notes || "" });
+    });
+  });
+  return out;
+}
+SL.sync.init({
+  slug: PROGRAM.slug,
+  storageKey: PROGRAM.storageKey,
+  payload: () => ({ state, entries: syncEntries() }),
+  hasData: () => Object.keys(state.days).length > 0
+});
 
 /* ---------------------------------------------------------------------------
    SHELL
@@ -1164,33 +1156,24 @@ function renderRow(w, d, row, idx, plan) {
   const ds = dayState(w, d, false);
   const ck = "m" + idx;
   const isDone = !!(ds && ds.completed[ck]);
-  const log = (ds && ds.logs[idx]) || { weight: "", notes: "", hit: null };
-  const weightVal = parseWeight(log.weight);
   const sixty = plan.sixty;
   const rest = effRest(row.rest, sixty);
   const trimmedSets = plan.trims[idx];
+  const spec = specOf(row, plan, idx);
+  const log = SL.normLog(ds && ds.logs[idx], row.track ? spec.sets : 0);
 
-  // "Last:" reference across the whole program by exercise name
+  // "Last:" reference across the whole program by exercise name, and the coach
   let lastHtml = "";
+  let sugg = null;
   if (row.track) {
     const hist = priorEntries(row.name, w, d);
     if (hist.length) {
-      const L = hist[0];
-      lastHtml = `<div class="ex-last">Last (W${L.week + 1} ${PROGRAM.dayLabels[L.day]}${L.date ? " · " + shortDate(L.date) : ""}): <strong>${fmtLoad(L.weight, row.bw)}</strong>` +
-        (row.isMax ? "" : (L.hit ? ` · <span class="ex-hit-flag yes">hit the top</span>` : ` · <span class="ex-hit-flag no">missed</span>`)) + `</div>`;
+      const Lst = hist[0];
+      lastHtml = SL.lastHtml(Lst, spec, `W${Lst.week + 1} ${PROGRAM.dayLabels[Lst.day]}${Lst.date ? " · " + shortDate(Lst.date) : ""}`);
     }
+    sugg = suggestNext(row, w, d, spec);
   }
-
-  // Coach suggestion
-  let suggHtml = "";
-  const sugg = suggestNext(row, w, d);
-  if (sugg) {
-    const label =
-      sugg.type === "up" ? `Try ${fmtLoad(sugg.weight, row.bw)}` :
-      sugg.type === "hold" ? `Hold ${fmtLoad(sugg.weight, row.bw)}, beat your reps` :
-      `Plateau: drop to ${fmtLoad(sugg.weight, row.bw)}${sugg.reps ? ` × ${sugg.reps}` : ""}`;
-    suggHtml = `<button class="ex-suggest ${sugg.type}" data-w="${sugg.weight}">${label}<span class="sg-tap">tap to use</span></button>`;
-  }
+  const suggHtml = SL.suggestHtml(sugg);
 
   const detailHtml = row.detail
     ? `<div class="ex-detail">${row.detail.map(m => `<span class="dt-line">• ${m}</span>`).join("")}</div>` : "";
@@ -1205,8 +1188,6 @@ function renderRow(w, d, row, idx, plan) {
   if (row.timer) { timerLabel = row.timer.label || "⏱"; timerMode = "special"; }
   else { timerLabel = rest >= 120 ? `⏱ ${Math.round(rest / 60)}m` : `⏱ ${rest}s`; timerMode = "rest"; }
 
-  const hitVal = log.hit === true ? "yes" : (log.hit === false ? "no" : "");
-  const hitLabel = row.repRange ? `All sets at the top (${row.repTop})?` : row.repTop ? `All sets of ${row.repTop}?` : `Done as written?`;
 
   const el = document.createElement("div");
   el.className = "exercise";
@@ -1223,24 +1204,13 @@ function renderRow(w, d, row, idx, plan) {
         ${suggHtml}
         <div class="ex-actions">
           <a class="btn" href="${v(row.name)}" target="_blank" rel="noopener">▶ Video</a>
-          ${row.track ? `<button class="btn log-toggle">✎ Log</button>` : ""}
+          ${row.track ? `<button class="btn log-toggle">✎ Log sets</button>` : ""}
           <button class="btn btn-timer row-timer" data-default="${timerLabel}">${timerLabel}</button>
         </div>
         ${row.track ? `
         <div class="ex-log">
-          <div class="log-weight-row">
-            ${row.bw ? `<span class="unit">BW +</span>` : ""}
-            <input type="number" class="log-weight" inputmode="decimal" step="0.5" min="0"
-                   placeholder="${row.bw ? "Added lb · 0 = just BW" : "Weight"}" value="${weightVal === null ? "" : weightVal}">
-            <span class="unit">lb</span>
-          </div>
-          ${row.isMax ? "" : `
-          <div class="hit-label">${hitLabel}</div>
-          <div class="hit-row">
-            <button class="hit-btn hit-yes ${hitVal === "yes" ? "on-yes" : ""}">✓ Hit</button>
-            <button class="hit-btn hit-no ${hitVal === "no" ? "on-no" : ""}">✗ Missed</button>
-          </div>`}
-          <textarea class="log-notes" placeholder="Notes — reps hit, RPE, how it felt...">${escapeHtml(log.notes)}</textarea>
+          ${SL.gridHtml(log, spec, sugg)}
+          <textarea class="log-notes" placeholder="Notes: form, tempo, RPE, how it felt...">${escapeHtml(log.notes)}</textarea>
         </div>` : ""}
       </div>
     </div>`;
@@ -1254,27 +1224,19 @@ function renderRow(w, d, row, idx, plan) {
 
   function ensureLog() {
     const dstate = dayState(w, d, true);
-    if (!dstate.logs[idx]) dstate.logs[idx] = { weight: null, hit: null, notes: "" };
+    dstate.logs[idx] = SL.normLog(dstate.logs[idx], spec.sets);
     stampDate(dstate);
     return dstate.logs[idx];
   }
 
   if (row.track) {
     el.querySelector(".log-toggle").onclick = () => el.querySelector(".ex-log").classList.toggle("open");
-    if (weightVal !== null || log.notes || log.hit != null) el.querySelector(".ex-log").classList.add("open");
-
-    const suggBtn = el.querySelector(".ex-suggest");
-    if (suggBtn) suggBtn.onclick = () => { ensureLog().weight = parseFloat(suggBtn.dataset.w); saveState(); renderDay(d); };
-
-    const yesBtn = el.querySelector(".hit-yes"), noBtn = el.querySelector(".hit-no");
-    if (yesBtn) yesBtn.onclick = () => { const l = ensureLog(); l.hit = l.hit === true ? null : true; saveState(); renderDay(d); };
-    if (noBtn)  noBtn.onclick  = () => { const l = ensureLog(); l.hit = l.hit === false ? null : false; saveState(); renderDay(d); };
-
-    // Typing must NOT re-render — that would blur the field mid-entry.
-    el.querySelector(".log-weight").addEventListener("input", e => {
-      const raw = e.target.value.trim();
-      ensureLog().weight = raw === "" ? null : parseFloat(raw);
-      saveState();
+    if (SL.hasSets(log) || log.notes) el.querySelector(".ex-log").classList.add("open");
+    SL.wireGrid(el, {
+      spec, sugg,
+      getLog: ensureLog,
+      save: saveState,
+      rerender: () => renderDay(d)
     });
     el.querySelector(".log-notes").addEventListener("input", e => { ensureLog().notes = e.target.value; saveState(); });
   }
@@ -1296,14 +1258,16 @@ function renderRow(w, d, row, idx, plan) {
 function buildNotes() {
   document.getElementById("notes-card").innerHTML = `
     <h2>How this tracker works</h2>
-    <p><strong>${PROGRAM.heroTitle}</strong> runs ${NWEEKS} weeks. Pick the week with the pills, pick the day with the tabs, check exercises off as you go, and tap <strong>✎ Log</strong> to record the weight you used.</p>
-    <p>When you log, tap <strong>✓ Hit</strong> if every set landed at the <em>top of the rep range</em> — that one tap drives next week's weight suggestion:</p>
+    <p><strong>${PROGRAM.heroTitle}</strong> runs ${NWEEKS} weeks. Pick the week with the pills, pick the day with the tabs, check exercises off as you go.</p>
+    <h3>Logging sets and the coach</h3>
+    <p>Tap <strong>✎ Log sets</strong> on any lift and enter the reps (seconds on timed rows) and weight for every set. The <strong>= 3 × 8</strong> button fills the targets in one tap; type over what was different. Complexes log the weight per round. On bodyweight lifts the weight is <em>added</em> weight: blank means not tracked, 0 means strict bodyweight.</p>
+    <p>A hit is inferred: every set at or above the top of the rep range. No extra tap. That drives next time's chip:</p>
     <ul>
-      <li><strong>Green — "Try 190 lb":</strong> you hit the top last time, so it adds 5 lb (10 lb on squat/deadlift/lunge patterns).</li>
-      <li><strong>Grey — "Hold 185 lb, beat your reps":</strong> you missed. Weight stays put; win the reps first.</li>
-      <li><strong>Amber — plateau:</strong> three logged outings at one weight with no successful one → cut ~10% and add 2 reps.</li>
+      <li><strong>Green, "Try 190 lb":</strong> you hit it last time, so it adds 5 lb (10 lb on squat, deadlift and lunge patterns). On bodyweight lifts it adds a rep.</li>
+      <li><strong>Grey, "Hold 185 lb, beat your reps":</strong> you fell short. Weight stays put; win the reps first. Max-rep rows say "Beat last".</li>
+      <li><strong>Amber, plateau:</strong> three logged outings at one weight with no hit → cut ~10% and add 2 reps.</li>
     </ul>
-    <p>The <strong>Last:</strong> line under each lift shows what you did the previous time that exercise appeared — any week, any day — so you never have to page back to know your starting weight.</p>
+    <p>The <strong>Last:</strong> line under each lift shows the sets you did the previous time that exercise appeared, any week, any day ("8, 8, 7 @ 40 lb · short"). Tap the chip to fill its weight into the sets you haven't done yet.</p>
     <h3>Timers</h3>
     <ul>
       <li><strong>⏱ 90s / 2m</strong> — rest countdown, beeps and buzzes at zero. Tap mid-run to cancel.</li>
@@ -1316,6 +1280,7 @@ function buildNotes() {
     <p>The <strong>60-min</strong> toggle in the header re-plans every day to fit an hour, deterministically: rests tighten one step, ranged sets run at the low end, cool-down holds halve, and if a day is still over, it trims one set from the last accessories (never the first two lifts). The day header shows the re-planned time, each exercise gets a <em>"start ~N min in"</em> marker, and the <strong>Session clock</strong> tells you if you're ahead or behind that plan.</p>
     <h3>Structure</h3>
     <p>${PROGRAM.sub}. Wednesday${PROGRAM.requiredDays.includes("sat") ? " and Saturday are" : " is"} mobility circuit work — low effort on purpose. Sunday is rest.</p>
+    ${SL.sync.notesHtml()}
     <div class="note-box">${PROGRAM.sourceNote}</div>`;
 }
 
@@ -1633,6 +1598,7 @@ document.getElementById("reset-btn").onclick = () => {
 buildShell();
 uiWeek = currentWeek();
 render();
+SL.sync.wireNotes();
 
 /* Land on the day that's due in the current week. */
 (function openDueTab() {

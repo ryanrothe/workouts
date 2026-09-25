@@ -231,8 +231,9 @@
   <div class="pane" id="pane-notes">
     <div class="card">
       <h2>How this tracker works</h2>
-      <p>Two workouts, both from John Madsen. Tap <strong>Upper Body</strong> or <strong>Legs</strong> to switch between them. Within each, tap the <strong>+ New</strong> pill to start a new dated session — check off exercises as you finish them, and log the weight you used in the box that opens when you tap <strong>✎ Log</strong>.</p>
-      <p>Your last session's load shows up under each exercise as a reference so you know what to beat (or match).</p>
+      <p>Two workouts, both from John Madsen. Tap <strong>Upper Body</strong> or <strong>Legs</strong> to switch between them. Within each, tap the <strong>+ New</strong> pill to start a new dated session, check off exercises as you finish them, and tap <strong>✎ Log sets</strong> to record every set.</p>
+      <p>Each set logs <strong>reps and weight</strong> (added weight on pull-ups and leg raises). The <strong>= 3 × 15</strong> button fills the targets in one tap; type over what was different. Pull-up waves log reps per wave (target 10: 2 + 3 + 5).</p>
+      <p>The <strong>Last:</strong> line under each exercise shows the sets from your previous session ("15, 15, 12 @ 25 lb · short"), and a chip suggests the load: every set at the target adds 5 lb, falling short holds the weight, three short sessions at one weight drop it ~10%. Max-rep work says <strong>Beat last</strong>.</p>
       <p>Each workout header shows a <strong>planned time</strong> and every exercise a <em>"start ~N min in"</em> marker. Tap <strong>▶ Clock</strong> in the session toolbar when you start — it survives reloads and reports pace against the plan once you check off your first exercise. The <strong>⏱ 60-min mode</strong> toggle tightens every rest one step (90s→60s, 60s→45s) and recomputes the plan and the rest timers; sets and reps stay as written.</p>
 
       <h3>Upper Body — original message</h3>
@@ -270,6 +271,7 @@
 
 </div>
 
+<script src="../shared/setlog.js"></script>
 <script>
 /* ===========================================================================
    PROGRAM DATA — John Madsen Upper / Lower Split
@@ -343,6 +345,7 @@ function loadState() {
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
   updateStats();
+  SetLog.sync.schedule();
 }
 
 function todayISO() {
@@ -388,17 +391,54 @@ function getActiveSession(workout) {
   return state.sessions[workout].find(s => s.id === id) || null;
 }
 
-function getLastLoggedLoad(workout, exIdx, beforeSessionId) {
-  const sessions = state.sessions[workout];
+/* ===========================================================================
+   SET LOGGING + COACH (../shared/setlog.js). Each set logs reps and weight.
+   Older logs kept the load as free text ("50 lb DBs, BW+25"); they fold in at
+   read time as one set at the first number, and the text moves into Notes the
+   first time that old log is edited.
+   =========================================================================== */
+const LOADED = { db_incline: 1, db_lat_raise: 1, db_side_raise: 1, db_hammer: 1, goblet_tempo: 1, bulgarian: 1, db_rdl: 1, pullup_wave: 1, hang_leg: 1 };
+const BODYWEIGHT = { pullup_wave: 1, hang_leg: 1 };
+function specFor(ex) {
+  const pr = SetLog.parseReps(ex.reps), ss = SetLog.parseSets(ex.sets, 3);
+  const wave = ex.id === "pullup_wave";   // 1 wave = 2 + 3 + 5
+  return { name: EXERCISES[ex.id].name, sets: ss.sets, minSets: ss.minSets, repTop: wave ? 10 : pr.repTop, repRange: pr.repRange,
+           isMax: pr.isMax, unit: pr.unit, loaded: !!LOADED[ex.id], bw: !!BODYWEIGHT[ex.id], lower: false };
+}
+function priorEntries(workout, exIdx, beforeSessionId) {
+  const ex = WORKOUTS[workout].exercises[exIdx], spec = specFor(ex);
+  const out = [];
   let foundCurrent = false;
-  for (const s of sessions) {
+  for (const s of state.sessions[workout]) {
     if (s.id === beforeSessionId) { foundCurrent = true; continue; }
     if (!foundCurrent) continue;
-    const log = s.logs[exIdx];
-    if (log && log.weight) return { weight: log.weight, date: s.date };
+    const log = SetLog.normLog(s.logs[exIdx], spec.sets);
+    if (SetLog.hasSets(log)) out.push(SetLog.entry(log, spec, { date: s.date }));
   }
-  return null;
+  return out;
 }
+function syncEntries() {
+  const out = [];
+  Object.keys(WORKOUTS).forEach(workout => (state.sessions[workout] || []).forEach(s => {
+    WORKOUTS[workout].exercises.forEach((ex, idx) => {
+      const raw = s.logs[idx];
+      if (!raw) return;
+      const spec = specFor(ex), log = SetLog.normLog(raw, spec.sets);
+      if (!SetLog.hasData(log)) return;
+      out.push({ date: s.date, where: WORKOUTS[workout].name, workout, exercise: spec.name, rx: `${ex.sets} × ${ex.reps}`,
+                 unit: spec.unit, target: spec.repTop, loaded: spec.loaded, bw: spec.bw,
+                 sets: SetLog.hasSets(log) ? log.sets : [], hit: SetLog.hit(log, spec),
+                 notes: [typeof raw.weight === "string" && /[a-z]/i.test(raw.weight) ? `Load: ${raw.weight}` : "", log.notes].filter(Boolean).join(" · ") });
+    });
+  }));
+  return out;
+}
+SetLog.sync.init({
+  slug: "hotel",
+  storageKey: STORAGE_KEY,
+  payload: () => ({ state, entries: syncEntries() }),
+  hasData: () => Object.values(state.sessions || {}).some(a => a.length)
+});
 
 function deleteSession(workout, sessionId) {
   if (!confirm("Delete this session? Logs and checks for it will be gone.")) return;
@@ -573,8 +613,11 @@ function renderWorkout(workout) {
 function renderExercise(workout, session, ex, idx) {
   const exDef = EXERCISES[ex.id];
   const isDone = !!session.completed[idx];
-  const log = session.logs[idx] || { weight: "", notes: "" };
-  const lastLoad = getLastLoggedLoad(workout, idx, session.id);
+  const spec = specFor(ex);
+  const log = SetLog.normLog(session.logs[idx], spec.sets);
+  const legacyText = session.logs[idx] && typeof session.logs[idx].weight === "string" && /[a-z]/i.test(session.logs[idx].weight) ? session.logs[idx].weight : "";
+  const hist = priorEntries(workout, idx, session.id);
+  const sugg = SetLog.suggest(hist, spec, { inc: 5 });
   const restSecs = effRestSecs(ex.rest || 60);
   const restLabel = `⏱ ${restSecs}s`;
   const planOffset = workoutPlan(workout).offsets[idx];
@@ -596,15 +639,17 @@ function renderExercise(workout, session, ex, idx) {
           <span class="ex-name">${exDef.name}</span>
         </div>
         <div class="ex-prescription"><strong>${ex.sets} × ${ex.reps}</strong>${ex.load ? " · " + ex.load : ""}${paceHtml}</div>
-        ${lastLoad ? `<div class="ex-last">Last (${shortDate(lastLoad.date)}): <strong>${escapeHtml(lastLoad.weight)}</strong></div>` : ""}
+        ${hist.length ? SetLog.lastHtml(hist[0], spec, shortDate(hist[0].date)) : ""}
+        ${SetLog.suggestHtml(sugg)}
         <div class="ex-actions">
           <a class="btn" href="${v(exDef.q)}" target="_blank" rel="noopener">▶ Video</a>
-          <button class="btn log-toggle">✎ Log</button>
+          <button class="btn log-toggle">✎ Log sets</button>
           <button class="btn btn-timer rest-timer" data-default="${restLabel}">${restLabel}</button>
         </div>
         <div class="ex-log">
-          <input type="text" class="log-weight" placeholder="Weight / load (e.g. 50 lb DBs, BW+25)" value="${escapeAttr(log.weight)}">
-          <textarea class="log-notes" placeholder="Notes — reps actually hit, RPE, how it felt...">${escapeHtml(log.notes)}</textarea>
+          ${legacyText ? `<div class="ex-last">Logged as: ${escapeHtml(legacyText)}</div>` : ""}
+          ${SetLog.gridHtml(log, spec, sugg)}
+          <textarea class="log-notes" placeholder="Notes: RPE, how it felt...">${escapeHtml(log.notes)}</textarea>
         </div>
       </div>
     </div>
@@ -618,21 +663,24 @@ function renderExercise(workout, session, ex, idx) {
   el.querySelector(".log-toggle").onclick = () => {
     el.querySelector(".ex-log").classList.toggle("open");
   };
-  if (log.weight || log.notes) el.querySelector(".ex-log").classList.add("open");
+  if (SetLog.hasSets(log) || log.notes || legacyText) el.querySelector(".ex-log").classList.add("open");
 
   const timerKey = `${workout}_${session.id}_${idx}`;
   const timerBtn = el.querySelector(".rest-timer");
   reattachTimer(timerKey, timerBtn);
   timerBtn.onclick = () => toggleRestTimer(timerKey, timerBtn, restSecs);
 
-  el.querySelector(".log-weight").addEventListener("input", e => {
-    if (!session.logs[idx]) session.logs[idx] = { weight: "", notes: "" };
-    session.logs[idx].weight = e.target.value;
-    saveState();
-  });
+  function ensureLog() {
+    const raw = session.logs[idx];
+    const text = raw && typeof raw.weight === "string" && /[a-z]/i.test(raw.weight) ? raw.weight : "";
+    const lg = SetLog.normLog(raw, spec.sets);
+    if (text) lg.notes = `Load: ${text}` + (lg.notes ? "\n" + lg.notes : "");   // keep the old free-text load
+    session.logs[idx] = lg;
+    return lg;
+  }
+  SetLog.wireGrid(el, { spec, sugg, getLog: ensureLog, save: saveState, rerender: () => render(workout) });
   el.querySelector(".log-notes").addEventListener("input", e => {
-    if (!session.logs[idx]) session.logs[idx] = { weight: "", notes: "" };
-    session.logs[idx].notes = e.target.value;
+    ensureLog().notes = e.target.value;
     saveState();
   });
   return el;
@@ -831,6 +879,8 @@ document.getElementById("reset-btn").onclick = () => {
 })();
 
 render();
+document.querySelector("#pane-notes .card").insertAdjacentHTML("beforeend", SetLog.sync.notesHtml());
+SetLog.sync.wireNotes();
 </script>
 </body>
 </html>

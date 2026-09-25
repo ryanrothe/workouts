@@ -191,6 +191,13 @@ main { padding: 12px 14px 100px; max-width: 720px; margin: 0 auto; }
 .check-btn svg { width: 18px; height: 18px; stroke-width: 2.5; }
 .check-btn.checked { background: var(--success); border-color: var(--success); color: white; }
 .set-row.done-row .set-weight { opacity: 0.5; }
+.set-row.with-reps { grid-template-columns: 30px 1fr 1fr 44px; }
+.set-weight.set-reps { text-align: center; }
+.set-row.done-row .set-reps { opacity: 0.5; }
+.set-head-kb { display: grid; grid-template-columns: 30px 1fr 1fr 44px; gap: 8px; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; padding: 0 2px 2px; }
+.ex-card .ex-last { margin: -4px 0 6px; }
+.ex-card .ex-suggest { margin: 0 0 8px; }
+.ex-card .sl-tools { margin: 6px 0 8px; }
 
 /* Timer button */
 .timer-btn {
@@ -347,6 +354,7 @@ main { padding: 12px 14px 100px; max-width: 720px; margin: 0 auto; }
 
 <div class="toast" id="toast"></div>
 
+<script src="../shared/setlog.js"></script>
 <script>
 /* ============================================================
    KB Shred Tracker — Adam Gooch 8-Week Intermediate KB Program
@@ -373,6 +381,7 @@ function loadState() {
 }
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); } catch(e) {}
+  if (PROGRAM) SetLog.sync.schedule();
 }
 
 /* ── helpers ────────────────────────────────────────────────── */
@@ -537,6 +546,74 @@ function buildRenderGroups(exercises) {
   });
 
   return groups;
+}
+
+/* ── set logging + coach (../shared/setlog.js) ─────────────────
+   Each set stores r{i} (reps or seconds), w{i} (weight, as typed) and s{i}
+   (checked). Checking a set still starts the rest timer. Kettlebells move in
+   fixed jumps, so the coach runs in bell mode: top of the range → next bell up,
+   short → hold and beat the reps, 3 short sessions at one bell → drop a bell. */
+function kbSpec(ex) {
+  const pr = SetLog.parseReps(ex.reps);
+  return { name: cleanName(ex.name), sets: ex.sets || 1, minSets: ex.sets || 1, repTop: pr.repTop, repRange: pr.repRange,
+           isMax: pr.isMax, unit: pr.unit, loaded: true, bw: false, lower: false };
+}
+/* An exercise log ({ w0, r0, s0, …, notes }) as a SetLog log. */
+function kbLog(exLog, n) {
+  const sets = [];
+  for (let i = 0; i < n; i++) {
+    const r = exLog[`r${i}`], w = exLog[`w${i}`];
+    sets.push({ r: r === '' || r == null ? null : SetLog.parseInt(r), w: w === '' || w == null ? null : SetLog.parseWeight(w), d: !!exLog[`s${i}`] });
+  }
+  return { sets, notes: exLog.notes || '' };
+}
+function localISO(d) { d = d || new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function shortDate(iso) { if (!iso) return ''; const [, m, d] = iso.split('-'); return `${parseInt(m, 10)}/${parseInt(d, 10)}`; }
+/* Every earlier logged outing of this exercise, newest first, across the whole program. */
+function kbHistory(name, beforeWeekId, beforeDay) {
+  const key = SetLog.normName(cleanName(name));
+  const out = [];
+  for (const w of PROGRAM.weeks) {
+    let stop = false;
+    for (const d of w.days) {
+      if (w.id === beforeWeekId && d.day === beforeDay) { stop = true; break; }
+      const lg = STATE.logs[logKey(w.id, d.day)];
+      if (!lg || !lg.exercises) continue;
+      (d.exercises || []).forEach((ex, i) => {
+        if (SetLog.normName(cleanName(ex.name)) !== key || !lg.exercises[i]) return;
+        const spec = kbSpec(ex);
+        const log = kbLog(lg.exercises[i], ex.sets);
+        if (!SetLog.hasSets(log)) return;
+        out.push(SetLog.entry(log, spec, { date: lg.date || null, week: w.label, day: d.day }));
+      });
+    }
+    if (stop) break;
+  }
+  return out.reverse();
+}
+function stampDay(weekId, dayId) {
+  const key = logKey(weekId, dayId);
+  if (!STATE.logs[key]) STATE.logs[key] = {};
+  if (!STATE.logs[key].date) STATE.logs[key].date = localISO();
+}
+
+/* ── sync: transport + device token live in ../shared/setlog.js ── */
+function syncEntries() {
+  const out = [];
+  PROGRAM.weeks.forEach(w => w.days.forEach(d => {
+    const lg = STATE.logs[logKey(w.id, d.day)];
+    if (!lg || !lg.exercises) return;
+    (d.exercises || []).forEach((ex, i) => {
+      if (!lg.exercises[i]) return;
+      const spec = kbSpec(ex);
+      const log = kbLog(lg.exercises[i], ex.sets);
+      if (!SetLog.hasData(log)) return;
+      out.push({ date: lg.date || null, where: `${w.label} · ${d.day}`, exercise: spec.name, rx: `${ex.sets} × ${ex.reps}`,
+                 unit: spec.unit, target: spec.repRange || spec.repTop, loaded: true, bw: false,
+                 sets: log.sets.map(x => ({ r: x.r, w: x.w, done: x.d })), hit: SetLog.hit(log, spec), notes: log.notes });
+    });
+  }));
+  return out;
 }
 
 /* ── format prescription string ─────────────────────────────── */
@@ -712,11 +789,46 @@ function buildExCard(w, d, exIdx, ex, log, subLabel, isSubCard) {
   if (presc) card.appendChild(el('div', { class: 'ex-prescription' }, presc));
   if (ex.notes) card.appendChild(el('div', { class: 'ex-notes-text' }, ex.notes));
 
+  // Last time + coach
+  const spec = kbSpec(ex);
+  const hist = kbHistory(ex.name, w.id, d.day);
+  const sugg = SetLog.suggest(hist, spec, { bells: true });
+  if (hist.length) {
+    const L = hist[0];
+    card.appendChild(el('div', { html: SetLog.lastHtml(L, spec, `${L.week} ${L.day}${L.date ? ' · ' + shortDate(L.date) : ''}`) }).firstElementChild);
+  }
+  if (sugg) {
+    const chip = el('div', { html: SetLog.suggestHtml(sugg) }).firstElementChild;
+    chip.addEventListener('click', () => {
+      if (sugg.weight == null) return;
+      const exL = ensureExLog(w.id, d.day, exIdx);
+      for (let i = 0; i < ex.sets; i++) if (!exL[`s${i}`] && (exL[`r${i}`] == null || exL[`r${i}`] === '')) exL[`w${i}`] = String(sugg.weight);
+      stampDay(w.id, d.day); saveState(); render();
+    });
+    card.appendChild(chip);
+  }
+
   // Set rows
   const setsEl = el('div', { class: 'sets' });
+  setsEl.appendChild(el('div', { class: 'set-head-kb' }, el('span', {}, 'Set'),
+    el('span', {}, `${spec.unit === 's' ? 'seconds' : 'reps'}${spec.repTop != null ? ' · ' + (spec.repRange || spec.repTop) : ''}`),
+    el('span', {}, 'lb'), el('span', {}, '')));
   for (let i = 0; i < ex.sets; i++) {
     const checked = !!(exLog[`s${i}`]);
     const weight = exLog[`w${i}`] || '';
+    const repsVal = exLog[`r${i}`] == null ? '' : String(exLog[`r${i}`]);
+
+    const repsInput = el('input', {
+      type: 'number', inputmode: 'numeric', pattern: '[0-9]*', min: '0', step: '1',
+      placeholder: spec.repTop != null ? String(spec.repTop) : 'reps',
+      class: 'set-weight set-reps', value: repsVal
+    });
+    repsInput.addEventListener('input', e => {
+      const raw = e.target.value.trim();
+      ensureExLog(w.id, d.day, exIdx)[`r${i}`] = raw === '' ? null : parseInt(raw, 10);
+      stampDay(w.id, d.day);
+      saveState();
+    });
 
     const weightInput = el('input', {
       type: 'text', inputmode: 'decimal', placeholder: 'lb / kg',
@@ -724,6 +836,7 @@ function buildExCard(w, d, exIdx, ex, log, subLabel, isSubCard) {
     });
     weightInput.addEventListener('input', e => {
       ensureExLog(w.id, d.day, exIdx)[`w${i}`] = e.target.value;
+      stampDay(w.id, d.day);
       saveState();
     });
 
@@ -741,13 +854,35 @@ function buildExCard(w, d, exIdx, ex, log, subLabel, isSubCard) {
       render();
     });
 
-    setsEl.appendChild(el('div', { class: `set-row${checked ? ' done-row' : ''}` },
+    setsEl.appendChild(el('div', { class: `set-row with-reps${checked ? ' done-row' : ''}` },
       el('div', { class: 'set-num' }, String(i + 1)),
+      repsInput,
       weightInput,
       checkBtn
     ));
   }
   card.appendChild(setsEl);
+
+  // "= 4 × 10" fills the target (and the coach's weight) into sets not yet checked.
+  const tools = el('div', { class: 'sl-tools' });
+  if (spec.repTop != null) {
+    const fw = sugg && sugg.weight != null ? sugg.weight : null;
+    tools.appendChild(el('button', { class: 'btn', onclick: () => {
+      const exL = ensureExLog(w.id, d.day, exIdx);
+      for (let i = 0; i < ex.sets; i++) {
+        if (exL[`s${i}`]) continue;
+        if (exL[`r${i}`] == null || exL[`r${i}`] === '') exL[`r${i}`] = spec.repTop;
+        if (fw != null && !exL[`w${i}`]) exL[`w${i}`] = String(fw);
+      }
+      stampDay(w.id, d.day); saveState(); render();
+    }}, `= ${ex.sets} × ${spec.repTop}${spec.unit === 's' ? ' s' : ''}${fw != null ? ' @ ' + SetLog.fmtWeight(fw) : ''}`));
+  }
+  tools.appendChild(el('button', { class: 'btn', onclick: () => {
+    const exL = ensureExLog(w.id, d.day, exIdx);
+    for (let i = 0; i < ex.sets; i++) if (!exL[`s${i}`]) { delete exL[`r${i}`]; delete exL[`w${i}`]; }
+    saveState(); render();
+  }}, 'Clear'));
+  card.appendChild(tools);
 
   // Per-exercise notes
   const notesInput = el('textarea', { class: 'ex-notes-input', placeholder: 'Notes…', rows: '1' });
@@ -948,9 +1083,10 @@ function openAbout() {
     el('h3', {}, 'About'),
     el('div', {
       style: 'font-size:14px;line-height:1.6;color:var(--text-body)',
-      html: '<p><strong>8-Week Intermediate Kettlebell Shred</strong> by Adam Gooch</p><p>4 training days per week over 8 weeks. Full body kettlebell training with supersets, conditioning circuits, and progressive overload. Intensity guided by RPE (Rate of Perceived Exertion).</p><p>Each day has a linked workout video. Your logs are saved in this browser\'s local storage. Use Export from the menu to save a backup.</p>'
+      html: '<p><strong>8-Week Intermediate Kettlebell Shred</strong> by Adam Gooch</p><p>4 training days per week over 8 weeks. Full body kettlebell training with supersets, conditioning circuits, and progressive overload. Intensity guided by RPE (Rate of Perceived Exertion).</p><p>Each set logs reps and weight; checking a set starts the rest timer. The <strong>Last</strong> line shows what you did the previous time an exercise appeared. Bells move in big jumps, so the coach says <strong>next bell up</strong> once every set hits the top of the range, rather than naming a weight.</p><p>Each day has a linked workout video. Your logs are saved in this browser\'s local storage and sync to Karl (below). Use Export from the menu to save a backup.</p>' + SetLog.sync.notesHtml()
     })
   ));
+  SetLog.sync.wireNotes();
 }
 
 /* ── export / import / reset ────────────────────────────────── */
@@ -1019,6 +1155,12 @@ async function init() {
   if (!w.days.find(d => d.day === STATE.currentDay)) {
     STATE.currentDay = w.days[0].day;
   }
+  SetLog.sync.init({
+    slug: 'kb-shred',
+    storageKey: STORAGE_KEY,
+    payload: () => ({ state: STATE, entries: syncEntries() }),
+    hasData: () => Object.keys(STATE.logs || {}).length > 0
+  });
   saveState();
   render();
 }

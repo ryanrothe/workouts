@@ -338,6 +338,7 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="../shared/setlog.js"></script>
 <script>
 /* ============================================================
    Athletic AF Tracker — single-file static app, iOS-friendly.
@@ -364,6 +365,7 @@ function loadState() {
 }
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); } catch(e){ console.error(e); }
+  if (PROGRAM) SetLog.sync.schedule();
 }
 
 /* ---------------- helpers ---------------- */
@@ -775,6 +777,21 @@ function renderExercise(ex, exIdx, weekId) {
     wrap.appendChild(chip);
   }
 
+  // "Last:" line — every set from the most recent session of this lift.
+  const target = parseTarget(ex.details);
+  const lastSess = sessionsFor(ex.name, sig)[0];
+  if (lastSess) {
+    const lw = topWeight(lastSess);
+    const reps = lastSess.sets.map(s => s.reps || 0).join(', ');
+    const flag = (target.kind === 'fixed' || target.kind === 'range')
+      ? (allSetsHit(lastSess, target.target) ? ' · <span class="ex-hit-flag yes">hit</span>' : ' · <span class="ex-hit-flag no">short</span>') : '';
+    const when = lastSess.ts ? new Date(lastSess.ts).toLocaleDateString([], { month: 'numeric', day: 'numeric' }) : '';
+    const lastEl = el('div', {class:'ex-last', html:
+      `Last${when ? ` (${when})` : ''}: <strong>${reps}${lw ? ` @ ${lw} ${PROGRAM.unit}` : ''}</strong>${flag}`});
+    const chipEl = wrap.querySelector('.coach');
+    if (chipEl) wrap.insertBefore(lastEl, chipEl); else wrap.appendChild(lastEl);
+  }
+
   const last = findLastPerformance(ex.name);
   const sets = el('div', {class:'sets'});
   for (let i = 0; i < ex.set_count; i++) {
@@ -828,6 +845,28 @@ function renderExercise(ex, exIdx, weekId) {
     sets.appendChild(row);
   }
   wrap.appendChild(sets);
+
+  // "= 3 × 5" fills the target reps (and the coach's weight) into every set not
+  // yet checked off. Checking a set is still what records it and starts the rest.
+  if (target.kind === 'fixed' || target.kind === 'range') {
+    const fw = sugg && sugg.weight ? sugg.weight : null;
+    wrap.appendChild(el('div', {class:'sl-tools'},
+      el('button', {class:'btn', onclick: () => {
+        for (let i = 0; i < ex.set_count; i++) {
+          if (!log.sets[i]) log.sets[i] = { reps: '', weight: '', done: false };
+          const sd = log.sets[i];
+          if (sd.done) continue;
+          if (sd.reps === '' || sd.reps == null) sd.reps = String(target.target);
+          if (fw && (sd.weight === '' || sd.weight == null)) sd.weight = String(fw);
+        }
+        saveState(); renderDay();
+      }}, `= ${ex.set_count} × ${target.target}${fw ? ` @ ${fw}` : ''}`),
+      el('button', {class:'btn', onclick: () => {
+        log.sets.forEach(sd => { if (sd && !sd.done) { sd.reps = ''; sd.weight = ''; } });
+        saveState(); renderDay();
+      }}, 'Clear')
+    ));
+  }
 
   const actions = el('div', {class:'ex-actions'},
     el('button', {onclick: () => openHistoryModal(ex.name)},
@@ -1083,8 +1122,33 @@ function openAbout() {
   openModal(el('div', {},
     el('h3', {}, 'About'),
     el('div', {class:'muted', style:'font-size:14px;line-height:1.5;white-space:pre-wrap'},
-      `This is a static site — no account, no server. Your sets and history live in this browser's storage on your phone.\n\nTap "Add to Home Screen" in Safari to install the Exercise Library hub like an app.\n\nUse Export from the menu now and then to save a JSON backup somewhere safe.\n\nProgram: Athletic AF — 5 phases + Week 17.`)
+      `This is a static site — no account. Your sets and history live in this browser's storage on your phone, and every save also syncs to Karl (below).\n\nTap "Add to Home Screen" in Safari to install the Exercise Library hub like an app.\n\nUse Export from the menu now and then to save a JSON backup somewhere safe.\n\nProgram: Athletic AF — 5 phases + Week 17.`),
+    el('div', {class:'about-sync', html: SetLog.sync.notesHtml()})
   ));
+  SetLog.sync.wireNotes();
+}
+
+/* ---------------- sync ----------------
+   Transport and device token live in ../shared/setlog.js. The payload is the
+   raw state plus the flat `entries` list every program shares. */
+function syncEntries() {
+  const out = [];
+  PROGRAM.weeks.forEach(w => w.days.forEach((d, di) => d.exercises.forEach((ex, ei) => {
+    const raw = STATE.log[w.id]?.[di]?.[ei];
+    if (!raw || ex.checklist) return;
+    const log = SetLog.normLog(raw, ex.set_count);
+    if (!SetLog.hasSets(log)) return;
+    const t = parseTarget(ex.details);
+    const ts = STATE.sessions.filter(s => s.weekId === w.id && s.dayIdx === di).reduce((m, s) => Math.max(m, s.ts || 0), 0);
+    const target = t.kind === 'fixed' || t.kind === 'range' ? t.target : null;
+    const filled = log.sets.filter(x => x.r != null);
+    const dt = ts ? new Date(ts) : null;
+    out.push({ date: dt ? `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}` : null, where: `${w.label} · ${d.day}`, exercise: ex.name,
+               rx: ex.details, unit: 'reps', target, target_kind: t.kind, loaded: true, bw: false,
+               sets: log.sets.map(x => ({ r: x.r, w: x.w, done: !!x.d })),
+               hit: target != null && filled.length ? filled.every(x => x.r >= target) : null, notes: '' });
+  })));
+  return out;
 }
 
 /* ---------------- export/import ---------------- */
@@ -1139,6 +1203,12 @@ async function init() {
     STATE.currentWeekId = PROGRAM.weeks[0].id;
     STATE.currentDayIdx = 0;
   }
+  SetLog.sync.init({
+    slug: 'athletic-af',
+    storageKey: STORAGE_KEY,
+    payload: () => ({ state: STATE, entries: syncEntries() }),
+    hasData: () => STATE.sessions.length > 0 || Object.keys(STATE.log || {}).length > 0
+  });
   saveState();
   render();
   // Service worker is registered at the umbrella level (../sw.js) by the launcher.

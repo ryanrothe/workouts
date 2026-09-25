@@ -31,7 +31,8 @@ exercise-library/
 ├── icon-512.png            ← Larger PWA icon
 ├── favicon.png             ← Browser-tab favicon (64×64)
 ├── shared/
-│   └── styles.css          ← Design tokens + shared components (appbar, cards, buttons, day card, exercise rows)
+│   ├── styles.css          ← Design tokens + shared components (appbar, cards, buttons, day card, exercise rows, set grid)
+│   └── setlog.js           ← Shared set logging, progression coach and sync (window.SetLog)
 ├── father-son/
 │   └── index.html          ← Father & Son Strength — 12-week two-lifter program (self-contained)
 ├── tfm-1/
@@ -68,20 +69,33 @@ exercise-library/
 - **One PWA, one icon.** A single dumbbell icon used by iOS "Add to Home Screen" — no more generic-letter fallbacks. The shared service worker caches all three sub-apps so they all work offline.
 - **Shared appbar with back-nav** on every sub-app so you always have a clear way back to the launcher.
 
+## Set logging, the coach and sync (`shared/setlog.js`)
+
+Since 2026-09-24 seven programs log the same way: Father & Son, TFM 1.0 and 2.0, 6-Day PPL, Athletic AF, KB Shred and Hotel. Hyrox, Achilles and Full Body Aesthetics do not load it.
+
+- **Every set is integers.** A log is `{ sets: [{ r, w }], notes }`: `r` is reps (seconds on timed rows), `w` the weight (added weight on bodyweight rows: blank = untracked, 0 = strict bodyweight). An `= 3 × 8` button fills the targets; type over what differed.
+- **A hit is inferred**, never tapped: every required set at or above the target (PPL counts anywhere inside the range; the rest need the top). The old ✓ Hit / ✗ Missed toggles are gone.
+- **The Last line** shows every set from the previous time that exercise appeared ("8, 8, 7 @ 185 lb · short"); **the coach chip** says what to do next: +5 lb (10 on lower-body lifts in TFM, Father & Son and Athletic AF; PPL and Hotel stay at 5), hold and beat the reps, a plateau cut after 3 short sessions at one weight, "add a rep" on bodyweight rows, "beat last" on max rows, hold the weight when this week's rep target climbs, and "next bell up" in KB Shred (bells move in fixed jumps).
+- **Old logs are folded in at read time, never bulk-rewritten.** `{ weight, hit }` becomes one set at that weight and keeps its hit; free-text loads ("50 lb DBs") parse to the first number and the text moves into Notes the first time that log is edited.
+- **Athletic AF and KB Shred keep their per-set check**, because checking a set is what starts the rest timer (and, in Athletic AF, what records it to history). They gained the fill button, the Last line and sync; KB Shred also gained a reps column and the coach.
+- **Sync.** Every save PUTs `{ program, schema: 2, savedAt, state, entries }` to the `workout-sync` Worker under ONE library-wide device token (`workout_sync_token`, adopted from Father & Son's token on first run). `entries` is a flat list, one row per logged exercise, which is what Karl reads. Each program shows the token and a Sync now / Restore from a token pair on its Notes or About panel. On a test device, `localStorage.workout_sync_off = "1"` turns posting off.
+
 ## localStorage continuity
 
 The merge **preserves all logged data**. Each sub-app keeps its original `localStorage` key:
 
 | Sub-app | Key | What it holds |
 |---|---|---|
-| Father & Son Strength | `father_son_v1` (+ `father_son_v1_sync_token`) | Active lifter; per week/day: date, session clock, readiness, short-Monday flag, warm-up checks, and per lifter: checks, weight + hit + notes logs, finisher pick/result; per lifter: pull-up step, push-up level, benchmark table |
-| The Functional Method 1.0 | `tfm1_v1` | 60-min-mode flag; per week/day: date, session clock, checks (warm-up/main/cool-down), weight + hit-the-range + notes logs |
+| Father & Son Strength | `father_son_v1` (+ legacy `father_son_v1_sync_token`) | Active lifter; per week/day: date, session clock, readiness, short-Monday flag, warm-up checks, and per lifter: checks, set logs `{ sets: [{ r, w }], notes, step? }`, finisher pick/result; per lifter: pull-up step, push-up level, benchmark table |
+| The Functional Method 1.0 | `tfm1_v1` | 60-min-mode flag; per week/day: date, session clock, checks (warm-up/main/cool-down), set logs (legacy `{ weight, hit }` still read) |
 | The Functional Method 2.0 | `tfm2_v1` | Same shape as TFM 1.0 |
 | Hyrox | `hyrox_home_v1` | Current week, travel-mode flag, checked exercises, per-exercise logs, benchmark + simulation times |
 | Achilles | `achilles_program_v1` | Current week, checked exercises, weight/notes logs, self-assess scores |
 | Athletic AF | `athleticAF.v1` | Current week + day, per-set logs, full session history, PR records |
-| Hotel | `madsen_split_v1` | Sessions per workout (upper/lower) with checks + logs |
-| 6-Day PPL | `ppl_v1` | Sessions per workout (6 keys: pushA/pullA/legsA/pushB/pullB/legsB) with checks + logs |
+| Hotel | `madsen_split_v1` | Sessions per workout (upper/lower) with checks + set logs (legacy free-text weights still read) |
+| 6-Day PPL | `ppl_v1` | Sessions per workout (6 keys: pushA/pullA/legsA/pushB/pullB/legsB) with checks, subs, set logs (legacy `{ weight, hit }` still read) |
+| KB Shred | `kb_shred_v1` | Per week/day: date, done flag, per exercise `r{i}` reps, `w{i}` weight, `s{i}` checked, notes |
+| Sync (all programs) | `workout_sync_token` | The one device token every program posts under |
 | Athletic AF plate calc | `plateBar`, `plateTarget` | Last-used bar weight + target |
 
 If you've been tracking workouts in the original repos, **the data still lives in those browsers** under those keys. To carry it over to the merged repo, either:
@@ -119,6 +133,10 @@ If you've been tracking workouts in the original repos, **the data still lives i
    ```css
    body[data-program="mobility"] { --primary: #5b8c3a; ... }
    ```
+   For set logging, load the shared module before the program's own script and follow any of the seven programs that use it (`tfm-1/` for phased, `ppl/` for open-ended):
+   ```html
+   <script src="../shared/setlog.js"></script>
+   ```
 3. Drop the shared appbar at the top of the body:
    ```html
    <header class="appbar">
@@ -153,6 +171,6 @@ You can't open `index.html` by double-clicking — browsers block `fetch('data.j
 
 ## Caveats to know
 
-- **Service worker is sticky.** Once installed, the SW will serve the cached version even after you push new HTML. If something looks stale, in Safari iOS: Settings → Safari → Advanced → Website Data → remove "Exercise Library" — or bump the `CACHE = 'exercise-library-v...'` version string in `sw.js`.
+- **Service worker.** HTML, JS, CSS and JSON are network-first and revalidate with the server (`cache: 'no-cache'`), and the precache bypasses the HTTP cache, so a deploy lands on the next online open. Images and the manifest are cache-first. Still bump `CACHE = 'exercise-library-v...'` in `sw.js` on every deploy so the offline copy refreshes. If something still looks stale: Settings → Safari → Advanced → Website Data → remove "Exercise Library".
 - **iOS PWA storage limits.** Safari currently caps localStorage at ~5 MB per origin and may evict data after long periods of non-use. Use Athletic AF's Export backup occasionally and stash the JSON in iCloud Drive or the repo.
-- **No cross-program sync.** Each program's data is isolated by design (different localStorage keys). If you want a "what did I lift across all 3 this week" view later, that needs a fourth layer pulling from all three keys.
+- **Programs don't read each other's history.** Each program's data stays under its own key, and the Last line only looks inside its own program. The cross-program view is the sync: every program posts to the same Worker under one token, and Karl reads them together.

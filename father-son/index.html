@@ -161,28 +161,7 @@
   .ex-tag.test   { background: var(--warning-soft); color: var(--warning); }
   .ex-tag.arms   { background: #fdeaea; color: #b3261e; }
 
-  /* "Last:" reference + next-load suggestion */
-  .ex-hit-flag { font-weight: 700; }
-  .ex-hit-flag.yes { color: var(--success); }
-  .ex-hit-flag.no  { color: var(--danger); }
-  .ex-suggest {
-    display: inline-flex; align-items: center; gap: 5px;
-    margin-top: 5px;
-    border-radius: 6px;
-    padding: 4px 9px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    border: 1px solid transparent;
-    text-align: left;
-    line-height: 1.35;
-  }
-  .ex-suggest.up      { background: var(--success-soft); color: var(--success); border-color: var(--success-line); }
-  .ex-suggest.hold    { background: var(--card-2);       color: var(--text-body); border-color: var(--border); }
-  .ex-suggest.plateau { background: var(--warning-soft); color: var(--warning); border-color: #edd9a6; }
-  .ex-suggest:active { filter: brightness(0.96); }
-  .ex-suggest .sg-tap { font-weight: 600; opacity: 0.72; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; }
+  /* "Last:" line, coach chip and set grid styles live in ../shared/styles.css (SetLog). */
 
   .ex-detail {
     margin: 6px 0 0;
@@ -197,37 +176,6 @@
   .ex-detail .dt-line { display: block; }
   .ex-cue { font-size: 11.5px; color: var(--accent); margin-top: 4px; line-height: 1.4; }
   .ex-cue strong { color: var(--accent); }
-
-  /* Log editor: weight + did-you-hit */
-  .log-weight-row { display: flex; align-items: center; gap: 6px; }
-  .log-weight-row .log-weight { flex: 1; min-width: 0; }
-  .log-weight-row .unit { font-size: 12px; color: var(--muted); font-weight: 600; }
-  .hit-label { font-size: 11px; color: var(--muted); font-weight: 600; margin-top: 2px; }
-  .hit-row { display: flex; gap: 6px; }
-  .hit-btn {
-    flex: 1;
-    border: 1px solid var(--border);
-    background: var(--card-2);
-    color: var(--muted);
-    border-radius: 6px;
-    padding: 8px 6px;
-    font-size: 12px;
-    font-weight: 600;
-    font-family: inherit;
-    cursor: pointer;
-  }
-  .hit-btn.on-yes { background: var(--success-soft); color: var(--success); border-color: var(--success-line); }
-  .hit-btn.on-no  { background: var(--danger-soft);  color: var(--danger);  border-color: #f3c8c4; }
-
-  /* Set grid */
-  .set-grid { margin-bottom: 8px; }
-  .set-head, .set-row { display: grid; grid-template-columns: 34px 1fr 1fr; gap: 6px; align-items: center; }
-  .set-head { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; padding: 0 2px 4px; }
-  .set-row { margin-bottom: 5px; }
-  .set-n { font-size: 12px; font-weight: 700; color: var(--muted); text-align: center; }
-  .set-row input { width: 100%; min-width: 0; text-align: center; font-size: 15px; padding: 9px 4px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-variant-numeric: tabular-nums; background: var(--card); }
-  .set-tools { display: flex; gap: 6px; margin-top: 4px; }
-  .set-tools .btn { flex: 1; justify-content: center; }
 
   /* Timer buttons */
   .btn-timer { font-variant-numeric: tabular-nums; min-width: 78px; justify-content: center; }
@@ -466,7 +414,12 @@
 
 </div>
 
+<script src="../shared/setlog.js"></script>
 <script>
+/* Set logging, the coach and sync come from ../shared/setlog.js. */
+const SL = window.SetLog;
+const { normName, parseWeight, fmtWeight, fmtLoad } = SL;
+
 /* ===========================================================================
    HELPERS. Every row carries TWO prescriptions (son / ryan). The active
    lifter decides which one renders and which history it reads.
@@ -864,31 +817,14 @@ function loadState() {
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
   updateStats();
-  scheduleSync();
+  SL.sync.schedule();
 }
 
 /* ---------------------------------------------------------------------------
-   SYNC. Local storage stays the source of truth; every save also pushes the
-   state to the workout-sync Worker so Karl can read it. Fire-and-forget,
-   retried on the next save. The device token is generated once and survives
-   Reset. It shows on the Notes tab.
+   SYNC. The transport and the device token live in ../shared/setlog.js. This
+   program supplies the payload: the raw state, a flat `entries` list every
+   program shares (what Karl reads), and the legacy row-name `catalog`.
    --------------------------------------------------------------------------- */
-const SYNC_URL = "https://workout-sync.ryanrothe.workers.dev/v1/" + PROGRAM.slug;
-const TOKEN_KEY = PROGRAM.storageKey + "_sync_token";
-function syncToken() {
-  let t = null;
-  try { t = localStorage.getItem(TOKEN_KEY); } catch (e) {}
-  if (!t || !/^[a-f0-9]{24}$/.test(t)) {
-    const bytes = new Uint8Array(12);
-    (window.crypto || window.msCrypto).getRandomValues(bytes);
-    t = Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
-    try { localStorage.setItem(TOKEN_KEY, t); } catch (e) {}
-  }
-  return t;
-}
-let syncTimer = null;
-let syncStatus = { at: null, ok: null, msg: "not yet" };
-function scheduleSync() { clearTimeout(syncTimer); syncTimer = setTimeout(pushSync, 1500); }
 function syncCatalog() {
   const cat = {};
   Object.keys(state.days).forEach(k => {
@@ -906,30 +842,34 @@ function syncCatalog() {
   });
   return cat;
 }
-async function pushSync() {
-  clearTimeout(syncTimer); syncTimer = null;
-  const payload = { program: PROGRAM.slug, savedAt: new Date().toISOString(), ua: navigator.userAgent, state, catalog: syncCatalog() };
-  try {
-    const r = await fetch(`${SYNC_URL}/${syncToken()}`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(payload), keepalive: true });
-    syncStatus = { at: Date.now(), ok: r.ok, msg: r.ok ? "synced" : `server said ${r.status}` };
-  } catch (e) {
-    syncStatus = { at: Date.now(), ok: false, msg: "offline, will retry on the next save" };
-  }
-  paintSync();
+function syncEntries() {
+  const out = [];
+  for (let w = 0; w < NWEEKS; w++) PROGRAM.dayOrder.forEach(d => {
+    if (!hasDay(w, d)) return;
+    const ds = dayState(w, d, false); if (!ds) return;
+    PROGRAM.weeks[w][d].blocks.forEach((b, bi) => b.rows.forEach((row, ri) => {
+      const key = `b${bi}r${ri}`;
+      LIFTERS.forEach(l => {
+        const raw = ds.per && ds.per[l] && ds.per[l].logs && ds.per[l].logs[key];
+        if (!raw) return;
+        const p = resolve(row, l, raw.step);
+        const log = SL.normLog(raw, loggable(row) ? p.sets : 0);
+        if (!SL.hasData(log)) return;
+        out.push({ date: ds.date, where: `W${w} ${PROGRAM.dayLabels[d]}`, week: w, day: d, lifter: l, exercise: p.name, rx: p.rx,
+                   unit: p.unit || "reps", target: p.repTop, loaded: !!p.loaded, bw: !!p.bw,
+                   sets: log.sets.filter(x => x.r != null || x.w != null).length ? log.sets : [], hit: loggable(row) ? SL.hit(log, specOf(row, p)) : null,
+                   step: raw.step, notes: log.notes || "" });
+      });
+    }));
+  });
+  return out;
 }
-async function pullSync(token) {
-  const r = await fetch(`${SYNC_URL}/${token}`);
-  if (!r.ok) throw new Error(r.status === 404 ? "no data for that token" : `server said ${r.status}`);
-  return r.json();
-}
-function paintSync() {
-  const el = document.getElementById("sync-status");
-  if (!el) return;
-  const when = syncStatus.at ? new Date(syncStatus.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "";
-  el.textContent = syncStatus.ok === null ? "Sync: " + syncStatus.msg : `Sync: ${syncStatus.msg}${when ? " · " + when : ""}`;
-  el.style.color = syncStatus.ok === false ? "var(--danger)" : "var(--muted)";
-}
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && syncTimer) pushSync(); });
+SL.sync.init({
+  slug: PROGRAM.slug,
+  storageKey: PROGRAM.storageKey,
+  payload: () => ({ state, entries: syncEntries(), catalog: syncCatalog() }),
+  hasData: () => Object.keys(state.days).length > 0
+});
 function L() { return state.lifter; }
 function dayState(w, d, create) {
   const k = dayKey(w, d);
@@ -1054,44 +994,16 @@ function resolve(row, lifter, pinnedStep) {
 }
 /* Rows that take a set grid: everything except effort pieces. */
 function loggable(row) { return row.kind !== "effort"; }
-/* One log per row: { sets: [{ r, w }], notes }. Older logs ({ weight, hit, notes }) fold in. */
-function normLog(log, nSets) {
-  const out = { sets: [], notes: (log && log.notes) || "" };
-  if (log && log.step != null) out.step = log.step;
-  if (log && Array.isArray(log.sets)) out.sets = log.sets.map(x => ({ r: x && x.r != null ? x.r : null, w: x && x.w != null ? x.w : null }));
-  else if (log && log.weight != null) out.sets = [{ r: null, w: parseWeight(log.weight) }];
-  while (out.sets.length < nSets) out.sets.push({ r: null, w: null });
-  return out;
+/* The spec SetLog reads: the resolved prescription plus how many sets are required. */
+function specOf(row, p) {
+  return Object.assign({}, p, { minSets: p.sets, promote: row.kind === "track", next: p.next || null });
 }
-function setsHit(sets, p) {
-  const filled = sets.filter(x => x.r != null);
-  if (!filled.length) return null;                 // nothing logged yet
-  if (p.goal) return p.goal(sets.map(x => x.r == null ? 0 : x.r));
-  if (p.repTop == null) return null;               // no target to judge against
-  return sets.slice(0, p.sets).every(x => x.r != null && x.r >= p.repTop);
-}
-function setsWeight(sets) { const w = sets.map(x => x.w).filter(x => x != null); return w.length ? Math.max(...w) : null; }
-function fmtSets(sets, unit) { return sets.map(x => x.r == null ? "–" : x.r).join(", ") + (unit === "s" ? " s" : ""); }
 
 /* ===========================================================================
-   HISTORY + PROGRESSION COACH, per lifter, by exercise name.
-   Son: +5 lb flat. Ryan: +5 upper / +10 lower. Miss holds. 3 misses at one
-   weight: plateau, drop 10%, add 2 reps. No logged weight, no suggestion.
+   HISTORY + PROGRESSION COACH, per lifter, by exercise name. The rules live in
+   SetLog.suggest. Son: +5 lb flat. Ryan: +5 upper / +10 lower. Miss holds.
+   3 misses at one weight: plateau, drop 10%, add 2 reps. No log, no suggestion.
    =========================================================================== */
-const PLATEAU_SESSIONS = 3;
-function normName(n) { return String(n).toLowerCase().replace(/[^a-z0-9]/g, ""); }
-function parseWeight(x) {
-  if (typeof x === "number") return isFinite(x) ? x : null;
-  if (typeof x === "string") { const m = x.match(/\d+(\.\d+)?/); return m ? parseFloat(m[0]) : null; }
-  return null;
-}
-function fmtWeight(n) { return (Math.round(n * 10) / 10).toString().replace(/\.0$/, ""); }
-function fmtLoad(n, bw) { return bw ? (n === 0 ? "BW" : `BW +${fmtWeight(n)} lb`) : `${fmtWeight(n)} lb`; }
-function roundToInc(n, inc, floor) { return Math.max(floor != null ? floor : inc, Math.round(n / inc) * inc); }
-function bumpRange(range, top) {
-  if (range) { const m = range.match(/^(\d+)-(\d+)$/); if (m) return `${+m[1] + 2}-${+m[2] + 2}`; }
-  return top ? `${top + 2}` : null;
-}
 function priorEntries(name, beforeW, beforeD, lifter) {
   const key = normName(name);
   const l = lifter || L();
@@ -1112,45 +1024,17 @@ function priorEntries(name, beforeW, beforeD, lifter) {
         if (!raw) return;
         const pr = resolve(row, l, raw.step);
         if (normName(pr.name) !== key) return;
-        const log = normLog(raw, pr.sets);
-        const any = log.sets.some(x => x.r != null || x.w != null);
-        if (!any) return;
-        out.push({ sets: log.sets, weight: setsWeight(log.sets), hit: setsHit(log.sets, pr), unit: pr.unit, date: ds.date, week: w, day: d });
+        const log = SL.normLog(raw, pr.sets);
+        if (!SL.hasSets(log) && typeof log.legacyHit !== "boolean") return;
+        out.push(SL.entry(log, specOf(row, pr), { date: ds.date, week: w, day: d }));
       }));
     }
   }
   return out.reverse();
 }
-/* Loaded rows: +inc after a hit, hold after a miss, plateau after 3 misses at one weight.
-   Bodyweight rows: add a rep (or 5 s) after a hit, hold after a miss.
-   Track rows: a hit means the promotion rule is met. No log, no suggestion. */
 function suggestNext(row, p, w, d) {
-  if (!loggable(row) || p.isMax) return null;
-  const hist = priorEntries(p.name, w, d);
-  if (!hist.length) return null;
-  const last = hist[0];
-  if (row.kind === "track") {
-    if (last.hit === true) return { type: "promote", label: p.next ? `Promotion earned: ${p.next}` : "Goal met. Top of the track" };
-    if (last.hit === false) return { type: "hold", label: `Beat last: ${fmtSets(last.sets, p.unit)}` };
-    return null;
-  }
-  if (p.loaded && last.weight != null) {
-    const inc = L() === "son" ? 5 : (p.lower ? 10 : 5);
-    if (hist.length >= PLATEAU_SESSIONS) {
-      const win = hist.slice(0, PLATEAU_SESSIONS);
-      if (win.every(e => e.weight === win[0].weight) && win.every(e => e.hit === false)) {
-        return { type: "plateau", weight: roundToInc(win[0].weight * 0.9, inc, p.bw ? 0 : undefined), reps: bumpRange(p.repRange, p.repTop), label: `Plateau: drop to ${fmtLoad(roundToInc(win[0].weight * 0.9, inc, p.bw ? 0 : undefined), p.bw)}${bumpRange(p.repRange, p.repTop) ? ` × ${bumpRange(p.repRange, p.repTop)}` : ""}` };
-      }
-    }
-    if (last.hit === true) return { type: "up", weight: last.weight + inc, label: `Try ${fmtLoad(last.weight + inc, p.bw)}` };
-    if (last.hit === false) return { type: "hold", weight: last.weight, label: `Hold ${fmtLoad(last.weight, p.bw)}, beat your reps` };
-    return { type: "hold", weight: last.weight, label: `Last: ${fmtLoad(last.weight, p.bw)}` };
-  }
-  if (p.repTop == null) return null;
-  const step = p.unit === "s" ? 5 : 1;
-  if (last.hit === true) return { type: "up", reps: p.repTop + step, label: `Add ${p.unit === "s" ? "5 s" : "a rep"}: ${p.sets} × ${p.repTop + step}` };
-  if (last.hit === false) return { type: "hold", label: `Hold ${p.sets} × ${p.repTop}, clean it up` };
-  return null;
+  if (!loggable(row)) return null;
+  return SL.suggest(priorEntries(p.name, w, d), specOf(row, p), { inc: L() === "son" ? 5 : undefined });
 }
 
 /* ===========================================================================
@@ -1377,8 +1261,9 @@ function renderRow(w, d, row, key, plan) {
   const p = resolve(row, null, rawLog && rawLog.step != null ? rawLog.step : undefined);
   const isDone = !!(ps && ps.completed[key]);
   const canLog = loggable(row);
-  const log = normLog(ps && ps.logs[key], canLog ? p.sets : 0);
-  const hasLog = log.sets.some(x => x.r != null || x.w != null);
+  const spec = specOf(row, p);
+  const log = SL.normLog(ps && ps.logs[key], canLog ? p.sets : 0);
+  const hasLog = SL.hasSets(log);
 
   let lastHtml = "";
   let sugg = null;
@@ -1386,12 +1271,11 @@ function renderRow(w, d, row, key, plan) {
     const hist = priorEntries(p.name, w, d);
     if (hist.length) {
       const Lst = hist[0];
-      const flag = Lst.hit === true ? ` · <span class="ex-hit-flag yes">hit</span>` : Lst.hit === false ? ` · <span class="ex-hit-flag no">short</span>` : "";
-      lastHtml = `<div class="ex-last">Last (W${Lst.week} ${PROGRAM.dayLabels[Lst.day]}${Lst.date ? " · " + shortDate(Lst.date) : ""}): <strong>${fmtSets(Lst.sets, Lst.unit)}${Lst.weight != null ? " @ " + fmtLoad(Lst.weight, p.bw) : ""}</strong>${flag}</div>`;
+      lastHtml = SL.lastHtml(Lst, spec, `W${Lst.week} ${PROGRAM.dayLabels[Lst.day]}${Lst.date ? " · " + shortDate(Lst.date) : ""}`);
     }
     sugg = suggestNext(row, p, w, d);
   }
-  const suggHtml = sugg ? `<button class="ex-suggest ${sugg.type === "promote" ? "up" : sugg.type}">${sugg.label}<span class="sg-tap">${sugg.type === "promote" ? "tap to promote" : sugg.weight != null || sugg.reps != null ? "tap to fill" : ""}</span></button>` : "";
+  const suggHtml = SL.suggestHtml(sugg);
   const detailHtml = row.detail ? `<div class="ex-detail">${row.detail.map(m => `<span class="dt-line">• ${m}</span>`).join("")}</div>` : "";
   const cueHtml = row.cue ? `<div class="ex-cue">${row.cue}</div>` : (row.kind === "track" ? `<div class="ex-cue"><strong>Promote when:</strong> ${p.promote}</div>` : "");
   const startAt = plan.offsets[key] != null ? Math.round(plan.offsets[key] / 60) : null;
@@ -1401,21 +1285,7 @@ function renderRow(w, d, row, key, plan) {
   if (row.timer) { timerLabel = row.timer.label || "⏱"; timerMode = "special"; }
   else { timerLabel = row.rest >= 120 ? `⏱ ${Math.round(row.rest / 60)}m` : `⏱ ${row.rest}s`; timerMode = "rest"; }
 
-  const unitLabel = p.unit === "s" ? "s" : "reps";
-  const gridHtml = canLog ? `
-    <div class="set-grid">
-      <div class="set-head"><span>Set</span><span>${unitLabel}${p.repTop != null ? ` · target ${p.repTop}` : ""}</span>${p.loaded ? `<span>lb${p.bw ? " added" : ""}</span>` : "<span></span>"}</div>
-      ${log.sets.map((x, i) => `
-      <div class="set-row">
-        <span class="set-n">${i + 1}</span>
-        <input type="number" class="set-r" inputmode="numeric" min="0" step="1" data-i="${i}" placeholder="${p.repTop != null ? p.repTop : "–"}" value="${x.r == null ? "" : x.r}">
-        ${p.loaded ? `<input type="number" class="set-w" inputmode="decimal" min="0" step="0.5" data-i="${i}" placeholder="lb" value="${x.w == null ? "" : x.w}">` : "<span></span>"}
-      </div>`).join("")}
-      <div class="set-tools">
-        ${p.repTop != null ? `<button class="btn set-fill">= ${p.sets} × ${p.repTop}${p.loaded && (sugg && sugg.weight != null) ? " @ " + fmtWeight(sugg.weight) : ""}</button>` : ""}
-        <button class="btn set-clear">Clear</button>
-      </div>
-    </div>` : "";
+  const gridHtml = canLog ? SL.gridHtml(log, spec, sugg) : "";
 
   const el = document.createElement("div");
   el.className = "exercise";
@@ -1453,7 +1323,7 @@ function renderRow(w, d, row, key, plan) {
     const cur = dayState(w, d, true);
     const pp = cur.per[L()];
     const keepStep = pp.logs[key] && pp.logs[key].step != null ? pp.logs[key].step : (row.kind === "track" ? p.step : undefined);
-    pp.logs[key] = normLog(pp.logs[key], canLog ? p.sets : 0);
+    pp.logs[key] = SL.normLog(pp.logs[key], canLog ? p.sets : 0);
     if (keepStep != null) pp.logs[key].step = keepStep;   // a track log stays with the step it was done at
     stampDate(cur);
     return pp.logs[key];
@@ -1461,39 +1331,16 @@ function renderRow(w, d, row, key, plan) {
   el.querySelector(".log-toggle").onclick = () => el.querySelector(".ex-log").classList.toggle("open");
   if (hasLog || log.notes) el.querySelector(".ex-log").classList.add("open");
 
-  const suggBtn = el.querySelector(".ex-suggest");
-  if (suggBtn && sugg) suggBtn.onclick = () => {
-    if (sugg.type === "promote") {
+  SL.wireGrid(el, {
+    spec, sugg,
+    getLog: ensureLog,
+    save: saveState,
+    rerender: () => renderDay(d),
+    onPromote: () => {
       const kind = row.trackKind, steps = TRACKS[kind][L()], i = state.tracks[L()][kind];
       if (i + 1 < steps.length && confirm(`Promote ${LIFTER_LABEL[L()]} to ${steps[i + 1].name}?`)) { state.tracks[L()][kind] = i + 1; saveState(); render(); }
-      return;
     }
-    const lg = ensureLog();
-    lg.sets.forEach(x => {
-      if (sugg.weight != null) x.w = sugg.weight;
-      if (sugg.reps != null && p.unit !== "s") x.r = parseInt(String(sugg.reps).split("-").pop(), 10);
-      if (sugg.reps != null && p.unit === "s") x.r = sugg.reps;
-    });
-    saveState(); renderDay(d);
-    el.querySelector(".ex-log") && el.querySelector(".ex-log").classList.add("open");
-  };
-  const fillBtn = el.querySelector(".set-fill");
-  if (fillBtn) fillBtn.onclick = () => {
-    const lg = ensureLog();
-    lg.sets.forEach(x => { if (x.r == null) x.r = p.repTop; if (p.loaded && x.w == null && sugg && sugg.weight != null) x.w = sugg.weight; });
-    saveState(); renderDay(d);
-  };
-  const clearBtn = el.querySelector(".set-clear");
-  if (clearBtn) clearBtn.onclick = () => { const lg = ensureLog(); lg.sets.forEach(x => { x.r = null; x.w = null; }); saveState(); renderDay(d); };
-  // Typing must NOT re-render: it would blur the field mid-entry.
-  el.querySelectorAll(".set-r").forEach(inp => inp.addEventListener("input", e => {
-    const i = parseInt(e.target.dataset.i, 10), raw = e.target.value.trim();
-    ensureLog().sets[i].r = raw === "" ? null : parseInt(raw, 10); saveState();
-  }));
-  el.querySelectorAll(".set-w").forEach(inp => inp.addEventListener("input", e => {
-    const i = parseInt(e.target.dataset.i, 10), raw = e.target.value.trim();
-    ensureLog().sets[i].w = raw === "" ? null : parseFloat(raw); saveState();
-  }));
+  });
   el.querySelector(".log-notes").addEventListener("input", e => { ensureLog().notes = e.target.value; saveState(); });
 
   const tKey = `${dayKey(w, d)}_${L()}_${key}`;
@@ -1719,13 +1566,7 @@ function buildNotes() {
       <li><strong>⏱ Stopwatch</strong> for the hang and negative tests. Tap to stop, tap again to reset.</li>
       <li><strong>Session clock</strong> in the day toolbar tells you if you are ahead of or behind the planned time.</li>
     </ul>
-    <h3>Sync to Karl</h3>
-    <p>Every save also posts this program's data to a private sync endpoint so Karl can read it and coach from it. The phone stays the source of truth; if the post fails it retries on the next save.</p>
-    <p><strong>Device token:</strong> <code id="sync-token" style="user-select:all;font-size:13px">${syncToken()}</code><br><span id="sync-status" style="font-size:12px;color:var(--muted)">Sync: not yet</span></p>
-    <div class="ex-actions" style="margin-top:6px">
-      <button class="btn" id="sync-now">↑ Sync now</button>
-      <button class="btn" id="sync-restore">↓ Restore from a token</button>
-    </div>
+    ${SL.sync.notesHtml()}
     <div class="note-box">Designed 2026-09-21 for a 13-year-old cross-country and club soccer athlete and his dad. Cycle 2 (winter, no competing sport) is where volume, the barbell and full plyo dose belong.</div>`;
 }
 
@@ -1926,19 +1767,7 @@ document.getElementById("reset-btn").onclick = () => {
 buildShell();
 uiWeek = currentWeek();
 render();
-document.getElementById("sync-now").onclick = () => { syncStatus = { at: null, ok: null, msg: "sending…" }; paintSync(); pushSync(); };
-document.getElementById("sync-restore").onclick = async () => {
-  const t = prompt("Paste the device token from the other phone (24 characters). This REPLACES everything on this phone with that phone's data.");
-  if (!t || !/^[a-f0-9]{24}$/.test(t.trim())) { if (t) alert("That is not a 24-character token."); return; }
-  try {
-    const payload = await pullSync(t.trim());
-    if (!payload.state || !confirm(`Found data saved ${payload.savedAt}. Replace this phone's data with it?`)) return;
-    try { localStorage.setItem(TOKEN_KEY, t.trim()); } catch (e) {}
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(payload.state)); } catch (e) {}
-    location.reload();
-  } catch (e) { alert("Restore failed: " + e.message); }
-};
-pushSync();
+SL.sync.wireNotes();
 (function openDueTab() {
   const tab = document.querySelector(`.tab[data-pane="${dueDay(uiWeek)}"]`);
   if (tab) tab.click();

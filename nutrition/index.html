@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Nutrition" />
+<meta name="theme-color" content="#4d7c0f" />
+<link rel="manifest" href="../manifest.webmanifest" />
+<link rel="apple-touch-icon" href="../icon-180.png" />
+<link rel="icon" type="image/png" href="../favicon.png" />
+<title>Nutrition — macros and meal prep</title>
+<link rel="stylesheet" href="../shared/styles.css" />
+<style>
+  /* Nutrition-specific styles. Tokens and the shell come from ../shared/styles.css. */
+  .hero { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; box-shadow: var(--shadow); }
+  .date-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .date-row .btn { height: 36px; padding: 0 12px; font-size: 14px; }
+  .date-title { text-align: center; flex: 1; min-width: 0; }
+  .date-title .d1 { font-size: 16px; font-weight: 700; }
+  .date-title .d2 { font-size: 11.5px; color: var(--muted); }
+
+  /* Macro panel */
+  .macros { margin-top: 12px; display: flex; flex-direction: column; gap: 9px; }
+  .mrow { display: grid; grid-template-columns: 52px 1fr 108px; gap: 8px; align-items: center; }
+  .mrow .mname { font-size: 12px; font-weight: 700; color: var(--text-body); }
+  .mrow .mname small { display: block; font-weight: 600; color: var(--muted); font-size: 10px; }
+  .mbar { height: 10px; border-radius: 999px; background: var(--border-soft); overflow: hidden; position: relative; }
+  .mbar > i { display: block; height: 100%; background: var(--primary); border-radius: 999px; transition: width 0.25s; }
+  .mbar.over > i { background: var(--danger); }
+  .mbar.near > i { background: var(--success); }
+  .mnum { font-size: 12.5px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .mnum b { font-size: 14px; }
+  .mnum small { display: block; color: var(--muted); font-size: 10.5px; }
+  .split { margin-top: 8px; font-size: 11.5px; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+  .split b { color: var(--text-body); }
+
+  .row-actions { display: flex; gap: 8px; margin: 12px 0; }
+  .row-actions .btn { flex: 1; justify-content: center; height: var(--tap); font-size: 13.5px; border-radius: 10px; }
+
+  /* Weigh-in */
+  .weigh { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 12.5px; color: var(--text-body); }
+  .weigh input { width: 84px; text-align: center; font-size: 16px; padding: 7px 6px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); font-variant-numeric: tabular-nums; }
+  .weigh input:focus { outline: none; border-color: var(--primary); }
+  .weigh .avg { color: var(--muted); font-size: 11.5px; }
+
+  /* Planned chips */
+  .planned { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .chip { border: 1px solid var(--primary-line); background: var(--primary-soft); color: var(--primary); border-radius: 999px; padding: 7px 12px; font-size: 12.5px; font-weight: 600; font-family: inherit; cursor: pointer; line-height: 1.3; text-align: left; }
+  .chip.grey { background: var(--card-2); border-color: var(--border); color: var(--text-body); }
+
+  /* Log list */
+  .log { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 12px; }
+  .log-item { display: flex; gap: 10px; align-items: center; padding: 11px 14px; border-bottom: 1px solid var(--border-soft); cursor: pointer; }
+  .log-item:last-child { border-bottom: none; }
+  .log-item .li-main { flex: 1; min-width: 0; }
+  .log-item .li-name { font-weight: 600; font-size: 14px; }
+  .log-item .li-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .log-item .li-k { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+  .log-item .li-m { font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+  .log-item.quick .li-name::after { content: "off-plan"; margin-left: 6px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--warning); background: var(--warning-soft); border-radius: 4px; padding: 1px 5px; vertical-align: 1px; }
+  .empty { padding: 18px 14px; color: var(--muted); font-size: 13px; text-align: center; }
+
+  /* Bottom sheet */
+  .sheet-wrap { position: fixed; inset: 0; z-index: 100; background: rgba(20, 30, 50, 0.4); display: flex; align-items: flex-end; }
+  .sheet-wrap[hidden] { display: none; }
+  .sheet { background: var(--card); width: 100%; max-width: 760px; margin: 0 auto; border-radius: 16px 16px 0 0; max-height: 88vh; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 16px calc(16px + env(safe-area-inset-bottom)); box-shadow: var(--shadow-lg); }
+  .sheet-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .sheet-head h2 { font-size: 16px; }
+  .sheet-close { height: 32px; width: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--card-2); font-size: 16px; display: flex; align-items: center; justify-content: center; }
+  .cat-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-bottom: 10px; padding-bottom: 2px; }
+  .cat-chips::-webkit-scrollbar { display: none; }
+  .meal-pick { display: flex; align-items: center; gap: 10px; padding: 11px 4px; border-bottom: 1px solid var(--border-soft); cursor: pointer; }
+  .meal-pick:last-child { border-bottom: none; }
+  .meal-pick .mp-name { font-weight: 600; font-size: 14px; }
+  .meal-pick .mp-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .meal-pick .mp-k { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; font-size: 14px; }
+  .meal-pick .mp-m { font-size: 10.5px; color: var(--muted); text-align: right; white-space: nowrap; }
+
+  /* Portion editor + forms */
+  .items { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+  .item-row { display: grid; grid-template-columns: 1fr 78px 30px; gap: 8px; align-items: center; }
+  .item-row .in { font-size: 13px; }
+  .item-row .in small { display: block; color: var(--muted); font-size: 10.5px; }
+  .item-row input, .form input, .form select, .form textarea { width: 100%; min-width: 0; font-size: 16px; padding: 8px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); font-family: inherit; font-variant-numeric: tabular-nums; }
+  .item-row input { text-align: center; }
+  .item-row input:focus, .form input:focus, .form select:focus, .form textarea:focus { outline: none; border-color: var(--primary); }
+  .item-row .x { height: 30px; width: 30px; border-radius: 50%; border: 1px solid var(--border); font-size: 14px; color: var(--muted); display: flex; align-items: center; justify-content: center; }
+  .mult { display: flex; gap: 6px; margin: 6px 0 10px; }
+  .mult .btn { flex: 1; justify-content: center; height: 36px; }
+  .totals { background: var(--card-2); border: 1px solid var(--border-soft); border-radius: 8px; padding: 9px 12px; font-size: 13px; display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; margin: 6px 0 10px; }
+  .totals b { font-size: 15px; }
+  .form { display: flex; flex-direction: column; gap: 8px; }
+  .form .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .form .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .form label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 3px; }
+  .form .actions { display: flex; gap: 8px; margin-top: 4px; }
+  .form .actions .btn { flex: 1; justify-content: center; height: var(--tap); font-size: 13.5px; border-radius: 10px; }
+
+  /* Meals tab */
+  .meal-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 8px; overflow: hidden; }
+  .meal-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; }
+  .meal-head .mh-name { font-weight: 600; font-size: 14px; }
+  .meal-head .mh-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .meal-body { border-top: 1px solid var(--border-soft); padding: 10px 14px 14px; }
+  .meal-card.collapsed .meal-body { display: none; }
+  .comp { display: flex; justify-content: space-between; font-size: 12.5px; padding: 4px 0; color: var(--text-body); border-bottom: 1px dashed var(--border-soft); }
+  .comp:last-child { border-bottom: none; }
+  .comp small { color: var(--muted); }
+  .sec-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; margin: 14px 4px 6px; }
+  .food-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 14px; border-bottom: 1px solid var(--border-soft); font-size: 13px; cursor: pointer; }
+  .food-row:last-child { border-bottom: none; }
+  .food-row .fr-sub { font-size: 11px; color: var(--muted); }
+  .food-row .fr-est { color: var(--warning); font-weight: 700; font-size: 9.5px; text-transform: uppercase; margin-left: 4px; }
+
+  /* Plan tab */
+  .plan-day { display: grid; grid-template-columns: 44px 1fr 1fr 40px; gap: 6px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border-soft); }
+  .plan-day:last-child { border-bottom: none; }
+  .plan-day .pd { font-size: 12px; font-weight: 700; color: var(--text-body); }
+  .plan-day select { width: 100%; min-width: 0; font-size: 13px; padding: 8px 6px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); font-family: inherit; }
+  .plan-day .salad { height: 34px; width: 100%; border-radius: 8px; border: 1px solid var(--border); background: var(--card-2); font-size: 15px; }
+  .plan-day .salad.on { background: var(--primary-soft); border-color: var(--primary-line); }
+  .plan-day.today .pd { color: var(--primary); }
+  .plan-tools { display: flex; gap: 8px; margin: 10px 0 4px; }
+  .plan-tools .btn { flex: 1; justify-content: center; height: 38px; }
+  .batch { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border-soft); font-size: 13px; }
+  .batch:last-child { border-bottom: none; }
+  .batch .b-main { flex: 1; min-width: 0; }
+  .batch .b-sub { font-size: 11.5px; color: var(--muted); }
+  .batch .b-qty { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .batch .ex-check { margin: 0; }
+  .batch.done .b-main { text-decoration: line-through; color: var(--muted); }
+
+  /* Targets tab */
+  .derive { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; font-size: 13px; padding: 6px 0; }
+  .derive .k { color: var(--text-body); }
+  .derive .v { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+  .derive .v small { font-weight: 600; color: var(--muted); }
+  .stepper { display: grid; grid-template-columns: 1fr 40px 76px 40px; gap: 6px; align-items: center; padding: 6px 0; }
+  .stepper .sn { font-size: 13px; color: var(--text-body); }
+  .stepper .sn small { display: block; color: var(--muted); font-size: 10.5px; }
+  .stepper .btn { height: 36px; justify-content: center; font-size: 16px; padding: 0; }
+  .stepper input { width: 100%; text-align: center; font-size: 16px; padding: 7px 4px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); font-variant-numeric: tabular-nums; }
+  .stepper input:focus { outline: none; border-color: var(--primary); }
+  .seg { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 8px 0; }
+  .seg button { flex: 1; height: 38px; font-size: 13px; font-weight: 600; background: var(--card); color: var(--muted); font-family: inherit; }
+  .seg button.on { background: var(--text); color: white; }
+  .pct-bar { display: flex; height: 14px; border-radius: 999px; overflow: hidden; margin: 8px 0 4px; }
+  .pct-bar i { display: block; height: 100%; }
+  .pct-bar .p { background: #2563eb; } .pct-bar .f { background: #d97706; } .pct-bar .c { background: #4d7c0f; }
+  .pct-key { display: flex; gap: 12px; font-size: 11.5px; color: var(--muted); }
+  .pct-key i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+</style>
+</head>
+<body data-program="nutrition">
+
+<header class="appbar">
+  <div class="appbar-inner">
+    <a class="appbar-back" href="../">← Library</a>
+    <div class="appbar-title">
+      <div class="eyebrow">Tracker</div>
+      <div class="name">Nutrition</div>
+    </div>
+  </div>
+  <div class="appbar-accent"></div>
+</header>
+
+<div class="container">
+  <div class="tabs" id="tabs"></div>
+  <div class="pane" id="pane-today"></div>
+  <div class="pane" id="pane-meals"></div>
+  <div class="pane" id="pane-plan"></div>
+  <div class="pane" id="pane-targets"></div>
+  <div class="pane" id="pane-about"></div>
+</div>
+
+<div class="sheet-wrap" id="sheet-wrap" hidden><div class="sheet" id="sheet" role="dialog"></div></div>
+
+<script src="../shared/setlog.js"></script>
+<script>
+(function () {
+  "use strict";
+  const KEY = "nutrition_v1";
+  const SLUG = "nutrition";
+
+  /* ------------------------------------------------------------------ helpers */
+  const $ = (s, el) => (el || document).querySelector(s);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const pad = (n) => String(n).padStart(2, "0");
+  const dstr = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const today = () => dstr(new Date());
+  const parseD = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+  const addDays = (s, n) => { const d = parseD(s); d.setDate(d.getDate() + n); return dstr(d); };
+  const mondayOf = (s) => { const d = parseD(s); const w = (d.getDay() + 6) % 7; d.setDate(d.getDate() - w); return dstr(d); };
+  const fmtDate = (s) => parseD(s).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+  const shortDate = (s) => parseD(s).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  const uid = (p) => p + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const r0 = (n) => Math.round(n || 0);
+  const num = (v) => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+  const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const CATS = [["breakfast", "Breakfast"], ["lunch", "Lunch"], ["dinner", "Dinner"], ["side", "Side"], ["snack", "Snack"]];
+  const SECTIONS = ["Meat", "Grains", "Produce", "Dairy", "Drinks", "Pantry"];
+
+  /* ------------------------------------------------------------------ seed data
+     Per-100 g values (or per unit for unit foods). Source is recorded on every
+     food; "estimate" means Karl's SR Legacy figure, to be re-priced against USDA.
+     Cooked-to-raw factor (rawFactor = cooked g per raw g) drives the grocery list. */
+  const SEED_FOODS = {
+    shake:    { name: "Premier Protein shake", brand: "Cafe Latte, 11 fl oz", unit: "each", per: { k: 160, p: 30, f: 3, c: 4 }, portion: 1, section: "Drinks", pack: 18, packName: "18-pack", source: "label 2026-09-25" },
+    thigh:    { name: "Chicken thigh, boneless skinless", brand: "roasted", unit: "g", per: { k: 179, p: 24.8, f: 8.15, c: 0 }, portion: 200, section: "Meat", rawFactor: 0.72, source: "USDA 172388" },
+    tritip:   { name: "Tri-tip, lean", brand: "roasted", unit: "g", per: { k: 177, p: 27, f: 7.3, c: 0 }, portion: 225, section: "Meat", rawFactor: 0.75, source: "estimate" },
+    beef:     { name: "Ground beef 85/15", brand: "pan-browned, drained", unit: "g", per: { k: 250, p: 25.9, f: 15.7, c: 0 }, portion: 200, section: "Meat", rawFactor: 0.72, source: "estimate" },
+    cheddar:  { name: "Cheddar, shredded", brand: "", unit: "g", per: { k: 409, p: 23.3, f: 34, c: 2.4 }, portion: 28, section: "Dairy", source: "USDA 328637" },
+    rice:     { name: "Bibigo sticky white rice bowl", brand: "1 bowl = 210 g", unit: "g", per: { k: 138, p: 2.9, f: 0.24, c: 31.9 }, portion: 210, section: "Grains", packG: 210, packName: "bowl", source: "label 2026-09-25" },
+    quinoa:   { name: "Seeds of Change quinoa & brown rice", brand: "garlic pouch, 240 g", unit: "g", per: { k: 183, p: 3.3, f: 3.3, c: 35.4 }, portion: 150, section: "Grains", packG: 240, packName: "pouch", source: "label 2026-09-25" },
+    broccoli: { name: "Broccoli", brand: "steamed", unit: "g", per: { k: 35, p: 2.38, f: 0.41, c: 7.18 }, portion: 150, section: "Produce", rawFactor: 1, source: "USDA 169967" },
+    beans:    { name: "Green beans", brand: "frozen, steamed", unit: "g", per: { k: 28, p: 1.5, f: 0.2, c: 6.5 }, portion: 150, section: "Produce", rawFactor: 1, source: "estimate" },
+    spinach:  { name: "Spinach, raw", brand: "", unit: "g", per: { k: 23, p: 2.9, f: 0.4, c: 3.6 }, portion: 60, section: "Produce", rawFactor: 1, source: "estimate" },
+    feta:     { name: "Feta, crumbled", brand: "", unit: "g", per: { k: 264, p: 14.2, f: 21.3, c: 4.1 }, portion: 28, section: "Dairy", source: "estimate" },
+    balsamic: { name: "Balsamic vinegar", brand: "", unit: "g", per: { k: 88, p: 0.5, f: 0, c: 17 }, portion: 15, section: "Pantry", source: "estimate" },
+    yogurt:   { name: "Greek yogurt, nonfat plain", brand: "", unit: "g", per: { k: 59, p: 10.3, f: 0.4, c: 3.6 }, portion: 200, section: "Dairy", source: "estimate" },
+  };
+  const SEED_MEALS = [
+    { id: "b1", cat: "breakfast", name: "Three Premier Protein shakes", items: [["shake", 3]] },
+    { id: "l1", cat: "lunch", name: "Chicken thigh and rice bowl", items: [["thigh", 200], ["rice", 210], ["broccoli", 150]] },
+    { id: "l2", cat: "lunch", name: "Cheesy beef and rice", items: [["beef", 170], ["rice", 210], ["cheddar", 28]] },
+    { id: "l3", cat: "lunch", name: "Tri-tip and quinoa bowl", items: [["tritip", 170], ["quinoa", 150], ["beans", 150]] },
+    { id: "l4", cat: "lunch", name: "Chicken thigh and quinoa bowl", items: [["thigh", 200], ["quinoa", 150], ["beans", 150]] },
+    { id: "d1", cat: "dinner", name: "Tri-tip steak plate", items: [["tritip", 225], ["rice", 210], ["broccoli", 150]] },
+    { id: "d2", cat: "dinner", name: "Cheesy beef rice bowl", items: [["beef", 200], ["rice", 210], ["cheddar", 28], ["beans", 150]] },
+    { id: "d3", cat: "dinner", name: "Chicken thigh plate", items: [["thigh", 250], ["rice", 210], ["broccoli", 150]] },
+    { id: "d4", cat: "dinner", name: "Beef and quinoa bowl", items: [["beef", 200], ["quinoa", 150], ["broccoli", 150]] },
+    { id: "d5", cat: "dinner", name: "Tri-tip and quinoa plate", items: [["tritip", 225], ["quinoa", 150], ["beans", 150]] },
+    { id: "v1", cat: "side", name: "Spinach, feta and balsamic salad", items: [["spinach", 60], ["feta", 28], ["balsamic", 15]] },
+    { id: "s1", cat: "snack", name: "One extra Premier Protein shake", items: [["shake", 1]] },
+    { id: "s2", cat: "snack", name: "Greek yogurt", items: [["yogurt", 200]] },
+  ];
+  const ROTATION = { lunch: ["l1", "l2", "l3", "l4"], dinner: ["d1", "d2", "d3", "d4", "d5"] };
+
+  function freshState() {
+    const meals = {};
+    SEED_MEALS.forEach((m, i) => { meals[m.id] = { id: m.id, cat: m.cat, name: m.name, order: i, items: m.items.map(([food, g]) => ({ food, g })) }; });
+    const foods = {};
+    Object.entries(SEED_FOODS).forEach(([id, f]) => { foods[id] = Object.assign({ id }, f); });
+    return {
+      v: 1,
+      profile: { heightIn: 76, age: 47, sex: "m", activity: 1.55, goal: "cut", deficitPct: 20, deficitCap: 500, surplus: 250, proteinPerLb: 1.0, fatPerLb: 0.3, mode: "auto", manual: { kcal: 2500, p: 220, f: 66 } },
+      weights: {},
+      foods, meals,
+      days: {},
+      plan: { weeks: {} },
+      ui: { tab: "today", date: null },
+    };
+  }
+
+  /* ------------------------------------------------------------------ state */
+  let S;
+  function load() {
+    try { const raw = localStorage.getItem(KEY); if (raw) { S = JSON.parse(raw); migrate(); return; } } catch (e) {}
+    S = freshState();
+  }
+  function migrate() {
+    const f = freshState();
+    S.profile = Object.assign(f.profile, S.profile || {});
+    S.profile.manual = Object.assign(f.profile.manual, S.profile.manual || {});
+    S.weights = S.weights || {}; S.days = S.days || {}; S.plan = S.plan || { weeks: {} }; S.plan.weeks = S.plan.weeks || {};
+    S.foods = S.foods || f.foods; S.meals = S.meals || f.meals; S.ui = Object.assign(f.ui, S.ui || {});
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+    SetLog.sync.schedule();
+  }
+  const curDate = () => S.ui.date || today();
+
+  /* ------------------------------------------------------------------ macros */
+  function foodMacros(food, qty) {
+    const f = S.foods[food]; if (!f) return { k: 0, p: 0, f: 0, c: 0 };
+    const m = f.unit === "each" ? qty : qty / 100;
+    return { k: f.per.k * m, p: f.per.p * m, f: f.per.f * m, c: f.per.c * m };
+  }
+  function sumMacros(items) {
+    return items.reduce((a, it) => { const m = foodMacros(it.food, num(it.g)); a.k += m.k; a.p += m.p; a.f += m.f; a.c += m.c; return a; }, { k: 0, p: 0, f: 0, c: 0 });
+  }
+  const mealMacros = (meal) => sumMacros(meal.items);
+  const macroStr = (m) => `${r0(m.p)}P · ${r0(m.f)}F · ${r0(m.c)}C`;
+  function itemsStr(items) {
+    return items.map((it) => { const f = S.foods[it.food]; if (!f) return "?"; const n = f.name.split(",")[0]; return f.unit === "each" ? `${num(it.g)}× ${n}` : `${n} ${r0(it.g)} g`; }).join(", ");
+  }
+
+  /* ------------------------------------------------------------------ targets */
+  function weightOn(date) {
+    // 7-day trailing average of weigh-ins ending on `date`; else the latest weigh-in before it.
+    const keys = Object.keys(S.weights).filter((d) => d <= date).sort();
+    if (!keys.length) return null;
+    const from = addDays(date, -6);
+    const win = keys.filter((d) => d >= from).map((d) => S.weights[d]);
+    if (win.length) return { w: win.reduce((a, b) => a + b, 0) / win.length, n: win.length, latest: S.weights[keys[keys.length - 1]] };
+    return { w: S.weights[keys[keys.length - 1]], n: 0, latest: S.weights[keys[keys.length - 1]], stale: keys[keys.length - 1] };
+  }
+  function targets(date) {
+    const p = S.profile;
+    if (p.mode === "manual") {
+      const kcal = r0(p.manual.kcal), P = r0(p.manual.p), F = r0(p.manual.f);
+      return { mode: "manual", kcal, p: P, f: F, c: Math.max(0, r0((kcal - P * 4 - F * 9) / 4)) };
+    }
+    const wo = weightOn(date); if (!wo) return null;
+    const w = wo.w, kg = w * 0.45359237, cm = p.heightIn * 2.54;
+    const bmr = 10 * kg + 6.25 * cm - 5 * p.age + (p.sex === "f" ? -161 : 5);
+    const tdee = bmr * p.activity;
+    let deficit = 0;
+    if (p.goal === "cut") deficit = Math.min(tdee * p.deficitPct / 100, p.deficitCap);
+    if (p.goal === "build") deficit = -p.surplus;
+    const kcal = r0(tdee - deficit), P = r0(w * p.proteinPerLb), F = r0(w * p.fatPerLb);
+    return { mode: "auto", w, wn: wo.n, stale: wo.stale, bmr, tdee, deficit, kcal, p: P, f: F, c: Math.max(0, r0((kcal - P * 4 - F * 9) / 4)) };
+  }
+  const pct = (t) => { const tot = t.p * 4 + t.f * 9 + t.c * 4 || 1; return { p: r0(t.p * 4 / tot * 100), f: r0(t.f * 9 / tot * 100), c: r0(t.c * 4 / tot * 100) }; };
+
+  /* ------------------------------------------------------------------ day log */
+  const day = (date) => (S.days[date] = S.days[date] || { log: [] });
+  const dayTotals = (date) => (S.days[date] ? S.days[date].log : []).reduce((a, e) => { a.k += e.k; a.p += e.p; a.f += e.f; a.c += e.c; return a; }, { k: 0, p: 0, f: 0, c: 0 });
+  function logMeal(date, meal, items, note) {
+    const m = sumMacros(items);
+    day(date).log.push({ id: uid("e"), t: new Date().toISOString(), kind: "meal", meal: meal.id, name: meal.name, items: items.map((i) => ({ food: i.food, g: num(i.g) })), k: r0(m.k), p: r0(m.p), f: r0(m.f), c: r0(m.c), note: note || "" });
+    save();
+  }
+  function logQuick(date, q) {
+    let k = num(q.k); if (!k) k = num(q.p) * 4 + num(q.f) * 9 + num(q.c) * 4;
+    day(date).log.push({ id: uid("e"), t: new Date().toISOString(), kind: "quick", name: q.name || "Quick add", k: r0(k), p: r0(q.p), f: r0(q.f), c: r0(q.c), note: q.note || "" });
+    save();
+  }
+
+  /* ------------------------------------------------------------------ plan */
+  const week = (mon) => (S.plan.weeks[mon] = S.plan.weeks[mon] || { days: {}, prep: {} });
+  function planFor(date) { const wk = S.plan.weeks[mondayOf(date)]; return wk ? wk.days[date] || null : null; }
+  function fillRotation(mon) {
+    const wk = week(mon);
+    const li = Object.keys(S.plan.weeks).filter((k) => k < mon).length; // shift the rotation a step each week
+    for (let i = 0; i < 7; i++) {
+      const d = addDays(mon, i);
+      wk.days[d] = { lunch: ROTATION.lunch[(i + li) % ROTATION.lunch.length], dinner: ROTATION.dinner[(i + li) % ROTATION.dinner.length], salad: (i % 2 === 0) };
+    }
+    save();
+  }
+  function weekNeeds(mon) {
+    // Aggregate cooked grams (or units) per food for the week's planned lunches, dinners and salads.
+    const wk = week(mon), need = {};
+    const add = (mealId) => { const m = S.meals[mealId]; if (!m) return; m.items.forEach((it) => { need[it.food] = (need[it.food] || 0) + num(it.g); }); };
+    for (let i = 0; i < 7; i++) { const p = wk.days[addDays(mon, i)]; if (!p) continue; add(p.lunch); add(p.dinner); if (p.salad) add("v1"); }
+    if (wk.shakes !== false) need.shake = (need.shake || 0) + 21;
+    return need;
+  }
+  function grocery(need) {
+    const rows = [];
+    Object.entries(need).forEach(([id, qty]) => {
+      const f = S.foods[id]; if (!f || !qty) return;
+      let buy, detail;
+      if (f.unit === "each") { buy = `${qty} ${f.packName ? "" : "×"}`.trim(); detail = f.pack ? `${qty} shakes = ${Math.ceil(qty / f.pack)} × ${f.packName}` : `${qty}×`; buy = f.pack ? `${Math.ceil(qty / f.pack)} ${f.packName}` : `${qty}×`; }
+      else if (f.packG) { const n = Math.ceil(qty / f.packG); buy = `${n} ${f.packName}${n === 1 ? "" : "s"}`; detail = `${r0(qty)} g cooked`; }
+      else if (f.rawFactor && f.rawFactor < 1) { const raw = qty / f.rawFactor; buy = `${(raw / 453.6).toFixed(1)} lb raw`; detail = `${r0(qty)} g cooked ÷ ${f.rawFactor} yield`; }
+      else { buy = `${r0(qty)} g`; detail = qty >= 1000 ? `${(qty / 1000).toFixed(1)} kg` : ""; }
+      rows.push({ id, section: f.section || "Pantry", name: f.name, buy, detail, qty });
+    });
+    rows.sort((a, b) => SECTIONS.indexOf(a.section) - SECTIONS.indexOf(b.section) || b.qty - a.qty);
+    return rows;
+  }
+
+  /* ------------------------------------------------------------------ sheet */
+  const sheetWrap = $("#sheet-wrap"), sheetEl = $("#sheet");
+  function openSheet(html) { sheetEl.innerHTML = html; sheetWrap.hidden = false; document.body.style.overflow = "hidden"; }
+  function closeSheet() { sheetWrap.hidden = true; sheetEl.innerHTML = ""; document.body.style.overflow = ""; }
+  sheetWrap.addEventListener("click", (e) => { if (e.target === sheetWrap) closeSheet(); });
+  const sheetHead = (title) => `<div class="sheet-head"><h2>${esc(title)}</h2><button class="sheet-close" data-close aria-label="Close">×</button></div>`;
+  sheetEl.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) closeSheet(); });
+
+  /* Meal picker: category chips, then meals with macros. Tapping a meal opens the portion editor. */
+  function openPicker(cat, date) {
+    cat = cat || "lunch";
+    const meals = Object.values(S.meals).filter((m) => !m.archived && m.cat === cat).sort((a, b) => a.order - b.order);
+    openSheet(`${sheetHead("Log a meal")}
+      <div class="cat-chips">${CATS.map(([k, l]) => `<button class="tab ${k === cat ? "active" : ""}" data-cat="${k}">${l}</button>`).join("")}</div>
+      <div>${meals.length ? meals.map((m) => { const mm = mealMacros(m); return `<div class="meal-pick" data-meal="${m.id}"><div style="flex:1;min-width:0"><div class="mp-name">${esc(m.name)}</div><div class="mp-sub">${esc(itemsStr(m.items))}</div></div><div><div class="mp-k">${r0(mm.k)}</div><div class="mp-m">${macroStr(mm)}</div></div></div>`; }).join("") : `<div class="empty">No ${cat} meals yet. Add one on the Meals tab.</div>`}</div>`);
+    sheetEl.querySelectorAll("[data-cat]").forEach((b) => (b.onclick = () => openPicker(b.dataset.cat, date)));
+    sheetEl.querySelectorAll("[data-meal]").forEach((el) => (el.onclick = () => openPortion(S.meals[el.dataset.meal], date)));
+  }
+
+  /* Portion editor: grams per component, ×0.5 / ×1 / ×1.5, live totals. Also edits an existing entry. */
+  function openPortion(meal, date, entry) {
+    const items = (entry ? entry.items : meal.items).map((i) => ({ food: i.food, g: num(i.g) }));
+    const base = meal.items.map((i) => num(i.g));
+    const render = () => {
+      const t = sumMacros(items);
+      openSheet(`${sheetHead(entry ? "Edit portion" : meal.name)}
+        ${entry ? `<div class="hint" style="margin-top:-4px">${esc(meal.name)} · logged ${esc(shortDate(date))}</div>` : ""}
+        <div class="mult"><button class="btn" data-mult="0.5">×½</button><button class="btn" data-mult="0.75">×¾</button><button class="btn" data-mult="1">×1</button><button class="btn" data-mult="1.5">×1½</button></div>
+        <div class="items">${items.map((it, i) => { const f = S.foods[it.food]; const m = foodMacros(it.food, it.g); return `<div class="item-row"><div class="in">${esc(f ? f.name : it.food)}<small>${r0(m.k)} kcal · ${macroStr(m)}</small></div><input type="number" inputmode="decimal" step="${f && f.unit === "each" ? 1 : 5}" value="${it.g}" data-i="${i}" aria-label="grams" /><button class="x" data-x="${i}" aria-label="remove">×</button></div>`; }).join("")}</div>
+        <div class="totals"><span><b>${r0(t.k)}</b> kcal</span><span>${r0(t.p)} P</span><span>${r0(t.f)} F</span><span>${r0(t.c)} C</span></div>
+        <div class="form"><div class="actions">${entry ? `<button class="btn btn-danger" data-del>Delete</button>` : ""}<button class="btn btn-accent" data-log>${entry ? "Save" : "Log it"}</button></div></div>`);
+      sheetEl.querySelectorAll("[data-mult]").forEach((b) => (b.onclick = () => { const k = num(b.dataset.mult); items.forEach((it, i) => { it.g = Math.round((base[i] || it.g) * k); }); render(); }));
+      sheetEl.querySelectorAll("input[data-i]").forEach((inp) => (inp.oninput = () => {
+        const it = items[+inp.dataset.i]; it.g = num(inp.value);
+        const m = foodMacros(it.food, it.g), small = inp.parentElement.querySelector("small");
+        if (small) small.textContent = `${r0(m.k)} kcal · ${macroStr(m)}`;
+        const t = sumMacros(items); $(".totals", sheetEl).innerHTML = `<span><b>${r0(t.k)}</b> kcal</span><span>${r0(t.p)} P</span><span>${r0(t.f)} F</span><span>${r0(t.c)} C</span>`;
+      }));
+      sheetEl.querySelectorAll("[data-x]").forEach((b) => (b.onclick = () => { items.splice(+b.dataset.x, 1); base.splice(+b.dataset.x, 1); render(); }));
+      $("[data-log]", sheetEl).onclick = () => {
+        if (entry) { const m = sumMacros(items); Object.assign(entry, { items: items.map((i) => ({ food: i.food, g: i.g })), k: r0(m.k), p: r0(m.p), f: r0(m.f), c: r0(m.c) }); save(); }
+        else logMeal(date, meal, items);
+        closeSheet(); renderToday();
+      };
+      const del = $("[data-del]", sheetEl); if (del) del.onclick = () => { if (!confirm("Delete this entry?")) return; day(date).log = day(date).log.filter((e) => e.id !== entry.id); save(); closeSheet(); renderToday(); };
+    };
+    render();
+  }
+
+  function openQuick(date, entry) {
+    openSheet(`${sheetHead(entry ? "Edit off-plan entry" : "Quick add (off-plan)")}
+      <div class="hint" style="margin-top:-6px;margin-bottom:8px">Eating out, a snack that is not in the library, a family dinner. Rough macros are fine. Leave kcal blank and it is computed from P, F and C.</div>
+      <div class="form">
+        <div><label>What</label><input id="q-name" value="${esc(entry ? entry.name : "")}" placeholder="e.g. Chipotle bowl" /></div>
+        <div class="g4"><div><label>kcal</label><input id="q-k" type="number" inputmode="numeric" value="${entry ? entry.k : ""}" /></div><div><label>P g</label><input id="q-p" type="number" inputmode="numeric" value="${entry ? entry.p : ""}" /></div><div><label>F g</label><input id="q-f" type="number" inputmode="numeric" value="${entry ? entry.f : ""}" /></div><div><label>C g</label><input id="q-c" type="number" inputmode="numeric" value="${entry ? entry.c : ""}" /></div></div>
+        <div><label>Note</label><input id="q-note" value="${esc(entry ? entry.note : "")}" placeholder="optional" /></div>
+        <div class="actions">${entry ? `<button class="btn btn-danger" data-del>Delete</button>` : ""}<button class="btn btn-accent" data-log>${entry ? "Save" : "Log it"}</button></div>
+      </div>`);
+    $("[data-log]", sheetEl).onclick = () => {
+      const q = { name: $("#q-name").value.trim(), k: $("#q-k").value, p: $("#q-p").value, f: $("#q-f").value, c: $("#q-c").value, note: $("#q-note").value.trim() };
+      if (entry) { let k = num(q.k); if (!k) k = num(q.p) * 4 + num(q.f) * 9 + num(q.c) * 4; Object.assign(entry, { name: q.name || "Quick add", k: r0(k), p: r0(q.p), f: r0(q.f), c: r0(q.c), note: q.note }); save(); }
+      else logQuick(date, q);
+      closeSheet(); renderToday();
+    };
+    const del = $("[data-del]", sheetEl); if (del) del.onclick = () => { if (!confirm("Delete this entry?")) return; day(date).log = day(date).log.filter((e) => e.id !== entry.id); save(); closeSheet(); renderToday(); };
+  }
+
+  /* ------------------------------------------------------------------ TODAY */
+  function macroRow(name, sub, eaten, target, unit) {
+    const has = target != null;
+    const frac = has && target > 0 ? eaten / target : 0;
+    const cls = !has ? "" : frac > 1.05 ? "over" : frac >= 0.9 ? "near" : "";
+    const rem = has ? target - eaten : null;
+    return `<div class="mrow"><div class="mname">${name}<small>${sub}</small></div><div class="mbar ${cls}"><i style="width:${Math.min(100, frac * 100)}%"></i></div><div class="mnum"><b>${r0(eaten)}</b>${has ? ` / ${r0(target)}` : ""} ${unit}<small>${has ? (rem >= 0 ? `${r0(rem)} left` : `${r0(-rem)} over`) : "no target yet"}</small></div></div>`;
+  }
+  function renderToday() {
+    const date = curDate(), t = targets(date), tot = dayTotals(date), d = S.days[date] || { log: [] };
+    const wo = weightOn(date), wIn = S.weights[date];
+    const plan = planFor(date);
+    const loggedMeals = new Set(d.log.map((e) => e.meal));
+    const chips = [];
+    if (plan) {
+      if (plan.lunch && S.meals[plan.lunch] && !loggedMeals.has(plan.lunch)) chips.push(`<button class="chip" data-plan="${plan.lunch}">Log planned lunch: ${esc(S.meals[plan.lunch].name)}</button>`);
+      if (plan.dinner && S.meals[plan.dinner] && !loggedMeals.has(plan.dinner)) chips.push(`<button class="chip" data-plan="${plan.dinner}">Log planned dinner: ${esc(S.meals[plan.dinner].name)}</button>`);
+      if (plan.salad && !loggedMeals.has("v1") && S.meals.v1) chips.push(`<button class="chip grey" data-plan="v1">+ Salad</button>`);
+    }
+    if (!loggedMeals.has("b1") && S.meals.b1 && date === today()) chips.unshift(`<button class="chip grey" data-plan="b1">Log breakfast shakes</button>`);
+    const eatenPct = tot.k > 0 ? pct({ p: tot.p, f: tot.f, c: tot.c }) : null;
+    $("#pane-today").innerHTML = `
+      <div class="hero">
+        <div class="date-row"><button class="btn" data-nav="-1" aria-label="previous day">‹</button><div class="date-title"><div class="d1">${date === today() ? "Today" : fmtDate(date)}</div><div class="d2">${date === today() ? fmtDate(date) : `<a href="#" data-nav="0">back to today</a>`}</div></div><button class="btn" data-nav="1" aria-label="next day">›</button></div>
+        <div class="macros">
+          ${macroRow("kcal", t ? (t.mode === "manual" ? "manual target" : "cut target") : "", tot.k, t ? t.kcal : null, "")}
+          ${macroRow("Protein", "1 g/lb", tot.p, t ? t.p : null, "g")}
+          ${macroRow("Fat", "0.3 g/lb", tot.f, t ? t.f : null, "g")}
+          ${macroRow("Carbs", "the rest", tot.c, t ? t.c : null, "g")}
+        </div>
+        <div class="split">${eatenPct ? `<span>Eaten split: <b>${eatenPct.p}%</b> P · <b>${eatenPct.f}%</b> F · <b>${eatenPct.c}%</b> C</span>` : `<span>Nothing logged yet</span>`}${t ? `<span>Target split: <b>${pct(t).p}%</b> P · <b>${pct(t).f}%</b> F · <b>${pct(t).c}%</b> C</span>` : `<span>Enter a weigh-in to get targets</span>`}</div>
+        <div class="weigh"><span>Weigh-in</span><input id="w-in" type="number" inputmode="decimal" step="0.1" placeholder="lb" value="${wIn != null ? wIn : ""}" /><span>lb</span><span class="avg">${wo ? (wo.n > 1 ? `7-day avg ${wo.w.toFixed(1)} (${wo.n} days)` : wo.stale ? `last ${wo.latest} on ${shortDate(wo.stale)}` : `latest ${wo.latest}`) : "no weigh-ins yet"}</span></div>
+      </div>
+      ${chips.length ? `<div class="planned">${chips.join("")}</div>` : ""}
+      <div class="row-actions"><button class="btn btn-accent" data-add="meal">+ Meal</button><button class="btn" data-add="quick">+ Quick add</button></div>
+      <div class="log">${d.log.length ? d.log.map((e) => `<div class="log-item ${e.kind}" data-entry="${e.id}"><div class="li-main"><div class="li-name">${esc(e.name)}</div><div class="li-sub">${e.kind === "meal" ? esc(itemsStr(e.items)) : esc(e.note || "off-plan")}</div></div><div><div class="li-k">${e.k}</div><div class="li-m">${e.p}P · ${e.f}F · ${e.c}C</div></div></div>`).join("") : `<div class="empty">Nothing logged ${date === today() ? "today" : "this day"}. Tap + Meal.</div>`}</div>
+      ${d.log.length ? `<div class="hint" style="text-align:center">Tap an entry to change the portion or delete it.</div>` : ""}`;
+    const pane = $("#pane-today");
+    pane.querySelectorAll("[data-nav]").forEach((b) => (b.onclick = (e) => { e.preventDefault(); const n = +b.dataset.nav; S.ui.date = n === 0 ? null : addDays(date, n); if (S.ui.date === today()) S.ui.date = null; save(); renderToday(); }));
+    $("#w-in", pane).onchange = (e) => { const v = num(e.target.value); if (v > 0) S.weights[date] = Math.round(v * 10) / 10; else delete S.weights[date]; save(); renderToday(); };
+    pane.querySelectorAll("[data-plan]").forEach((b) => (b.onclick = () => openPortion(S.meals[b.dataset.plan], date)));
+    pane.querySelectorAll("[data-add]").forEach((b) => (b.onclick = () => (b.dataset.add === "meal" ? openPicker(guessCat(), date) : openQuick(date))));
+    pane.querySelectorAll("[data-entry]").forEach((el) => (el.onclick = () => { const e = d.log.find((x) => x.id === el.dataset.entry); if (!e) return; if (e.kind === "meal" && S.meals[e.meal]) openPortion(S.meals[e.meal], date, e); else openQuick(date, e); }));
+  }
+  function guessCat() { const h = new Date().getHours(); return h < 10 ? "breakfast" : h < 15 ? "lunch" : h < 21 ? "dinner" : "snack"; }
+
+  /* ------------------------------------------------------------------ MEALS */
+  function renderMeals() {
+    const meals = Object.values(S.meals).filter((m) => !m.archived).sort((a, b) => a.order - b.order);
+    const foods = Object.values(S.foods).sort((a, b) => SECTIONS.indexOf(a.section) - SECTIONS.indexOf(b.section) || a.name.localeCompare(b.name));
+    $("#pane-meals").innerHTML = `
+      <div class="row-actions" style="margin-top:0"><button class="btn btn-accent" data-new-meal>+ New meal</button><button class="btn" data-new-food>+ New food</button></div>
+      ${CATS.map(([k, l]) => { const ms = meals.filter((m) => m.cat === k); if (!ms.length) return ""; return `<div class="sec-label">${l}</div>` + ms.map((m) => { const mm = mealMacros(m); return `<div class="meal-card collapsed" data-mc="${m.id}"><div class="meal-head"><div style="flex:1;min-width:0"><div class="mh-name">${esc(m.name)}</div><div class="mh-sub">${esc(itemsStr(m.items))}</div></div><div><div class="mp-k" style="font-weight:700;text-align:right">${r0(mm.k)}</div><div class="mp-m">${macroStr(mm)}</div></div><span class="caret">▾</span></div><div class="meal-body">${m.items.map((it) => { const f = S.foods[it.food], x = foodMacros(it.food, it.g); return `<div class="comp"><span>${esc(f ? f.name : it.food)} <small>${f && f.unit === "each" ? `× ${it.g}` : `${it.g} g`}</small></span><span>${r0(x.k)} · ${macroStr(x)}</span></div>`; }).join("")}<div class="row-actions" style="margin-bottom:0"><button class="btn" data-edit-meal="${m.id}">Edit</button><button class="btn" data-dup-meal="${m.id}">Duplicate</button><button class="btn btn-danger" data-arch-meal="${m.id}">Archive</button></div></div></div>`; }).join(""); }).join("")}
+      <div class="sec-label">Foods (per 100 g, or per unit)</div>
+      <div class="log">${foods.map((f) => `<div class="food-row" data-food="${f.id}"><div><div>${esc(f.name)}${f.source === "estimate" ? `<span class="fr-est">est.</span>` : ""}</div><div class="fr-sub">${esc(f.brand || "")}${f.brand ? " · " : ""}${f.section} · ${esc(f.source)}</div></div><div style="text-align:right;white-space:nowrap"><div style="font-weight:700">${f.per.k}</div><div class="fr-sub">${f.per.p}P · ${f.per.f}F · ${f.per.c}C ${f.unit === "each" ? "each" : "/100 g"}</div></div></div>`).join("")}</div>
+      <div class="hint">Foods marked <b>est.</b> carry Karl's estimate and get re-priced against USDA; tap a food to correct it from a label. Meal macros are computed live from the food values, so fixing a food fixes every meal that uses it.</div>`;
+    const pane = $("#pane-meals");
+    pane.querySelectorAll(".meal-head").forEach((h) => (h.onclick = () => h.parentElement.classList.toggle("collapsed")));
+    $("[data-new-meal]", pane).onclick = () => openMealForm(null);
+    $("[data-new-food]", pane).onclick = () => openFoodForm(null);
+    pane.querySelectorAll("[data-edit-meal]").forEach((b) => (b.onclick = () => openMealForm(S.meals[b.dataset.editMeal])));
+    pane.querySelectorAll("[data-dup-meal]").forEach((b) => (b.onclick = () => { const m = S.meals[b.dataset.dupMeal]; const id = uid("m"); S.meals[id] = { id, cat: m.cat, name: m.name + " (copy)", order: m.order + 0.5, items: m.items.map((i) => ({ food: i.food, g: i.g })) }; save(); renderMeals(); }));
+    pane.querySelectorAll("[data-arch-meal]").forEach((b) => (b.onclick = () => { if (!confirm("Archive this meal? Logged days keep their numbers.")) return; S.meals[b.dataset.archMeal].archived = true; save(); renderMeals(); }));
+    pane.querySelectorAll("[data-food]").forEach((el) => (el.onclick = () => openFoodForm(S.foods[el.dataset.food])));
+  }
+  function openMealForm(meal) {
+    const items = meal ? meal.items.map((i) => ({ food: i.food, g: i.g })) : [];
+    const foodOpts = (sel) => Object.values(S.foods).sort((a, b) => a.name.localeCompare(b.name)).map((f) => `<option value="${f.id}" ${f.id === sel ? "selected" : ""}>${esc(f.name)}</option>`).join("");
+    const render = () => {
+      const t = sumMacros(items);
+      openSheet(`${sheetHead(meal ? "Edit meal" : "New meal")}
+        <div class="form">
+          <div><label>Name</label><input id="m-name" value="${esc(meal ? meal.name : "")}" placeholder="e.g. Chicken thigh and rice bowl" /></div>
+          <div><label>Category</label><select id="m-cat">${CATS.map(([k, l]) => `<option value="${k}" ${(meal ? meal.cat : "lunch") === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+          <label>Components</label>
+          <div class="items">${items.map((it, i) => { const f = S.foods[it.food]; return `<div class="item-row"><select data-food-i="${i}" style="font-size:13px;padding:8px 6px;border:1px solid var(--border);border-radius:8px;background:var(--card);font-family:inherit;min-width:0">${foodOpts(it.food)}</select><input type="number" inputmode="decimal" value="${it.g}" data-g-i="${i}" aria-label="${f && f.unit === "each" ? "count" : "grams"}" /><button class="x" data-x="${i}">×</button></div>`; }).join("")}</div>
+          <button class="btn" data-add-item style="justify-content:center;height:38px">+ Add component</button>
+          <div class="totals"><span><b>${r0(t.k)}</b> kcal</span><span>${r0(t.p)} P</span><span>${r0(t.f)} F</span><span>${r0(t.c)} C</span></div>
+          <div class="actions"><button class="btn btn-accent" data-save>Save meal</button></div>
+        </div>`);
+      const grab = () => { $("#m-name").dataset.v = $("#m-name").value; };
+      sheetEl.querySelectorAll("[data-food-i]").forEach((s) => (s.onchange = () => { items[+s.dataset.foodI].food = s.value; const f = S.foods[s.value]; items[+s.dataset.foodI].g = f ? f.portion : 100; const n = $("#m-name").value; render(); $("#m-name").value = n; }));
+      sheetEl.querySelectorAll("[data-g-i]").forEach((inp) => (inp.oninput = () => { items[+inp.dataset.gI].g = num(inp.value); const t2 = sumMacros(items); $(".totals", sheetEl).innerHTML = `<span><b>${r0(t2.k)}</b> kcal</span><span>${r0(t2.p)} P</span><span>${r0(t2.f)} F</span><span>${r0(t2.c)} C</span>`; }));
+      sheetEl.querySelectorAll("[data-x]").forEach((b) => (b.onclick = () => { const n = $("#m-name").value; items.splice(+b.dataset.x, 1); render(); $("#m-name").value = n; }));
+      $("[data-add-item]", sheetEl).onclick = () => { const n = $("#m-name").value, c = $("#m-cat").value; const first = Object.values(S.foods)[0]; items.push({ food: first.id, g: first.portion }); render(); $("#m-name").value = n; $("#m-cat").value = c; };
+      $("[data-save]", sheetEl).onclick = () => {
+        const name = $("#m-name").value.trim(); if (!name) { alert("Give the meal a name."); return; }
+        if (!items.length) { alert("Add at least one component."); return; }
+        if (meal) { meal.name = name; meal.cat = $("#m-cat").value; meal.items = items.map((i) => ({ food: i.food, g: num(i.g) })); }
+        else { const id = uid("m"); S.meals[id] = { id, name, cat: $("#m-cat").value, order: Object.keys(S.meals).length + 1, items: items.map((i) => ({ food: i.food, g: num(i.g) })) }; }
+        save(); closeSheet(); renderMeals();
+      };
+    };
+    render();
+  }
+  function openFoodForm(food) {
+    openSheet(`${sheetHead(food ? "Edit food" : "New food")}
+      <div class="hint" style="margin-top:-6px;margin-bottom:8px">Enter the label per 100 g (cooked, as eaten), or switch to per unit for things like a shake or a bowl.</div>
+      <div class="form">
+        <div><label>Name</label><input id="f-name" value="${esc(food ? food.name : "")}" /></div>
+        <div class="g2"><div><label>Brand / prep</label><input id="f-brand" value="${esc(food ? food.brand || "" : "")}" /></div><div><label>Section</label><select id="f-sec">${SECTIONS.map((s) => `<option ${food && food.section === s ? "selected" : ""}>${s}</option>`).join("")}</select></div></div>
+        <div class="g2"><div><label>Values are per</label><select id="f-unit"><option value="g" ${!food || food.unit === "g" ? "selected" : ""}>100 g</option><option value="each" ${food && food.unit === "each" ? "selected" : ""}>1 unit</option></select></div><div><label>Default portion</label><input id="f-portion" type="number" inputmode="decimal" value="${food ? food.portion : 100}" /></div></div>
+        <div class="g4"><div><label>kcal</label><input id="f-k" type="number" inputmode="decimal" value="${food ? food.per.k : ""}" /></div><div><label>P g</label><input id="f-p" type="number" inputmode="decimal" value="${food ? food.per.p : ""}" /></div><div><label>F g</label><input id="f-f" type="number" inputmode="decimal" value="${food ? food.per.f : ""}" /></div><div><label>C g</label><input id="f-c" type="number" inputmode="decimal" value="${food ? food.per.c : ""}" /></div></div>
+        <div class="g2"><div><label>Cooked ÷ raw yield</label><input id="f-raw" type="number" inputmode="decimal" step="0.01" value="${food && food.rawFactor != null ? food.rawFactor : ""}" placeholder="0.72 for meat" /></div><div><label>Pack size (g) · name</label><div style="display:flex;gap:4px"><input id="f-packg" type="number" inputmode="decimal" value="${food && food.packG ? food.packG : ""}" placeholder="g" /><input id="f-packn" value="${esc(food && food.packName ? food.packName : "")}" placeholder="bowl" /></div></div></div>
+        <div><label>Source</label><input id="f-src" value="${esc(food ? food.source : "label")}" /></div>
+        <div class="actions"><button class="btn btn-accent" data-save>Save food</button></div>
+      </div>`);
+    $("[data-save]", sheetEl).onclick = () => {
+      const name = $("#f-name").value.trim(); if (!name) { alert("Name the food."); return; }
+      const f = food || { id: uid("f") };
+      Object.assign(f, { name, brand: $("#f-brand").value.trim(), section: $("#f-sec").value, unit: $("#f-unit").value, portion: num($("#f-portion").value) || (f.unit === "each" ? 1 : 100), per: { k: num($("#f-k").value), p: num($("#f-p").value), f: num($("#f-f").value), c: num($("#f-c").value) }, source: $("#f-src").value.trim() || "label" });
+      const rf = num($("#f-raw").value); if (rf > 0 && rf <= 1) f.rawFactor = rf; else delete f.rawFactor;
+      const pg = num($("#f-packg").value); if (pg > 0) { f.packG = pg; f.packName = $("#f-packn").value.trim() || "pack"; } else { delete f.packG; if (f.unit !== "each") delete f.packName; }
+      if (!f.per.k) f.per.k = r0(f.per.p * 4 + f.per.f * 9 + f.per.c * 4);
+      S.foods[f.id] = f; save(); closeSheet(); renderMeals();
+    };
+  }
+
+  /* ------------------------------------------------------------------ PLAN */
+  function renderPlan() {
+    const mon = S.ui.week || mondayOf(today());
+    const wk = week(mon);
+    const opts = (cat, sel) => `<option value="">—</option>` + Object.values(S.meals).filter((m) => !m.archived && m.cat === cat).sort((a, b) => a.order - b.order).map((m) => `<option value="${m.id}" ${m.id === sel ? "selected" : ""}>${esc(m.name)}</option>`).join("");
+    const need = weekNeeds(mon), rows = grocery(need);
+    const batch = Object.entries(need).filter(([id]) => S.foods[id] && S.foods[id].unit !== "each" && ["Meat", "Grains", "Produce"].includes(S.foods[id].section)).sort((a, b) => b[1] - a[1]);
+    let planned = 0; for (let i = 0; i < 7; i++) { const p = wk.days[addDays(mon, i)]; if (p && (p.lunch || p.dinner)) planned++; }
+    const t = targets(today());
+    $("#pane-plan").innerHTML = `
+      <div class="hero">
+        <div class="date-row"><button class="btn" data-wk="-1" aria-label="previous week">‹</button><div class="date-title"><div class="d1">Week of ${shortDate(mon)}</div><div class="d2">${planned} of 7 days planned · Sunday prep</div></div><button class="btn" data-wk="1" aria-label="next week">›</button></div>
+        <div class="plan-tools"><button class="btn" data-fill>Fill with rotation</button><button class="btn" data-clear>Clear week</button></div>
+        <div style="margin-top:6px">
+          <div class="plan-day" style="border:none;padding-bottom:2px"><div class="pd" style="color:var(--muted);font-size:10px;text-transform:uppercase">Day</div><div class="pd" style="color:var(--muted);font-size:10px;text-transform:uppercase">Lunch</div><div class="pd" style="color:var(--muted);font-size:10px;text-transform:uppercase">Dinner</div><div class="pd" style="color:var(--muted);font-size:10px;text-transform:uppercase;text-align:center">Salad</div></div>
+          ${DAYS.map((dn, i) => { const d = addDays(mon, i), p = wk.days[d] || {}; return `<div class="plan-day ${d === today() ? "today" : ""}"><div class="pd">${dn}</div><select data-slot="lunch" data-d="${d}">${opts("lunch", p.lunch)}</select><select data-slot="dinner" data-d="${d}">${opts("dinner", p.dinner)}</select><button class="salad ${p.salad ? "on" : ""}" data-salad="${d}" aria-label="salad">🥗</button></div>`; }).join("")}
+        </div>
+        ${t ? `<div class="hint">Each planned day: shakes + lunch + dinner${""} lands ${DAYS.map((dn, i) => { const p = wk.days[addDays(mon, i)]; if (!p || !(p.lunch || p.dinner)) return null; const m = [S.meals.b1, S.meals[p.lunch], S.meals[p.dinner], p.salad ? S.meals.v1 : null].filter(Boolean).map(mealMacros).reduce((a, x) => ({ k: a.k + x.k, p: a.p + x.p, f: a.f + x.f, c: a.c + x.c }), { k: 0, p: 0, f: 0, c: 0 }); return `${dn} ${r0(m.k)}`; }).filter(Boolean).join(" · ") || "nothing yet"} kcal against ${t.kcal}. What is left is snack and rice room.</div>` : ""}
+      </div>
+      <div class="card"><h2>Batch cook</h2><p>Cooked weights for the week's plan. Check off as it comes out of the oven.</p>
+        ${batch.length ? batch.map(([id, g]) => { const f = S.foods[id], done = !!wk.prep[id]; return `<div class="batch ${done ? "done" : ""}" data-prep="${id}"><div class="ex-check ${done ? "done" : ""}"><svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3 7-7"/></svg></div><div class="b-main">${esc(f.name)}<div class="b-sub">${f.packG ? `${Math.ceil(g / f.packG)} ${f.packName}${Math.ceil(g / f.packG) === 1 ? "" : "s"} · heat as you go` : f.rawFactor && f.rawFactor < 1 ? `cook about ${(g / f.rawFactor / 453.6).toFixed(1)} lb raw` : /raw/i.test(f.name) ? "wash and portion" : "steam as you go"}</div></div><div class="b-qty">${g >= 1000 ? (g / 1000).toFixed(2) + " kg" : r0(g) + " g"}</div></div>`; }).join("") : `<div class="empty">Plan a few days first.</div>`}
+      </div>
+      <div class="card"><h2>Grocery list</h2><p>Grouped by store section. Raw weights use the yield on each food (meat cooks down to about 72%).</p>
+        <div class="weigh" style="margin:0 0 8px"><label style="display:flex;align-items:center;gap:6px;font-size:12.5px"><input type="checkbox" id="g-shakes" ${wk.shakes !== false ? "checked" : ""} style="width:20px;height:20px" /> include 21 shakes (3 a day)</label></div>
+        ${rows.length ? SECTIONS.map((sec) => { const rs = rows.filter((r) => r.section === sec); if (!rs.length) return ""; return `<div class="sec-label" style="margin:10px 0 4px">${sec}</div>` + rs.map((r) => `<div class="batch" data-buy="${r.id}"><div class="ex-check ${wk.bought && wk.bought[r.id] ? "done" : ""}"><svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3 7-7"/></svg></div><div class="b-main ${wk.bought && wk.bought[r.id] ? "done" : ""}">${esc(r.name)}${r.detail ? `<div class="b-sub">${esc(r.detail)}</div>` : ""}</div><div class="b-qty">${esc(r.buy)}</div></div>`).join(""); }).join("") : `<div class="empty">Plan a few days first.</div>`}
+      </div>`;
+    const pane = $("#pane-plan");
+    pane.querySelectorAll("[data-wk]").forEach((b) => (b.onclick = () => { S.ui.week = addDays(mon, 7 * +b.dataset.wk); save(); renderPlan(); }));
+    $("[data-fill]", pane).onclick = () => { fillRotation(mon); renderPlan(); };
+    $("[data-clear]", pane).onclick = () => { if (!confirm("Clear this week's plan?")) return; wk.days = {}; wk.prep = {}; wk.bought = {}; save(); renderPlan(); };
+    pane.querySelectorAll("select[data-slot]").forEach((s) => (s.onchange = () => { const d = s.dataset.d; wk.days[d] = wk.days[d] || {}; wk.days[d][s.dataset.slot] = s.value || null; save(); renderPlan(); }));
+    pane.querySelectorAll("[data-salad]").forEach((b) => (b.onclick = () => { const d = b.dataset.salad; wk.days[d] = wk.days[d] || {}; wk.days[d].salad = !wk.days[d].salad; save(); renderPlan(); }));
+    pane.querySelectorAll("[data-prep]").forEach((el) => (el.onclick = () => { wk.prep[el.dataset.prep] = !wk.prep[el.dataset.prep]; save(); renderPlan(); }));
+    pane.querySelectorAll("[data-buy]").forEach((el) => (el.onclick = () => { wk.bought = wk.bought || {}; wk.bought[el.dataset.buy] = !wk.bought[el.dataset.buy]; save(); renderPlan(); }));
+    $("#g-shakes", pane).onchange = (e) => { wk.shakes = e.target.checked; save(); renderPlan(); };
+  }
+
+  /* ------------------------------------------------------------------ TARGETS */
+  function renderTargets() {
+    const p = S.profile, date = today(), t = targets(date), wo = weightOn(date);
+    const step = (label, sub, key, stepBy, min, max, obj) => `<div class="stepper"><div class="sn">${label}<small>${sub}</small></div><button class="btn" data-step="${key}" data-by="${-stepBy}" data-min="${min}" data-max="${max}">−</button><input type="number" inputmode="decimal" step="${stepBy}" value="${(obj || p)[key]}" data-field="${key}" /><button class="btn" data-step="${key}" data-by="${stepBy}" data-min="${min}" data-max="${max}">+</button></div>`;
+    const split = t ? pct(t) : null;
+    $("#pane-targets").innerHTML = `
+      <div class="card">
+        <h2>Daily target</h2>
+        <div class="seg"><button class="${p.mode === "auto" ? "on" : ""}" data-mode="auto">From bodyweight</button><button class="${p.mode === "manual" ? "on" : ""}" data-mode="manual">Set by hand</button></div>
+        ${t ? `<div class="derive">
+            ${t.mode === "auto" ? `<div class="k">Bodyweight used</div><div class="v">${t.w.toFixed(1)} lb <small>${t.wn > 1 ? `7-day avg of ${t.wn}` : t.stale ? `last weigh-in ${shortDate(t.stale)}` : "latest weigh-in"}</small></div>
+            <div class="k">Resting burn (Mifflin-St Jeor)</div><div class="v">${r0(t.bmr)} <small>kcal</small></div>
+            <div class="k">Maintenance × ${p.activity}</div><div class="v">${r0(t.tdee)} <small>kcal</small></div>
+            <div class="k">${p.goal === "cut" ? "Deficit" : p.goal === "build" ? "Surplus" : "Deficit"}</div><div class="v">${p.goal === "maintain" ? "0" : r0(Math.abs(t.deficit))} <small>${p.goal === "cut" ? `smaller of ${p.deficitPct}% and ${p.deficitCap}` : ""}</small></div>` : ""}
+            <div class="k"><b>Calories</b></div><div class="v"><b>${t.kcal}</b> <small>kcal</small></div>
+            <div class="k">Protein</div><div class="v">${t.p} g <small>${split.p}%</small></div>
+            <div class="k">Fat</div><div class="v">${t.f} g <small>${split.f}%</small></div>
+            <div class="k">Carbs</div><div class="v">${t.c} g <small>${split.c}%, the remainder</small></div>
+          </div>
+          <div class="pct-bar"><i class="p" style="width:${split.p}%"></i><i class="f" style="width:${split.f}%"></i><i class="c" style="width:${split.c}%"></i></div>
+          <div class="pct-key"><span><i style="background:#2563eb"></i>Protein</span><span><i style="background:#d97706"></i>Fat</span><span><i style="background:#4d7c0f"></i>Carbs</span></div>
+          <div class="hint">After the three shakes (480 kcal, 90 P, 9 F, 12 C) that leaves <b>${t.kcal - 480} kcal, ${t.p - 90} P, ${t.f - 9} F, ${t.c - 12} C</b> for lunch, dinner and snacks.</div>`
+        : `<div class="warn-box">No weigh-in yet. Enter one on the Today tab and the target computes from it, or switch to Set by hand.</div>`}
+      </div>
+      ${p.mode === "auto" ? `<div class="card"><h2>Adjust the balance</h2>
+        ${step("Protein", "g per lb bodyweight", "proteinPerLb", 0.05, 0.5, 1.5)}
+        ${step("Fat", "g per lb bodyweight", "fatPerLb", 0.05, 0.2, 0.6)}
+        <div class="hint">Carbs take whatever calories are left, so raising protein or fat lowers carbs.</div>
+        <h3>Goal</h3>
+        <div class="seg">${[["cut", "Cut"], ["maintain", "Maintain"], ["build", "Build"]].map(([k, l]) => `<button class="${p.goal === k ? "on" : ""}" data-goal="${k}">${l}</button>`).join("")}</div>
+        ${p.goal === "cut" ? step("Deficit", "% under maintenance", "deficitPct", 5, 5, 30) + step("Deficit cap", "kcal a day, at most", "deficitCap", 50, 100, 1000) : ""}
+        ${p.goal === "build" ? step("Surplus", "kcal a day", "surplus", 50, 0, 600) : ""}
+        <h3>Profile</h3>
+        ${step("Height", "inches", "heightIn", 1, 48, 90)}
+        ${step("Age", "years", "age", 1, 18, 90)}
+        <div class="stepper"><div class="sn">Activity<small>lifting most days, desk job = 1.55</small></div><select data-field="activity" style="grid-column:2 / span 3;font-size:14px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--card);font-family:inherit">${[[1.2, "1.2 · sedentary"], [1.375, "1.375 · light, 1 to 3 days"], [1.55, "1.55 · moderate, 3 to 5 days"], [1.725, "1.725 · hard, 6 to 7 days"], [1.9, "1.9 · athlete, two-a-days"]].map(([v, l]) => `<option value="${v}" ${+p.activity === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+        <div class="hint">Re-check every 4 weeks: as the 7-day average drops, the target follows it on its own.</div>
+      </div>` : `<div class="card"><h2>Set by hand</h2>
+        ${step("Calories", "kcal a day", "kcal", 50, 1200, 5000, p.manual)}
+        ${step("Protein", "g a day", "p", 5, 50, 400, p.manual)}
+        ${step("Fat", "g a day", "f", 5, 20, 200, p.manual)}
+        <div class="hint">Carbs are the remainder: (calories − protein × 4 − fat × 9) ÷ 4.</div>
+      </div>`}`;
+    const pane = $("#pane-targets");
+    const obj = () => (p.mode === "manual" ? p.manual : p);
+    pane.querySelectorAll("[data-mode]").forEach((b) => (b.onclick = () => { p.mode = b.dataset.mode; save(); renderTargets(); }));
+    pane.querySelectorAll("[data-goal]").forEach((b) => (b.onclick = () => { p.goal = b.dataset.goal; save(); renderTargets(); }));
+    pane.querySelectorAll("[data-step]").forEach((b) => (b.onclick = () => { const o = ["kcal", "p", "f"].includes(b.dataset.step) ? p.manual : p; const v = Math.min(+b.dataset.max, Math.max(+b.dataset.min, Math.round((num(o[b.dataset.step]) + num(b.dataset.by)) * 100) / 100)); o[b.dataset.step] = v; save(); renderTargets(); }));
+    pane.querySelectorAll("[data-field]").forEach((inp) => (inp.onchange = () => { const o = ["kcal", "p", "f"].includes(inp.dataset.field) ? p.manual : p; const v = num(inp.value); if (v > 0) o[inp.dataset.field] = v; save(); renderTargets(); }));
+  }
+
+  /* ------------------------------------------------------------------ ABOUT */
+  function renderAbout() {
+    const nDays = Object.keys(S.days).filter((d) => S.days[d].log.length).length, nW = Object.keys(S.weights).length;
+    $("#pane-about").innerHTML = `
+      <div class="card"><h2>How this works</h2>
+        <ul>
+          <li><b>Closed menu.</b> You eat from the meal library. Logging is one tap plus the grams you weighed. Off-plan food goes in as a quick add and is marked, so a week shows on-plan days honestly.</li>
+          <li><b>Targets follow bodyweight.</b> Mifflin-St Jeor from the 7-day average weigh-in, activity 1.55, protein 1 g per lb, fat 0.3 g per lb, carbs the remainder. On a cut the deficit is the smaller of 20% and 500 kcal. Every number is adjustable on Targets, or set the whole thing by hand.</li>
+          <li><b>Meal macros are computed live</b> from the food table, so a corrected label fixes every meal at once. A logged day keeps the numbers it was logged with.</li>
+          <li><b>Sunday plan.</b> Pick lunches and dinners for the week, get the batch-cook list in cooked grams and a grocery list in raw pounds, bowls and pouches.</li>
+        </ul>
+        <p style="margin-top:8px;font-size:12px;color:var(--muted)">${nDays} day${nDays === 1 ? "" : "s"} logged · ${nW} weigh-in${nW === 1 ? "" : "s"} · data lives on this phone.</p>
+      </div>
+      <div class="card">${SetLog.sync.notesHtml()}</div>
+      <div class="card"><h2>Backup</h2>
+        <div class="row-actions" style="margin:8px 0 0"><button class="btn" data-export>Export JSON</button><button class="btn" data-import>Import JSON</button><button class="btn btn-danger" data-reset>Reset</button></div>
+        <input type="file" id="imp-file" accept="application/json" hidden />
+      </div>`;
+    const pane = $("#pane-about");
+    SetLog.sync.wireNotes(); SetLog.sync.paint();
+    $("[data-export]", pane).onclick = () => { const blob = new Blob([JSON.stringify(S, null, 1)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `nutrition-${today()}.json`; a.click(); };
+    $("[data-import]", pane).onclick = () => $("#imp-file").click();
+    $("#imp-file", pane).onchange = (e) => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { try { const j = JSON.parse(r.result); if (!j.meals || !j.foods) throw new Error("not a nutrition backup"); S = j; migrate(); save(); renderAll(); alert("Imported."); } catch (err) { alert("Could not import: " + err.message); } }; r.readAsText(f); };
+    $("[data-reset]", pane).onclick = () => { if (!confirm("Reset everything on this phone? Meals, foods, logs and weigh-ins go back to the starting library.")) return; S = freshState(); save(); renderAll(); };
+  }
+
+  /* ------------------------------------------------------------------ tabs + boot */
+  const TABS = [["today", "Today"], ["meals", "Meals"], ["plan", "Plan"], ["targets", "Targets"], ["about", "About"]];
+  const RENDER = { today: renderToday, meals: renderMeals, plan: renderPlan, targets: renderTargets, about: renderAbout };
+  function showTab(id) {
+    S.ui.tab = id; save();
+    $("#tabs").innerHTML = TABS.map(([k, l]) => `<button class="tab ${k === id ? "active" : ""}" data-tab="${k}">${l}</button>`).join("");
+    $("#tabs").querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
+    document.querySelectorAll(".pane").forEach((p) => p.classList.toggle("active", p.id === "pane-" + id));
+    RENDER[id]();
+  }
+  function renderAll() { showTab(S.ui.tab || "today"); }
+
+  /* Sync payload: state plus a flat per-day list Karl reads (totals, target, entries, weigh-in). */
+  function exportDays() {
+    const dates = new Set([...Object.keys(S.days), ...Object.keys(S.weights)]);
+    return [...dates].sort().slice(-90).map((d) => { const t = targets(d), tot = dayTotals(d), log = S.days[d] ? S.days[d].log : []; return { date: d, weight: S.weights[d] || null, target: t ? { k: t.kcal, p: t.p, f: t.f, c: t.c } : null, total: { k: r0(tot.k), p: r0(tot.p), f: r0(tot.f), c: r0(tot.c) }, offplan: log.filter((e) => e.kind === "quick").length, entries: log.map((e) => ({ name: e.name, kind: e.kind, k: e.k, p: e.p, f: e.f, c: e.c, portion: e.kind === "meal" ? itemsStr(e.items) : e.note || "" })) }; });
+  }
+
+  load();
+  if (S.ui.date === today()) S.ui.date = null;
+  SetLog.sync.init({ slug: SLUG, storageKey: KEY, payload: () => ({ state: S, days: exportDays(), targets: targets(today()), profile: S.profile }), hasData: () => Object.keys(S.days).length > 0 || Object.keys(S.weights).length > 0 });
+  renderAll();
+  window.__nutrition = { state: () => S, targets, save, renderAll };
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => { navigator.serviceWorker.register("../sw.js").catch(() => {}); });
+  }
+})();
+</script>
+</body>
+</html>

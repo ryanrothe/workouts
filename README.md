@@ -18,6 +18,7 @@ Launcher at the root picks a program. Each sub-app keeps its own data, its own f
 | **KB Shred** | 8 weeks | 4×/week | Adam Gooch kettlebell program. Full-body daily with supersets and conditioning circuits. |
 | **6-Day PPL** | Open-ended (3-month block) | 6×/week | Jason Helmes / Anyman Fitness push-pull-legs split. Six dated session logs, per-exercise rest timers, an Up Next stat that rotates the cycle, and **automatic load progression** — log a weight plus whether you hit the rep range, and the next session suggests +5 lb, a hold, or a plateau deload (−10% / +2 reps). |
 | **Full Body Aesthetics** | 64 weeks | 6×/week | Ryan Fischer DB program. Full body daily, cycling strength and hypertrophy. |
+| **Nutrition** (tracker, not a program) | open-ended | daily | Macros against a bodyweight-derived cut target (Mifflin-St Jeor, 1 g/lb protein, 0.3 g/lb fat, carbs the remainder; or set by hand), a closed meal library logged by weighed grams, off-plan quick adds, weigh-ins with a 7-day average, and a Sunday planner that turns the week's meals into a batch-cook list and a grocery list. Pushes `days` to the `workout-sync` Worker; `pull.py nutrition`. Added 2026-09-25. |
 
 ## Structure
 
@@ -95,6 +96,7 @@ The merge **preserves all logged data**. Each sub-app keeps its original `localS
 | Hotel | `madsen_split_v1` | Sessions per workout (upper/lower) with checks + set logs (legacy free-text weights still read) |
 | 6-Day PPL | `ppl_v1` | Sessions per workout (6 keys: pushA/pullA/legsA/pushB/pullB/legsB) with checks, subs, set logs (legacy `{ weight, hit }` still read) |
 | KB Shred | `kb_shred_v1` | Per week/day: date, done flag, per exercise `r{i}` reps, `w{i}` weight, `s{i}` checked, notes |
+| Nutrition | `nutrition_v1` | Profile and target settings (auto or manual), weigh-ins by date, food table (per-100 g or per-unit macros, source, yield, pack size), meal library, per-day log entries with macros frozen at log time, weekly plans (lunch/dinner/salad per day, prep and bought checks) |
 | Sync (all programs) | `workout_sync_token` | The one device token every program posts under |
 | Athletic AF plate calc | `plateBar`, `plateTarget` | Last-used bar weight + target |
 

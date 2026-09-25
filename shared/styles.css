@@ -97,6 +97,11 @@ body[data-program="father-son"] {
   --primary-soft: #eef0ff;
   --primary-line: #c7c9f5;
 }
+body[data-program="nutrition"] {
+  --primary:      #4d7c0f;     /* olive green — Nutrition */
+  --primary-soft: #f1f8e6;
+  --primary-line: #c5e1a5;
+}
 body[data-program="launcher"] {
   --primary:      #1a1f2b;     /* neutral charcoal for the menu */
   --primary-soft: #eef0f4;

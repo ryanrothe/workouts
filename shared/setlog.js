@@ -329,7 +329,9 @@
     document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flush(); });
     window.addEventListener("pagehide", flush);
     // Push once on open: the first run of an upgraded program backs up the untouched data.
-    if (!cfg.hasData || cfg.hasData()) setTimeout(() => sync.push(), 800);
+    // Held in sync.timer so leaving within the 0.8 s still posts it through flush() (found
+    // 2026-09-25: tapping quickly through every program synced almost none of them).
+    if (!cfg.hasData || cfg.hasData()) { clearTimeout(sync.timer); sync.timer = setTimeout(sync.push, 800); }
   };
   sync.schedule = function () { if (!sync.cfg) return; clearTimeout(sync.timer); sync.timer = setTimeout(sync.push, 1500); };
   sync.push = async function (unloading) {
@@ -339,6 +341,10 @@
     let payload;
     try {
       payload = Object.assign({ program: sync.cfg.slug, schema: 2, savedAt: new Date().toISOString(), ua: navigator.userAgent }, sync.cfg.payload());
+      // Each program's own push carries its Today summary (shared/shell.js), so Cloudflare has
+      // it even when the Library page hasn't been opened since.
+      const sm = window.HS && window.HS.readSummary ? window.HS.readSummary(sync.cfg.slug) : null;
+      if (sm && !payload.summary) payload.summary = sm;
     } catch (e) { sync.status = { at: Date.now(), ok: false, msg: "could not build the payload: " + e.message }; sync.paint(); return; }
     try {
       const body = JSON.stringify(payload);

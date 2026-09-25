@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Exercise Library" />
+<meta name="theme-color" content="#F3F1EC" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<link rel="icon" type="image/png" href="favicon.png" />
+<title>Progress · Exercise Library</title>
+<link rel="stylesheet" href="shared/app.css" />
+<style>
+  .big { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+  .big b { font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 44px; line-height: 1; }
+  .big span { font-size: 13px; color: var(--muted); }
+  .big .r { text-align: right; font-size: 13px; line-height: 1.3; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; }
+  .mv { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+  .mv + .mv { border-top: 1px solid var(--line); }
+  .mv .t { flex: 1; min-width: 0; }
+  .mv .t b { display: block; font-size: 15px; font-weight: 600; }
+  .mv .t small { font-size: 12px; color: var(--muted); }
+  .tracks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .tracks b { display: block; font-size: 15px; }
+  .tracks small { font-size: 12px; color: var(--muted); }
+  .dots { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+  .dots > div { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .dots span { font-size: 11px; font-weight: 600; color: var(--muted); }
+  .dot { width: 30px; height: 30px; border-radius: 15px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; color: #fff; }
+</style>
+</head>
+<body data-shell="progress">
+<main class="wrap" id="app"></main>
+
+<script src="shared/setlog.js"></script>
+<script src="shared/programs.js"></script>
+<script src="shared/fuel.js"></script>
+<script src="shared/shell.js"></script>
+<script src="shared/library.js"></script>
+<script src="shared/patterns.js"></script>
+<script src="shared/gaps.js"></script>
+<script>
+(function () {
+  "use strict";
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const today = HS.today();
+  const { addDays, mondayOf, parseD } = Fuel;
+  const md = (s) => parseD(s).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const check = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8"/></svg>';
+  const PERIODS = [["4", "4 weeks"], ["8", "8 weeks"], ["52", "Year"]];
+  let weeks = 8;
+  try { weeks = +(localStorage.getItem("hs_progress_weeks") || 8); } catch (e) {}
+  const OTHER = "#A39C8C";
+
+  function readEntries(slug) { try { return JSON.parse(localStorage.getItem("entries." + slug) || "[]"); } catch (e) { return []; } }
+
+  /* ------------------------------------------------------------ consistency */
+  function consistency() {
+    const firstMon = addDays(mondayOf(today), -7 * (weeks - 1));
+    const wkStarts = Array.from({ length: weeks }, (_, i) => addDays(firstMon, 7 * i));
+    const sums = HS.readSummaries();
+    const progs = (window.PROGRAMS || []).filter((p) => !p.placeholder);
+    const counts = wkStarts.map(() => ({}));
+    const used = new Set();
+    progs.forEach((p) => {
+      const sm = sums[p.slug]; if (!sm || !sm.sessions) return;
+      sm.sessions.forEach((d) => { if (d < firstMon || d > addDays(wkStarts[weeks - 1], 6)) return; const wi = Math.floor((parseD(d) - parseD(firstMon)) / (7 * 86400000)); if (wi < 0 || wi >= weeks) return; counts[wi][p.slug] = (counts[wi][p.slug] || 0) + 1; used.add(p.slug); });
+    });
+    // Stacks count as a session on their day.
+    try { const st = JSON.parse(localStorage.getItem("stack_v1") || "null"); (st && st.sessions || []).filter((s) => s.done).forEach((s) => { const wi = Math.floor((parseD(s.date) - parseD(firstMon)) / (7 * 86400000)); if (wi >= 0 && wi < weeks) { counts[wi].stack = (counts[wi].stack || 0) + 1; used.add("stack"); } }); } catch (e) {}
+    const series = progs.filter((p) => used.has(p.slug)).map((p) => ({ key: p.slug, label: p.short, color: p.color }));
+    if (used.has("stack")) series.push({ key: "stack", label: "Stacks", color: OTHER });
+    const totals = counts.map((c) => Object.values(c).reduce((a, b) => a + b, 0));
+    const avg = totals.reduce((a, b) => a + b, 0) / weeks, at4 = totals.filter((t) => t >= 4).length;
+    const maxY = Math.max(6, ...totals);
+    const W = 326, H = 170, x0 = 22, x1 = 322, yt = 10, yb = 140, per = (yb - yt) / maxY, slot = (x1 - x0) / weeks, bw = Math.max(4, Math.min(22, slot - 6));
+    let svg = "";
+    [2, 4, 6].filter((g) => g <= maxY).forEach((g) => { const y = yb - g * per; svg += `<line x1="${x0}" y1="${y.toFixed(1)}" x2="${x1}" y2="${y.toFixed(1)}" stroke="var(--line)"/><text x="${x0 - 6}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--muted)">${g}</text>`; });
+    svg += `<line x1="${x0}" y1="${yb}" x2="${x1}" y2="${yb}" stroke="#CFC9BC"/>`;
+    counts.forEach((c, i) => {
+      const cx = x0 + slot * i + slot / 2; let y = yb;
+      series.forEach((s) => { const v = c[s.key] || 0; if (!v) return; const h = v * per; svg += `<rect x="${(cx - bw / 2).toFixed(1)}" y="${(y - h).toFixed(1)}" width="${bw}" height="${Math.max(1, h - 1.5).toFixed(1)}" rx="3" fill="${s.color}"/>`; y -= h; });
+      if (weeks <= 12 || i % 4 === 0) svg += `<text x="${cx.toFixed(1)}" y="${yb + 16}" text-anchor="middle" font-size="10" fill="var(--muted)">${parseD(wkStarts[i]).getMonth() + 1}/${parseD(wkStarts[i]).getDate()}</text>`;
+    });
+    return `<section class="card pad" style="display:flex;flex-direction:column;gap:10px">
+      <div class="eyebrow">Consistency</div>
+      <div class="big"><div><b>${avg.toFixed(1)}</b><span> sessions a week</span></div><div class="r"><b style="font-family:inherit;font-size:13px">${at4} of ${weeks}</b><br><span>weeks at 4+</span></div></div>
+      <svg width="100%" viewBox="0 0 ${W} ${H}" role="img" aria-label="Sessions per week for the last ${weeks} weeks, stacked by program">${svg}</svg>
+      <div class="legend">${series.map((s) => `<span><i style="background:${s.color}"></i>${esc(s.label)}</span>`).join("") || "<span>No sessions logged in this window yet.</span>"}</div>
+      <div class="hint">Each bar is one week. A session is a day you logged anything in a program; a stack counts as its own session.</div>
+    </section>`;
+  }
+
+  /* ------------------------------------------------------------ with Porter */
+  function porter() {
+    const sm = HS.readSummary("father-son");
+    const tr = sm && sm.extra && sm.extra.tracks;
+    const firstMon = addDays(mondayOf(today), -7 * (weeks - 1));
+    const n = sm && sm.sessions ? sm.sessions.filter((d) => d >= firstMon).length : 0;
+    const t = (x, lab) => x ? `<div><span class="eyebrow">${lab}</span><b>${esc(x.name)}</b><small>${x.of ? `step ${x.step} of ${x.of}` : ""}</small></div>` : "";
+    return `<section class="card pad" style="display:flex;flex-direction:column;gap:12px">
+      <div class="row-head" style="padding:0;min-height:0"><span class="eyebrow" style="color:#4338CA">With Porter</span><span class="hint">${n} session${n === 1 ? "" : "s"} in this window</span></div>
+      ${tr ? `<div class="tracks">${t(tr.pullup, "Pull-up track")}${t(tr.pushup, "Push-up track")}</div>` : `<div class="hint">Open Father &amp; Son once and his tracks show here.</div>`}
+    </section>`;
+  }
+
+  /* ------------------------------------------------------------ moving up */
+  function spark(pts, color) {
+    const w = 64, h = 24, lo = Math.min(...pts), hi = Math.max(...pts), rng = hi - lo || 1;
+    const xs = pts.map((_, i) => 2 + i * (w - 4) / Math.max(1, pts.length - 1)), ys = pts.map((p) => h - 3 - (p - lo) / rng * (h - 6));
+    return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${xs.map((x, i) => x.toFixed(1) + "," + ys[i].toFixed(1)).join(" ")}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${xs[xs.length - 1].toFixed(1)}" cy="${ys[ys.length - 1].toFixed(1)}" r="2.8" fill="${color}"/></svg>`;
+  }
+  function movingUp() {
+    const from = addDays(mondayOf(today), -7 * (weeks - 1));
+    const lifts = {};
+    (window.PROGRAMS || []).filter((p) => !p.placeholder).map((p) => p.slug).concat(["stack"]).forEach((slug) => {
+      const prog = Lib.bySlug(slug) || { short: "Stack", color: OTHER };
+      readEntries(slug).forEach((e) => {
+        if (!e.date || e.date < from || (e.lifter && String(e.lifter).toLowerCase() !== "ryan") || !Array.isArray(e.sets)) return;
+        const ws = e.sets.map((s) => s.w).filter((w) => w != null && w > 0);
+        const rs = e.sets.map((s) => s.r).filter((r) => r != null);
+        if (!ws.length && !rs.length) return;
+        const k = Patterns.key(e.exercise);
+        const L = lifts[k] = lifts[k] || { name: e.exercise, prog, pts: {} };
+        const top = ws.length ? Math.max(...ws) : 0, reps = rs.reduce((a, b) => a + b, 0);
+        const prev = L.pts[e.date];
+        if (!prev || top > prev.w || (top === prev.w && reps > prev.r)) L.pts[e.date] = { w: top, r: reps, sets: e.sets.filter((s) => s.r != null || s.w != null) };
+      });
+    });
+    const rows = [], steady = [];
+    Object.values(lifts).forEach((L) => {
+      const days = Object.keys(L.pts).sort(); if (days.length < 2) return;
+      const a = L.pts[days[0]], b = L.pts[days[days.length - 1]];
+      const byW = a.w > 0 || b.w > 0;
+      const up = byW ? b.w > a.w || (b.w === a.w && b.r > a.r) : b.r > a.r;
+      const fmt = (x) => byW ? `${x.w} × ${x.sets.map((s) => s.r != null ? s.r : "·").join(", ")}` : `${x.sets.map((s) => s.r).join(", ")}`;
+      if (up) rows.push({ L, from: fmt(a), to: fmt(b), gain: byW ? (b.w - a.w) / (a.w || 1) : (b.r - a.r) / (a.r || 1), pts: days.map((d) => byW ? L.pts[d].w : L.pts[d].r) });
+      else steady.push(L);
+    });
+    rows.sort((x, y) => y.gain - x.gain);
+    const top = rows.slice(0, 5);
+    return `<section class="card pad" style="display:flex;flex-direction:column;gap:4px;padding-bottom:8px">
+      <div class="row-head" style="padding:0 0 4px;min-height:0"><span class="eyebrow">Moving up</span><span class="hint">working sets, not maxes</span></div>
+      ${top.length ? top.map((r) => `<div class="mv"><div class="t"><b>${esc(r.L.name)}</b><small>${esc(r.L.prog.short)} · ${esc(r.from)} to <b style="display:inline;font-size:12px;color:var(--ink)">${esc(r.to)}</b></small></div>${spark(r.pts, r.L.prog.color)}</div>`).join("")
+        : `<div class="hint" style="padding:6px 0 10px">A lift shows up here once it's logged twice in this window with more weight or more reps the second time.</div>`}
+      ${top.length || steady.length ? `<div class="hint" style="padding:8px 0 6px;border-top:1px solid var(--line)">${steady.length} more lift${steady.length === 1 ? "" : "s"} holding steady. Any lift in any program counts.</div>` : ""}
+    </section>`;
+  }
+
+  /* ------------------------------------------------------------ weight */
+  function weight() {
+    const S = Fuel.read();
+    const from = addDays(today, -(weeks * 7 - 1));
+    const W = S && S.weights ? Object.keys(S.weights).filter((d) => d >= from && d <= today).sort() : [];
+    if (W.length < 2) return `<section class="card pad"><div class="eyebrow">Weight</div><p class="hint" style="margin:6px 0 0">Log a few morning weigh-ins on Fuel and the trend shows here.</p></section>`;
+    const avg = W.map((d) => { const wo = Fuel.weightOn(S, d); return wo ? wo.w : S.weights[d]; });
+    const vals = W.map((d) => S.weights[d]);
+    const lo = Math.floor(Math.min(...vals, ...avg) - 0.5), hi = Math.ceil(Math.max(...vals, ...avg) + 0.5);
+    const Wd = 326, Hd = 150, lx0 = 30, lx1 = 320, ly0 = 8, ly1 = 124;
+    const span = Math.max(1, (parseD(W[W.length - 1]) - parseD(W[0])) / 86400000);
+    const X = (d) => lx0 + ((parseD(d) - parseD(W[0])) / 86400000) / span * (lx1 - lx0), Y = (v) => ly1 - (v - lo) / (hi - lo || 1) * (ly1 - ly0);
+    let svg = "";
+    const step = Math.max(1, Math.round((hi - lo) / 4));
+    for (let g = lo; g <= hi; g += step) svg += `<line x1="${lx0}" y1="${Y(g).toFixed(1)}" x2="${lx1}" y2="${Y(g).toFixed(1)}" stroke="var(--line)"/><text x="${lx0 - 6}" y="${(Y(g) + 4).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--muted)">${g}</text>`;
+    W.forEach((d) => { svg += `<circle cx="${X(d).toFixed(1)}" cy="${Y(S.weights[d]).toFixed(1)}" r="2.4" fill="#BFB8A8"/>`; });
+    svg += `<polyline points="${W.map((d, i) => X(d).toFixed(1) + "," + Y(avg[i]).toFixed(1)).join(" ")}" fill="none" stroke="var(--olive)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+    svg += `<circle cx="${X(W[W.length - 1]).toFixed(1)}" cy="${Y(avg[avg.length - 1]).toFixed(1)}" r="4" fill="var(--olive)"/>`;
+    svg += `<text x="${lx0}" y="${ly1 + 18}" font-size="10" fill="var(--muted)">${md(W[0])}</text><text x="${lx1}" y="${ly1 + 18}" text-anchor="end" font-size="10" fill="var(--muted)">${md(W[W.length - 1])}</text>`;
+    const change = avg[avg.length - 1] - avg[0];
+    return `<section class="card pad" style="display:flex;flex-direction:column;gap:10px">
+      <div class="eyebrow">Weight</div>
+      <div class="big"><div><b>${avg[avg.length - 1].toFixed(1)}</b><span> lb, 7-day average</span></div><div class="r"><b style="font-family:inherit;font-size:13px">${change <= 0 ? "down" : "up"} ${Math.abs(change).toFixed(1)} lb</b><br><span>since ${md(W[0])}</span></div></div>
+      <svg width="100%" viewBox="0 0 ${Wd} ${Hd}" role="img" aria-label="Morning weigh-ins and the 7-day average">${svg}</svg>
+      <div class="legend"><span><i style="background:#BFB8A8;border-radius:5px;width:8px;height:8px"></i>Morning weigh-in</span><span><i style="background:var(--olive);width:14px;height:3px"></i>7-day average</span></div>
+      <div class="hint">Read the line, not the dots. The average is the number your calorie target follows.</div>
+    </section>`;
+  }
+
+  /* ------------------------------------------------------------ fuel */
+  function fuel() {
+    const S = Fuel.read(); if (!S) return "";
+    const days = Array.from({ length: 7 }, (_, i) => addDays(today, i - 6));
+    let on = 0, pSum = 0, pN = 0, pT = 0;
+    const cells = days.map((d) => {
+      const log = S.days && S.days[d] ? S.days[d].log : [];
+      const off = log.some((e) => e.kind === "quick");
+      if (log.length && !off) on++;
+      if (log.length) { const t = Fuel.dayTotals(S, d); pSum += t.p; pN++; const tg = Fuel.targets(S, d); if (tg) pT += tg.p; }
+      const dot = !log.length ? `<div class="dot" style="border:1.5px dashed #BDB6A8"></div>` : off ? `<div class="dot" style="border:2.5px solid var(--F)"></div>` : `<div class="dot" style="background:var(--olive)">${check}</div>`;
+      return `<div><span>${"SMTWTFS"[parseD(d).getDay()]}</span>${dot}</div>`;
+    }).join("");
+    return `<section class="card pad" style="display:flex;flex-direction:column;gap:12px">
+      <div class="row-head" style="padding:0;min-height:0"><span class="eyebrow olive">Fuel · last 7 days</span><span style="font-size:13px"><b>${on} of 7</b> <span class="hint">days on plan</span></span></div>
+      <div class="dots">${cells}</div>
+      <div class="legend"><span><i style="background:var(--olive);border-radius:5px"></i>On plan</span><span><i style="border:2px solid var(--F);box-sizing:border-box;border-radius:5px"></i>Off-plan food logged</span><span><i style="border:1.5px dashed #9C9586;box-sizing:border-box;border-radius:5px"></i>Not logged</span></div>
+      ${pN ? `<div style="font-size:13px">Protein averaged <b>${Math.round(pSum / pN)} g</b> <span class="hint">of ${Math.round(pT / pN)} on logged days</span></div>` : ""}
+    </section>`;
+  }
+
+  function render() {
+    $("#app").innerHTML = `
+      <header class="page-head"><div><div class="eyebrow">All programs</div><h1>Progress</h1></div></header>
+      <div class="utabs" role="tablist">${PERIODS.map(([v, l]) => `<button role="tab" aria-selected="${+v === weeks}" class="${+v === weeks ? "on" : ""}" data-w="${v}">${l}</button>`).join("")}</div>
+      ${consistency()}${porter()}${movingUp()}${weight()}${fuel()}
+      <a class="card pad" href="gaps.html" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span><b style="display:block;font-size:15px">This week's gaps</b><span class="hint">Coverage by movement and what fills it</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg></a>`;
+    document.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { weeks = +b.dataset.w; try { localStorage.setItem("hs_progress_weeks", String(weeks)); } catch (e) {} render(); }));
+  }
+  Lib.initSync(Lib.load());
+  render();
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") render(); });
+  if ("serviceWorker" in navigator) window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+})();
+</script>
+</body>
+</html>

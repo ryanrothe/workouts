@@ -907,7 +907,7 @@ function publishSummary() {
     const cw = Math.max(0, Math.min(NWEEKS - 1, calWeekOf(today)));
     const slot = (w, d) => {
       const day = PROGRAM.weeks[w][d];
-      return { label: day.title, sub: `Week ${w} · ${PROGRAM.dayLabels[d]}`, date: calISO(w, d),
+      return { id: sessionId(w, d), label: day.title, sub: `Week ${w} · ${PROGRAM.dayLabels[d]}`, date: calISO(w, d),
                minutes: Math.round(dayPlan(w, d).total / 60), listed: day.duration };
     };
     let next = null, todaySlot = null;
@@ -932,10 +932,72 @@ function publishSummary() {
       kind: "setdays", week: cw, weeks: 12, phase: cw === 0 ? "Day 1" : BLOCKS[blockOf(cw) - 1].name,
       days: ["Mon", "Wed"], next, today: todaySlot,
       thisWeek: { done: wkDays.filter(d => dayHasWork(dayState(cw, d, false))).length, planned: wkDays.length },
-      sessions
+      sessions,
+      extra: { tracks: sonTracks() }
     });
   } catch (e) {}
 }
+/* Son's current pull-up step and push-up level, exactly as the hero card shows them. */
+function sonTracks() {
+  const out = {};
+  ["pullup", "pushup"].forEach(kind => {
+    const steps = TRACKS[kind].son;
+    const i = Math.min(state.tracks.son[kind], steps.length - 1);
+    out[kind] = { name: steps[i].name, step: i + 1, of: steps.length };
+  });
+  return out;
+}
+
+/* ---------------------------------------------------------------------------
+   CATALOG (Phase 2 contract in ../shared/shell.js). Every session, W0 to W12,
+   in program order, id "w<week>-<mon|wed>". Rows are RYAN's version (his name
+   and prescription): the catalog feeds Ryan's own coverage. Track rows read
+   Ryan's current step. Minutes use the dayPlan time model with every block on
+   (no short Monday, no readiness cut) and Ryan's prescriptions; warm-up items
+   are 30 s each and the finisher is 3 min, as in dayPlan. Pure: no DOM, no saves.
+   --------------------------------------------------------------------------- */
+function sessionId(w, d) { return `w${w}-${d}`; }
+window.HS_CATALOG = function () {
+  const r1 = x => Math.round(x * 10) / 10;
+  const KIND_BY_TAG = { power: "strength", pull: "strength", push: "strength", legs: "strength", arms: "strength", armor: "strength",
+                        core: "core", test: "test", skill: "warmup" };
+  const repsOf = rx => { const m = String(rx || "").match(/×\s*([^·]+?)\s*(?:·|$)/); return m ? m[1].trim() : null; };
+  const setsOf = rx => { const m = String(rx || "").match(/^(\d+)(?:-(\d+))?\s*×/); return m ? parseInt(m[2] || m[1], 10) : 1; };
+  const sessions = [];
+  for (let w = 0; w < NWEEKS; w++) PROGRAM.dayOrder.forEach(d => {
+    if (!hasDay(w, d)) return;
+    const day = PROGRAM.weeks[w][d];
+    const exercises = [];
+    let t = 60;
+    (day.warmup || []).forEach(item => {
+      const m = item.match(/^(.*?)\s*×\s*(.+)$/);
+      const scheme = m ? `× ${m[2]}` : null;
+      exercises.push({ name: m ? m[1] : item, scheme, sets: 1, reps: m ? repsOf(scheme) : null, restSec: null, minutes: 0.5, kind: "warmup", tag: null });
+      t += 30;
+    });
+    day.blocks.forEach((b, i) => {
+      if (i > 0) t += 30;
+      const paired = /superset|the two tracks/i.test(b.note || "") ? 0.5 : 1;
+      b.rows.forEach(row => {
+        const p = resolve(row, "ryan");
+        const secs = rowSecs(row, p, paired);
+        t += secs;
+        exercises.push({
+          name: p.name, scheme: p.rx,
+          sets: row.kind === "effort" ? setsOf(p.rx) : (p.sets || 1),
+          reps: repsOf(p.rx), restSec: row.rest || null, minutes: r1(secs / 60),
+          kind: KIND_BY_TAG[row.tag] || "strength", tag: row.tag || null
+        });
+      });
+    });
+    const menu = w === 0 ? ["Plank high-fives"] : finMenu(w, d).map(f => f.name);
+    exercises.push({ name: "Finisher", scheme: menu.length > 1 ? `Pick one: ${menu.join(" · ")}` : menu[0], sets: 1, reps: null, restSec: null,
+                     minutes: 3, kind: "conditioning", tag: null });
+    t += 180;
+    sessions.push({ id: sessionId(w, d), week: w, day: PROGRAM.dayLabels[d], label: day.title, minutes: Math.round(t / 60), optional: false, exercises });
+  });
+  return { slug: PROGRAM.slug, kind: "setdays", sessions };
+};
 function L() { return state.lifter; }
 function dayState(w, d, create) {
   const k = dayKey(w, d);
@@ -1830,12 +1892,21 @@ document.getElementById("reset-btn").onclick = () => {
   }
 };
 
+/* Deep link "#s=w3-mon" (shell.js catalog contract): open that week and day instead of the default. The hash is left alone. */
+const DEEP = (function () {
+  let h = ""; try { h = decodeURIComponent(location.hash || ""); } catch (e) {}
+  const m = h.match(/^#s=w(\d+)-(mon|wed)$/i);
+  if (!m) return null;
+  const w = parseInt(m[1], 10), d = m[2].toLowerCase();
+  return w < NWEEKS && hasDay(w, d) ? { w, d } : null;
+})();
+
 buildShell();
-uiWeek = currentWeek();
+uiWeek = DEEP ? DEEP.w : currentWeek();
 render();
 SL.sync.wireNotes();
 (function openDueTab() {
-  const tab = document.querySelector(`.tab[data-pane="${dueDay(uiWeek)}"]`);
+  const tab = document.querySelector(`.tab[data-pane="${DEEP ? DEEP.d : dueDay(uiWeek)}"]`);
   if (tab) tab.click();
 })();
 publishSummary();

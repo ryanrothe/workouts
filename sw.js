@@ -4,11 +4,14 @@
    Network-first for HTML, scripts, styles and program data (so a deploy never pairs a
    new page with an old shared/setlog.js); cache-first for images and the manifest. */
 
-const CACHE = 'exercise-library-v24';
+const CACHE = 'exercise-library-v26';
 const PRECACHE = [
   './',
   './index.html',
   './library.html',
+  './gaps.html',
+  './stack.html',
+  './progress.html',
   './manifest.webmanifest',
   './shared/styles.css',
   './shared/app.css',
@@ -17,6 +20,9 @@ const PRECACHE = [
   './shared/fuel.js',
   './shared/library.js',
   './shared/programs.js',
+  './shared/patterns.js',
+  './shared/gaps.js',
+  './shared/catalog.json',
   './shared/fonts/archivo-latin.woff2',
   './shared/fonts/figtree-latin.woff2',
   './father-son/',

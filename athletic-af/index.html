@@ -565,8 +565,8 @@ function suggestFor(ex, sig) {
    60-min mode tightens each rest one step and every timer follows suit. */
 const SETUP_ALLOW = 300;
 
-function effRestSecs(rest) {
-  if (!STATE.sixty) return rest;
+function effRestSecs(rest, sixty = STATE.sixty) {
+  if (!sixty) return rest;
   if (rest >= 180) return 120;
   if (rest >= 120) return 90;
   if (rest >= 90) return 60;
@@ -578,14 +578,15 @@ function exWorkSecs(ex) {
   if (t.kind === 'fixed' || t.kind === 'range') return Math.min(90, Math.max(25, t.target * 4));
   return 40;
 }
-function dayPlanAAF() {
-  const d = currentDay();
+/* Plans the selected day with the saved toggle by default; the catalog passes
+   any day and sixty = false. */
+function dayPlanAAF(d = currentDay(), sixty = STATE.sixty) {
   let t = SETUP_ALLOW;
   const offsets = [];
   d.exercises.forEach(ex => {
     offsets.push(t);
     if (ex.checklist) { t += exWorkSecs(ex); return; }
-    const rest = effRestSecs(parseRestToSeconds(ex.rest) || 90);
+    const rest = effRestSecs(parseRestToSeconds(ex.rest) || 90, sixty);
     t += (ex.set_count || 3) * (exWorkSecs(ex) + rest);
   });
   return { total: t, offsets };
@@ -1200,7 +1201,7 @@ function publishSummary() {
       let total = null;
       try { STATE.currentWeekId = w.id; STATE.currentDayIdx = nx.di; total = dayPlanAAF().total; }
       finally { STATE.currentWeekId = keep[0]; STATE.currentDayIdx = keep[1]; }
-      next = { label: d.focus || d.day, sub: `${w.label} · ${d.day}`, date: null,
+      next = { id: aafSessionId(w, d), label: d.focus || d.day, sub: `${w.label} · ${d.day}`, date: null,
                minutes: total != null ? Math.round(total / 60) : null, listed: null };
     }
     const req = w.days.map((d, i) => i).filter(i => !w.days[i].is_recovery);
@@ -1216,6 +1217,83 @@ function publishSummary() {
     });
   } catch (e) {}
 }
+
+/* ---------------- catalog (Phase 2, ../shared/shell.js) ----------------
+   Every day of every week in program order, Week 17 included. Session ids come
+   from the data's week ids: "P1-Wk1" + Monday → "p1-w1-mon", "Week-17" +
+   Monday → "w17-mon". week = program-wide week (1-17); Wednesday recovery days
+   are optional. Minutes from dayPlanAAF() with 60-min mode off; a row's
+   minutes are its slice of that plan (the plan also counts the coach's
+   instruction rows, so they carry minutes too). Returns null until data.json
+   has loaded. Pure: no DOM, no saves. */
+function aafWeekSlug(w) {
+  const m = /^P(\d+)-Wk(\d+)$/i.exec(w.id || '');
+  if (m) return `p${m[1]}-w${m[2]}`;
+  const n = /(\d+)/.exec(w.id || '');
+  return n ? `w${n[1]}` : String(w.id || '').toLowerCase();
+}
+function aafSessionId(w, d) { return `${aafWeekSlug(w)}-${String(d.day || '').slice(0, 3).toLowerCase()}`; }
+/* "#s=p2-w3-thu" → { wi, di }, or null when absent, unknown, or before data loads. */
+function aafFromHash() {
+  const m = String(location.hash || '').match(/^#s=([a-z0-9-]+)$/i);
+  if (!m || !PROGRAM) return null;
+  const id = m[1].toLowerCase();
+  for (let wi = 0; wi < PROGRAM.weeks.length; wi++) {
+    const di = PROGRAM.weeks[wi].days.findIndex(d => aafSessionId(PROGRAM.weeks[wi], d) === id);
+    if (di >= 0) return { wi, di };
+  }
+  return null;
+}
+const AAF_NOTE = /exercise|percentage|finisher|\*speed\*|^\s*\d+\.\s/i;
+const AAF_CORE = /plank|hollow|knee raise|leg raise|sit ?ups?\b|russian twist|crunch|dead ?bug|v-?ups?\b|pallof|ab wheel/i;
+const AAF_ENGINE = /bike|assault|assult|ski ?erg|jump rope|\brun\b|\bsprint\b/i;
+function aafRowKind(ex, d) {
+  const name = ex.name || '', text = `${name} ${ex.details || ''}`;
+  // The coach's instruction rows: one set, no rest, a sentence for a name. The
+  // bike finisher is the one whose work is written nowhere else.
+  if (!ex.checklist && ex.set_count === 1 && !ex.rest && (AAF_NOTE.test(name) || name.length > 60)) {
+    return AAF_ENGINE.test(text) ? 'conditioning' : 'note';
+  }
+  if (/\d\s*RM possible|new 1 rep max/i.test(ex.details || '')) return 'test';
+  if (d.is_recovery) {
+    if (!ex.checklist) return 'warmup';
+    return AAF_CORE.test(name) ? 'core' : 'mobility';
+  }
+  if (AAF_CORE.test(name)) return 'core';
+  if (AAF_ENGINE.test(text)) return 'conditioning';
+  return 'strength';
+}
+function aafScheme(ex) {
+  const det = String(ex.details || '').replace(/\s*\n+\s*/g, ' · ').replace(/\s+/g, ' ').trim();
+  if (det) return det;
+  const m = String(ex.name || '').match(/\s+x\s+(.+)$/i);   // "Pike Fold to Squat Hold x 60 sec"
+  return m ? m[1].trim() : null;
+}
+function aafReps(ex) {
+  const t = parseTarget(ex.details);
+  if (t.kind === 'range') return `${t.lo}-${t.hi}`;
+  if (t.kind === 'fixed') return String(t.target);
+  if (t.kind === 'amrap') return 'max';
+  return null;
+}
+window.HS_CATALOG = function () {
+  if (!PROGRAM || !Array.isArray(PROGRAM.weeks)) return null;
+  const sessions = [];
+  PROGRAM.weeks.forEach((w, wi) => w.days.forEach(d => {
+    const plan = dayPlanAAF(d, false);
+    const exercises = d.exercises.map((ex, ei) => {
+      const kind = aafRowKind(ex, d);
+      const end = ei + 1 < plan.offsets.length ? plan.offsets[ei + 1] : plan.total;
+      const rest = parseRestToSeconds(ex.rest);
+      return { name: ex.name, scheme: aafScheme(ex), sets: ex.checklist ? 1 : (ex.set_count || 3),
+               reps: ex.checklist || kind === 'note' ? null : aafReps(ex), restSec: ex.checklist || !rest ? null : rest,
+               minutes: Math.round((end - plan.offsets[ei]) / 6) / 10, kind, tag: null };
+    });
+    sessions.push({ id: aafSessionId(w, d), week: wi + 1, day: String(d.day || '').slice(0, 3), label: d.focus || d.day,
+                    minutes: Math.round(plan.total / 60), optional: !!d.is_recovery, exercises });
+  }));
+  return { slug: 'athletic-af', kind: 'phased', sessions };
+};
 
 /* ---------------- export/import ---------------- */
 function doExport() {
@@ -1275,6 +1353,9 @@ async function init() {
     const nx = aafNext();
     if (nx) { STATE.currentWeekId = PROGRAM.weeks[nx.wi].id; STATE.currentDayIdx = nx.di; }
   } catch (e) {}
+  // A "#s=<id>" deep link (catalog id) opens that week and day instead. The hash is left as is.
+  const deep = aafFromHash();
+  if (deep) { STATE.currentWeekId = PROGRAM.weeks[deep.wi].id; STATE.currentDayIdx = deep.di; }
   SetLog.sync.init({
     slug: 'athletic-af',
     storageKey: STORAGE_KEY,

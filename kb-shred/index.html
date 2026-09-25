@@ -422,10 +422,11 @@ function dayDone(weekId, day) { return !!getLog(weekId, day.day).done; }
 /* ── time budget + 60-min mode + session clock (backported 2026-08-30) ──
    KB rests are already short, so the compression ladder is one small step:
    60s→45s, 45s→30s. Superset members share their rest (rest once per round),
-   so the plan counts half a rest per superset exercise. */
+   so the plan counts half a rest per superset exercise. `full` (the catalog)
+   plans with 60-min mode off without reading or touching STATE. */
 const SETUP_ALLOW = 300;
-function effRestSecs(rest) {
-  if (!STATE.sixty) return rest;
+function effRestSecs(rest, full) {
+  if (full || !STATE.sixty) return rest;
   if (rest >= 60) return 45;
   if (rest >= 45) return 30;
   return rest;
@@ -437,13 +438,13 @@ function exWorkSecs(ex) {
   if (/each side|each leg|each arm/i.test(reps)) work = Math.round(work * 1.8);
   return work;
 }
-function dayPlanKB(d) {
+function dayPlanKB(d, full) {
   if (d.conditioning || !d.exercises || !d.exercises.length) return { total: 1800, offsets: [], cond: true };
   let t = SETUP_ALLOW;
   const offsets = [];
   d.exercises.forEach(ex => {
     offsets.push(t);
-    const rest = effRestSecs(parseInt(ex.rest) || 60) * (ex.superset ? 0.5 : 1);
+    const rest = effRestSecs(parseInt(ex.rest) || 60, full) * (ex.superset ? 0.5 : 1);
     t += (ex.sets || 3) * (exWorkSecs(ex) + rest);
   });
   return { total: t, offsets, cond: false };
@@ -653,7 +654,7 @@ function publishSummary() {
     for (const k in STATE.logs) { const lg = STATE.logs[k]; if (lg && lg.date && kbHasWork(lg)) sessions.push(lg.date); }
     HS.summary('kb-shred', {
       kind: 'phased', week: week.week, weeks: PROGRAM.weeks.length, phase: null,
-      next: nextDay ? { label: nextDay.label, sub: `${nextWeek.label} · ${nextDay.day}`, date: null,
+      next: nextDay ? { id: kbSessionId(nextWeek, nextDay), label: nextDay.label, sub: `${nextWeek.label} · ${nextDay.day}`, date: null,
                         minutes: Math.round(dayPlanKB(nextDay).total / 60), listed: null } : null,
       today: null,
       thisWeek: { done: week.days.filter(d => dayDone(week.id, d)).length, planned: week.days.length },
@@ -662,6 +663,47 @@ function publishSummary() {
     });
   } catch (e) { console.warn('kb-shred summary failed', e); }
 }
+
+/* ── catalog (../shared/shell.js, Phase 2) ───────────────────────
+   HS_CATALOG() lists all 32 sessions in program order, id "w3-d2" (week id +
+   day id from data.json). Minutes come from dayPlanKB with 60-min mode off.
+   One row per exercise (superset members included): row minutes are the
+   plan's per-exercise time, excluding the 5-min setup allowance; circuit days
+   are one flat 30-min block, split across rows by the same per-exercise
+   weights. kind: circuit day → conditioning, plank/crunch-type → core, else
+   strength. tag: the superset sub-label the page shows ("A1"), else null.
+   Returns null until data.json has loaded. Pure: no DOM, no saves. */
+function kbSessionId(w, d) { return `${w.id}-${d.id}`; }
+function kbFindSession(id) {
+  if (!PROGRAM || !id) return null;
+  for (const w of PROGRAM.weeks) for (const d of w.days) if (kbSessionId(w, d) === id) return { w, d };
+  return null;
+}
+const KB_CORE_RE = /plank|crunch|russian twist|wood ?chop|gorilla drag|pike hold|around the world|sit-?up|dead ?bug|hollow|v-?up|leg raise|pallof/i;
+window.HS_CATALOG = function () {
+  if (!PROGRAM) return null;
+  const sessions = [];
+  PROGRAM.weeks.forEach(w => w.days.forEach(d => {
+    const exs = d.exercises || [];
+    const plan = dayPlanKB(d, true);
+    const rowPlan = plan.cond ? dayPlanKB({ exercises: exs }, true) : plan;
+    const rowSecs = exs.map((ex, i) => (i + 1 < exs.length ? rowPlan.offsets[i + 1] : rowPlan.total) - rowPlan.offsets[i]);
+    const scale = plan.cond ? plan.total / (rowSecs.reduce((a, b) => a + b, 0) || 1) : 1;
+    const seen = {};
+    sessions.push({
+      id: kbSessionId(w, d), week: w.week, day: d.day, label: d.label || null,
+      minutes: Math.round(plan.total / 60), optional: false,
+      exercises: exs.map((ex, i) => {
+        const name = cleanName(ex.name);
+        const tag = ex.superset ? `${ex.superset}${(seen[ex.superset] = (seen[ex.superset] || 0) + 1)}` : null;
+        return { name, scheme: `${ex.sets} × ${ex.reps}`, sets: parseInt(ex.sets, 10) || 1, reps: ex.reps || null,
+                 restSec: parseInt(ex.rest, 10) || 60, minutes: Math.round(rowSecs[i] * scale / 6) / 10,
+                 kind: d.conditioning ? 'conditioning' : KB_CORE_RE.test(name) ? 'core' : 'strength', tag };
+      })
+    });
+  }));
+  return { slug: 'kb-shred', kind: 'phased', sessions };
+};
 
 /* ── format prescription string ─────────────────────────────── */
 function fmtPrescription(ex) {
@@ -1196,8 +1238,13 @@ async function init() {
     return;
   }
   // Open on the next session (the summary's `next`); a finished program keeps the last view.
+  // A "#s=<catalog id>" deep link opens that session instead; the hash is left as is.
   const nx = kbPosition();
-  if (nx.nextDay) { STATE.currentWeek = nx.nextWeek.id; STATE.currentDay = nx.nextDay.day; }
+  let linkId = null;
+  try { const hm = /^#s=(.+)$/.exec(location.hash); if (hm) linkId = decodeURIComponent(hm[1]); } catch (e) {}
+  const linked = kbFindSession(linkId);
+  if (linked) { STATE.currentWeek = linked.w.id; STATE.currentDay = linked.d.day; }
+  else if (nx.nextDay) { STATE.currentWeek = nx.nextWeek.id; STATE.currentDay = nx.nextDay.day; }
   if (!PROGRAM.weeks.find(w => w.id === STATE.currentWeek)) {
     STATE.currentWeek = PROGRAM.weeks[0].id;
   }

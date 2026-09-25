@@ -652,7 +652,7 @@ function publishSummary() {
     if (nx) {
       const day = DAYS[nx.dk];
       const listed = day.focus.match(/~\s*\d+\s*min/);
-      next = { label: day.name.replace(/^Day [A-Z]\s*—\s*/, ""), sub: `Week ${nx.wk} · Day ${nx.dk.slice(-1)}`, date: null,
+      next = { id: sessionId(nx.wk, nx.dk), label: day.name.replace(/^Day [A-Z]\s*—\s*/, ""), sub: `Week ${nx.wk} · Day ${nx.dk.slice(-1)}`, date: null,
                minutes: Math.round(dayPlan(nx.dk).total / 60), listed: listed ? listed[0] : null };
     }
     HS.summary("achilles", {
@@ -715,6 +715,36 @@ function fmtClock(s) {
   const m = Math.floor(s / 60), sec = s % 60;
   return `${m}:${String(sec).padStart(2, "0")}`;
 }
+
+/* ===========================================================================
+   CATALOG (Phase 2 contract in ../shared/shell.js). All 12 weeks x days A/B/C
+   in program order, id "w<week>-<a|b|c>". Minutes come from dayPlan above
+   (session) and the same per-row formula (sets x (work + rest)). Kind follows
+   the page's tag: warm = warmup, mob = mobility (cooldown when it closes the
+   day), iso / hsr / ecc / acc / plyo = strength. Pure: no DOM, no saves.
+   =========================================================================== */
+function sessionId(wk, dayKey) { return `w${wk}-${dayKey.slice(-1).toLowerCase()}`; }
+window.HS_CATALOG = function () {
+  const KIND_BY_TAG = { warm: "warmup", mob: "mobility", iso: "strength", hsr: "strength", ecc: "strength", acc: "strength", plyo: "strength" };
+  const sessions = [];
+  for (let wk = 1; wk <= 12; wk++) getPhaseForWeek(wk).dayKeys.forEach(dk => {
+    const day = DAYS[dk];
+    const n = day.exercises.length;
+    sessions.push({
+      id: sessionId(wk, dk), week: wk, day: dk.slice(-1), label: day.name.replace(/^Day [A-Z]\s*—\s*/, ""),
+      minutes: Math.round(dayPlan(dk).total / 60), optional: false,
+      exercises: day.exercises.map((ex, i) => {
+        const def = EXERCISES[ex.id];
+        const sets = parseInt(ex.sets, 10) || 3;
+        const rest = REST_BY_TAG[def.tag] != null ? REST_BY_TAG[def.tag] : 60;
+        const kind = def.tag === "mob" && i === n - 1 ? "cooldown" : (KIND_BY_TAG[def.tag] || "strength");
+        return { name: def.name, scheme: `${ex.sets} × ${ex.reps}`, sets, reps: ex.reps || null, restSec: rest,
+                 minutes: Math.round(sets * (exWorkSecs(ex) + rest) / 6) / 10, kind, tag: def.tag };
+      })
+    });
+  });
+  return { slug: "achilles", kind: "phased", sessions };
+};
 
 const sessionClockIvs = {};
 function wireDayClock(clockKey, dayKey, btn, stat) {
@@ -1072,9 +1102,29 @@ document.getElementById("reset-btn").onclick = () => {
   }
 };
 
+/* Deep link "#s=w3-b" (shell.js catalog contract): open that week and day instead of the default.
+   The day card is expanded if it was collapsed and scrolled to. The hash is left alone. */
+const DEEP = (function () {
+  let h = ""; try { h = decodeURIComponent(location.hash || ""); } catch (e) {}
+  const m = h.match(/^#s=w(\d+)-([abc])$/i);
+  if (!m) return null;
+  const wk = parseInt(m[1], 10);
+  if (wk < 1 || wk > 12) return null;
+  const dk = getPhaseForWeek(wk).dayKeys.find(k => k.slice(-1).toLowerCase() === m[2].toLowerCase());
+  return dk ? { wk, dk } : null;
+})();
+
 /* Open on the next session's week (was: the last week pill tapped, persisted in state.currentWeek). */
-(function openOnNext() { const nx = nextSession(); if (nx) state.currentWeek = nx.wk; })();
+(function openOnNext() {
+  if (DEEP) { state.currentWeek = DEEP.wk; if (state.expanded[`${DEEP.wk}_${DEEP.dk}`] === false) delete state.expanded[`${DEEP.wk}_${DEEP.dk}`]; return; }
+  const nx = nextSession(); if (nx) state.currentWeek = nx.wk;
+})();
 renderAll();
+if (DEEP) {
+  const el = document.getElementById("days-container").children[getPhaseForWeek(DEEP.wk).dayKeys.indexOf(DEEP.dk)];
+  const bar = document.querySelector(".appbar");
+  if (el) requestAnimationFrame(() => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - (bar ? bar.offsetHeight : 0) - 8));
+}
 publishSummary();
 </script>
 </body>

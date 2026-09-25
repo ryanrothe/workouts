@@ -595,7 +595,7 @@ function publishSummary(){
     let next = null;
     if (nx){
       const day = WEEKS[nx.wk].days[nx.di];
-      next = { label: day.name, sub: `Week ${nx.wk} · Day ${day.tag}`, date: null,
+      next = { id: sessionId(nx.wk, nx.di), label: day.name, sub: `Week ${nx.wk} · Day ${day.tag}`, date: null,
                minutes: Math.round(dayTargetSecs(nx.wk, nx.di) / 60), listed: null };
     }
     HS.summary("hyrox", {
@@ -657,6 +657,52 @@ function fmtClock(s){
   const m = Math.floor(s / 60), sec = s % 60;
   return `${m}:${String(sec).padStart(2, "0")}`;
 }
+
+/* ===========================================================================
+   CATALOG (Phase 2 contract in ../shared/shell.js). All 12 weeks x days A-D in
+   program order, id "w<week>-<a|b|c|d>", home prescriptions (travel mode is a
+   view, not a different program). Session minutes are the per-day targets
+   above. This page has no per-row time model, so a row's minutes are only set
+   when its prescription states a duration ("5 min", "... — 25min"), else null.
+   Kind: warm = warmup, mob = mobility (cooldown in a Cooldown block), str =
+   strength, bench = test, eng / sled = conditioning, sta = conditioning except
+   core work (core) and accessory pulldowns (strength); the "→ Race order" line
+   is a note. Pure: no DOM, no saves.
+   =========================================================================== */
+function sessionId(wk, di){ return `w${wk}-${WEEKS[wk].days[di].tag.toLowerCase()}`; }
+window.HS_CATALOG = function(){
+  const minsOf = rx => { const m = rx.match(/—\s*(\d+)\s*min/i) || rx.match(/^(?:\d+\s*[–-]\s*)?(\d+)\s*min\b/i) || rx.match(/(\d+)\s*min$/i); return m ? parseInt(m[1], 10) : null; };
+  const setsOf = (rx, blockRounds) => {
+    if (/^\d+(?:\s*[–-]\s*\d+)?\s*min\b/i.test(rx)) return 1;
+    const m = rx.match(/(\d+)\s*×/) || rx.match(/(\d+)\s*rounds?\b/i);
+    return m ? parseInt(m[1], 10) : (blockRounds || 1);
+  };
+  const repsOf = rx => { const m = rx.match(/\d+\s*×\s*([^\s@,—(+]+)/); if (m) return m[1]; const r = rx.match(/^(\d+)\s*reps\b/i); return r ? r[1] : null; };
+  const restOf = rx => { let m = rx.match(/(\d+)\s*s\s*(?:rest|between)\b/i); if (m) return parseInt(m[1], 10); m = rx.match(/rest\s*(\d+)(?:\s*[–-]\s*\d+)?\s*min/i); return m ? parseInt(m[1], 10) * 60 : null; };
+  const kindOf = (item, block) => {
+    if (/^→/.test(item.name)) return "note";
+    if (item.tag === "warm") return "warmup";
+    if (item.tag === "mob") return /cooldown/i.test(block.label) ? "cooldown" : "mobility";
+    if (item.tag === "bench") return "test";
+    if (item.tag === "str") return "strength";
+    if (item.tag === "sta" && /core|plank|hollow|knee raise/i.test(item.name + " " + item.rx)) return "core";
+    if (item.tag === "sta" && /accessory/i.test(block.label)) return "strength";
+    return "conditioning";
+  };
+  const sessions = [];
+  for (let wk = 1; wk <= 12; wk++) WEEKS[wk].days.forEach((day, di) => {
+    const exercises = [];
+    day.blocks.forEach(block => {
+      const rm = block.label.match(/(\d+)\s*rounds?\b/i);
+      block.items.forEach(item => exercises.push({
+        name: item.name, scheme: item.rx, sets: setsOf(item.rx, rm ? parseInt(rm[1], 10) : null), reps: repsOf(item.rx),
+        restSec: restOf(item.rx), minutes: minsOf(item.rx), kind: kindOf(item, block), tag: item.tag
+      }));
+    });
+    sessions.push({ id: sessionId(wk, di), week: wk, day: day.tag, label: day.name, minutes: Math.round(dayTargetSecs(wk, di) / 60), optional: false, exercises });
+  });
+  return { slug: "hyrox", kind: "phased", sessions };
+};
 const sessionClockIvs = {};
 function wireDayClock(wk, di, btn, stat){
   const clockKey = `${wk}_${di}`;
@@ -954,9 +1000,29 @@ document.getElementById("reset-btn").onclick = () => {
   }
 };
 
+/* Deep link "#s=w3-b" (shell.js catalog contract): open that week and day instead of the default.
+   The day card is expanded if it was collapsed and scrolled to. The hash is left alone. */
+const DEEP = (function(){
+  let h = ""; try { h = decodeURIComponent(location.hash || ""); } catch(e){}
+  const m = h.match(/^#s=w(\d+)-([a-d])$/i);
+  if (!m) return null;
+  const wk = parseInt(m[1], 10);
+  if (wk < 1 || wk > 12) return null;
+  const di = WEEKS[wk].days.findIndex(d => d.tag.toLowerCase() === m[2].toLowerCase());
+  return di >= 0 ? { wk, di } : null;
+})();
+
 /* Open on the next session's week (was: the last week pill tapped, persisted in state.currentWeek). */
-(function openOnNext(){ const nx = nextSession(); if (nx) state.currentWeek = nx.wk; })();
+(function openOnNext(){
+  if (DEEP){ state.currentWeek = DEEP.wk; if (state.expanded[`${DEEP.wk}_${DEEP.di}`] === false) delete state.expanded[`${DEEP.wk}_${DEEP.di}`]; return; }
+  const nx = nextSession(); if (nx) state.currentWeek = nx.wk;
+})();
 renderAll();
+if (DEEP){
+  const el = document.getElementById("days-container").children[DEEP.di];
+  const bar = document.querySelector(".appbar");
+  if (el) requestAnimationFrame(() => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - (bar ? bar.offsetHeight : 0) - 8));
+}
 publishSummary();
 </script>
 </body>

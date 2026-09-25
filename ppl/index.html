@@ -714,8 +714,8 @@ function nextUpKey() {
    =========================================================================== */
 const SETUP_ALLOW = 360;   // warm-up sets + plate changes + getting to the rack
 
-function effRestSecs(rest) {
-  if (!state.sixty) return rest;
+function effRestSecs(rest, sixty = state.sixty) {
+  if (!sixty) return rest;
   if (rest >= 120) return 90;
   if (rest >= 90) return 60;
   return 45;
@@ -728,14 +728,15 @@ function exWorkSecs(ex) {
   if (/foot|leg|arm/i.test(reps)) work = Math.round(work * 1.8);
   return work;
 }
-/* Total planned seconds + the offset at which each exercise should start. */
-function workoutPlan(workout) {
+/* Total planned seconds + the offset at which each exercise should start.
+   `sixty` defaults to the saved toggle; the catalog passes false. */
+function workoutPlan(workout, sixty = state.sixty) {
   let t = SETUP_ALLOW;
   const offsets = [];
   WORKOUTS[workout].exercises.forEach(ex => {
     offsets.push(t);
     const sets = parseInt(ex.sets, 10) || 3;
-    t += sets * (exWorkSecs(ex) + effRestSecs(ex.rest || 60));
+    t += sets * (exWorkSecs(ex) + effRestSecs(ex.rest || 60, sixty));
   });
   return { total: t, offsets };
 }
@@ -1112,7 +1113,7 @@ function publishSummary() {
     const sorted = dates.slice().sort();
     HS.summary("ppl", {
       kind: "open", week: null, weeks: null,
-      next: { label: w.name, sub: `${w.day} slot`, date: null,
+      next: { id: pplSessionId(k), label: w.name, sub: `${w.day} slot`, date: null,
               minutes: Math.round(workoutPlan(k).total / 60), listed: "45 min" },
       today: null,
       thisWeek: { done: dates.filter(d => d >= ws && d <= we).length, planned: 6 },
@@ -1122,6 +1123,38 @@ function publishSummary() {
     });
   } catch (e) {}
 }
+
+/* ===========================================================================
+   CATALOG (Phase 2): the contract in ../shared/shell.js. Every workout in
+   rotation order, as the program writes it: the default lift in each slot
+   (never a garage sub), minutes from workoutPlan() with 60-min mode off.
+   Row minutes are the row's own sets × (work + rest); the session total also
+   carries SETUP_ALLOW. Pure: reads constants only, no DOM, no saves.
+   Session ids are the workout keys in kebab case: pushA → "push-a".
+   =========================================================================== */
+function pplSessionId(k) { return k.replace(/[A-Z]/g, c => "-" + c.toLowerCase()); }
+/* "#s=pull-b" → "pullB", or null when absent or unknown. */
+function pplKeyFromHash() {
+  const m = String(location.hash || "").match(/^#s=([a-z0-9-]+)$/i);
+  if (!m) return null;
+  const id = m[1].toLowerCase();
+  return WORKOUT_ORDER.find(k => pplSessionId(k) === id) || null;
+}
+window.HS_CATALOG = function () {
+  const sessions = WORKOUT_ORDER.map(k => {
+    const w = WORKOUTS[k], plan = workoutPlan(k, false);
+    const exercises = w.exercises.map((ex, i) => {
+      const def = EXERCISES[ex.id];
+      const end = i + 1 < plan.offsets.length ? plan.offsets[i + 1] : plan.total;
+      return { name: def.name, scheme: `${ex.sets} × ${ex.reps}`, sets: SL.parseSets(ex.sets, 3).sets,
+               reps: ex.reps || null, restSec: ex.rest || 60, minutes: Math.round((end - plan.offsets[i]) / 6) / 10,
+               kind: def.tag === "core" ? "core" : "strength", tag: def.tag || null };
+    });
+    return { id: pplSessionId(k), week: null, day: w.day.slice(0, 3), label: w.name,
+             minutes: Math.round(plan.total / 60), optional: false, exercises };
+  });
+  return { slug: "ppl", kind: "open", sessions };
+};
 
 /* ===========================================================================
    REST TIMER — per-exercise duration; survives re-renders via a module-level map
@@ -1286,9 +1319,10 @@ render();
 document.querySelector("#pane-notes .card").insertAdjacentHTML("beforeend", SL.sync.notesHtml());
 SL.sync.wireNotes();
 
-/* Open on the workout that's due, so the app lands where you're training today. */
+/* Open on the workout that's due, so the app lands where you're training today.
+   A "#s=<id>" deep link (catalog id) wins; the hash is left as is. */
 (function openDueTab() {
-  const next = nextUpKey();
+  const next = pplKeyFromHash() || nextUpKey();
   const tab = document.querySelector(`.tab[data-pane="${next}"]`);
   if (tab) tab.click();
 })();

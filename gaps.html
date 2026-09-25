@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Exercise Library" />
+<meta name="theme-color" content="#F3F1EC" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<link rel="icon" type="image/png" href="favicon.png" />
+<title>Gaps · Exercise Library</title>
+<link rel="stylesheet" href="shared/app.css" />
+<style>
+  .back { display: inline-flex; align-items: center; gap: 2px; min-height: 44px; font-size: 15px; font-weight: 600; margin: -8px 0 -6px -6px; padding: 0 6px; }
+  .fw { display: grid; grid-template-columns: 78px minmax(0, 1fr) auto; gap: 10px; align-items: baseline; }
+  .watch div + div { margin-top: 6px; }
+  .cov { padding: 16px 16px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .crow { display: grid; grid-template-columns: 96px minmax(0, 1fr) 62px; gap: 10px; align-items: center; min-height: 34px; }
+  .crow .lb { font-size: 13px; font-weight: 600; line-height: 1.2; display: flex; align-items: center; gap: 4px; }
+  .crow .lb.short { font-weight: 800; }
+  .crow .track { position: relative; height: 18px; }
+  .crow .band { position: absolute; top: 0; height: 18px; border-radius: 4px; background: #E3EBD2; }
+  .crow .seg { position: absolute; top: 3px; height: 12px; border-radius: 3px; }
+  .crow .val { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; }
+  .crow .val b { font-size: 14px; }
+  .crow .val b small { font-size: 11px; font-weight: 500; color: var(--muted); }
+  .crow .val span { font-size: 11px; font-weight: 600; color: var(--muted); }
+  .crow .val span.short { font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #9A5F06; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; }
+  .fill { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .fill .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .fill .top b { font-size: 15px; }
+  .fill .top span { font-size: 12px; font-weight: 700; color: #9A5F06; }
+  .fill .opt { display: flex; gap: 12px; align-items: center; }
+  .fill .opt .t { flex: 1; min-width: 0; }
+  .fill .opt .t b { display: block; font-size: 14px; font-weight: 600; }
+  .fill .opt .t small { font-size: 12px; font-weight: 600; }
+  .fill .acts { display: flex; gap: 8px; }
+  .fill .acts .btn { flex: 1; }
+  .pick { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 6px 0; border: 0; background: transparent; text-align: left; cursor: pointer; }
+  .pick + .pick { border-top: 1px solid var(--line); }
+  .pick .bx { width: 24px; height: 24px; border-radius: 7px; border: 1.5px solid #BDB6A8; box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; }
+  .pick.on .bx { background: var(--olive); border-color: var(--olive); }
+  .pick .t { flex: 1; display: flex; flex-direction: column; }
+  .pick .t b { font-size: 15px; font-weight: 600; }
+  .pick .t small { font-size: 12px; color: var(--muted); }
+  .chiprow { display: flex; flex-wrap: wrap; gap: 8px; }
+  .wtag { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 6px 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); font-size: 14px; font-weight: 600; }
+  .wtag button { width: 28px; height: 28px; border: 0; background: transparent; font-size: 18px; color: var(--muted); cursor: pointer; }
+</style>
+</head>
+<body data-shell="today">
+<main class="wrap" id="app"><div class="empty">Loading your week…</div></main>
+<div class="sheet-wrap" id="sheet-wrap" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+
+<script src="shared/setlog.js"></script>
+<script src="shared/programs.js"></script>
+<script src="shared/fuel.js"></script>
+<script src="shared/shell.js"></script>
+<script src="shared/library.js"></script>
+<script src="shared/patterns.js"></script>
+<script src="shared/gaps.js"></script>
+<script>
+(function () {
+  "use strict";
+  const $ = (s, el) => (el || document).querySelector(s);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const COL = { solo: "#16171B", porter: "#4338CA", her: "#A21CAF" };
+  const I = {
+    l: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6l-6 6 6 6"/></svg>',
+    target: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-label="focus"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/></svg>',
+    check: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8"/></svg>'
+  };
+  let L = Lib.load();
+  const today = HS.today();
+  const mono = (p, sm) => `<div class="mono${sm ? " sm" : ""}" style="background:${p.color}">${esc(p.mono)}</div>`;
+  const prettyDay = (s) => Fuel.parseD(s).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+
+  function coverageCard(res) {
+    const cov = res.coverage, tg = res.targets;
+    const row = (p) => {
+      const t = tg[p.key], c = cov.byPattern[p.key], scale = p.unit === "min" ? 120 : 20;
+      const total = c.total, short = total < t.lo;
+      let x = 0; const segs = [];
+      ["solo", "porter", "her"].forEach((w) => { const v = c[w]; if (!v) return; const wd = Math.min(100 - x, v / scale * 100); segs.push(`<div class="seg" style="left:${x.toFixed(1)}%;width:calc(${wd.toFixed(1)}% - 2px);background:${COL[w]}"></div>`); x += wd; });
+      return `<div class="crow"><span class="lb${short ? " short" : ""}">${p.label}${t.focus ? `<span class="olive" style="display:inline-flex">${I.target}</span>` : ""}</span>
+        <div class="track" aria-label="${p.label}: ${Math.round(total)} of ${t.lo} to ${t.hi}"><div class="band" style="left:${(t.lo / scale * 100).toFixed(1)}%;width:${(Math.min(t.hi, scale) - t.lo) / scale * 100}%"></div>${segs.join("")}</div>
+        <div class="val"><b>${Math.round(total)} <small>${p.unit === "min" ? "min" : "/ " + t.lo + "+"}</small></b><span class="${short ? "short" : ""}">${short ? "short" : total > t.hi ? "over" : "in range"}</span></div></div>`;
+    };
+    const setRows = Patterns.PATTERNS.filter((p) => p.unit === "sets").map(row).join("");
+    const minRows = Patterns.PATTERNS.filter((p) => p.unit === "min").map(row).join("");
+    const daysLeft = 6 - ((Fuel.parseD(today).getDay() + 6) % 7);
+    return `<section class="card cov" aria-label="Coverage">
+      <div class="row-head" style="padding:0;min-height:0"><span class="eyebrow">Hard sets this week</span><span class="hint">${daysLeft === 0 ? "last day" : `${daysLeft} day${daysLeft === 1 ? "" : "s"} left`}</span></div>
+      ${setRows}<div style="height:1px;background:var(--line);margin:4px 0"></div>${minRows}
+      <div class="legend"><span><i style="background:${COL.solo}"></i>You, solo</span><span><i style="background:${COL.porter}"></i>With Porter</span><span><i style="background:${COL.her}"></i>With your daughter</span><span><i style="background:#E3EBD2;width:14px"></i>Target range</span></div>
+      <div class="hint">Every exercise in every program is tagged by movement. Only your sets count, and sets with the kids count at the load you logged. ${cov.entries ? "" : "Nothing is logged yet this week, so every row starts at zero."}</div>
+    </section>`;
+  }
+  function focusCard() {
+    const f = (L.focus || []).map((k) => (Patterns.PATTERNS.find((p) => p.key === k) || {}).label).filter(Boolean);
+    return `<section class="card pad" style="display:flex;flex-direction:column;gap:10px">
+      <div class="fw"><span class="eyebrow">Focus</span><span style="font-size:14px;font-weight:600">${f.length ? esc(f.join(", ")) : "None set"}</span><button class="link olive" style="border:0;background:none;cursor:pointer" data-edit>Edit</button></div>
+      <div style="height:1px;background:var(--line)"></div>
+      <div class="fw" style="align-items:start"><span class="eyebrow" style="padding-top:2px">Watch</span><div class="watch" style="font-size:14px">${(L.watch || []).length ? L.watch.map((w) => `<div><b>${esc(w)}</b></div>`).join("") : `<span class="hint">Nothing on the watch list</span>`}</div><span></span></div>
+    </section>`;
+  }
+  function fillCards(res, blk) {
+    const cards = res.gaps.slice(0, 4).map((g) => {
+      const b = Gaps.bestBlock(blk.pool, g.key);
+      const s = Gaps.bestSession(res.options, g.key);
+      if (!b && !s) return "";
+      const why = `${g.have} of ${g.lo}${g.unit === "min" ? " min" : "+ sets"}${g.focus ? " · focus" : ""}`;
+      const blockLine = b ? `<div class="opt">${mono(b.prog, true)}<div class="t"><b>${esc(b.row.n)} ${b.row.s ? esc(b.row.s) : ""}</b><small style="color:${b.prog.color}">${esc(b.prog.short)} · ${esc(b.session.l)} · about ${b.minutes} min</small></div></div>` : "";
+      const sessLine = s ? `<div class="opt">${mono(s.prog, true)}<div class="t"><b>${esc(s.session.l)}</b><small style="color:${s.prog.color}">Whole session · ${esc(s.prog.short)}${s.minutes ? ` · about ${s.minutes} min` : ""}</small></div></div>` : "";
+      return `<section class="card fill"><div class="top"><b>${esc(g.label)}</b><span>${why}</span></div>${blockLine}${sessLine}
+        <div class="acts">${b ? `<a class="btn btn-primary" href="stack.html?add=${encodeURIComponent(b.slug + "|" + b.session.id + "|" + b.key)}">Stack ${esc(b.row.n.split(" ").slice(0, 3).join(" "))}</a>` : ""}${s ? `<a class="btn" href="${s.slug}/#s=${encodeURIComponent(s.session.id)}">Start session</a>` : ""}</div></section>`;
+    }).join("");
+    return cards || `<div class="card empty">No gaps this week. Everything is in range.</div>`;
+  }
+
+  async function render() {
+    await Gaps.loadCatalog("");
+    L = Lib.load();
+    const res = Gaps.menu({ date: today, lib: L, minutes: 60 });
+    const blk = Gaps.blocks({ date: today, lib: L, minutes: 60, ignoreGuard: false });
+    const mon = res.coverage.mon;
+    $("#app").innerHTML = `
+      <a class="back" href="index.html">${I.l}Today</a>
+      <header class="page-head"><div><div class="eyebrow">Week of ${prettyDay(mon)} · all programs</div><h1>Gaps</h1></div></header>
+      ${focusCard()}
+      ${coverageCard(res)}
+      ${res.guard.length ? `<div class="hint" style="padding:0 4px">Held back today: ${res.guard.join(", ")}. There's a family session tomorrow that loads them.</div>` : ""}
+      <div class="row-head"><div class="eyebrow">Fill the gaps</div><span class="hint">biggest first</span></div>
+      ${fillCards(res, blk)}`;
+    $("[data-edit]").onclick = openFocus;
+  }
+
+  /* ------------------------------------------------------------ focus + watch sheet */
+  const wrap = $("#sheet-wrap"), sheet = $("#sheet");
+  const close = () => { wrap.hidden = true; sheet.innerHTML = ""; document.body.style.overflow = ""; };
+  wrap.addEventListener("click", (e) => { if (e.target === wrap) close(); });
+  function openFocus() {
+    const sel = new Set(L.focus || []), watch = (L.watch || []).slice();
+    const draw = () => {
+      sheet.innerHTML = `<div class="grabber"></div><div class="sheet-head"><h2>Focus and watch</h2><button class="x-btn" data-x aria-label="Close">×</button></div>
+        <p class="hint" style="font-size:13px;margin:0">A focus adds 2 sets to both ends of its target (15 minutes for engine and mobility) and weighs 1.5× when Gaps ranks suggestions.</p>
+        <div class="card" style="padding:4px 14px">${Patterns.PATTERNS.map((p) => `<button class="pick ${sel.has(p.key) ? "on" : ""}" data-k="${p.key}" aria-pressed="${sel.has(p.key)}"><span class="bx">${sel.has(p.key) ? I.check : ""}</span><span class="t"><b>${p.label}</b><small>${p.lo} to ${p.hi} ${p.unit === "min" ? "min" : "sets"} a week</small></span></button>`).join("")}</div>
+        <div class="eyebrow" style="padding:4px 2px 0">Watch list</div>
+        <div class="chiprow">${watch.map((w, i) => `<span class="wtag">${esc(w)}<button data-rm="${i}" aria-label="Remove ${esc(w)}">×</button></span>`).join("") || `<span class="hint">Nothing yet.</span>`}</div>
+        <div style="display:flex;gap:8px"><input class="field" id="w-add" placeholder="e.g. Pull-ups, left knee" /><button class="btn" data-add>Add</button></div>
+        <button class="btn btn-block btn-primary" data-save>Save</button>`;
+      $("[data-x]", sheet).onclick = close;
+      sheet.querySelectorAll("[data-k]").forEach((b) => (b.onclick = () => { const k = b.dataset.k; sel.has(k) ? sel.delete(k) : sel.add(k); draw(); }));
+      sheet.querySelectorAll("[data-rm]").forEach((b) => (b.onclick = () => { watch.splice(+b.dataset.rm, 1); draw(); }));
+      $("[data-add]", sheet).onclick = () => { const v = $("#w-add", sheet).value.trim(); if (v) { watch.push(v); draw(); } };
+      $("[data-save]", sheet).onclick = () => { L = Lib.load(); L.focus = [...sel]; L.watch = watch; Lib.save(L); close(); render(); };
+    };
+    draw(); wrap.hidden = false; document.body.style.overflow = "hidden";
+  }
+
+  Lib.initSync(L);
+  render();
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") render(); });
+  if ("serviceWorker" in navigator) window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+})();
+</script>
+</body>
+</html>

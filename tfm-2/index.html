@@ -867,10 +867,20 @@ function prepSecs(items, perItemBase, sixty, factor) {
   return Math.round(total * (sixty ? factor : 1));
 }
 
+/* A mobility circuit day (one block, one mob row) plans to its listed
+   duration, low end: "30 mins" → 30, "30-45 mins" → 30. Null for other days. */
+function circuitSecs(day) {
+  const rows = day.blocks.length === 1 ? day.blocks[0].rows : [];
+  if (rows.length !== 1 || rows[0].tag !== "mob") return null;
+  const m = String(day.duration || "").match(/(\d+)/);
+  return m ? parseInt(m[1], 10) * 60 : null;
+}
+
 /* Full plan for a day: total secs, per-main-row start offsets, sets overrides,
-   and a human list of what 60-min mode changed. */
-function dayPlan(w, d) {
-  const sixty = state.sixty;
+   and a human list of what 60-min mode changed. sixtyOverride (optional) plans
+   with 60-min mode forced on or off without touching state (the catalog). */
+function dayPlan(w, d, sixtyOverride) {
+  const sixty = sixtyOverride != null ? !!sixtyOverride : state.sixty;
   const day = PROGRAM.weeks[w][d];
   const rows = mainRows(w, d);
   const trims = {};          // idx → sets to run
@@ -893,6 +903,8 @@ function dayPlan(w, d) {
   }
 
   let plan = totalWith(trims);
+  const circ = circuitSecs(day);
+  if (circ != null) plan = { total: circ, offsets: plan.offsets };
 
   if (sixty) {
     adjustments.push("Rests tightened one step (3:00→2:00, 2:00→1:30, 1:30→1:00)");
@@ -1365,7 +1377,7 @@ function publishSummary() {
     let next = null;
     if (nx) {
       const day = PROGRAM.weeks[nx.w][nx.d];
-      next = { label: day.title, sub: `Week ${nx.w + 1} · ${PROGRAM.dayLabels[nx.d]}`, date: null,
+      next = { id: sessionId(nx.w, nx.d), label: day.title, sub: `Week ${nx.w + 1} · ${PROGRAM.dayLabels[nx.d]}`, date: null,
                minutes: Math.round(dayPlan(nx.w, nx.d).total / 60), listed: day.duration };
     }
     HS.summary(PROGRAM.slug, {
@@ -1375,6 +1387,72 @@ function publishSummary() {
     });
   } catch (e) {}
 }
+
+/* ---------------------------------------------------------------------------
+   CATALOG (Phase 2 contract in ../shared/shell.js). Every week × every day in
+   program order, each day's rows in render order: warm-up items, block rows,
+   cool-down items. Minutes come from the time model with 60-min mode off.
+   Pure: reads PROGRAM only, never state or the DOM.
+   kind: warm-up / cool-down items by section; mob rows "mobility"; core-tagged
+   rows and anything in a Core block "core"; complexes, finishers and untracked
+   jump pieces "conditioning"; every other lift "strength".
+   --------------------------------------------------------------------------- */
+function sessionId(w, d) { return `w${w + 1}-${d}`; }
+/* "#s=w3-thu" → { w: 2, d: "thu" }, or null when absent or out of range. */
+function sessionFromHash() {
+  const m = String(location.hash || "").match(/^#s=w(\d+)-([a-z]+)$/i);
+  if (!m) return null;
+  const w = parseInt(m[1], 10) - 1, d = m[2].toLowerCase();
+  return w >= 0 && w < NWEEKS && PROGRAM.dayOrder.includes(d) && PROGRAM.weeks[w][d] ? { w, d } : null;
+}
+function catMins(secs) { return Math.round(secs / 6) / 10; }
+/* Warm-up / cool-down strings ("Lateral Band Walk x 15 (each side)"). The
+   per-item seconds are prepSecs on one item, same bases dayPlan uses. */
+function catPrep(items, base, kind) {
+  return (items || []).map(it => {
+    const m = String(it).match(/^(.+?)\s+x\s+(.+)$/);
+    const scheme = m ? m[2].trim() : null;
+    const reps = scheme ? scheme.replace(/\([^)]*\)/g, " ").replace(/\s+/g, " ").trim() || null : null;
+    return { name: m ? m[1].trim() : String(it), scheme, sets: 1, reps, restSec: null,
+             minutes: catMins(prepSecs([it], base, false, 1)), kind, tag: null };
+  });
+}
+function catSets(row) {
+  if (row.sets) return row.sets;
+  if (/^\s*\d+(?:\s*-\s*\d+)?\s*(?:sets|rounds)\b/i.test(String(row.rx))) return SL.parseSets(row.rx, 1).sets;
+  if (row.timer && row.timer.kind === "interval") return row.timer.rounds;
+  return 1;
+}
+function catRest(row) {
+  if (!row.timer) return row.rest != null ? row.rest : null;
+  if (row.timer.kind === "interval") { const s = row.timer.segs.find(x => /^rest$/i.test(x[0])); return s ? s[1] : null; }
+  return row.tag === "mob" && row.timer.kind === "down" ? row.timer.secs : null;   // the circuit's rest timer
+}
+function catKind(row, block) {
+  if (row.tag === "mob") return "mobility";
+  if (row.tag === "core" || /^core\b/i.test(block.label || "")) return "core";
+  if (row.tag === "cplx" || row.tag === "fin" || row.track === false) return "conditioning";
+  return "strength";
+}
+window.HS_CATALOG = function () {
+  const sessions = [];
+  for (let w = 0; w < NWEEKS; w++) PROGRAM.dayOrder.forEach(d => {
+    const day = PROGRAM.weeks[w][d];
+    if (!day) return;
+    const exercises = catPrep(day.warmup, 50, "warmup");
+    const circ = circuitSecs(day);
+    day.blocks.forEach(b => b.rows.forEach(row => {
+      const rx = String(row.rx || "");
+      const reps = (row.unit === "reps" || row.unit === "s") && rx.includes("×") ? rx.split("×")[1].split(" · ")[0].trim() || null : null;
+      exercises.push({ name: row.name, scheme: rx || null, sets: catSets(row), reps, restSec: catRest(row),
+                       minutes: catMins(circ != null ? circ : rowSecs(row, false)), kind: catKind(row, b), tag: row.tag || null });
+    }));
+    exercises.push(...catPrep(day.cooldown, 75, "cooldown"));
+    sessions.push({ id: sessionId(w, d), week: w + 1, day: PROGRAM.dayLabels[d], label: day.title,
+                    minutes: Math.round(dayPlan(w, d, false).total / 60), optional: !!day.optional, exercises });
+  });
+  return { slug: PROGRAM.slug, kind: "phased", sessions };
+};
 
 /* ---------------------------------------------------------------------------
    SESSION CLOCK — elapsed vs the day plan, so mornings stay on schedule.
@@ -1659,10 +1737,11 @@ document.getElementById("reset-btn").onclick = () => {
 })();
 
 buildShell();
-/* Open on the summary's next session. With the program finished (no next),
-   fall back to the first unfinished week and its due day, as before. */
+/* Open on the "#s=<id>" deep link when present, else the summary's next
+   session. With the program finished (no next), fall back to the first
+   unfinished week and its due day, as before. The hash is left in place. */
 let startAt = null;
-try { startAt = nextSession(); } catch (e) {}
+try { startAt = sessionFromHash() || nextSession(); } catch (e) {}
 uiWeek = startAt ? startAt.w : currentWeek();
 render();
 SL.sync.wireNotes();

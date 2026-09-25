@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Exercise Library" />
+<meta name="theme-color" content="#F3F1EC" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<link rel="icon" type="image/png" href="favicon.png" />
+<title>Stack · Exercise Library</title>
+<link rel="stylesheet" href="shared/app.css" />
+<style>
+  .back { display: inline-flex; align-items: center; gap: 2px; min-height: 44px; font-size: 15px; font-weight: 600; margin: -8px 0 -6px -6px; padding: 0 6px; }
+  .fam { padding: 12px 12px 12px 14px; display: flex; gap: 12px; align-items: center; border-radius: 18px; }
+  .fam .t { flex: 1; } .fam .t b { display: block; font-size: 15px; } .fam .t small { font-size: 12px; color: var(--muted); }
+  .ctl { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 8px; align-items: center; }
+  .blk { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 62px; padding: 8px 0; border: 0; background: transparent; text-align: left; cursor: pointer; }
+  .blk + .blk { border-top: 1px solid var(--line); }
+  .blk .bx { width: 26px; height: 26px; border-radius: 8px; border: 1.5px solid #BDB6A8; box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; }
+  .blk.on .bx { background: var(--ink); border-color: var(--ink); }
+  .blk .t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .blk .t b { font-size: 15px; font-weight: 600; }
+  .blk .t small { font-size: 12px; color: var(--muted); }
+  .blk .t em { font-style: normal; font-size: 12px; font-weight: 700; }
+  .blk .m { font-size: 14px; font-weight: 700; white-space: nowrap; }
+  .sbar { display: flex; gap: 2px; border-radius: 8px; overflow: hidden; background: var(--track); height: 30px; }
+  .sbar i { display: flex; align-items: center; padding-left: 8px; color: #fff; font-size: 11px; font-weight: 700; font-style: normal; white-space: nowrap; overflow: hidden; }
+  .run { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .run .hd { display: flex; gap: 10px; align-items: flex-start; }
+  .run .hd .t { flex: 1; min-width: 0; }
+  .run .hd b { display: block; font-size: 17px; }
+  .run .hd small { font-size: 12px; font-weight: 600; }
+  .last { font-size: 12.5px; color: var(--muted); }
+  .grid-h, .srow { display: grid; grid-template-columns: 30px minmax(0, 1fr) minmax(0, 1fr) 44px; gap: 8px; align-items: center; }
+  .grid-h { font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); text-align: center; }
+  .srow .n { font-size: 13px; font-weight: 700; color: var(--muted); text-align: center; }
+  .srow input { width: 100%; height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); text-align: center; font-size: 17px; font-weight: 700; }
+  .srow input:focus { outline: none; border: 2px solid var(--ink); }
+  .srow .ok { width: 44px; height: 44px; border-radius: 22px; border: 2px solid #BDB6A8; background: transparent; color: #BDB6A8; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .srow .ok.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+</style>
+</head>
+<body data-shell="today">
+<main class="wrap" id="app"><div class="empty">Loading…</div></main>
+
+<script src="shared/setlog.js"></script>
+<script src="shared/programs.js"></script>
+<script src="shared/fuel.js"></script>
+<script src="shared/shell.js"></script>
+<script src="shared/library.js"></script>
+<script src="shared/patterns.js"></script>
+<script src="shared/gaps.js"></script>
+<script>
+(function () {
+  "use strict";
+  const KEY = "stack_v1";
+  const $ = (s, el) => (el || document).querySelector(s);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const I = {
+    l: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6l-6 6 6 6"/></svg>',
+    check: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8"/></svg>',
+    play: '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>'
+  };
+  const today = HS.today();
+  const L = Lib.load();
+
+  /* ------------------------------------------------------------ state */
+  let S;
+  function load() { try { S = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { S = null; } if (!S || !Array.isArray(S.sessions)) S = { v: 1, sessions: [] }; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} SetLog.sync.schedule(); }
+  function entries() {
+    const out = [];
+    S.sessions.forEach((s) => s.blocks.forEach((b) => {
+      const sets = b.sets.filter((x) => x.r != null || x.w != null || x.done);
+      if (sets.length) out.push({ date: s.date, where: "Stack", exercise: b.name, program: b.slug, session: b.sessionId, unit: "reps", sets: b.sets.map((x) => ({ r: x.r, w: x.w, done: !!x.done })), rx: b.scheme || null });
+    }));
+    return out;
+  }
+  const open = () => S.sessions.find((s) => s.date === today && !s.done);
+
+  /* Last logged numbers for an exercise, from any program's entries on this phone (and earlier stacks). */
+  function lastFor(name) {
+    const k = Patterns.key(name); let best = null;
+    (window.PROGRAMS || []).map((p) => p.slug).concat(["stack"]).forEach((slug) => {
+      let es = []; try { es = JSON.parse(localStorage.getItem("entries." + slug) || "[]"); } catch (e) {}
+      es.forEach((e) => { if (Patterns.key(e.exercise) !== k || !e.date || e.date >= today) return; if (!Array.isArray(e.sets) || !e.sets.some((s) => s.r != null || s.w != null)) return; if (!best || e.date > best.date) best = e; });
+    });
+    if (!best) return null;
+    const reps = best.sets.filter((s) => s.r != null).map((s) => s.r);
+    const w = Math.max(...best.sets.map((s) => s.w || 0));
+    return { date: best.date, w: w || null, text: `${w ? w + " lb × " : ""}${reps.length ? reps.join(", ") : "done"}` };
+  }
+
+  /* ------------------------------------------------------------ composer */
+  const pref = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
+  const setPref = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  let picked = null, forced = null;
+  function familyDone() {
+    const out = [];
+    (window.PROGRAMS || []).filter((p) => p.family && !p.placeholder && Lib.role(L, p.slug) === "family").forEach((p) => {
+      const sm = HS.readSummary(p.slug);
+      if (sm && sm.today && sm.today.done) out.push({ p, label: sm.today.label || "session", minutes: sm.today.minutes || 40 });
+    });
+    return out;
+  }
+  function blockFromCatalog(slug, sessionId, key) {
+    const s = Gaps.findSession(slug, sessionId); if (!s) return null;
+    const row = s.x.find((x) => Patterns.key(x.n) === key); if (!row) return null;
+    const prog = Lib.bySlug(slug);
+    return { slug, prog, session: s, row, key, minutes: Math.max(3, Math.round(row.min || (row.sets || 1) * (((row.rest || 60) + 40) / 60))), fills: [] };
+  }
+  function renderComposer() {
+    const budget = +pref("hs_stack_time", "20");
+    const res = Gaps.blocks({ date: today, lib: L, minutes: budget });
+    const list = res.pool.slice(0, 8);   // pool is ranked by gap filled per minute
+    if (forced && !list.some((b) => b.key === forced.key)) list.unshift(forced);
+    if (!picked) { picked = new Set(res.chosen.map((b) => b.key)); if (forced) picked.add(forced.key); }
+    const chosen = list.filter((b) => picked.has(b.key)), used = chosen.reduce((a, b) => a + b.minutes, 0);
+    const fam = familyDone();
+    const famMin = fam.reduce((a, f) => a + f.minutes, 0);
+    const bar = fam.map((f) => `<i style="width:${(f.minutes / Math.max(60, famMin + used) * 100).toFixed(1)}%;background:${f.p.color}">${esc(f.label)} with ${f.p.slug === "father-son" ? "Porter" : "her"}</i>`).join("")
+      + chosen.map((b, i) => `<i style="width:${(b.minutes / Math.max(60, famMin + used) * 100).toFixed(1)}%;background:${i % 2 ? "#4A4C52" : "var(--ink)"}">${b.minutes >= 8 ? esc(b.row.n.split(" ").slice(-2).join(" ")) : ""}</i>`).join("");
+    const dow = new Date().toLocaleDateString("en-US", { weekday: "long" });
+    $("#app").innerHTML = `
+      <a class="back" href="index.html">${I.l}Today</a>
+      <header class="page-head"><div><div class="eyebrow" style="color:${fam[0] ? fam[0].p.color : "var(--muted)"}">${dow}${fam[0] ? ` · after ${esc(fam[0].label.toLowerCase())} with ${fam[0].p.slug === "father-son" ? "Porter" : "her"}` : ""}</div><h1>Stack on top</h1></div></header>
+      ${fam.map((f) => `<section class="card fam"><div class="mono" style="background:${f.p.color}">${esc(f.p.mono)}</div><div class="t"><b>${esc(f.label)} with ${f.p.slug === "father-son" ? "Porter" : "her"}</b><small>about ${f.minutes} min · done</small></div><span style="width:30px;height:30px;border-radius:15px;background:${f.p.color};color:#fff;display:flex;align-items:center;justify-content:center">${I.check}</span></section>`).join("")}
+      <div class="ctl"><span class="eyebrow" style="padding-left:4px">Time left</span><div class="seg">${["10", "20", "30"].map((v) => `<button class="${+v === budget ? "on" : ""}" data-t="${v}" aria-pressed="${+v === budget}">${v}</button>`).join("")}</div></div>
+      <div class="row-head"><div class="eyebrow">Blocks that fill your gaps</div><span class="hint">picked by Gaps</span></div>
+      ${list.length ? `<section class="card" style="padding:4px 14px">${list.map((b) => { const on = picked.has(b.key); const f = b.forGap ? (b.fills.find((y) => y.key === b.forGap.key) || b.fills[0]) : b.fills[0]; return `<button class="blk ${on ? "on" : ""}" data-k="${b.key}" aria-pressed="${on}"><span class="bx">${on ? I.check : ""}</span><span class="t"><b>${esc(b.row.n)}</b><small>${esc(b.row.s || "")}${b.row.s ? " · " : ""}${esc(b.prog.short)}</small>${f ? `<em style="color:${b.prog.color}">${esc(f.label)} · ${f.g.have} of ${f.g.lo}${f.unit === "min" ? " min" : "+"}</em>` : ""}</span><span class="m">${b.minutes} min</span></button>`; }).join("")}</section>`
+        : `<div class="card empty">No gaps to fill this week, or nothing fits in ${budget} minutes.</div>`}
+      ${res.guard.length ? `<div class="hint" style="padding:0 4px">Held back: ${esc(res.guard.join(", "))}. A family session tomorrow loads them.</div>` : ""}
+      <section class="card pad" style="display:flex;flex-direction:column;gap:8px"><div class="row-head" style="padding:0;min-height:0"><span class="eyebrow">Today's stack</span><b>${famMin + used} min</b></div><div class="sbar">${bar}</div><div class="hint">${fam.length ? `${fam.map((f) => f.label).join(" + ")} plus ${used} minutes of yours.` : `${used} minutes of yours.`} Sets count toward Gaps.</div></section>
+      <button class="btn btn-block btn-primary" data-start ${chosen.length ? "" : "disabled"}>${I.play} Start the stack · ${used} min</button>`;
+    $("#app").querySelectorAll("[data-t]").forEach((b) => (b.onclick = () => { setPref("hs_stack_time", b.dataset.t); picked = null; renderComposer(); }));
+    $("#app").querySelectorAll("[data-k]").forEach((b) => (b.onclick = () => { const k = b.dataset.k; picked.has(k) ? picked.delete(k) : picked.add(k); renderComposer(); }));
+    const st = $("[data-start]");
+    if (st) st.onclick = () => {
+      const blocks = list.filter((b) => picked.has(b.key)).map((b) => ({ slug: b.slug, sessionId: b.session.id, name: b.row.n, scheme: b.row.s || "", min: b.minutes, sets: Array.from({ length: Math.max(1, b.row.sets || 3) }, () => ({ r: null, w: null, done: false })) }));
+      S.sessions.push({ id: "st_" + Date.now().toString(36), date: today, started: new Date().toISOString(), done: false, blocks });
+      save(); render();
+    };
+  }
+
+  /* ------------------------------------------------------------ run */
+  function renderRun(sess) {
+    $("#app").innerHTML = `
+      <a class="back" href="index.html">${I.l}Today</a>
+      <header class="page-head"><div><div class="eyebrow">Stack · ${sess.blocks.length} block${sess.blocks.length === 1 ? "" : "s"} · started ${new Date(sess.started).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</div><h1>Your stack</h1></div></header>
+      ${sess.blocks.map((b, bi) => { const p = Lib.bySlug(b.slug) || { color: "#16171B", mono: "·", short: "" }; const last = lastFor(b.name); return `<section class="card run">
+        <div class="hd"><div class="mono sm" style="background:${p.color}">${esc(p.mono)}</div><div class="t"><b>${esc(b.name)}</b><small style="color:${p.color}">${esc(b.scheme)} · ${esc(p.short)}</small></div></div>
+        ${last ? `<div class="last">Last time ${esc(last.text)} (${Fuel.parseD(last.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })})</div>` : ""}
+        <div class="grid-h"><span>Set</span><span>Reps</span><span>lb</span><span></span></div>
+        ${b.sets.map((x, si) => `<div class="srow"><span class="n">${si + 1}</span><input type="number" inputmode="numeric" aria-label="Set ${si + 1} reps" value="${x.r != null ? x.r : ""}" data-b="${bi}" data-s="${si}" data-f="r" /><input type="number" inputmode="decimal" aria-label="Set ${si + 1} weight" value="${x.w != null ? x.w : last && last.w && si === 0 ? "" : x.w != null ? x.w : ""}" placeholder="${last && last.w ? last.w : ""}" data-b="${bi}" data-s="${si}" data-f="w" /><button class="ok ${x.done ? "on" : ""}" data-b="${bi}" data-s="${si}" data-done aria-label="Set ${si + 1} done" aria-pressed="${!!x.done}">${I.check}</button></div>`).join("")}
+      </section>`; }).join("")}
+      <button class="btn btn-block btn-primary" data-finish>Finish the stack</button>
+      <button class="btn btn-ghost" data-discard>Discard it</button>`;
+    $("#app").querySelectorAll("input[data-f]").forEach((inp) => (inp.onchange = () => {
+      const x = sess.blocks[+inp.dataset.b].sets[+inp.dataset.s]; const v = parseFloat(inp.value);
+      x[inp.dataset.f] = isFinite(v) ? v : null; save();
+    }));
+    $("#app").querySelectorAll("[data-done]").forEach((b) => (b.onclick = () => {
+      const x = sess.blocks[+b.dataset.b].sets[+b.dataset.s];
+      x.done = !x.done;
+      if (x.done && x.w == null) { const ph = b.parentElement.querySelector('[data-f="w"]').placeholder; if (ph) x.w = parseFloat(ph); }
+      save(); renderRun(sess);
+    }));
+    $("[data-finish]").onclick = () => { sess.done = true; sess.finished = new Date().toISOString(); save(); SetLog.sync.push(); location.href = "index.html"; };
+    $("[data-discard]").onclick = () => { if (!confirm("Discard this stack? Nothing in it will count.")) return; S.sessions = S.sessions.filter((s) => s !== sess); save(); render(); };
+  }
+
+  async function render() {
+    await Gaps.loadCatalog("");
+    const sess = open();
+    if (sess) return renderRun(sess);
+    renderComposer();
+  }
+
+  load();
+  SetLog.sync.init({ slug: "stack", storageKey: KEY, payload: () => ({ state: S, entries: entries() }), hasData: () => S.sessions.length > 0 });
+  const add = new URLSearchParams(location.search).get("add");
+  (async () => {
+    await Gaps.loadCatalog("");
+    if (add) { const [slug, sid, key] = add.split("|"); forced = blockFromCatalog(slug, sid, key); history.replaceState(null, "", location.pathname); }
+    render();
+  })();
+  if ("serviceWorker" in navigator) window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+})();
+</script>
+</body>
+</html>

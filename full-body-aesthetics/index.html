@@ -527,9 +527,10 @@ function renderHero() {
 
 /* ── time budget + 60-min mode + session clock (backported 2026-08-30) ──
    FBA rests are a fixed 60s; 60-min mode runs them at 45s. The plan parses
-   rep targets out of each prescription string. */
+   rep targets out of each prescription string. `full` (the catalog) plans
+   with 60-min mode off without reading or touching STATE. */
 const SETUP_ALLOW = 300;
-function effRestSecs() { return STATE.sixty ? 45 : REST_SECONDS; }
+function effRestSecs(full) { return !full && STATE.sixty ? 45 : REST_SECONDS; }
 function restBtnLabel() { return `⏱ ${effRestSecs()}s`; }
 function exWorkSecs(ex) {
   const p = String(ex.prescription || '');
@@ -538,14 +539,14 @@ function exWorkSecs(ex) {
   if (/ea\.|each/i.test(p)) work = Math.round(work * 1.8);
   return work;
 }
-function dayPlanFBA(d) {
+function dayPlanFBA(d, full) {
   if (d.rest) return { total: 0, offsets: [], cond: true };
   if (d.conditioning || !d.exercises || d.exercises.length < 2) return { total: 1500, offsets: [], cond: true };
   let t = SETUP_ALLOW;
   const offsets = [];
   d.exercises.forEach(ex => {
     offsets.push(t);
-    t += (ex.sets || 3) * (exWorkSecs(ex) + effRestSecs());
+    t += (ex.sets || 3) * (exWorkSecs(ex) + effRestSecs(full));
   });
   return { total: t, offsets, cond: false };
 }
@@ -1111,7 +1112,7 @@ function publishSummary() {
     for (const k in STATE.logs) { const lg = STATE.logs[k]; if (lg && lg.date && fbaHasWork(lg)) sessions.push(lg.date); }
     HS.summary('full-body-aesthetics', {
       kind: 'phased', week: week.week, weeks: PROGRAM.weeks.length, phase: fbaCycle(wi),
-      next: nextDay ? { label: nextDay.type || 'Metcon', sub: `${nextWeek.label} · ${nextDay.day}`, date: null,
+      next: nextDay ? { id: fbaSessionId(nextWeek, nextDay), label: nextDay.type || 'Metcon', sub: `${nextWeek.label} · ${nextDay.day}`, date: null,
                         minutes: Math.round(dayPlanFBA(nextDay).total / 60), listed: null } : null,
       today: null,
       thisWeek: { done: train.filter(d => dayDone(week.id, d)).length, planned: train.length },
@@ -1120,6 +1121,63 @@ function publishSummary() {
     });
   } catch (e) { console.warn('full-body-aesthetics summary failed', e); }
 }
+
+/* ── catalog (../shared/shell.js, Phase 2) ───────────────────────
+   HS_CATALOG() lists every training day in program order (rest days skipped),
+   id "w12-mon" (week id + first three letters of the day). Minutes come from
+   dayPlanFBA with 60-min mode off; label matches summary.next.label. Card days
+   give one row per exercise, as the page renders them: kind "note" for the
+   instruction lines the data stores as exercises ("High Band Fly Demo:",
+   "Immediately into;", "1min. of Rest", "Set 1) 5 reps @ 65% of 1RM"), "test"
+   for a 1-rep-max build-up, "core" for Abs rows and plank/sit-up-type names,
+   else "strength"; tag is the group badge; scheme is the prescription minus the
+   name. Text days give one "conditioning" row whose scheme is the opening of
+   the workout text. Null fields are omitted to keep ~290 sessions small.
+   Returns null until data.json has loaded. Pure: no DOM, no saves. */
+function fbaSessionId(w, d) { return `${w.id}-${d.day.slice(0, 3).toLowerCase()}`; }
+function fbaFindSession(id) {
+  if (!PROGRAM || !id) return null;
+  for (const w of PROGRAM.weeks) for (const d of w.days) if (!d.rest && fbaSessionId(w, d) === id) return { w, d };
+  return null;
+}
+const FBA_NOTE_RE = /[:;]\s*$|^immediately\b|^\d+\s*(sec|min)\.?\s*(of\s+)?rest\.?$|^\d+\s*min\.?\s*to finish\b|^set \d+\)|^(give yourself|as far as|be sure|no matter what|if you|similar to|do a few|get warmed|last week|after all|between sets|as soon as|recommended scale)\b/i;
+const FBA_CORE_RE = /\bplank\b(?!\s+(db\s+|dumbbell\s+)?rows?)|sit-?ups?\b|crunch|knee (raise|tuck)s?|russian twist|flutter kick|wood ?chop|roll ?outs?|toe taps?|knee taps?|uppercuts?|\bv-?ups?\b|leg raises?|hollow/i;
+function fbaCut(s, n) { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s; }
+function fbaRow(ex, secs) {
+  const name = String(ex.name || '').trim(), p = String(ex.prescription || '').trim();
+  const at = name ? p.indexOf(name) : -1;
+  let scheme = (at >= 0 ? p.slice(0, at) + ' ' + p.slice(at + name.length) : p).replace(/\s+/g, ' ').trim();
+  scheme = scheme.replace(/^\(([^)]*)\)/, '$1').replace(/^[\s.,;:]+/, '');
+  const rm = p.match(/(?<!\d)[1-9]\s*x\s*(\d+(?:\s*-\s*\d+)?|max|failure)(?![\dx])/i) || p.match(/^(\d+(?:\s*-\s*\d+)?)\s+(?!sec|min|set|rounds?\b)/i);
+  const kind = FBA_NOTE_RE.test(name) ? 'note'
+    : /building up to a 1 rep max|1 ?rep max test/i.test(name) ? 'test'
+    : /^(abs|core)$/i.test(ex.group || '') || FBA_CORE_RE.test(name) ? 'core' : 'strength';
+  const row = { name, sets: parseInt(ex.sets, 10) || 1, restSec: effRestSecs(true), minutes: Math.round(secs / 6) / 10, kind };
+  if (scheme) row.scheme = fbaCut(scheme, 90);
+  if (rm) row.reps = rm[1].replace(/\s+/g, '');
+  if (ex.group) row.tag = ex.group;
+  return row;
+}
+window.HS_CATALOG = function () {
+  if (!PROGRAM) return null;
+  const sessions = [];
+  PROGRAM.weeks.forEach(w => w.days.forEach(d => {
+    if (d.rest) return;
+    const plan = dayPlanFBA(d, true);
+    const s = { id: fbaSessionId(w, d), week: w.week, day: d.day.slice(0, 3), label: d.type || 'Metcon', minutes: Math.round(plan.total / 60) };
+    if (!plan.cond) {
+      const exs = d.exercises;
+      s.exercises = exs.map((ex, i) => fbaRow(ex, (i + 1 < exs.length ? plan.offsets[i + 1] : plan.total) - plan.offsets[i]));
+    } else {
+      const row = { name: d.type || 'Metcon', sets: 1, minutes: s.minutes, kind: 'conditioning' };
+      const text = String(d.notes || '').split('\n').map(x => x.trim()).filter(Boolean).join(' / ');
+      if (text) row.scheme = fbaCut(text, 160);
+      s.exercises = [row];
+    }
+    sessions.push(s);
+  }));
+  return { slug: 'full-body-aesthetics', kind: 'phased', sessions };
+};
 
 /* ── init ──────────────────────────────────────────────────── */
 $('#btnPickWeek').addEventListener('click', openWeekPicker);
@@ -1135,8 +1193,13 @@ async function init() {
     return;
   }
   // Open on the next session (the summary's `next`); a finished program keeps the last view.
+  // A "#s=<catalog id>" deep link opens that session instead; the hash is left as is.
   const nx = fbaPosition();
-  if (nx.nextDay) { STATE.currentWeek = nx.nextWeek.id; STATE.currentDay = nx.nextDay.day; }
+  let linkId = null;
+  try { const hm = /^#s=(.+)$/.exec(location.hash); if (hm) linkId = decodeURIComponent(hm[1]); } catch (e) {}
+  const linked = fbaFindSession(linkId);
+  if (linked) { STATE.currentWeek = linked.w.id; STATE.currentDay = linked.d.day; }
+  else if (nx.nextDay) { STATE.currentWeek = nx.nextWeek.id; STATE.currentDay = nx.nextDay.day; }
   // Validate state
   if (!PROGRAM.weeks.find(w => w.id === STATE.currentWeek)) {
     STATE.currentWeek = PROGRAM.weeks[0].id;

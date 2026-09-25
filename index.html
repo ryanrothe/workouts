@@ -65,6 +65,23 @@
   .rowlink .t b { font-size: 14px; }
   .rowlink .t small { font-size: 12px; color: var(--muted); }
   .donechip { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; }
+  .mix { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .mix-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+  .mix-grid > div { display: flex; flex-direction: column; gap: 4px; }
+  .mix-grid .mb { height: 10px; border-radius: 5px; background: var(--track); overflow: hidden; }
+  .mix-grid .mb.gap { box-sizing: border-box; border: 2px solid #C27C0E; background: #FBF1DD; }
+  .mix-grid b { font-size: 12px; }
+  .mix-grid small { font-size: 11px; font-weight: 600; color: var(--muted); margin-top: -3px; }
+  .mix-grid small.gap { color: #9A5F06; }
+  .ctl { display: grid; grid-template-columns: 50px minmax(0, 1fr); gap: 8px; align-items: center; }
+  .ctl .eyebrow { padding-left: 4px; }
+  .opt { padding: 14px 12px 14px 14px; display: flex; gap: 12px; align-items: center; border-radius: 18px; }
+  .opt .t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .opt .tag { font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+  .opt .ti { font-size: 16px; font-weight: 700; }
+  .opt .me { font-size: 12px; color: var(--muted); }
+  .opt .why { font-size: 12.5px; line-height: 1.4; margin-top: 4px; }
+  .opt .go { width: 44px; height: 44px; flex-shrink: 0; border-radius: 13px; color: #FFFFFF; display: flex; align-items: center; justify-content: center; }
 </style>
 </head>
 <body data-shell="today">
@@ -75,6 +92,8 @@
 <script src="shared/fuel.js"></script>
 <script src="shared/shell.js"></script>
 <script src="shared/library.js"></script>
+<script src="shared/patterns.js"></script>
+<script src="shared/gaps.js"></script>
 <script>
 (function () {
   "use strict";
@@ -162,7 +181,11 @@
         <a class="start" style="background:${p.color}" href="${progHref(p)}">${I.play} Start ${esc(sm.today.label || "")}</a></section>`;
     }
     let h, s;
-    if (sm.today && sm.today.done) { h = `<span class="donechip" style="color:${p.color}">${I.check} Done today</span>`; s = sm.next && sm.next.date ? `Next: ${prettyDate(sm.next.date)} · ${esc(sm.next.label || "")}` : ""; }
+    if (sm.today && sm.today.done) {
+      h = `<span class="donechip" style="color:${p.color}">${I.check} Done today</span>`; s = sm.next && sm.next.date ? `Next: ${prettyDate(sm.next.date)} · ${esc(sm.next.label || "")}` : "";
+      return `<section class="card compact">${mono(p)}<div class="t"><div class="pn" style="color:${p.color}">${esc(p.name)}</div><div class="h">${h}</div><div class="s">${s}</div></div><a class="chev" href="${progHref(p)}" aria-label="Open ${esc(p.name)}">${I.chev}</a></section>
+        <a class="rowlink" href="stack.html" style="border-color:${p.color}"><span style="color:${p.color};display:flex">${I.plus}</span><span class="t"><b>Stack on top</b><small>Short blocks that fill your gaps in the time you have left.</small></span>${I.chev}</a>`;
+    }
     else if (sm.kind === "setdays") { h = "Rest day"; s = sm.next ? `Next: ${sm.next.date ? prettyDate(sm.next.date) : ""} · ${esc(sm.next.label || "")}` : "Program complete"; }
     else { h = sm.next ? esc(sm.next.label) : "Program complete"; s = sm.next ? esc(sm.next.sub || "") : ""; }
     return `<section class="card compact">${mono(p)}<div class="t"><div class="pn" style="color:${p.color}">${esc(p.name)}</div><div class="h">${h}</div><div class="s">${s}</div></div><a class="chev" href="${progHref(p)}" aria-label="Open ${esc(p.name)}">${I.chev}</a></section>`;
@@ -196,14 +219,64 @@
       <header class="page-head"><div><div class="eyebrow">${DOW[now.getDay()]} · ${now.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div><h1>Today</h1></div>${weighChip()}</header>
       ${fuelCard()}
       ${fam.length ? `<div class="row-head"><div class="eyebrow">Family · first</div><a class="link" href="library.html">Library ${I.chev}</a></div>${fam.map(familyCard).join("")}` : ""}
-      <div class="row-head"><div class="eyebrow">Mine · ${mine.length} of ${caps.mine}</div>${fam.length ? "" : `<a class="link" href="library.html">Library ${I.chev}</a>`}</div>
-      ${mine.length ? mine.map(mineCard).join("") : `<a class="rowlink" href="library.html"><span class="t"><b>No program of your own yet</b><small>Pick one in the Library.</small></span>${I.chev}</a>`}
+      <div class="row-head"><div class="eyebrow" id="mine-head">Mine · ${mine.length} of ${caps.mine}</div><a class="link" href="gaps.html">Gaps ${I.chev}</a></div>
+      <div id="mine-slot" style="display:flex;flex-direction:column;gap:12px">${mine.length ? mine.map(mineCard).join("") : `<a class="rowlink" href="library.html"><span class="t"><b>No program of your own yet</b><small>Pick one in the Library.</small></span>${I.chev}</a>`}</div>
       <a class="rowlink" href="library.html#pool"><span class="t"><b>Pick any session from the pool</b><small>Every other program, one session at a time.</small></span>${I.chev}</a>
       ${hotel && Lib.role(L, "hotel") !== "finished" ? `<a class="rowlink" href="hotel/"><span style="color:${hotel.color};display:flex">${I.suitcase}</span><span class="t"><b>On the road?</b><small>Swap today for a Hotel workout. Your programs stay put.</small></span>${I.chev}</a>` : ""}`;
   }
-  render();
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") render(); });
-  window.addEventListener("pageshow", (e) => { if (e.persisted) render(); });
+  /* ------------------------------------------------------------ B: decide on the day (Phase 2) */
+  const pref = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
+  const setPref = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  const MIX = ["push", "pull", "squat", "hinge", "engine"];
+  function mixCard(res) {
+    const cells = MIX.map((k) => {
+      const t = res.targets[k], have = res.coverage.byPattern[k].total, p = Patterns.PATTERNS.find((x) => x.key === k);
+      const frac = Math.min(1, have / t.lo), gap = have < t.lo * 0.5, close = !gap && have < t.lo;
+      return `<div><div class="mb${gap ? " gap" : ""}">${gap ? "" : `<i style="display:block;height:100%;width:${(frac * 100).toFixed(0)}%;background:var(--ink);border-radius:5px"></i>`}</div><b>${p.label}</b><small class="${gap ? "gap" : ""}">${gap ? "gap" : close ? "close" : "in range"}</small></div>`;
+    }).join("");
+    return `<a class="card mix" href="gaps.html"><div class="row-head" style="padding:0;min-height:0"><span class="eyebrow">This week, all programs</span><span class="link olive" style="min-height:0">Gaps ${I.chev}</span></div><div class="mix-grid">${cells}</div></a>`;
+  }
+  function optCard(o, tag) {
+    const p = o.prog;
+    return `<section class="card opt"><div class="mono" style="background:${p.color}">${esc(p.mono)}</div><div class="t">
+      <span class="tag" style="color:${p.color}">${esc(tag)}</span><span class="ti">${esc(o.session.l)}</span>
+      <span class="me">${esc(p.short)}${o.minutes ? ` · about ${o.minutes} min` : ""}</span><span class="why">${esc(o.reason)}</span></div>
+      <a class="go" style="background:${p.color}" href="${p.slug}/#s=${encodeURIComponent(o.session.id)}" aria-label="Start ${esc(o.session.l)}">${I.play}</a></section>`;
+  }
+  async function renderMenu() {
+    await Gaps.loadCatalog("");
+    const slot = document.getElementById("mine-slot");
+    if (!slot || !Gaps.catalog || !Object.keys(Gaps.catalog.programs || {}).length) return;
+    const minutes = +pref("hs_time", "45"), who = pref("hs_who", "me");
+    const res = Gaps.menu({ date: HS.today(), lib: L, minutes });
+    // Best option per program, three programs at most; your own program's next session stays visible
+    // even when it runs longer than the time you picked.
+    const seenProg = new Set(), opts = [];
+    res.options.filter((o) => !o.guarded.length && !o.tooLong).forEach((o) => { if (opts.length < 3 && !seenProg.has(o.slug)) { seenProg.add(o.slug); opts.push(o); } });
+    const mineNext = res.options.find((o) => o.role === "mine" && !seenProg.has(o.slug));
+    let lead = "";
+    if (who === "porter") {
+      const fs = Lib.bySlug("father-son"), sm = HS.readSummary("father-son");
+      const s = sm && sm.next ? Gaps.findSession("father-son", sm.next.id) : null;
+      if (fs && s) lead = optCard({ prog: fs, session: s, minutes: s.m, reason: `Porter's program. ${sm.next.date === HS.today() ? "It's his day." : "Off his usual day, and that's fine."}` }, "With Porter");
+    } else if (who === "her") {
+      lead = `<div class="card pad hint" style="font-size:13px">Her program isn't built yet. When it is, her next session shows here first.</div>`;
+    }
+    const seg = (name, cur, items) => `<div class="seg" role="group" aria-label="${name}">${items.map(([v, l]) => `<button class="${v === cur ? "on" : ""}" data-${name}="${v}" aria-pressed="${v === cur}">${l}</button>`).join("")}</div>`;
+    document.getElementById("mine-head").textContent = "Mine · fill the gaps";
+    slot.innerHTML = `${mixCard(res)}
+      <div class="ctl"><span class="eyebrow">Time</span>${seg("time", String(minutes), [["20", "20"], ["30", "30"], ["45", "45"], ["60", "60"]])}</div>
+      <div class="ctl"><span class="eyebrow">Who</span>${seg("who", who, [["me", "Just me"], ["porter", "+ Porter"], ["her", "+ Her"]])}</div>
+      ${lead}
+      ${opts.map((o, i) => optCard(o, o.role === "mine" ? (i === 0 ? "Your program · next up" : "Your program") : o.fills.some((f) => f.g.focus) ? "Pool · your focus" : "Pool")).join("") || `<div class="card empty">Nothing fits in ${minutes} minutes. Try more time.</div>`}
+      ${mineNext ? optCard(Object.assign({}, mineNext, { reason: mineNext.guarded.length ? mineNext.reason : `Needs about ${mineNext.minutes} min, more than the ${minutes} you picked. ${mineNext.reason}` }), "Your program · next up") : ""}`;
+    slot.querySelectorAll("[data-time]").forEach((b) => (b.onclick = () => { setPref("hs_time", b.dataset.time); renderMenu(); }));
+    slot.querySelectorAll("[data-who]").forEach((b) => (b.onclick = () => { setPref("hs_who", b.dataset.who); renderMenu(); }));
+  }
+
+  render(); renderMenu();
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { render(); renderMenu(); } });
+  window.addEventListener("pageshow", (e) => { if (e.persisted) { render(); renderMenu(); } });
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });

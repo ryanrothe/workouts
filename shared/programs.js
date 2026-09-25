@@ -41,5 +41,6 @@ window.PROGRAMS = [
 /* Stores that are not programs but sync and restore the same way. */
 window.EXTRA_STORES = [
   { sync: "nutrition", storageKey: "nutrition_v1", name: "Fuel" },
-  { sync: "library", storageKey: "library_v1", name: "Library settings" }
+  { sync: "library", storageKey: "library_v1", name: "Library settings" },
+  { sync: "stack", storageKey: "stack_v1", name: "Stacks" }
 ];

@@ -1,7 +1,7 @@
 /* Health system shell (Phase 1, 2026-09-25).
    Include on every page, after ../shared/setlog.js and before the page's own script:
      <script src="../shared/shell.js"></script>
-   - Main pages (<body data-shell="today|library|fuel">) get the bottom tab bar: Today / Library / Fuel.
+   - Main pages (<body data-shell="today|library|fuel|progress">) get the bottom tab bar: Today / Library / Fuel / Progress.
    - Program pages (<body data-program="...">, no data-shell) get "‹ Today" on the back link and a
      Fuel chip (kcal left today) at the right of the sticky appbar. Nothing else on the page changes.
    - HS.summary(slug, obj) is the contract every program writes after load and after each save.
@@ -18,7 +18,29 @@
      thisWeek: { done, planned } sessions done and planned in the current program week
      days:     ["Mon","Wed"] fixed weekdays for set-day programs, else null
      sessions: ["YYYY-MM-DD", ...] every local date with logged work (trimmed to the last 180)
-     lastDate: most recent date in sessions, or null */
+     lastDate: most recent date in sessions, or null
+     extra:    optional program-specific facts for Progress (Father & Son: { tracks: {...} })
+   next.id is the session id from the program's catalog (below), so Today can deep-link to it.
+
+   Catalog contract (Phase 2, 2026-09-25). Every program page defines
+     window.HS_CATALOG = function () { return { slug, kind, sessions: [...] }; }
+   listing EVERY session the program contains, in program order:
+     { id, week, day, label, minutes, optional, exercises: [...] }
+       id:      stable string the page understands, e.g. "w1-fri", "push-a", "p2-w3-mon"
+       week:    program week number, or null for open-ended programs
+       day:     "Mon" | "Day 1" | "A" (whatever the program uses), or null
+       label:   the session title ("Legs", "Push A")
+       minutes: planned minutes from the page's own time model (60-min mode off), or null
+       optional: true for optional days (e.g. TFM 1.0 Saturday mobility)
+     exercise: { name, scheme, sets, reps, restSec, minutes, kind, tag }
+       name:    the row's exercise name as the page shows it (Ryan's version on two-lifter pages)
+       scheme:  the prescription text ("3 x 8", "2:00 accumulated")
+       sets:    number of working sets (integer; 1 for a single timed effort)
+       reps:    rep target text or null; restSec: rest between sets in seconds, or null
+       minutes: this row's share of the session from the page's time model, or null
+       kind:    "strength" | "core" | "conditioning" | "mobility" | "warmup" | "cooldown" | "test" | "note"
+       tag:     the page's own tag for the row (e.g. "legs", "upper", "cplx"), or null
+   Deep link: if the URL hash is "#s=<id>", the page opens on that session instead of summary.next. */
 (function () {
   "use strict";
   const HS = (window.HS = window.HS || {});
@@ -93,7 +115,8 @@ body.hs-has-tabbar { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
   const ICON = {
     today: '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/><rect x="7.5" y="13" width="4" height="4" rx="1"/>',
     library: '<rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/>',
-    fuel: '<path d="M3.5 11.5h17a8.5 8.5 0 0 1-17 0z"/><path d="M9.5 3.5c-1 1.2-1 2.3 0 3.5M14 3.5c-1 1.2-1 2.3 0 3.5"/>'
+    fuel: '<path d="M3.5 11.5h17a8.5 8.5 0 0 1-17 0z"/><path d="M9.5 3.5c-1 1.2-1 2.3 0 3.5M14 3.5c-1 1.2-1 2.3 0 3.5"/>',
+    progress: '<path d="M4 19V5"/><path d="M4 19h16"/><path d="M7.5 15l4-4.5 3 3L20 7.5"/>'
   };
   HS.icon = (name, size, sw, color) =>
     `<svg width="${size || 22}" height="${size || 22}" viewBox="0 0 24 24" fill="none" stroke="${color || "currentColor"}" stroke-width="${sw || 1.8}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[name] || ""}</svg>`;
@@ -153,7 +176,8 @@ body.hs-has-tabbar { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
       const items = [
         ["today", "Today", BASE + "index.html", `<span class="hs-ico">${HS.icon("today", 23, 1.8)}</span>`],
         ["library", "Library", BASE + "library.html", `<span class="hs-ico">${HS.icon("library", 23, 1.8)}</span>`],
-        ["fuel", fuelLabel, BASE + "nutrition/", `<span class="hs-ico">${fuelMiniRing(st, 28, active === "fuel" ? "#16171B" : "#5C5F66")}</span>`]
+        ["fuel", fuelLabel, BASE + "nutrition/", `<span class="hs-ico">${fuelMiniRing(st, 28, active === "fuel" ? "#16171B" : "#5C5F66")}</span>`],
+        ["progress", "Progress", BASE + "progress.html", `<span class="hs-ico">${HS.icon("progress", 23, 1.8)}</span>`]
       ];
       nav.innerHTML = `<div class="hs-tabbar-in">${items.map(([k, label, href, ico]) =>
         `<a class="hs-tab" href="${href}"${k === active ? ' aria-current="page"' : ""}>${ico}<span>${label}</span></a>`).join("")}</div>`;

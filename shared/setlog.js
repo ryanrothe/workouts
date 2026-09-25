@@ -140,7 +140,26 @@
     const load = e.weight != null ? SL.fmtLoad(e.weight, spec.bw) : "";
     return sets && load ? `${sets} @ ${load}` : (sets || load);
   };
+  /* A newer set of the same exercise logged in a stack (stack.html, Phase 2) wins the Last line. */
+  SL.stackNewer = function (name, afterDate) {
+    let es = [];
+    try { es = JSON.parse(localStorage.getItem("entries.stack") || "[]"); } catch (err) { return null; }
+    const k = SL.normName(name); let best = null;
+    es.forEach((x) => {
+      if (!x || SL.normName(x.exercise) !== k || !x.date || (afterDate && x.date <= afterDate)) return;
+      if (!Array.isArray(x.sets) || !x.sets.some((s) => s.r != null || s.w != null)) return;
+      if (!best || x.date > best.date) best = x;
+    });
+    return best;
+  };
   SL.lastHtml = function (e, spec, where) {
+    const st = spec && spec.name ? SL.stackNewer(spec.name, e && e.date) : null;
+    if (st) {
+      const sets = st.sets.filter((s) => s.r != null || s.w != null).map((s) => ({ r: s.r, w: s.w }));
+      const e2 = { sets, weight: SL.topWeight(sets), unit: (e && e.unit) || spec.unit || "reps" };
+      const md = new Date(st.date + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      return `<div class="ex-last">Last (stack · ${md}): <strong>${SL.lastText(e2, spec)}</strong></div>`;
+    }
     const flag = spec.isMax ? "" : e.hit === true ? ` · <span class="ex-hit-flag yes">hit</span>` : e.hit === false ? ` · <span class="ex-hit-flag no">short</span>` : "";
     return `<div class="ex-last">Last${where ? ` (${where})` : ""}: <strong>${SL.lastText(e, spec)}</strong>${flag}</div>`;
   };
@@ -337,7 +356,6 @@
   sync.push = async function (unloading) {
     if (!sync.cfg) return;
     clearTimeout(sync.timer); sync.timer = null;
-    if (lsGet("workout_sync_off") === "1") { sync.status = { at: Date.now(), ok: null, msg: "off on this device (testing)" }; sync.paint(); return; }
     let payload;
     try {
       payload = Object.assign({ program: sync.cfg.slug, schema: 2, savedAt: new Date().toISOString(), ua: navigator.userAgent }, sync.cfg.payload());
@@ -345,7 +363,11 @@
       // it even when the Library page hasn't been opened since.
       const sm = window.HS && window.HS.readSummary ? window.HS.readSummary(sync.cfg.slug) : null;
       if (sm && !payload.summary) payload.summary = sm;
+      // Keep the flat entries on the phone too, so Gaps and Progress (Today, Phase 2) can read every
+      // program's logged sets offline. Written before the off switch, so it works in the preview.
+      if (Array.isArray(payload.entries)) lsSet("entries." + sync.cfg.slug, JSON.stringify(payload.entries));
     } catch (e) { sync.status = { at: Date.now(), ok: false, msg: "could not build the payload: " + e.message }; sync.paint(); return; }
+    if (lsGet("workout_sync_off") === "1") { sync.status = { at: Date.now(), ok: null, msg: "off on this device (testing)" }; sync.paint(); return; }
     try {
       const body = JSON.stringify(payload);
       // keepalive lets a post outlive the page, but browsers refuse keepalive bodies over

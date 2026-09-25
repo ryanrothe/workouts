@@ -322,12 +322,17 @@
   sync.init = function (cfg) {
     sync.cfg = cfg;
     sync.token();
-    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && sync.timer) sync.push(); });
+    // A save waits 1.5 s before posting. Leaving the page inside that window (tapping
+    // "← Library" right after typing) must still post it: flush on hide AND on pagehide,
+    // which is the event an in-app navigation fires (found 2026-09-24: an edit never synced).
+    const flush = () => { if (sync.timer) sync.push(true); };
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flush(); });
+    window.addEventListener("pagehide", flush);
     // Push once on open: the first run of an upgraded program backs up the untouched data.
     if (!cfg.hasData || cfg.hasData()) setTimeout(() => sync.push(), 800);
   };
   sync.schedule = function () { if (!sync.cfg) return; clearTimeout(sync.timer); sync.timer = setTimeout(sync.push, 1500); };
-  sync.push = async function () {
+  sync.push = async function (unloading) {
     if (!sync.cfg) return;
     clearTimeout(sync.timer); sync.timer = null;
     if (lsGet("workout_sync_off") === "1") { sync.status = { at: Date.now(), ok: null, msg: "off on this device (testing)" }; sync.paint(); return; }
@@ -336,7 +341,11 @@
       payload = Object.assign({ program: sync.cfg.slug, schema: 2, savedAt: new Date().toISOString(), ua: navigator.userAgent }, sync.cfg.payload());
     } catch (e) { sync.status = { at: Date.now(), ok: false, msg: "could not build the payload: " + e.message }; sync.paint(); return; }
     try {
-      const r = await fetch(`${SYNC_BASE}${sync.cfg.slug}/${sync.token()}`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(payload), keepalive: true });
+      const body = JSON.stringify(payload);
+      // keepalive lets a post outlive the page, but browsers refuse keepalive bodies over
+      // 64 KB outright. Use it only for the unload flush, and only while the body fits.
+      const keepalive = !!unloading && body.length < 60000;
+      const r = await fetch(`${SYNC_BASE}${sync.cfg.slug}/${sync.token()}`, { method: "PUT", headers: { "content-type": "application/json" }, body, keepalive });
       sync.status = { at: Date.now(), ok: r.ok, msg: r.ok ? "synced" : `server said ${r.status}` };
     } catch (e) {
       sync.status = { at: Date.now(), ok: false, msg: "offline, will retry on the next save" };

@@ -165,6 +165,73 @@
   };
 
   /* ---------------------------------------------------------------------------
+     REST BAR (2026-09-25). One rest at a time per page. A set check starts it; the
+     length comes from the row's own rest timer button (data-default "90s" / "2:00"),
+     else spec.rest, else 90 s. Survives re-renders: every grid with the same key
+     repaints from this state. Ends with a vibration and two short beeps.
+     --------------------------------------------------------------------------- */
+  SL.rest = (function () {
+    const st = { key: null, end: 0, total: 0, goUntil: 0, timer: null };
+    let ctx = null;
+    const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+    function unlock() {
+      try { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === "suspended") ctx.resume(); } catch (e) { ctx = null; }
+    }
+    function beep() {
+      try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) {}
+      if (!ctx) return;
+      try {
+        [0, 0.28].forEach((t) => {
+          const o = ctx.createOscillator(), g = ctx.createGain();
+          o.frequency.value = 880; g.gain.value = 0.18;
+          o.connect(g); g.connect(ctx.destination);
+          o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.18);
+        });
+      } catch (e) {}
+    }
+    function secsFor(root, spec) {
+      const row = (root.closest && (root.closest(".hs-row") || root.closest(".exercise"))) || root.parentElement || root;
+      const t = row && row.querySelector(".row-timer, .btn-timer");
+      const label = t ? (t.dataset.default || t.textContent || "") : "";
+      let m = label.match(/(\d+):(\d{2})/);
+      if (m) return +m[1] * 60 + +m[2];
+      m = label.match(/(\d+)\s*s\b/);
+      if (m) return +m[1];
+      m = label.match(/(\d+)\s*min/);
+      if (m) return +m[1] * 60;
+      return spec && spec.rest ? spec.rest : 90;
+    }
+    function paintAll() {
+      const now = Date.now();
+      document.querySelectorAll(".sl-rest").forEach((el) => {
+        const grid = el.closest(".sl-grid");
+        const mine = grid && grid.dataset.slKey === st.key;
+        if (!mine || (!st.end && !st.goUntil)) { el.hidden = true; el.classList.remove("go"); return; }
+        el.hidden = false;
+        const left = Math.max(0, Math.ceil((st.end - now) / 1000));
+        const go = left === 0;
+        el.classList.toggle("go", go);
+        el.querySelector(".sl-rest-t").textContent = go ? "Go" : fmt(left);
+        el.querySelector(".sl-rest-l").textContent = go ? "Rest done" : "Rest";
+        el.querySelector(".sl-rest-bar i").style.width = `${go ? 100 : Math.min(100, (1 - left / st.total) * 100).toFixed(1)}%`;
+      });
+    }
+    function tick() {
+      const now = Date.now();
+      if (st.end && now >= st.end) { st.end = 0; st.goUntil = now + 4000; beep(); }
+      if (!st.end && st.goUntil && now >= st.goUntil) { st.goUntil = 0; st.key = null; clearInterval(st.timer); st.timer = null; }
+      paintAll();
+    }
+    function start(key, secs) {
+      st.key = key; st.total = secs; st.end = Date.now() + secs * 1000; st.goUntil = 0;
+      if (!st.timer) st.timer = setInterval(tick, 250);
+      paintAll();
+    }
+    function stop() { st.end = 0; st.goUntil = 0; st.key = null; if (st.timer) { clearInterval(st.timer); st.timer = null; } paintAll(); }
+    return { start, stop, paintAll, secsFor, unlock, state: st };
+  })();
+
+  /* ---------------------------------------------------------------------------
      COACH. hist is newest first. opts.inc overrides the 5 upper / 10 lower rule.
        weighted:   hit → +inc · miss → hold, beat the reps · 3 misses at one weight → −10%, +2 reps
                    hit, but today's rep target is higher than last time's → hold the weight
@@ -245,21 +312,27 @@
     const rLabel = unit === "s" ? "seconds" : "reps";
     const head = `<div class="sl-head"><span>${unit === "none" ? "Round" : "Set"}</span>` +
       (hasR ? `<span>${rLabel}${spec.hitAt != null && spec.repRange ? ` · range ${spec.repRange}` : spec.repTop != null ? ` · target ${spec.repTop}` : ""}</span>` : "") +
-      (hasW ? `<span>lb${spec.bw ? " added" : ""}</span>` : "") + `</div>`;
+      (hasW ? `<span>lb${spec.bw ? " added" : ""}</span>` : "") + `<span></span></div>`;
+    // Per-set check (2026-09-25): marks the set done (d: true, already a stored field), fills
+    // what's missing and starts the rest bar below the grid.
+    const ok = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8"/></svg>';
     const rows = log.sets.map((x, i) => `
-      <div class="sl-row${i >= (spec.minSets || spec.sets || 0) && i < (spec.sets || 0) ? " sl-opt" : ""}">
+      <div class="sl-row${i >= (spec.minSets || spec.sets || 0) && i < (spec.sets || 0) ? " sl-opt" : ""}${x.d ? " sl-done" : ""}">
         <span class="sl-n">${i + 1}</span>
         ${hasR ? `<input type="number" class="sl-r" inputmode="numeric" pattern="[0-9]*" min="0" step="1" data-i="${i}" placeholder="${spec.repTop != null ? spec.repTop : "–"}" value="${x.r == null ? "" : x.r}">` : ""}
         ${hasW ? `<input type="number" class="sl-w" inputmode="decimal" min="0" step="0.5" data-i="${i}" placeholder="${spec.bw ? "+lb" : "lb"}" value="${x.w == null ? "" : x.w}">` : ""}
+        <button type="button" class="sl-ok${x.d ? " on" : ""}" data-i="${i}" aria-pressed="${x.d ? "true" : "false"}" aria-label="Set ${i + 1} done">${ok}</button>
       </div>`).join("");
+    const rest = `<div class="sl-rest" hidden role="timer" aria-live="off"><span class="sl-rest-l">Rest</span><b class="sl-rest-t">0:00</b><span class="sl-rest-bar"><i></i></span><button type="button" class="sl-rest-skip">Skip</button></div>`;
     const fw = sugg && sugg.weight != null && hasW ? sugg.weight : null;
     let fill = "";
     const req = spec.minSets || spec.sets;   // fill the required sets; an optional extra set is typed
     if (hasR && spec.repTop != null) fill = `= ${req} × ${spec.repTop}${unit === "s" ? " s" : ""}${fw != null ? " @ " + SL.fmtWeight(fw) : ""}`;
     else if (!hasR && fw != null) fill = `= ${req} rounds @ ${SL.fmtWeight(fw)}`;
     return `
-    <div class="sl-grid sl-c${cols}">
+    <div class="sl-grid sl-k sl-c${cols}">
       ${head}${rows}
+      ${rest}
       <div class="sl-tools">
         ${fill ? `<button type="button" class="btn sl-fill">${fill}</button>` : ""}
         <button type="button" class="btn sl-clear">Clear</button>
@@ -283,8 +356,32 @@
       });
       cfg.save(); cfg.rerender();
     };
+    // Rest key: one per exercise row, stable across re-renders (the row's data-key when the
+    // page sets one, plus the exercise name), so only the grid you checked shows the bar.
+    const rowEl = root.closest && root.closest("[data-key]");
+    const restKey = cfg.restKey || `${spec.name || "set"}|${rowEl ? rowEl.dataset.key : ""}`;
+    const gridEl = root.querySelector(".sl-grid") || root;
+    gridEl.dataset.slKey = restKey;
+    root.querySelectorAll(".sl-ok").forEach((b) => (b.onclick = () => {
+      const i = parseInt(b.dataset.i, 10), lg = cfg.getLog(), x = lg.sets[i];
+      if (!x) return;
+      if (x.d) { delete x.d; cfg.save(); cfg.rerender(); SL.rest.paintAll(); return; }
+      x.d = true;
+      if (spec.unit !== "none" && x.r == null && spec.repTop != null) x.r = spec.repTop;
+      if (hasW && x.w == null) {
+        const prev = lg.sets.slice(0, i).reverse().find((y) => y.w != null);
+        if (prev) x.w = prev.w; else if (sugg && sugg.weight != null) x.w = sugg.weight;
+      }
+      SL.rest.unlock();
+      const secs = SL.rest.secsFor(root, spec);
+      cfg.save(); cfg.rerender();
+      if (secs > 0) SL.rest.start(restKey, secs);
+    }));
     const clearBtn = root.querySelector(".sl-clear");
-    if (clearBtn) clearBtn.onclick = () => { cfg.getLog().sets.forEach(x => { x.r = null; x.w = null; }); cfg.save(); cfg.rerender(); };
+    if (clearBtn) clearBtn.onclick = () => { cfg.getLog().sets.forEach(x => { x.r = null; x.w = null; delete x.d; }); cfg.save(); cfg.rerender(); };
+    const skip = root.querySelector(".sl-rest-skip");
+    if (skip) skip.onclick = () => SL.rest.stop();
+    SL.rest.paintAll();
     root.querySelectorAll(".sl-r").forEach(inp => inp.addEventListener("input", e => {
       const i = parseInt(e.target.dataset.i, 10), raw = e.target.value.trim();
       cfg.getLog().sets[i].r = raw === "" ? null : parseInt(raw, 10); cfg.save();

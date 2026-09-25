@@ -61,7 +61,7 @@
     if (e.lifter && String(e.lifter).toLowerCase() !== "ryan") return 0;       // Porter's sets are his, not Ryan's
     const sets = e.sets;
     if (Array.isArray(sets)) {
-      const withReps = sets.filter((s) => s && s.r != null).length;
+      const withReps = sets.filter((s) => s && (s.r != null || s.d)).length;   // d: the per-set check
       if (withReps) return withReps;
       const done = sets.filter((s) => s && s.done).length;
       if (done) return done;

@@ -564,3 +564,25 @@ body[data-program] .superset-group { border-radius: var(--radius-lg); box-shadow
 .hs-tools .btn { background: transparent; border-color: transparent; color: var(--muted); font-size: 13.5px; min-height: 40px; }
 .hs-tools .btn.running { background: var(--primary); color: #fff; border-color: var(--primary); }
 .hs-section-label { font-size: 11px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin: 14px 4px 8px; }
+
+/* Per-set checks and the rest bar in the SetLog grid (2026-09-25). */
+.sl-grid.sl-k.sl-c1 .sl-head, .sl-grid.sl-k.sl-c1 .sl-row { grid-template-columns: 34px 1fr 44px; }
+.sl-grid.sl-k.sl-c2 .sl-head, .sl-grid.sl-k.sl-c2 .sl-row { grid-template-columns: 34px 1fr 1fr 44px; }
+.sl-grid.sl-k.sl-c0 .sl-head, .sl-grid.sl-k.sl-c0 .sl-row { grid-template-columns: 34px 1fr 44px; }
+.sl-ok {
+  width: 42px; height: 42px; justify-self: center; border-radius: 21px; box-sizing: border-box;
+  border: 2px solid var(--primary); background: transparent; color: var(--primary);
+  display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer;
+}
+.sl-ok svg { width: 18px; height: 18px; }
+.sl-ok.on { background: var(--primary); color: #fff; }
+.sl-row.sl-done input { background: var(--card-2); color: var(--text); }
+.sl-rest { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; padding: 8px 10px; border-radius: 12px; background: var(--card-2); }
+.sl-rest[hidden] { display: none; }
+.sl-rest .sl-rest-l { font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.sl-rest .sl-rest-t { font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 22px; min-width: 52px; font-variant-numeric: tabular-nums; }
+.sl-rest .sl-rest-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.sl-rest .sl-rest-bar i { display: block; height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.25s linear; }
+.sl-rest .sl-rest-skip { border: 0; background: transparent; font: inherit; font-size: 14px; font-weight: 800; color: var(--primary); min-height: 40px; padding: 0 4px; cursor: pointer; }
+.sl-rest.go { background: var(--primary-soft); }
+.sl-rest.go .sl-rest-t { color: var(--primary); }

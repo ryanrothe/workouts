@@ -1,15 +1,24 @@
 /* Exercise Library — shared service worker for offline use.
+   v22 (2026-09-25): health system shell (Today, Library, Fuel), shared shell/fuel/library modules, self-hosted fonts.
    Caches the launcher + all three sub-apps + shared styles + program data + icons.
    Network-first for HTML, scripts, styles and program data (so a deploy never pairs a
    new page with an old shared/setlog.js); cache-first for images and the manifest. */
 
-const CACHE = 'exercise-library-v20';
+const CACHE = 'exercise-library-v22';
 const PRECACHE = [
   './',
   './index.html',
+  './library.html',
   './manifest.webmanifest',
   './shared/styles.css',
+  './shared/app.css',
   './shared/setlog.js',
+  './shared/shell.js',
+  './shared/fuel.js',
+  './shared/library.js',
+  './shared/programs.js',
+  './shared/fonts/archivo-latin.woff2',
+  './shared/fonts/figtree-latin.woff2',
   './father-son/',
   './father-son/index.html',
   './tfm-1/',

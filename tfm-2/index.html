@@ -273,6 +273,7 @@
 </div>
 
 <script src="../shared/setlog.js"></script>
+<script src="../shared/shell.js"></script>
 <script>
 /* Set logging, the coach and sync come from ../shared/setlog.js. */
 const SL = window.SetLog;
@@ -769,6 +770,7 @@ function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
   updateStats();
   SL.sync.schedule();
+  publishSummary();
 }
 function dayState(w, d, create) {
   const k = dayKey(w, d);
@@ -1320,6 +1322,61 @@ function render() {
 }
 
 /* ---------------------------------------------------------------------------
+   HEALTH-SYSTEM SUMMARY. The contract lives in ../shared/shell.js; Today and
+   Library read summary.<slug>, never this page's storage.
+   Current week = the week of the most recently logged session (week 1 when
+   nothing is logged). Next = the first unfinished required day of that week;
+   once all of them are done, Mon of the following week (null after week 8).
+   A day is done by isDayComplete, the same test the hero stats use.
+   --------------------------------------------------------------------------- */
+function dayHasActivity(ds) {
+  if (!ds || !ds.date) return false;
+  if (ds.clockStart) return true;
+  if (Object.keys(ds.completed || {}).some(k => ds.completed[k])) return true;
+  return Object.keys(ds.logs || {}).some(i => SL.hasData(SL.normLog(ds.logs[i], 0)));
+}
+function sessionWeek() {
+  let best = null;
+  for (let w = 0; w < NWEEKS; w++) PROGRAM.dayOrder.forEach(d => {
+    const ds = dayState(w, d, false);
+    if (!dayHasActivity(ds)) return;
+    if (!best || ds.date > best.date || (ds.date === best.date && w > best.w)) best = { date: ds.date, w };
+  });
+  return best ? best.w : 0;
+}
+function nextSession() {
+  const w = sessionWeek();
+  const open = PROGRAM.dayOrder.find(d => PROGRAM.requiredDays.includes(d) && !isDayComplete(w, d));
+  if (open) return { w, d: open };
+  return w + 1 < NWEEKS ? { w: w + 1, d: PROGRAM.dayOrder[0] } : null;
+}
+function publishSummary() {
+  try {
+    if (!window.HS || typeof HS.summary !== "function") return;
+    const cw = sessionWeek();
+    const nx = nextSession();
+    const req = PROGRAM.dayOrder.filter(d => PROGRAM.requiredDays.includes(d));
+    const sessions = [];
+    for (let w = 0; w < NWEEKS; w++) PROGRAM.dayOrder.forEach(d => {
+      const ds = dayState(w, d, false);
+      if (dayHasActivity(ds)) sessions.push(ds.date);
+    });
+    sessions.sort();
+    let next = null;
+    if (nx) {
+      const day = PROGRAM.weeks[nx.w][nx.d];
+      next = { label: day.title, sub: `Week ${nx.w + 1} · ${PROGRAM.dayLabels[nx.d]}`, date: null,
+               minutes: Math.round(dayPlan(nx.w, nx.d).total / 60), listed: day.duration };
+    }
+    HS.summary(PROGRAM.slug, {
+      kind: "phased", week: (nx ? nx.w : cw) + 1, weeks: NWEEKS, next, today: null, days: null,
+      thisWeek: { done: req.filter(d => isDayComplete(nx ? nx.w : cw, d)).length, planned: req.length },
+      sessions, lastDate: sessions.length ? sessions[sessions.length - 1] : null
+    });
+  } catch (e) {}
+}
+
+/* ---------------------------------------------------------------------------
    SESSION CLOCK — elapsed vs the day plan, so mornings stay on schedule.
    --------------------------------------------------------------------------- */
 const sessionClocks = {};   // dayKey → interval id (paint only; truth in state)
@@ -1602,15 +1659,20 @@ document.getElementById("reset-btn").onclick = () => {
 })();
 
 buildShell();
-uiWeek = currentWeek();
+/* Open on the summary's next session. With the program finished (no next),
+   fall back to the first unfinished week and its due day, as before. */
+let startAt = null;
+try { startAt = nextSession(); } catch (e) {}
+uiWeek = startAt ? startAt.w : currentWeek();
 render();
 SL.sync.wireNotes();
 
 /* Land on the day that's due in the current week. */
 (function openDueTab() {
-  const tab = document.querySelector(`.tab[data-pane="${dueDay(uiWeek)}"]`);
+  const tab = document.querySelector(`.tab[data-pane="${startAt ? startAt.d : dueDay(uiWeek)}"]`);
   if (tab) tab.click();
 })();
+publishSummary();
 </script>
 </body>
 </html>

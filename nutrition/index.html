@@ -5,203 +5,203 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-<meta name="apple-mobile-web-app-title" content="Nutrition" />
-<meta name="theme-color" content="#4d7c0f" />
+<meta name="apple-mobile-web-app-title" content="Exercise Library" />
+<meta name="theme-color" content="#F3F1EC" />
 <link rel="manifest" href="../manifest.webmanifest" />
 <link rel="apple-touch-icon" href="../icon-180.png" />
 <link rel="icon" type="image/png" href="../favicon.png" />
-<title>Nutrition — macros and meal prep</title>
-<link rel="stylesheet" href="../shared/styles.css" />
+<title>Fuel · Exercise Library</title>
+<link rel="stylesheet" href="../shared/app.css" />
 <style>
-  /* Nutrition-specific styles. Tokens and the shell come from ../shared/styles.css. */
-  .hero { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; box-shadow: var(--shadow); }
-  .date-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .date-row .btn { height: 36px; padding: 0 12px; font-size: 14px; }
-  .date-title { text-align: center; flex: 1; min-width: 0; }
-  .date-title .d1 { font-size: 16px; font-weight: 700; }
-  .date-title .d2 { font-size: 11.5px; color: var(--muted); }
+  /* Fuel page. Tokens and components come from ../shared/app.css. */
+  .date-nav { display: flex; gap: 4px; }
+  .back-today { font-size: 13px; font-weight: 700; color: var(--olive); padding: 0 4px; min-height: 32px; display: inline-flex; align-items: center; }
 
-  /* Macro panel */
-  .macros { margin-top: 12px; display: flex; flex-direction: column; gap: 9px; }
-  .mrow { display: grid; grid-template-columns: 52px 1fr 108px; gap: 8px; align-items: center; }
-  .mrow .mname { font-size: 12px; font-weight: 700; color: var(--text-body); }
-  .mrow .mname small { display: block; font-weight: 600; color: var(--muted); font-size: 10px; }
-  .mbar { height: 10px; border-radius: 999px; background: var(--border-soft); overflow: hidden; position: relative; }
-  .mbar > i { display: block; height: 100%; background: var(--primary); border-radius: 999px; transition: width 0.25s; }
-  .mbar.over > i { background: var(--danger); }
-  .mbar.near > i { background: var(--success); }
-  .mnum { font-size: 12.5px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .mnum b { font-size: 14px; }
-  .mnum small { display: block; color: var(--muted); font-size: 10.5px; }
-  .split { margin-top: 8px; font-size: 11.5px; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
-  .split b { color: var(--text-body); }
+  /* Day summary */
+  .sum { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+  .big { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .big b { font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 46px; line-height: 1; }
+  .big span { font-size: 14px; color: var(--muted); }
+  .stack { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--track); }
+  .stack > i { display: block; height: 100%; }
+  .hatch { background: repeating-linear-gradient(135deg, var(--olive) 0px, var(--olive) 2px, #D5E0BF 2px, #D5E0BF 6px); }
+  .legend { display: flex; gap: 6px 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .mcols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .mcol .k { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .mcol .k i { width: 9px; height: 9px; border-radius: 3px; }
+  .mcol .v b { font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 28px; }
+  .mcol .v small { font-size: 12px; color: var(--muted); }
+  .mcol .bar { height: 6px; margin: 4px 0 5px; }
+  .mcol .l { font-size: 12px; color: var(--muted); }
+  .mcol .l.over { color: var(--F-ink); font-weight: 700; }
 
-  .row-actions { display: flex; gap: 8px; margin: 12px 0; }
-  .row-actions .btn { flex: 1; justify-content: center; height: var(--tap); font-size: 13.5px; border-radius: 10px; }
+  .weigh-row { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 14px 8px 16px; border-radius: 16px; }
+  .weigh-row .t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .weigh-row .t b { font-size: 15px; }
+  .weigh-row .t small { font-size: 12px; color: var(--muted); }
+  .weigh-row input { width: 92px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); text-align: center; font-size: 17px; font-weight: 700; }
+  .weigh-row input:focus { outline: none; border: 2px solid var(--olive); }
 
-  /* Weigh-in */
-  .weigh { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 12.5px; color: var(--text-body); }
-  .weigh input { width: 84px; text-align: center; font-size: 16px; padding: 7px 6px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); font-variant-numeric: tabular-nums; }
-  .weigh input:focus { outline: none; border-color: var(--primary); }
-  .weigh .avg { color: var(--muted); font-size: 11.5px; }
+  /* Timeline */
+  .tl { position: relative; padding-left: 30px; display: flex; flex-direction: column; gap: 18px; }
+  .tl::before { content: ""; position: absolute; left: 11px; top: 8px; bottom: 8px; width: 2px; background: var(--line); }
+  .ti { position: relative; display: flex; flex-direction: column; cursor: pointer; }
+  .ti .d { position: absolute; left: -26px; top: 3px; width: 16px; height: 16px; border-radius: 8px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; color: #FFFFFF; background: var(--bg); }
+  .ti .d.logged { background: var(--olive); }
+  .ti .d.off { background: var(--F); width: 12px; height: 12px; left: -24px; top: 5px; }
+  .ti .d.plan { border: 2px dashed var(--olive); }
+  .ti .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .ti .kc { font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 20px; }
+  .ti .nm { font-size: 15px; font-weight: 600; margin-top: 2px; }
+  .ti .sb { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .ti .mc { font-size: 12px; font-weight: 600; margin-top: 3px; }
+  .mcp { color: var(--P-ink); } .mcf { color: var(--F-ink); } .mcc { color: var(--C-ink); }
+  .ti .acts { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .after { background: var(--olive-soft); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+  .after p { margin: 0; font-size: 14px; line-height: 1.45; }
+  .actions2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 
-  /* Planned chips */
-  .planned { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-  .chip { border: 1px solid var(--primary-line); background: var(--primary-soft); color: var(--primary); border-radius: 999px; padding: 7px 12px; font-size: 12.5px; font-weight: 600; font-family: inherit; cursor: pointer; line-height: 1.3; text-align: left; }
-  .chip.grey { background: var(--card-2); border-color: var(--border); color: var(--text-body); }
+  /* Sheets: picker + editor */
+  .pick { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 8px 2px; border: 0; background: transparent; text-align: left; cursor: pointer; }
+  .pick + .pick { border-top: 1px solid var(--line); }
+  .pick .t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .pick .t b { font-size: 15px; font-weight: 600; }
+  .pick .t small { font-size: 12px; color: var(--muted); }
+  .pick .k { font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 19px; }
+  .ed { border: 2px solid var(--olive); border-radius: 20px; padding: 14px; display: flex; flex-direction: column; gap: 10px; background: var(--card); }
+  .irow { display: flex; align-items: center; gap: 8px; padding: 8px 0; }
+  .irow + .irow { border-top: 1px solid var(--line); }
+  .irow .t { flex: 1; min-width: 0; }
+  .irow .t b { display: block; font-size: 14px; font-weight: 600; }
+  .irow .t small { font-size: 12px; color: var(--muted); }
+  .irow input { width: 72px; height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); text-align: center; font-size: 16px; font-weight: 700; }
+  .irow .u { font-size: 13px; color: var(--muted); width: 12px; }
+  .irow .rm { width: 36px; height: 36px; border-radius: 18px; border: 1px solid var(--line); background: var(--card); color: var(--muted); font-size: 18px; cursor: pointer; flex-shrink: 0; }
+  .tot { background: var(--bg); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+  .tot .r { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .tot .r b { font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 22px; }
+  .tot .r span { font-size: 13px; font-weight: 600; }
+  .tot small { font-size: 12px; color: var(--muted); }
+  .textbtn { min-height: 40px; padding: 0; border: 0; background: transparent; font-size: 14px; font-weight: 700; color: var(--olive); cursor: pointer; }
 
-  /* Log list */
-  .log { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 12px; }
-  .log-item { display: flex; gap: 10px; align-items: center; padding: 11px 14px; border-bottom: 1px solid var(--border-soft); cursor: pointer; }
-  .log-item:last-child { border-bottom: none; }
-  .log-item .li-main { flex: 1; min-width: 0; }
-  .log-item .li-name { font-weight: 600; font-size: 14px; }
-  .log-item .li-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .log-item .li-k { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
-  .log-item .li-m { font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
-  .log-item.quick .li-name::after { content: "off-plan"; margin-left: 6px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--warning); background: var(--warning-soft); border-radius: 4px; padding: 1px 5px; vertical-align: 1px; }
-  .empty { padding: 18px 14px; color: var(--muted); font-size: 13px; text-align: center; }
+  /* Meals */
+  .mcard { overflow: hidden; }
+  .mcard + .mcard { margin-top: 8px; }
+  .mhead { display: flex; align-items: center; gap: 10px; width: 100%; padding: 13px 14px; border: 0; background: transparent; text-align: left; cursor: pointer; }
+  .mhead .t { flex: 1; min-width: 0; }
+  .mhead .t b { display: block; font-size: 15px; }
+  .mhead .t small { font-size: 12px; color: var(--muted); }
+  .mhead .k { text-align: right; }
+  .mhead .k b { display: block; font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 19px; }
+  .mhead .k small { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+  .mbody { padding: 0 14px 14px; display: none; }
+  .mcard.open .mbody { display: block; }
+  .comp { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 6px 0; border-top: 1px solid var(--line); }
+  .comp span:last-child { color: var(--muted); white-space: nowrap; }
+  .frow { display: flex; justify-content: space-between; gap: 10px; width: 100%; padding: 11px 14px; border: 0; background: transparent; text-align: left; cursor: pointer; }
+  .frow + .frow { border-top: 1px solid var(--line); }
+  .frow b { font-size: 14px; font-weight: 600; }
+  .frow small { display: block; font-size: 12px; color: var(--muted); }
+  .est { font-size: 10px; font-weight: 800; letter-spacing: 0.06em; color: var(--amber-ink); margin-left: 6px; }
 
-  /* Bottom sheet */
-  .sheet-wrap { position: fixed; inset: 0; z-index: 100; background: rgba(20, 30, 50, 0.4); display: flex; align-items: flex-end; }
-  .sheet-wrap[hidden] { display: none; }
-  .sheet { background: var(--card); width: 100%; max-width: 760px; margin: 0 auto; border-radius: 16px 16px 0 0; max-height: 88vh; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 16px calc(16px + env(safe-area-inset-bottom)); box-shadow: var(--shadow-lg); }
-  .sheet-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
-  .sheet-head h2 { font-size: 16px; }
-  .sheet-close { height: 32px; width: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--card-2); font-size: 16px; display: flex; align-items: center; justify-content: center; }
-  .cat-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-bottom: 10px; padding-bottom: 2px; }
-  .cat-chips::-webkit-scrollbar { display: none; }
-  .meal-pick { display: flex; align-items: center; gap: 10px; padding: 11px 4px; border-bottom: 1px solid var(--border-soft); cursor: pointer; }
-  .meal-pick:last-child { border-bottom: none; }
-  .meal-pick .mp-name { font-weight: 600; font-size: 14px; }
-  .meal-pick .mp-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
-  .meal-pick .mp-k { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; font-size: 14px; }
-  .meal-pick .mp-m { font-size: 10.5px; color: var(--muted); text-align: right; white-space: nowrap; }
+  /* Week plan */
+  .banner { background: var(--amber-soft); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+  .banner p { margin: 0; font-size: 14px; line-height: 1.45; }
+  .pday { display: grid; grid-template-columns: 38px minmax(0, 1fr) 62px; gap: 10px; align-items: start; padding: 12px 14px; }
+  .pday + .pday { border-top: 1px solid var(--line); }
+  .pday.today { background: #F7F8F1; }
+  .pday .dl { display: flex; flex-direction: column; }
+  .pday .dl span { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .pday.today .dl span { color: var(--olive); }
+  .pday .dl b { font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 22px; line-height: 1.05; }
+  .pday .sl { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .pday .sl label { display: flex; align-items: center; gap: 6px; }
+  .pday .sl label em { font-style: normal; font-size: 11px; font-weight: 800; color: var(--muted); width: 12px; }
+  .pday select { flex: 1; min-width: 0; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); font-size: 16px; padding: 0 6px; }
+  .salad { align-self: flex-start; min-height: 32px; padding: 0 10px; border-radius: 9px; border: 1px dashed #BDB6A8; background: transparent; font-size: 12.5px; font-weight: 700; color: var(--muted); cursor: pointer; margin-left: 18px; }
+  .salad.on { border: 1px solid var(--olive); color: var(--olive); background: var(--olive-soft); }
+  .pday .kk { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; padding-top: 4px; }
+  .pday .kk b { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .pday .kk .bar { width: 58px; height: 5px; }
+  .chk { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 50px; padding: 6px 0; border: 0; background: transparent; text-align: left; cursor: pointer; }
+  .chk + .chk { border-top: 1px solid var(--line); }
+  .chk .bx { width: 24px; height: 24px; border-radius: 7px; box-sizing: border-box; border: 1.5px solid #BDB6A8; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #FFFFFF; }
+  .chk.done .bx { background: var(--olive); border-color: var(--olive); }
+  .chk .t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .chk .t b { font-size: 14px; font-weight: 600; }
+  .chk.done .t b { color: var(--muted); }
+  .chk .t small { font-size: 12px; color: var(--muted); }
+  .chk .q { font-size: 14px; font-weight: 700; white-space: nowrap; }
+  .sec { font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); padding: 12px 0 2px; }
 
-  /* Portion editor + forms */
-  .items { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
-  .item-row { display: grid; grid-template-columns: 1fr 78px 30px; gap: 8px; align-items: center; }
-  .item-row .in { font-size: 13px; }
-  .item-row .in small { display: block; color: var(--muted); font-size: 10.5px; }
-  .item-row input, .form input, .form select, .form textarea { width: 100%; min-width: 0; font-size: 16px; padding: 8px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); font-family: inherit; font-variant-numeric: tabular-nums; }
-  .item-row input { text-align: center; }
-  .item-row input:focus, .form input:focus, .form select:focus, .form textarea:focus { outline: none; border-color: var(--primary); }
-  .item-row .x { height: 30px; width: 30px; border-radius: 50%; border: 1px solid var(--border); font-size: 14px; color: var(--muted); display: flex; align-items: center; justify-content: center; }
-  .mult { display: flex; gap: 6px; margin: 6px 0 10px; }
-  .mult .btn { flex: 1; justify-content: center; height: 36px; }
-  .totals { background: var(--card-2); border: 1px solid var(--border-soft); border-radius: 8px; padding: 9px 12px; font-size: 13px; display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; margin: 6px 0 10px; }
-  .totals b { font-size: 15px; }
-  .form { display: flex; flex-direction: column; gap: 8px; }
-  .form .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .form .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-  .form label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 3px; }
-  .form .actions { display: flex; gap: 8px; margin-top: 4px; }
-  .form .actions .btn { flex: 1; justify-content: center; height: var(--tap); font-size: 13.5px; border-radius: 10px; }
-
-  /* Meals tab */
-  .meal-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 8px; overflow: hidden; }
-  .meal-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; }
-  .meal-head .mh-name { font-weight: 600; font-size: 14px; }
-  .meal-head .mh-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
-  .meal-body { border-top: 1px solid var(--border-soft); padding: 10px 14px 14px; }
-  .meal-card.collapsed .meal-body { display: none; }
-  .comp { display: flex; justify-content: space-between; font-size: 12.5px; padding: 4px 0; color: var(--text-body); border-bottom: 1px dashed var(--border-soft); }
-  .comp:last-child { border-bottom: none; }
-  .comp small { color: var(--muted); }
-  .sec-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; margin: 14px 4px 6px; }
-  .food-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 14px; border-bottom: 1px solid var(--border-soft); font-size: 13px; cursor: pointer; }
-  .food-row:last-child { border-bottom: none; }
-  .food-row .fr-sub { font-size: 11px; color: var(--muted); }
-  .food-row .fr-est { color: var(--warning); font-weight: 700; font-size: 9.5px; text-transform: uppercase; margin-left: 4px; }
-
-  /* Plan tab */
-  .plan-day { display: grid; grid-template-columns: 44px 1fr 1fr 40px; gap: 6px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border-soft); }
-  .plan-day:last-child { border-bottom: none; }
-  .plan-day .pd { font-size: 12px; font-weight: 700; color: var(--text-body); }
-  .plan-day select { width: 100%; min-width: 0; font-size: 13px; padding: 8px 6px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); font-family: inherit; }
-  .plan-day .salad { height: 34px; width: 100%; border-radius: 8px; border: 1px solid var(--border); background: var(--card-2); font-size: 15px; }
-  .plan-day .salad.on { background: var(--primary-soft); border-color: var(--primary-line); }
-  .plan-day.today .pd { color: var(--primary); }
-  .plan-tools { display: flex; gap: 8px; margin: 10px 0 4px; }
-  .plan-tools .btn { flex: 1; justify-content: center; height: 38px; }
-  .batch { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border-soft); font-size: 13px; }
-  .batch:last-child { border-bottom: none; }
-  .batch .b-main { flex: 1; min-width: 0; }
-  .batch .b-sub { font-size: 11.5px; color: var(--muted); }
-  .batch .b-qty { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .batch .ex-check { margin: 0; }
-  .batch.done .b-main { text-decoration: line-through; color: var(--muted); }
-
-  /* Targets tab */
-  .derive { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; font-size: 13px; padding: 6px 0; }
-  .derive .k { color: var(--text-body); }
-  .derive .v { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
-  .derive .v small { font-weight: 600; color: var(--muted); }
-  .stepper { display: grid; grid-template-columns: 1fr 40px 76px 40px; gap: 6px; align-items: center; padding: 6px 0; }
-  .stepper .sn { font-size: 13px; color: var(--text-body); }
-  .stepper .sn small { display: block; color: var(--muted); font-size: 10.5px; }
-  .stepper .btn { height: 36px; justify-content: center; font-size: 16px; padding: 0; }
-  .stepper input { width: 100%; text-align: center; font-size: 16px; padding: 7px 4px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); font-variant-numeric: tabular-nums; }
-  .stepper input:focus { outline: none; border-color: var(--primary); }
-  .seg { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 8px 0; }
-  .seg button { flex: 1; height: 38px; font-size: 13px; font-weight: 600; background: var(--card); color: var(--muted); font-family: inherit; }
-  .seg button.on { background: var(--text); color: white; }
-  .pct-bar { display: flex; height: 14px; border-radius: 999px; overflow: hidden; margin: 8px 0 4px; }
-  .pct-bar i { display: block; height: 100%; }
-  .pct-bar .p { background: #2563eb; } .pct-bar .f { background: #d97706; } .pct-bar .c { background: #4d7c0f; }
-  .pct-key { display: flex; gap: 12px; font-size: 11.5px; color: var(--muted); }
-  .pct-key i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
-  .hint { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  /* Targets */
+  .pbar { display: flex; gap: 2px; height: 12px; border-radius: 6px; overflow: hidden; }
+  .pbar i { display: block; height: 100%; }
+  .leg3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .leg3 .k { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .leg3 .k i { width: 9px; height: 9px; border-radius: 3px; }
+  .leg3 .v { font-size: 17px; font-weight: 700; }
+  .leg3 .v small { font-size: 12px; font-weight: 500; color: var(--muted); }
+  .note { background: var(--bg); border-radius: 12px; padding: 10px 12px; font-size: 13px; line-height: 1.45; }
+  .ledger { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; column-gap: 8px; align-items: baseline; }
+  .ledger > * { padding: 5px 0; }
+  .ledger .op { font-size: 15px; font-weight: 700; color: var(--muted); }
+  .ledger .lb { font-size: 14px; }
+  .ledger .lb small { color: var(--muted); }
+  .ledger .vl { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+  .ledger .tot-row { padding-top: 10px; font-weight: 700; }
+  .ledger .rule { grid-column: 1 / -1; height: 1.5px; background: var(--ink); margin-top: 4px; padding: 0; }
+  .step { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; }
+  .step .sn { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; }
+  .step .sn small { display: block; font-size: 12px; font-weight: 500; color: var(--muted); }
+  .step .ctl { display: flex; align-items: center; gap: 6px; }
+  .step .ctl button { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); font-size: 20px; font-weight: 600; cursor: pointer; }
+  .step .ctl input { width: 74px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); text-align: center; font-size: 16px; font-weight: 700; }
+  .step select { height: 44px; max-width: 58%; border-radius: 12px; border: 1px solid var(--line); background: var(--card); font-size: 16px; padding: 0 8px; }
+  .sub-h { font-size: 15px; font-weight: 700; padding: 12px 0 8px; }
+  .about ul { margin: 6px 0 0; padding-left: 18px; font-size: 13.5px; line-height: 1.5; }
+  .about li + li { margin-top: 6px; }
 </style>
 </head>
-<body data-program="nutrition">
-
-<header class="appbar">
-  <div class="appbar-inner">
-    <a class="appbar-back" href="../">← Library</a>
-    <div class="appbar-title">
-      <div class="eyebrow">Tracker</div>
-      <div class="name">Nutrition</div>
-    </div>
-  </div>
-  <div class="appbar-accent"></div>
-</header>
-
-<div class="container">
-  <div class="tabs" id="tabs"></div>
-  <div class="pane" id="pane-today"></div>
-  <div class="pane" id="pane-meals"></div>
-  <div class="pane" id="pane-plan"></div>
-  <div class="pane" id="pane-targets"></div>
-  <div class="pane" id="pane-about"></div>
-</div>
-
-<div class="sheet-wrap" id="sheet-wrap" hidden><div class="sheet" id="sheet" role="dialog"></div></div>
+<body data-shell="fuel">
+<main class="wrap">
+  <header class="page-head" id="head"></header>
+  <nav class="utabs olive" id="tabs" aria-label="Fuel sections"></nav>
+  <div id="pane" style="display:flex;flex-direction:column;gap:14px"></div>
+</main>
+<div class="sheet-wrap" id="sheet-wrap" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
 
 <script src="../shared/setlog.js"></script>
+<script src="../shared/fuel.js"></script>
+<script src="../shared/shell.js"></script>
 <script>
 (function () {
   "use strict";
   const KEY = "nutrition_v1";
   const SLUG = "nutrition";
+  const F = window.Fuel;
 
   /* ------------------------------------------------------------------ helpers */
   const $ = (s, el) => (el || document).querySelector(s);
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const pad = (n) => String(n).padStart(2, "0");
-  const dstr = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  const today = () => dstr(new Date());
-  const parseD = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
-  const addDays = (s, n) => { const d = parseD(s); d.setDate(d.getDate() + n); return dstr(d); };
-  const mondayOf = (s) => { const d = parseD(s); const w = (d.getDay() + 6) % 7; d.setDate(d.getDate() - w); return dstr(d); };
-  const fmtDate = (s) => parseD(s).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
-  const shortDate = (s) => parseD(s).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  const { dstr, today, parseD, addDays, mondayOf, r0, num } = F;
+  const fmt = (n) => r0(n).toLocaleString("en-US");
+  const fmtDate = (s) => parseD(s).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  const shortDate = (s) => parseD(s).toLocaleDateString("en-US", { month: "short", day: "numeric" });
   const uid = (p) => p + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  const r0 = (n) => Math.round(n || 0);
-  const num = (v) => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
   const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const CATS = [["breakfast", "Breakfast"], ["lunch", "Lunch"], ["dinner", "Dinner"], ["side", "Side"], ["snack", "Snack"]];
+  const CATS = [["breakfast", "Breakfast"], ["lunch", "Lunch"], ["dinner", "Dinner"], ["snack", "Snack"], ["side", "Side"]];
+  const CAT_LABEL = { breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", side: "Side", snack: "Snack" };
   const SECTIONS = ["Meat", "Grains", "Produce", "Dairy", "Drinks", "Pantry"];
+  const I = {
+    l: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6l-6 6 6 6"/></svg>',
+    r: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg>',
+    check: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8"/></svg>',
+    check2: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8"/></svg>',
+    scale: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8 10a4 4 0 0 1 8 0"/><path d="M12 10l1.6-2"/></svg>'
+  };
 
   /* ------------------------------------------------------------------ seed data
      Per-100 g values (or per unit for unit foods). Source is recorded on every
@@ -251,7 +251,7 @@
       foods, meals,
       days: {},
       plan: { weeks: {} },
-      ui: { tab: "today", date: null },
+      ui: { tab: "day", date: null },
     };
   }
 
@@ -267,59 +267,32 @@
     S.profile.manual = Object.assign(f.profile.manual, S.profile.manual || {});
     S.weights = S.weights || {}; S.days = S.days || {}; S.plan = S.plan || { weeks: {} }; S.plan.weeks = S.plan.weeks || {};
     S.foods = S.foods || f.foods; S.meals = S.meals || f.meals; S.ui = Object.assign(f.ui, S.ui || {});
+    if (S.ui.tab === "today") S.ui.tab = "day";          // tab names before the 2026-09-25 redesign
+    if (S.ui.tab === "about") S.ui.tab = "targets";
   }
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
     SetLog.sync.schedule();
+    if (window.HS && HS.repaint) HS.repaint();
   }
   const curDate = () => S.ui.date || today();
 
-  /* ------------------------------------------------------------------ macros */
-  function foodMacros(food, qty) {
-    const f = S.foods[food]; if (!f) return { k: 0, p: 0, f: 0, c: 0 };
-    const m = f.unit === "each" ? qty : qty / 100;
-    return { k: f.per.k * m, p: f.per.p * m, f: f.per.f * m, c: f.per.c * m };
-  }
-  function sumMacros(items) {
-    return items.reduce((a, it) => { const m = foodMacros(it.food, num(it.g)); a.k += m.k; a.p += m.p; a.f += m.f; a.c += m.c; return a; }, { k: 0, p: 0, f: 0, c: 0 });
-  }
-  const mealMacros = (meal) => sumMacros(meal.items);
-  const macroStr = (m) => `${r0(m.p)}P · ${r0(m.f)}F · ${r0(m.c)}C`;
+  /* ------------------------------------------------------------------ macros + targets (shared/fuel.js) */
+  const foodMacros = (food, qty) => F.foodMacros(S, food, qty);
+  const sumMacros = (items) => F.sumMacros(S, items);
+  const mealMacros = (meal) => F.mealMacros(S, meal);
+  const weightOn = (date) => F.weightOn(S, date);
+  const targets = (date) => F.targets(S, date);
+  const pct = F.pct;
+  const macLine = (m) => `<span class="mcp">${r0(m.p)} P</span> · <span class="mcf">${r0(m.f)} F</span> · <span class="mcc">${r0(m.c)} C</span>`;
+  const macStr = (m) => `${r0(m.p)} P · ${r0(m.f)} F · ${r0(m.c)} C`;
   function itemsStr(items) {
     return items.map((it) => { const f = S.foods[it.food]; if (!f) return "?"; const n = f.name.split(",")[0]; return f.unit === "each" ? `${num(it.g)}× ${n}` : `${n} ${r0(it.g)} g`; }).join(", ");
   }
 
-  /* ------------------------------------------------------------------ targets */
-  function weightOn(date) {
-    // 7-day trailing average of weigh-ins ending on `date`; else the latest weigh-in before it.
-    const keys = Object.keys(S.weights).filter((d) => d <= date).sort();
-    if (!keys.length) return null;
-    const from = addDays(date, -6);
-    const win = keys.filter((d) => d >= from).map((d) => S.weights[d]);
-    if (win.length) return { w: win.reduce((a, b) => a + b, 0) / win.length, n: win.length, latest: S.weights[keys[keys.length - 1]] };
-    return { w: S.weights[keys[keys.length - 1]], n: 0, latest: S.weights[keys[keys.length - 1]], stale: keys[keys.length - 1] };
-  }
-  function targets(date) {
-    const p = S.profile;
-    if (p.mode === "manual") {
-      const kcal = r0(p.manual.kcal), P = r0(p.manual.p), F = r0(p.manual.f);
-      return { mode: "manual", kcal, p: P, f: F, c: Math.max(0, r0((kcal - P * 4 - F * 9) / 4)) };
-    }
-    const wo = weightOn(date); if (!wo) return null;
-    const w = wo.w, kg = w * 0.45359237, cm = p.heightIn * 2.54;
-    const bmr = 10 * kg + 6.25 * cm - 5 * p.age + (p.sex === "f" ? -161 : 5);
-    const tdee = bmr * p.activity;
-    let deficit = 0;
-    if (p.goal === "cut") deficit = Math.min(tdee * p.deficitPct / 100, p.deficitCap);
-    if (p.goal === "build") deficit = -p.surplus;
-    const kcal = r0(tdee - deficit), P = r0(w * p.proteinPerLb), F = r0(w * p.fatPerLb);
-    return { mode: "auto", w, wn: wo.n, stale: wo.stale, bmr, tdee, deficit, kcal, p: P, f: F, c: Math.max(0, r0((kcal - P * 4 - F * 9) / 4)) };
-  }
-  const pct = (t) => { const tot = t.p * 4 + t.f * 9 + t.c * 4 || 1; return { p: r0(t.p * 4 / tot * 100), f: r0(t.f * 9 / tot * 100), c: r0(t.c * 4 / tot * 100) }; };
-
   /* ------------------------------------------------------------------ day log */
   const day = (date) => (S.days[date] = S.days[date] || { log: [] });
-  const dayTotals = (date) => (S.days[date] ? S.days[date].log : []).reduce((a, e) => { a.k += e.k; a.p += e.p; a.f += e.f; a.c += e.c; return a; }, { k: 0, p: 0, f: 0, c: 0 });
+  const dayTotals = (date) => F.dayTotals(S, date);
   function logMeal(date, meal, items, note) {
     const m = sumMacros(items);
     day(date).log.push({ id: uid("e"), t: new Date().toISOString(), kind: "meal", meal: meal.id, name: meal.name, items: items.map((i) => ({ food: i.food, g: num(i.g) })), k: r0(m.k), p: r0(m.p), f: r0(m.f), c: r0(m.c), note: note || "" });
@@ -333,7 +306,7 @@
 
   /* ------------------------------------------------------------------ plan */
   const week = (mon) => (S.plan.weeks[mon] = S.plan.weeks[mon] || { days: {}, prep: {} });
-  function planFor(date) { const wk = S.plan.weeks[mondayOf(date)]; return wk ? wk.days[date] || null : null; }
+  const planFor = (date) => F.planFor(S, date);
   function fillRotation(mon) {
     const wk = week(mon);
     const li = Object.keys(S.plan.weeks).filter((k) => k < mon).length; // shift the rotation a step each week
@@ -356,7 +329,7 @@
     Object.entries(need).forEach(([id, qty]) => {
       const f = S.foods[id]; if (!f || !qty) return;
       let buy, detail;
-      if (f.unit === "each") { buy = `${qty} ${f.packName ? "" : "×"}`.trim(); detail = f.pack ? `${qty} shakes = ${Math.ceil(qty / f.pack)} × ${f.packName}` : `${qty}×`; buy = f.pack ? `${Math.ceil(qty / f.pack)} ${f.packName}` : `${qty}×`; }
+      if (f.unit === "each") { detail = f.pack ? `${qty} shakes = ${Math.ceil(qty / f.pack)} × ${f.packName}` : `${qty}×`; buy = f.pack ? `${Math.ceil(qty / f.pack)} ${f.packName}` : `${qty}×`; }
       else if (f.packG) { const n = Math.ceil(qty / f.packG); buy = `${n} ${f.packName}${n === 1 ? "" : "s"}`; detail = `${r0(qty)} g cooked`; }
       else if (f.rawFactor && f.rawFactor < 1) { const raw = qty / f.rawFactor; buy = `${(raw / 453.6).toFixed(1)} lb raw`; detail = `${r0(qty)} g cooked ÷ ${f.rawFactor} yield`; }
       else { buy = `${r0(qty)} g`; detail = qty >= 1000 ? `${(qty / 1000).toFixed(1)} kg` : ""; }
@@ -365,132 +338,239 @@
     rows.sort((a, b) => SECTIONS.indexOf(a.section) - SECTIONS.indexOf(b.section) || b.qty - a.qty);
     return rows;
   }
+  function dayPlanMacros(p) {
+    return [S.meals.b1, S.meals[p.lunch], S.meals[p.dinner], p.salad ? S.meals.v1 : null].filter(Boolean).map(mealMacros)
+      .reduce((a, x) => ({ k: a.k + x.k, p: a.p + x.p, f: a.f + x.f, c: a.c + x.c }), { k: 0, p: 0, f: 0, c: 0 });
+  }
 
   /* ------------------------------------------------------------------ sheet */
   const sheetWrap = $("#sheet-wrap"), sheetEl = $("#sheet");
-  function openSheet(html) { sheetEl.innerHTML = html; sheetWrap.hidden = false; document.body.style.overflow = "hidden"; }
+  function openSheet(html) { sheetEl.innerHTML = `<div class="grabber"></div>${html}`; sheetWrap.hidden = false; document.body.style.overflow = "hidden"; }
   function closeSheet() { sheetWrap.hidden = true; sheetEl.innerHTML = ""; document.body.style.overflow = ""; }
   sheetWrap.addEventListener("click", (e) => { if (e.target === sheetWrap) closeSheet(); });
-  const sheetHead = (title) => `<div class="sheet-head"><h2>${esc(title)}</h2><button class="sheet-close" data-close aria-label="Close">×</button></div>`;
   sheetEl.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) closeSheet(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !sheetWrap.hidden) closeSheet(); });
+  const sheetHead = (title) => `<div class="sheet-head"><h2>${esc(title)}</h2><button class="x-btn" data-close aria-label="Close">×</button></div>`;
 
-  /* Meal picker: category chips, then meals with macros. Tapping a meal opens the portion editor. */
-  function openPicker(cat, date) {
-    cat = cat || "lunch";
-    const meals = Object.values(S.meals).filter((m) => !m.archived && m.cat === cat).sort((a, b) => a.order - b.order);
-    openSheet(`${sheetHead("Log a meal")}
-      <div class="cat-chips">${CATS.map(([k, l]) => `<button class="tab ${k === cat ? "active" : ""}" data-cat="${k}">${l}</button>`).join("")}</div>
-      <div>${meals.length ? meals.map((m) => { const mm = mealMacros(m); return `<div class="meal-pick" data-meal="${m.id}"><div style="flex:1;min-width:0"><div class="mp-name">${esc(m.name)}</div><div class="mp-sub">${esc(itemsStr(m.items))}</div></div><div><div class="mp-k">${r0(mm.k)}</div><div class="mp-m">${macroStr(mm)}</div></div></div>`; }).join("") : `<div class="empty">No ${cat} meals yet. Add one on the Meals tab.</div>`}</div>`);
-    sheetEl.querySelectorAll("[data-cat]").forEach((b) => (b.onclick = () => openPicker(b.dataset.cat, date)));
-    sheetEl.querySelectorAll("[data-meal]").forEach((el) => (el.onclick = () => openPortion(S.meals[el.dataset.meal], date)));
+  /* Portion editor, shared by the picker (new log) and by editing a logged entry. */
+  function editorHtml(ctx) {
+    const t = sumMacros(ctx.items);
+    const tg = targets(ctx.date), tot = dayTotals(ctx.date);
+    const prior = ctx.entry ? { k: ctx.entry.k, p: ctx.entry.p, f: ctx.entry.f, c: ctx.entry.c } : { k: 0, p: 0, f: 0, c: 0 };
+    const after = tg ? { k: tg.kcal - tot.k + prior.k - t.k, p: tg.p - tot.p + prior.p - t.p, f: tg.f - tot.f + prior.f - t.f, c: tg.c - tot.c + prior.c - t.c } : null;
+    const afterTxt = after ? `After this: ${fmt(Math.abs(after.k))} kcal ${after.k >= 0 ? "left" : "over"} · ${r0(after.p)} P · ${r0(after.f)} F · ${r0(after.c)} C` : "";
+    const foodOpts = Object.values(S.foods).sort((a, b) => a.name.localeCompare(b.name)).map((f) => `<option value="${f.id}">${esc(f.name)}</option>`).join("");
+    return `<section class="ed" aria-label="Portion">
+      <div>${ctx.label ? `<div class="eyebrow olive">${esc(ctx.label)}</div>` : ""}<div style="font-size:18px;font-weight:700;margin-top:2px">${esc(ctx.meal.name)}</div></div>
+      <div class="seg" role="group" aria-label="Scale the plate">${[["0.5", "×½"], ["0.75", "×¾"], ["1", "×1"], ["1.5", "×1½"]].map(([k, l]) => `<button data-mult="${k}" class="${ctx.mult === k ? "on" : ""}">${l}</button>`).join("")}</div>
+      <div>${ctx.items.map((it, i) => { const f = S.foods[it.food]; const m = foodMacros(it.food, it.g); return `<div class="irow"><div class="t"><b>${esc(f ? f.name : it.food)}</b><small data-mac="${i}">${r0(m.k)} kcal · ${macStr(m)}</small></div><input type="number" inputmode="decimal" step="${f && f.unit === "each" ? 1 : 5}" value="${it.g}" data-i="${i}" aria-label="${esc(f ? f.name : it.food)} ${f && f.unit === "each" ? "count" : "grams"}" /><span class="u">${f && f.unit === "each" ? "×" : "g"}</span><button class="rm" data-x="${i}" aria-label="Remove ${esc(f ? f.name : it.food)}">×</button></div>`; }).join("")}</div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap"><button class="textbtn" data-addfood>+ Add a food</button>${!ctx.entry && S.meals.v1 && ctx.meal.id !== "v1" && (ctx.meal.cat === "dinner" || ctx.meal.cat === "lunch") ? `<button class="textbtn" data-salad>+ Salad · ${r0(mealMacros(S.meals.v1).k)}</button>` : ""}</div>
+      <div class="addfood" hidden><select class="field" data-newfood>${foodOpts}</select></div>
+      <div class="tot"><div class="r"><b data-tk>${fmt(t.k)} kcal</b><span data-tm>${macLine(t)}</span></div>${afterTxt ? `<small data-after>${afterTxt}</small>` : ""}</div>
+      <div style="display:flex;gap:8px">${ctx.entry ? `<button class="btn btn-danger" data-del>Delete</button>` : ""}<button class="btn btn-olive btn-block" style="flex:1" data-log>${ctx.entry ? "Save" : `Log ${fmt(t.k)} kcal`}</button></div>
+    </section>`;
   }
+  function wireEditor(root, ctx, rerender) {
+    const refreshTotals = () => {
+      const t = sumMacros(ctx.items);
+      $("[data-tk]", root).textContent = `${fmt(t.k)} kcal`;
+      $("[data-tm]", root).innerHTML = macLine(t);
+      const tg = targets(ctx.date), tot = dayTotals(ctx.date);
+      const prior = ctx.entry ? ctx.entry : { k: 0, p: 0, f: 0, c: 0 };
+      const a = $("[data-after]", root);
+      if (a && tg) { const k = tg.kcal - tot.k + prior.k - t.k; a.textContent = `After this: ${fmt(Math.abs(k))} kcal ${k >= 0 ? "left" : "over"} · ${r0(tg.p - tot.p + prior.p - t.p)} P · ${r0(tg.f - tot.f + prior.f - t.f)} F · ${r0(tg.c - tot.c + prior.c - t.c)} C`; }
+      if (!ctx.entry) $("[data-log]", root).textContent = `Log ${fmt(t.k)} kcal`;
+    };
+    root.querySelectorAll("[data-mult]").forEach((b) => (b.onclick = () => { const k = num(b.dataset.mult); ctx.mult = b.dataset.mult; ctx.items.forEach((it, i) => { if (ctx.base[i] != null) it.g = Math.round(ctx.base[i] * k); }); rerender(); }));
+    root.querySelectorAll("input[data-i]").forEach((inp) => (inp.oninput = () => {
+      const i = +inp.dataset.i, it = ctx.items[i]; it.g = num(inp.value); ctx.mult = null;
+      const m = foodMacros(it.food, it.g); const sm = $(`[data-mac="${i}"]`, root); if (sm) sm.textContent = `${r0(m.k)} kcal · ${macStr(m)}`;
+      root.querySelectorAll("[data-mult]").forEach((b) => b.classList.remove("on"));
+      refreshTotals();
+    }));
+    root.querySelectorAll("[data-x]").forEach((b) => (b.onclick = () => { const i = +b.dataset.x; ctx.items.splice(i, 1); ctx.base.splice(i, 1); rerender(); }));
+    const af = $("[data-addfood]", root), box = $(".addfood", root), sel = $("[data-newfood]", root);
+    af.onclick = () => { box.hidden = false; sel.focus(); };
+    sel.onchange = () => { const f = S.foods[sel.value]; if (!f) return; ctx.items.push({ food: f.id, g: f.portion || (f.unit === "each" ? 1 : 100) }); ctx.base.push(null); rerender(); };
+    const sal = $("[data-salad]", root);
+    if (sal) sal.onclick = () => { logMeal(ctx.date, S.meals.v1, S.meals.v1.items.map((i) => ({ food: i.food, g: i.g }))); sal.textContent = "Salad logged"; sal.disabled = true; refreshTotals(); renderDay(); };
+    $("[data-log]", root).onclick = () => {
+      if (!ctx.items.length) { alert("Add at least one food."); return; }
+      if (ctx.entry) { const m = sumMacros(ctx.items); Object.assign(ctx.entry, { items: ctx.items.map((i) => ({ food: i.food, g: num(i.g) })), k: r0(m.k), p: r0(m.p), f: r0(m.f), c: r0(m.c) }); save(); }
+      else logMeal(ctx.date, ctx.meal, ctx.items);
+      closeSheet(); renderDay();
+    };
+    const del = $("[data-del]", root);
+    if (del) del.onclick = () => { if (!confirm("Delete this entry?")) return; day(ctx.date).log = day(ctx.date).log.filter((e) => e.id !== ctx.entry.id); save(); closeSheet(); renderDay(); };
+  }
+  const newCtx = (meal, date, entry, label) => ({ meal, date, entry, label, mult: entry ? null : "1", items: (entry ? entry.items : meal.items).map((i) => ({ food: i.food, g: num(i.g) })), base: meal.items.map((i) => num(i.g)) });
 
-  /* Portion editor: grams per component, ×0.5 / ×1 / ×1.5, live totals. Also edits an existing entry. */
-  function openPortion(meal, date, entry) {
-    const items = (entry ? entry.items : meal.items).map((i) => ({ food: i.food, g: num(i.g) }));
-    const base = meal.items.map((i) => num(i.g));
+  /* Picker: one sheet. Tabs by category (Planned first when something is planned), search, the chosen meal's editor on top. */
+  function openPicker(date, opts) {
+    opts = opts || {};
+    const open = F.plannedOpen(S, date);
+    let tab = opts.tab || (open.length ? "planned" : guessCat());
+    let q = "";
+    let ctx = opts.mealId && S.meals[opts.mealId] ? newCtx(S.meals[opts.mealId], date, null, open.some((o) => o.id === opts.mealId) ? "Planned" : CAT_LABEL[S.meals[opts.mealId].cat]) : null;
     const render = () => {
-      const t = sumMacros(items);
-      openSheet(`${sheetHead(entry ? "Edit portion" : meal.name)}
-        ${entry ? `<div class="hint" style="margin-top:-4px">${esc(meal.name)} · logged ${esc(shortDate(date))}</div>` : ""}
-        <div class="mult"><button class="btn" data-mult="0.5">×½</button><button class="btn" data-mult="0.75">×¾</button><button class="btn" data-mult="1">×1</button><button class="btn" data-mult="1.5">×1½</button></div>
-        <div class="items">${items.map((it, i) => { const f = S.foods[it.food]; const m = foodMacros(it.food, it.g); return `<div class="item-row"><div class="in">${esc(f ? f.name : it.food)}<small>${r0(m.k)} kcal · ${macroStr(m)}</small></div><input type="number" inputmode="decimal" step="${f && f.unit === "each" ? 1 : 5}" value="${it.g}" data-i="${i}" aria-label="grams" /><button class="x" data-x="${i}" aria-label="remove">×</button></div>`; }).join("")}</div>
-        <div class="totals"><span><b>${r0(t.k)}</b> kcal</span><span>${r0(t.p)} P</span><span>${r0(t.f)} F</span><span>${r0(t.c)} C</span></div>
-        <div class="form"><div class="actions">${entry ? `<button class="btn btn-danger" data-del>Delete</button>` : ""}<button class="btn btn-accent" data-log>${entry ? "Save" : "Log it"}</button></div></div>`);
-      sheetEl.querySelectorAll("[data-mult]").forEach((b) => (b.onclick = () => { const k = num(b.dataset.mult); items.forEach((it, i) => { it.g = Math.round((base[i] || it.g) * k); }); render(); }));
-      sheetEl.querySelectorAll("input[data-i]").forEach((inp) => (inp.oninput = () => {
-        const it = items[+inp.dataset.i]; it.g = num(inp.value);
-        const m = foodMacros(it.food, it.g), small = inp.parentElement.querySelector("small");
-        if (small) small.textContent = `${r0(m.k)} kcal · ${macroStr(m)}`;
-        const t = sumMacros(items); $(".totals", sheetEl).innerHTML = `<span><b>${r0(t.k)}</b> kcal</span><span>${r0(t.p)} P</span><span>${r0(t.f)} F</span><span>${r0(t.c)} C</span>`;
-      }));
-      sheetEl.querySelectorAll("[data-x]").forEach((b) => (b.onclick = () => { items.splice(+b.dataset.x, 1); base.splice(+b.dataset.x, 1); render(); }));
-      $("[data-log]", sheetEl).onclick = () => {
-        if (entry) { const m = sumMacros(items); Object.assign(entry, { items: items.map((i) => ({ food: i.food, g: i.g })), k: r0(m.k), p: r0(m.p), f: r0(m.f), c: r0(m.c) }); save(); }
-        else logMeal(date, meal, items);
-        closeSheet(); renderToday();
-      };
-      const del = $("[data-del]", sheetEl); if (del) del.onclick = () => { if (!confirm("Delete this entry?")) return; day(date).log = day(date).log.filter((e) => e.id !== entry.id); save(); closeSheet(); renderToday(); };
+      const listAll = Object.values(S.meals).filter((m) => !m.archived).sort((a, b) => a.order - b.order);
+      let list;
+      if (q) list = listAll.filter((m) => m.name.toLowerCase().indexOf(q.toLowerCase()) >= 0);
+      else if (tab === "planned") list = open.map((o) => S.meals[o.id]).filter(Boolean);
+      else list = listAll.filter((m) => m.cat === tab);
+      if (ctx) list = list.filter((m) => m.id !== ctx.meal.id);
+      const title = ctx ? `Log ${ctx.meal.cat === "side" ? "a side" : (CAT_LABEL[ctx.meal.cat] || "a meal").toLowerCase()}` : "Log a meal";
+      const tabs = (open.length ? [["planned", "Planned"]] : []).concat(CATS);
+      openSheet(`${sheetHead(title)}
+        <input class="field" type="search" placeholder="Search meals" aria-label="Search meals" value="${esc(q)}" data-q />
+        <div class="utabs olive" role="tablist">${tabs.map(([k, l]) => `<button role="tab" aria-selected="${!q && k === tab}" class="${!q && k === tab ? "on" : ""}" data-tab="${k}">${l}</button>`).join("")}</div>
+        ${ctx ? editorHtml(ctx) : ""}
+        ${list.length ? `<div>${ctx ? `<div class="eyebrow" style="padding:4px 2px 2px">${q ? "Other matches" : tab === "planned" ? "Also planned" : `Other ${CAT_LABEL[tab].toLowerCase()}${tab === "lunch" || tab === "dinner" ? "es".slice(tab === "dinner" ? 1 : 0) : ""}`}</div>` : ""}${list.map((m) => { const mm = mealMacros(m); return `<button class="pick" data-meal="${m.id}"><span class="t"><b>${esc(m.name)}</b><small>${macStr(mm)}</small></span><span class="k">${r0(mm.k)}</span></button>`; }).join("")}</div>`
+          : (!ctx ? `<div class="empty">${q ? "No meals match." : tab === "planned" ? "Everything planned is logged." : `No ${CAT_LABEL[tab].toLowerCase()} meals yet. Add one on Meals.`}</div>` : "")}
+        <button class="btn" data-quick>Something off plan? Quick add</button>`);
+      const qi = $("[data-q]", sheetEl);
+      qi.oninput = () => { q = qi.value; const pos = qi.selectionStart; render(); const n = $("[data-q]", sheetEl); n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} };
+      sheetEl.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => { tab = b.dataset.tab; q = ""; render(); }));
+      sheetEl.querySelectorAll("[data-meal]").forEach((b) => (b.onclick = () => { const m = S.meals[b.dataset.meal]; ctx = newCtx(m, date, null, open.some((o) => o.id === m.id) ? "Planned" : CAT_LABEL[m.cat]); render(); sheetEl.scrollTop = 0; }));
+      $("[data-quick]", sheetEl).onclick = () => openQuick(date);
+      if (ctx) wireEditor($(".ed", sheetEl), ctx, render);
     };
     render();
   }
-
+  function openEntry(date, entry) {
+    const meal = S.meals[entry.meal];
+    if (!meal) return openQuick(date, entry);
+    const ctx = newCtx(meal, date, entry, `Logged ${shortDate(date)}`);
+    const render = () => { openSheet(`${sheetHead("Edit portion")}${editorHtml(ctx)}`); wireEditor($(".ed", sheetEl), ctx, render); };
+    render();
+  }
   function openQuick(date, entry) {
-    openSheet(`${sheetHead(entry ? "Edit off-plan entry" : "Quick add (off-plan)")}
-      <div class="hint" style="margin-top:-6px;margin-bottom:8px">Eating out, a snack that is not in the library, a family dinner. Rough macros are fine. Leave kcal blank and it is computed from P, F and C.</div>
-      <div class="form">
-        <div><label>What</label><input id="q-name" value="${esc(entry ? entry.name : "")}" placeholder="e.g. Chipotle bowl" /></div>
-        <div class="g4"><div><label>kcal</label><input id="q-k" type="number" inputmode="numeric" value="${entry ? entry.k : ""}" /></div><div><label>P g</label><input id="q-p" type="number" inputmode="numeric" value="${entry ? entry.p : ""}" /></div><div><label>F g</label><input id="q-f" type="number" inputmode="numeric" value="${entry ? entry.f : ""}" /></div><div><label>C g</label><input id="q-c" type="number" inputmode="numeric" value="${entry ? entry.c : ""}" /></div></div>
-        <div><label>Note</label><input id="q-note" value="${esc(entry ? entry.note : "")}" placeholder="optional" /></div>
-        <div class="actions">${entry ? `<button class="btn btn-danger" data-del>Delete</button>` : ""}<button class="btn btn-accent" data-log>${entry ? "Save" : "Log it"}</button></div>
-      </div>`);
+    openSheet(`${sheetHead(entry ? "Edit off-plan entry" : "Quick add, off plan")}
+      <p class="hint" style="font-size:13px;margin:0">Eating out, a snack that isn't in the library, a family dinner. Rough macros are fine. Leave kcal blank and it's computed from P, F and C.</p>
+      <div><label class="lab" for="q-name">What</label><input class="field" id="q-name" value="${esc(entry ? entry.name : "")}" placeholder="e.g. Chipotle bowl" /></div>
+      <div class="grid4"><div><label class="lab" for="q-k">kcal</label><input class="field" id="q-k" type="number" inputmode="numeric" value="${entry ? entry.k : ""}" /></div><div><label class="lab" for="q-p">P g</label><input class="field" id="q-p" type="number" inputmode="numeric" value="${entry ? entry.p : ""}" /></div><div><label class="lab" for="q-f">F g</label><input class="field" id="q-f" type="number" inputmode="numeric" value="${entry ? entry.f : ""}" /></div><div><label class="lab" for="q-c">C g</label><input class="field" id="q-c" type="number" inputmode="numeric" value="${entry ? entry.c : ""}" /></div></div>
+      <div><label class="lab" for="q-note">Note</label><input class="field" id="q-note" value="${esc(entry ? entry.note : "")}" placeholder="optional" /></div>
+      <div style="display:flex;gap:8px">${entry ? `<button class="btn btn-danger" data-del>Delete</button>` : ""}<button class="btn btn-olive btn-block" style="flex:1" data-log>${entry ? "Save" : "Log it"}</button></div>`);
     $("[data-log]", sheetEl).onclick = () => {
       const q = { name: $("#q-name").value.trim(), k: $("#q-k").value, p: $("#q-p").value, f: $("#q-f").value, c: $("#q-c").value, note: $("#q-note").value.trim() };
       if (entry) { let k = num(q.k); if (!k) k = num(q.p) * 4 + num(q.f) * 9 + num(q.c) * 4; Object.assign(entry, { name: q.name || "Quick add", k: r0(k), p: r0(q.p), f: r0(q.f), c: r0(q.c), note: q.note }); save(); }
       else logQuick(date, q);
-      closeSheet(); renderToday();
+      closeSheet(); renderDay();
     };
-    const del = $("[data-del]", sheetEl); if (del) del.onclick = () => { if (!confirm("Delete this entry?")) return; day(date).log = day(date).log.filter((e) => e.id !== entry.id); save(); closeSheet(); renderToday(); };
-  }
-
-  /* ------------------------------------------------------------------ TODAY */
-  function macroRow(name, sub, eaten, target, unit) {
-    const has = target != null;
-    const frac = has && target > 0 ? eaten / target : 0;
-    const cls = !has ? "" : frac > 1.05 ? "over" : frac >= 0.9 ? "near" : "";
-    const rem = has ? target - eaten : null;
-    return `<div class="mrow"><div class="mname">${name}<small>${sub}</small></div><div class="mbar ${cls}"><i style="width:${Math.min(100, frac * 100)}%"></i></div><div class="mnum"><b>${r0(eaten)}</b>${has ? ` / ${r0(target)}` : ""} ${unit}<small>${has ? (rem >= 0 ? `${r0(rem)} left` : `${r0(-rem)} over`) : "no target yet"}</small></div></div>`;
-  }
-  function renderToday() {
-    const date = curDate(), t = targets(date), tot = dayTotals(date), d = S.days[date] || { log: [] };
-    const wo = weightOn(date), wIn = S.weights[date];
-    const plan = planFor(date);
-    const loggedMeals = new Set(d.log.map((e) => e.meal));
-    const chips = [];
-    if (plan) {
-      if (plan.lunch && S.meals[plan.lunch] && !loggedMeals.has(plan.lunch)) chips.push(`<button class="chip" data-plan="${plan.lunch}">Log planned lunch: ${esc(S.meals[plan.lunch].name)}</button>`);
-      if (plan.dinner && S.meals[plan.dinner] && !loggedMeals.has(plan.dinner)) chips.push(`<button class="chip" data-plan="${plan.dinner}">Log planned dinner: ${esc(S.meals[plan.dinner].name)}</button>`);
-      if (plan.salad && !loggedMeals.has("v1") && S.meals.v1) chips.push(`<button class="chip grey" data-plan="v1">+ Salad</button>`);
-    }
-    if (!loggedMeals.has("b1") && S.meals.b1 && date === today()) chips.unshift(`<button class="chip grey" data-plan="b1">Log breakfast shakes</button>`);
-    const eatenPct = tot.k > 0 ? pct({ p: tot.p, f: tot.f, c: tot.c }) : null;
-    $("#pane-today").innerHTML = `
-      <div class="hero">
-        <div class="date-row"><button class="btn" data-nav="-1" aria-label="previous day">‹</button><div class="date-title"><div class="d1">${date === today() ? "Today" : fmtDate(date)}</div><div class="d2">${date === today() ? fmtDate(date) : `<a href="#" data-nav="0">back to today</a>`}</div></div><button class="btn" data-nav="1" aria-label="next day">›</button></div>
-        <div class="macros">
-          ${macroRow("kcal", t ? (t.mode === "manual" ? "manual target" : "cut target") : "", tot.k, t ? t.kcal : null, "")}
-          ${macroRow("Protein", "1 g/lb", tot.p, t ? t.p : null, "g")}
-          ${macroRow("Fat", "0.3 g/lb", tot.f, t ? t.f : null, "g")}
-          ${macroRow("Carbs", "the rest", tot.c, t ? t.c : null, "g")}
-        </div>
-        <div class="split">${eatenPct ? `<span>Eaten split: <b>${eatenPct.p}%</b> P · <b>${eatenPct.f}%</b> F · <b>${eatenPct.c}%</b> C</span>` : `<span>Nothing logged yet</span>`}${t ? `<span>Target split: <b>${pct(t).p}%</b> P · <b>${pct(t).f}%</b> F · <b>${pct(t).c}%</b> C</span>` : `<span>Enter a weigh-in to get targets</span>`}</div>
-        <div class="weigh"><span>Weigh-in</span><input id="w-in" type="number" inputmode="decimal" step="0.1" placeholder="lb" value="${wIn != null ? wIn : ""}" /><span>lb</span><span class="avg">${wo ? (wo.n > 1 ? `7-day avg ${wo.w.toFixed(1)} (${wo.n} days)` : wo.stale ? `last ${wo.latest} on ${shortDate(wo.stale)}` : `latest ${wo.latest}`) : "no weigh-ins yet"}</span></div>
-      </div>
-      ${chips.length ? `<div class="planned">${chips.join("")}</div>` : ""}
-      <div class="row-actions"><button class="btn btn-accent" data-add="meal">+ Meal</button><button class="btn" data-add="quick">+ Quick add</button></div>
-      <div class="log">${d.log.length ? d.log.map((e) => `<div class="log-item ${e.kind}" data-entry="${e.id}"><div class="li-main"><div class="li-name">${esc(e.name)}</div><div class="li-sub">${e.kind === "meal" ? esc(itemsStr(e.items)) : esc(e.note || "off-plan")}</div></div><div><div class="li-k">${e.k}</div><div class="li-m">${e.p}P · ${e.f}F · ${e.c}C</div></div></div>`).join("") : `<div class="empty">Nothing logged ${date === today() ? "today" : "this day"}. Tap + Meal.</div>`}</div>
-      ${d.log.length ? `<div class="hint" style="text-align:center">Tap an entry to change the portion or delete it.</div>` : ""}`;
-    const pane = $("#pane-today");
-    pane.querySelectorAll("[data-nav]").forEach((b) => (b.onclick = (e) => { e.preventDefault(); const n = +b.dataset.nav; S.ui.date = n === 0 ? null : addDays(date, n); if (S.ui.date === today()) S.ui.date = null; save(); renderToday(); }));
-    $("#w-in", pane).onchange = (e) => { const v = num(e.target.value); if (v > 0) S.weights[date] = Math.round(v * 10) / 10; else delete S.weights[date]; save(); renderToday(); };
-    pane.querySelectorAll("[data-plan]").forEach((b) => (b.onclick = () => openPortion(S.meals[b.dataset.plan], date)));
-    pane.querySelectorAll("[data-add]").forEach((b) => (b.onclick = () => (b.dataset.add === "meal" ? openPicker(guessCat(), date) : openQuick(date))));
-    pane.querySelectorAll("[data-entry]").forEach((el) => (el.onclick = () => { const e = d.log.find((x) => x.id === el.dataset.entry); if (!e) return; if (e.kind === "meal" && S.meals[e.meal]) openPortion(S.meals[e.meal], date, e); else openQuick(date, e); }));
+    const del = $("[data-del]", sheetEl); if (del) del.onclick = () => { if (!confirm("Delete this entry?")) return; day(date).log = day(date).log.filter((e) => e.id !== entry.id); save(); closeSheet(); renderDay(); };
   }
   function guessCat() { const h = new Date().getHours(); return h < 10 ? "breakfast" : h < 15 ? "lunch" : h < 21 ? "dinner" : "snack"; }
 
+  /* ------------------------------------------------------------------ header + tabs */
+  const TABS = [["day", "Day"], ["meals", "Meals"], ["plan", "Week plan"], ["targets", "Targets"]];
+  function renderHead() {
+    const tab = S.ui.tab, goal = { cut: "cut", maintain: "maintain", build: "build" }[S.profile.goal] || "";
+    let eyebrow = `Fuel${S.profile.mode === "manual" ? " · set by hand" : goal ? " · " + goal : ""}`, title = "", right = "";
+    if (tab === "day") {
+      const d = curDate();
+      title = d === today() ? "Today" : fmtDate(d);
+      right = `<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><div class="date-nav"><button class="icon-btn" data-nav="-1" aria-label="Previous day">${I.l}</button><button class="icon-btn" data-nav="1" aria-label="Next day">${I.r}</button></div>${d !== today() ? `<button class="back-today btn-ghost" style="border:0;background:none;cursor:pointer" data-nav="0">Back to today</button>` : ""}</div>`;
+    } else if (tab === "plan") {
+      const mon = S.ui.week || mondayOf(today());
+      eyebrow = "Fuel · week of"; title = shortDate(mon);
+      right = `<div class="date-nav"><button class="icon-btn" data-wk="-1" aria-label="Previous week">${I.l}</button><button class="icon-btn" data-wk="1" aria-label="Next week">${I.r}</button></div>`;
+    } else if (tab === "meals") title = "Meals";
+    else title = "Targets";
+    $("#head").innerHTML = `<div style="min-width:0"><div class="eyebrow olive">${eyebrow}</div><h1>${esc(title)}</h1></div>${right}`;
+    $("#head").querySelectorAll("[data-nav]").forEach((b) => (b.onclick = () => { const n = +b.dataset.nav; const d = curDate(); S.ui.date = n === 0 ? null : addDays(d, n); if (S.ui.date === today()) S.ui.date = null; save(); renderDay(); }));
+    $("#head").querySelectorAll("[data-wk]").forEach((b) => (b.onclick = () => { const mon = S.ui.week || mondayOf(today()); S.ui.week = addDays(mon, 7 * +b.dataset.wk); save(); renderPlan(); }));
+    $("#tabs").innerHTML = TABS.map(([k, l]) => `<button class="${k === tab ? "on" : ""}" aria-current="${k === tab ? "page" : "false"}" data-tab="${k}">${l}</button>`).join("");
+    $("#tabs").querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
+  }
+
+  /* ------------------------------------------------------------------ DAY */
+  function renderDay() {
+    if (S.ui.tab !== "day") return;
+    renderHead();
+    const date = curDate(), t = targets(date), tot = dayTotals(date), d = S.days[date] || { log: [] };
+    const wo = weightOn(date), wIn = S.weights[date];
+    const open = F.plannedOpen(S, date);
+    const planned = open.reduce((a, o) => ({ k: a.k + o.m.k, p: a.p + o.m.p, f: a.f + o.m.f, c: a.c + o.m.c }), { k: 0, p: 0, f: 0, c: 0 });
+    let sum;
+    if (t) {
+      const left = t.kcal - tot.k, over = left < 0;
+      const eW = Math.min(100, tot.k / t.kcal * 100), pW = Math.max(0, Math.min(100 - eW, planned.k / t.kcal * 100));
+      const openK = t.kcal - tot.k - planned.k;
+      const col = (label, key, color) => { const l = t[key] - tot[key]; return `<div class="mcol"><div class="k"><i style="background:${color}"></i>${label}</div><div class="v"><b>${r0(tot[key])}</b><small> / ${t[key]} g</small></div><div class="bar"><i style="width:${Math.min(100, tot[key] / t[key] * 100).toFixed(0)}%;background:${color}"></i></div><div class="l${l < 0 ? " over" : ""}">${r0(Math.abs(l))} ${l >= 0 ? "left" : "over"}</div></div>`; };
+      const eatenPct = tot.k > 0 ? pct({ p: tot.p, f: tot.f, c: tot.c }) : null, tp = pct(t);
+      sum = `<section class="card sum" aria-label="Day summary">
+        <div class="big"><b>${fmt(Math.abs(left))}</b><span>kcal ${over ? "over" : "left"} of ${fmt(t.kcal)}</span></div>
+        <div class="stack" aria-hidden="true"><i style="width:${eW.toFixed(1)}%;background:${over ? "var(--F)" : "var(--olive)"}"></i>${pW > 0 ? `<i class="hatch" style="width:${pW.toFixed(1)}%;border-left:2px solid var(--card)"></i>` : ""}</div>
+        <div class="legend"><span><i style="background:var(--olive)"></i>Eaten ${fmt(tot.k)}</span>${planned.k > 0 ? `<span><i class="hatch"></i>Planned ${fmt(planned.k)}</span>` : ""}<span><i style="background:var(--track);border:1px solid #D6D1C6;box-sizing:border-box"></i>${openK >= 0 ? `Open ${fmt(openK)}` : `Over by ${fmt(-openK)} with the plan`}</span></div>
+        <div class="divider" style="height:1px;background:var(--line)"></div>
+        <div class="mcols">${col("Protein", "p", "var(--P)")}${col("Fat", "f", "var(--F)")}${col("Carbs", "c", "var(--C)")}</div>
+        <div class="hint">${eatenPct ? `Eaten split ${eatenPct.p} / ${eatenPct.f} / ${eatenPct.c} · ` : ""}target ${tp.p} / ${tp.f} / ${tp.c} (P / F / C)${t.mode === "auto" ? ` · ${S.profile.proteinPerLb.toFixed(2)} g/lb protein` : ""}</div>
+      </section>`;
+    } else {
+      sum = `<section class="card sum"><div class="eyebrow">No target yet</div><div style="font-size:15px">Enter a weigh-in below and today's target computes from it, or set it by hand on Targets.</div></section>`;
+    }
+    const avgTxt = wo ? (wo.n > 1 ? `7-day average ${wo.w.toFixed(1)} lb${S.profile.mode === "auto" ? " · the target follows it" : ""}` : wo.stale ? `last ${wo.latest} lb on ${shortDate(wo.stale)}` : `latest ${wo.latest} lb`) : "No weigh-ins yet";
+    const weigh = `<section class="card weigh-row"><span class="olive" style="display:flex">${I.scale}</span><span class="t"><b>${date === today() ? "Morning weigh-in" : "Weigh-in"}</b><small>${esc(avgTxt)}</small></span><input id="w-in" type="number" inputmode="decimal" step="0.1" placeholder="lb" aria-label="Weigh-in in pounds" value="${wIn != null ? wIn : ""}" /></section>`;
+
+    const items = d.log.slice().sort((a, b) => (a.t < b.t ? -1 : 1)).map((e) => {
+      const cat = e.kind === "meal" && S.meals[e.meal] ? S.meals[e.meal].cat : null;
+      const isOff = e.kind === "quick";
+      return `<div class="ti" data-entry="${e.id}" role="button" tabindex="0" aria-label="Edit ${esc(e.name)}">
+        <span class="d ${isOff ? "off" : "logged"}">${isOff ? "" : I.check}</span>
+        <div class="top"><div class="eyebrow" style="color:${isOff ? "var(--F-ink)" : "var(--olive)"}">${isOff ? "Off plan" : `${CAT_LABEL[cat] || "Meal"} · logged`}</div><div class="kc">${e.k}</div></div>
+        <div class="nm">${esc(e.name)}</div><div class="sb">${e.kind === "meal" ? esc(itemsStr(e.items)) : esc(e.note || "rough macros")}</div>
+        <div class="mc">${macLine(e)}</div></div>`;
+    });
+    open.forEach((o) => {
+      const m = S.meals[o.id];
+      items.push(`<div class="ti" style="cursor:default">
+        <span class="d plan"></span>
+        <div class="top"><div class="eyebrow">${CAT_LABEL[o.slot] || o.slot} · planned</div><div class="kc" style="color:var(--muted)">${r0(o.m.k)}</div></div>
+        <div class="nm">${esc(o.name)}</div><div class="sb">${esc(itemsStr(m.items))}</div><div class="mc">${macLine(o.m)}</div>
+        <div class="acts"><button class="btn btn-olive" data-plan="${o.id}">Log it</button>${o.slot === "lunch" || o.slot === "dinner" ? `<button class="btn" data-swap="${o.slot}">Swap</button>` : ""}</div></div>`);
+    });
+    const timeline = items.length ? `<div class="tl">${items.join("")}</div>` : `<div class="card empty">Nothing logged ${date === today() ? "today" : "this day"} and nothing planned. Tap + Meal.</div>`;
+
+    let afterCard = "";
+    if (t && open.length) {
+      const after = { k: tot.k + planned.k, p: tot.p + planned.p, f: tot.f + planned.f, c: tot.c + planned.c };
+      const dk = t.kcal - after.k, dc = t.c - after.c, dp = t.p - after.p;
+      const names = open.filter((o) => o.slot !== "breakfast").map((o) => o.slot).join(" and ") || "breakfast";
+      let tip = "";
+      if (dk < -100) tip = `That lands ${fmt(-dk)} kcal over.`;
+      else if (dc >= 40 && S.foods.rice) { const rb = foodMacros("rice", S.foods.rice.portion || 210); tip = `Carbs land ${r0(dc)} g short. Rice is the dial: one more Bibigo bowl adds ${r0(rb.c)} C for ${r0(rb.k)} kcal.`; }
+      else if (dp >= 25 && S.foods.shake) tip = `Protein lands ${r0(dp)} g short. One more shake adds ${S.foods.shake.per.p} P for ${S.foods.shake.per.k} kcal.`;
+      else tip = `That lands within ${fmt(Math.abs(dk))} kcal of the target.`;
+      afterCard = `<section class="after"><div class="eyebrow olive">After ${esc(names)}</div><p>${fmt(after.k)} kcal · ${r0(after.p)} P · ${r0(after.f)} F · ${r0(after.c)} C. ${tip}</p></section>`;
+    }
+    $("#pane").innerHTML = `${sum}${weigh}<div class="row-head"><div class="eyebrow">${date === today() ? "Today" : fmtDate(date)}</div></div>${timeline}${afterCard}
+      <div class="actions2"><button class="btn btn-olive btn-block" data-add="meal">+ Meal</button><button class="btn btn-block" data-add="quick">Quick add</button></div>
+      ${d.log.length ? `<div class="hint" style="text-align:center">Tap a logged entry to change the portion or delete it.</div>` : ""}`;
+    const pane = $("#pane");
+    const wi = $("#w-in", pane);
+    wi.onchange = () => { const v = num(wi.value); if (v > 0) S.weights[date] = Math.round(v * 10) / 10; else delete S.weights[date]; save(); renderDay(); };
+    wi.onkeydown = (e) => { if (e.key === "Enter") wi.blur(); };
+    pane.querySelectorAll("[data-plan]").forEach((b) => (b.onclick = () => openPicker(date, { mealId: b.dataset.plan, tab: "planned" })));
+    pane.querySelectorAll("[data-swap]").forEach((b) => (b.onclick = () => openPicker(date, { tab: b.dataset.swap })));
+    pane.querySelectorAll("[data-add]").forEach((b) => (b.onclick = () => (b.dataset.add === "meal" ? openPicker(date) : openQuick(date))));
+    pane.querySelectorAll("[data-entry]").forEach((el) => {
+      const go = () => { const e = d.log.find((x) => x.id === el.dataset.entry); if (!e) return; if (e.kind === "meal") openEntry(date, e); else openQuick(date, e); };
+      el.onclick = go; el.onkeydown = (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); go(); } };
+    });
+  }
+
   /* ------------------------------------------------------------------ MEALS */
   function renderMeals() {
+    renderHead();
     const meals = Object.values(S.meals).filter((m) => !m.archived).sort((a, b) => a.order - b.order);
     const foods = Object.values(S.foods).sort((a, b) => SECTIONS.indexOf(a.section) - SECTIONS.indexOf(b.section) || a.name.localeCompare(b.name));
-    $("#pane-meals").innerHTML = `
-      <div class="row-actions" style="margin-top:0"><button class="btn btn-accent" data-new-meal>+ New meal</button><button class="btn" data-new-food>+ New food</button></div>
-      ${CATS.map(([k, l]) => { const ms = meals.filter((m) => m.cat === k); if (!ms.length) return ""; return `<div class="sec-label">${l}</div>` + ms.map((m) => { const mm = mealMacros(m); return `<div class="meal-card collapsed" data-mc="${m.id}"><div class="meal-head"><div style="flex:1;min-width:0"><div class="mh-name">${esc(m.name)}</div><div class="mh-sub">${esc(itemsStr(m.items))}</div></div><div><div class="mp-k" style="font-weight:700;text-align:right">${r0(mm.k)}</div><div class="mp-m">${macroStr(mm)}</div></div><span class="caret">▾</span></div><div class="meal-body">${m.items.map((it) => { const f = S.foods[it.food], x = foodMacros(it.food, it.g); return `<div class="comp"><span>${esc(f ? f.name : it.food)} <small>${f && f.unit === "each" ? `× ${it.g}` : `${it.g} g`}</small></span><span>${r0(x.k)} · ${macroStr(x)}</span></div>`; }).join("")}<div class="row-actions" style="margin-bottom:0"><button class="btn" data-edit-meal="${m.id}">Edit</button><button class="btn" data-dup-meal="${m.id}">Duplicate</button><button class="btn btn-danger" data-arch-meal="${m.id}">Archive</button></div></div></div>`; }).join(""); }).join("")}
-      <div class="sec-label">Foods (per 100 g, or per unit)</div>
-      <div class="log">${foods.map((f) => `<div class="food-row" data-food="${f.id}"><div><div>${esc(f.name)}${f.source === "estimate" ? `<span class="fr-est">est.</span>` : ""}</div><div class="fr-sub">${esc(f.brand || "")}${f.brand ? " · " : ""}${f.section} · ${esc(f.source)}</div></div><div style="text-align:right;white-space:nowrap"><div style="font-weight:700">${f.per.k}</div><div class="fr-sub">${f.per.p}P · ${f.per.f}F · ${f.per.c}C ${f.unit === "each" ? "each" : "/100 g"}</div></div></div>`).join("")}</div>
-      <div class="hint">Foods marked <b>est.</b> carry Karl's estimate and get re-priced against USDA; tap a food to correct it from a label. Meal macros are computed live from the food values, so fixing a food fixes every meal that uses it.</div>`;
-    const pane = $("#pane-meals");
-    pane.querySelectorAll(".meal-head").forEach((h) => (h.onclick = () => h.parentElement.classList.toggle("collapsed")));
+    $("#pane").innerHTML = `
+      <div class="actions2"><button class="btn btn-olive" data-new-meal>+ New meal</button><button class="btn" data-new-food>+ New food</button></div>
+      ${CATS.map(([k, l]) => { const ms = meals.filter((m) => m.cat === k); if (!ms.length) return ""; return `<section><div class="eyebrow" style="padding:0 4px 8px">${l}</div>${ms.map((m) => { const mm = mealMacros(m); return `<div class="card mcard" data-mc="${m.id}"><button class="mhead" aria-expanded="false"><span class="t"><b>${esc(m.name)}</b><small>${esc(itemsStr(m.items))}</small></span><span class="k"><b>${r0(mm.k)}</b><small>${macStr(mm)}</small></span></button><div class="mbody">${m.items.map((it) => { const f = S.foods[it.food], x = foodMacros(it.food, it.g); return `<div class="comp"><span>${esc(f ? f.name : it.food)} · ${f && f.unit === "each" ? `× ${it.g}` : `${it.g} g`}</span><span>${r0(x.k)} · ${macStr(x)}</span></div>`; }).join("")}<div style="display:flex;gap:8px;margin-top:10px"><button class="btn" data-edit-meal="${m.id}">Edit</button><button class="btn" data-dup-meal="${m.id}">Duplicate</button><button class="btn btn-danger" data-arch-meal="${m.id}">Archive</button></div></div></div>`; }).join("")}</section>`; }).join("")}
+      <section><div class="eyebrow" style="padding:0 4px 8px">Foods · per 100 g, or per unit</div><div class="card">${foods.map((f) => `<button class="frow" data-food="${f.id}"><span><b>${esc(f.name)}</b>${f.source === "estimate" ? `<span class="est">EST.</span>` : ""}<small>${esc(f.brand || "")}${f.brand ? " · " : ""}${f.section} · ${esc(f.source)}</small></span><span style="text-align:right;white-space:nowrap"><b>${f.per.k}</b><small>${f.per.p} P · ${f.per.f} F · ${f.per.c} C ${f.unit === "each" ? "each" : "/100 g"}</small></span></button>`).join("")}</div></section>
+      <div class="hint">Foods marked EST. carry Karl's estimate and get re-priced against USDA; tap a food to correct it from a label. Meal macros are computed live from the food values, so fixing a food fixes every meal that uses it.</div>`;
+    const pane = $("#pane");
+    pane.querySelectorAll(".mhead").forEach((h) => (h.onclick = () => { const c = h.parentElement; c.classList.toggle("open"); h.setAttribute("aria-expanded", c.classList.contains("open")); }));
     $("[data-new-meal]", pane).onclick = () => openMealForm(null);
     $("[data-new-food]", pane).onclick = () => openFoodForm(null);
     pane.querySelectorAll("[data-edit-meal]").forEach((b) => (b.onclick = () => openMealForm(S.meals[b.dataset.editMeal])));
@@ -500,29 +580,29 @@
   }
   function openMealForm(meal) {
     const items = meal ? meal.items.map((i) => ({ food: i.food, g: i.g })) : [];
+    let name = meal ? meal.name : "", cat = meal ? meal.cat : "lunch";
     const foodOpts = (sel) => Object.values(S.foods).sort((a, b) => a.name.localeCompare(b.name)).map((f) => `<option value="${f.id}" ${f.id === sel ? "selected" : ""}>${esc(f.name)}</option>`).join("");
     const render = () => {
       const t = sumMacros(items);
       openSheet(`${sheetHead(meal ? "Edit meal" : "New meal")}
-        <div class="form">
-          <div><label>Name</label><input id="m-name" value="${esc(meal ? meal.name : "")}" placeholder="e.g. Chicken thigh and rice bowl" /></div>
-          <div><label>Category</label><select id="m-cat">${CATS.map(([k, l]) => `<option value="${k}" ${(meal ? meal.cat : "lunch") === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>
-          <label>Components</label>
-          <div class="items">${items.map((it, i) => { const f = S.foods[it.food]; return `<div class="item-row"><select data-food-i="${i}" style="font-size:13px;padding:8px 6px;border:1px solid var(--border);border-radius:8px;background:var(--card);font-family:inherit;min-width:0">${foodOpts(it.food)}</select><input type="number" inputmode="decimal" value="${it.g}" data-g-i="${i}" aria-label="${f && f.unit === "each" ? "count" : "grams"}" /><button class="x" data-x="${i}">×</button></div>`; }).join("")}</div>
-          <button class="btn" data-add-item style="justify-content:center;height:38px">+ Add component</button>
-          <div class="totals"><span><b>${r0(t.k)}</b> kcal</span><span>${r0(t.p)} P</span><span>${r0(t.f)} F</span><span>${r0(t.c)} C</span></div>
-          <div class="actions"><button class="btn btn-accent" data-save>Save meal</button></div>
-        </div>`);
-      const grab = () => { $("#m-name").dataset.v = $("#m-name").value; };
-      sheetEl.querySelectorAll("[data-food-i]").forEach((s) => (s.onchange = () => { items[+s.dataset.foodI].food = s.value; const f = S.foods[s.value]; items[+s.dataset.foodI].g = f ? f.portion : 100; const n = $("#m-name").value; render(); $("#m-name").value = n; }));
-      sheetEl.querySelectorAll("[data-g-i]").forEach((inp) => (inp.oninput = () => { items[+inp.dataset.gI].g = num(inp.value); const t2 = sumMacros(items); $(".totals", sheetEl).innerHTML = `<span><b>${r0(t2.k)}</b> kcal</span><span>${r0(t2.p)} P</span><span>${r0(t2.f)} F</span><span>${r0(t2.c)} C</span>`; }));
-      sheetEl.querySelectorAll("[data-x]").forEach((b) => (b.onclick = () => { const n = $("#m-name").value; items.splice(+b.dataset.x, 1); render(); $("#m-name").value = n; }));
-      $("[data-add-item]", sheetEl).onclick = () => { const n = $("#m-name").value, c = $("#m-cat").value; const first = Object.values(S.foods)[0]; items.push({ food: first.id, g: first.portion }); render(); $("#m-name").value = n; $("#m-cat").value = c; };
+        <div><label class="lab" for="m-name">Name</label><input class="field" id="m-name" value="${esc(name)}" placeholder="e.g. Chicken thigh and rice bowl" /></div>
+        <div><label class="lab" for="m-cat">Category</label><select class="field" id="m-cat">${CATS.map(([k, l]) => `<option value="${k}" ${cat === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+        <div class="lab" style="margin-bottom:0">Components</div>
+        <div>${items.map((it, i) => { const f = S.foods[it.food]; return `<div class="irow"><select class="field" data-food-i="${i}" style="flex:1;min-width:0">${foodOpts(it.food)}</select><input type="number" inputmode="decimal" value="${it.g}" data-g-i="${i}" aria-label="${f && f.unit === "each" ? "count" : "grams"}" /><button class="rm" data-x="${i}" aria-label="Remove">×</button></div>`; }).join("")}</div>
+        <button class="btn" data-add-item>+ Add component</button>
+        <div class="tot"><div class="r"><b data-tk>${fmt(t.k)} kcal</b><span data-tm>${macLine(t)}</span></div></div>
+        <button class="btn btn-olive btn-block" data-save>Save meal</button>`);
+      const keep = () => { name = $("#m-name").value; cat = $("#m-cat").value; };
+      sheetEl.querySelectorAll("[data-food-i]").forEach((s) => (s.onchange = () => { keep(); const f = S.foods[s.value]; items[+s.dataset.foodI] = { food: s.value, g: f ? f.portion : 100 }; render(); }));
+      sheetEl.querySelectorAll("[data-g-i]").forEach((inp) => (inp.oninput = () => { items[+inp.dataset.gI].g = num(inp.value); const t2 = sumMacros(items); $("[data-tk]", sheetEl).textContent = `${fmt(t2.k)} kcal`; $("[data-tm]", sheetEl).innerHTML = macLine(t2); }));
+      sheetEl.querySelectorAll("[data-x]").forEach((b) => (b.onclick = () => { keep(); items.splice(+b.dataset.x, 1); render(); }));
+      $("[data-add-item]", sheetEl).onclick = () => { keep(); const first = Object.values(S.foods)[0]; items.push({ food: first.id, g: first.portion }); render(); };
       $("[data-save]", sheetEl).onclick = () => {
-        const name = $("#m-name").value.trim(); if (!name) { alert("Give the meal a name."); return; }
+        keep();
+        if (!name.trim()) { alert("Give the meal a name."); return; }
         if (!items.length) { alert("Add at least one component."); return; }
-        if (meal) { meal.name = name; meal.cat = $("#m-cat").value; meal.items = items.map((i) => ({ food: i.food, g: num(i.g) })); }
-        else { const id = uid("m"); S.meals[id] = { id, name, cat: $("#m-cat").value, order: Object.keys(S.meals).length + 1, items: items.map((i) => ({ food: i.food, g: num(i.g) })) }; }
+        if (meal) { meal.name = name.trim(); meal.cat = cat; meal.items = items.map((i) => ({ food: i.food, g: num(i.g) })); }
+        else { const id = uid("m"); S.meals[id] = { id, name: name.trim(), cat, order: Object.keys(S.meals).length + 1, items: items.map((i) => ({ food: i.food, g: num(i.g) })) }; }
         save(); closeSheet(); renderMeals();
       };
     };
@@ -530,16 +610,14 @@
   }
   function openFoodForm(food) {
     openSheet(`${sheetHead(food ? "Edit food" : "New food")}
-      <div class="hint" style="margin-top:-6px;margin-bottom:8px">Enter the label per 100 g (cooked, as eaten), or switch to per unit for things like a shake or a bowl.</div>
-      <div class="form">
-        <div><label>Name</label><input id="f-name" value="${esc(food ? food.name : "")}" /></div>
-        <div class="g2"><div><label>Brand / prep</label><input id="f-brand" value="${esc(food ? food.brand || "" : "")}" /></div><div><label>Section</label><select id="f-sec">${SECTIONS.map((s) => `<option ${food && food.section === s ? "selected" : ""}>${s}</option>`).join("")}</select></div></div>
-        <div class="g2"><div><label>Values are per</label><select id="f-unit"><option value="g" ${!food || food.unit === "g" ? "selected" : ""}>100 g</option><option value="each" ${food && food.unit === "each" ? "selected" : ""}>1 unit</option></select></div><div><label>Default portion</label><input id="f-portion" type="number" inputmode="decimal" value="${food ? food.portion : 100}" /></div></div>
-        <div class="g4"><div><label>kcal</label><input id="f-k" type="number" inputmode="decimal" value="${food ? food.per.k : ""}" /></div><div><label>P g</label><input id="f-p" type="number" inputmode="decimal" value="${food ? food.per.p : ""}" /></div><div><label>F g</label><input id="f-f" type="number" inputmode="decimal" value="${food ? food.per.f : ""}" /></div><div><label>C g</label><input id="f-c" type="number" inputmode="decimal" value="${food ? food.per.c : ""}" /></div></div>
-        <div class="g2"><div><label>Cooked ÷ raw yield</label><input id="f-raw" type="number" inputmode="decimal" step="0.01" value="${food && food.rawFactor != null ? food.rawFactor : ""}" placeholder="0.72 for meat" /></div><div><label>Pack size (g) · name</label><div style="display:flex;gap:4px"><input id="f-packg" type="number" inputmode="decimal" value="${food && food.packG ? food.packG : ""}" placeholder="g" /><input id="f-packn" value="${esc(food && food.packName ? food.packName : "")}" placeholder="bowl" /></div></div></div>
-        <div><label>Source</label><input id="f-src" value="${esc(food ? food.source : "label")}" /></div>
-        <div class="actions"><button class="btn btn-accent" data-save>Save food</button></div>
-      </div>`);
+      <p class="hint" style="font-size:13px;margin:0">Enter the label per 100 g (cooked, as eaten), or switch to per unit for things like a shake or a bowl.</p>
+      <div><label class="lab" for="f-name">Name</label><input class="field" id="f-name" value="${esc(food ? food.name : "")}" /></div>
+      <div class="grid2"><div><label class="lab" for="f-brand">Brand / prep</label><input class="field" id="f-brand" value="${esc(food ? food.brand || "" : "")}" /></div><div><label class="lab" for="f-sec">Section</label><select class="field" id="f-sec">${SECTIONS.map((s) => `<option ${food && food.section === s ? "selected" : ""}>${s}</option>`).join("")}</select></div></div>
+      <div class="grid2"><div><label class="lab" for="f-unit">Values are per</label><select class="field" id="f-unit"><option value="g" ${!food || food.unit === "g" ? "selected" : ""}>100 g</option><option value="each" ${food && food.unit === "each" ? "selected" : ""}>1 unit</option></select></div><div><label class="lab" for="f-portion">Default portion</label><input class="field" id="f-portion" type="number" inputmode="decimal" value="${food ? food.portion : 100}" /></div></div>
+      <div class="grid4"><div><label class="lab" for="f-k">kcal</label><input class="field" id="f-k" type="number" inputmode="decimal" value="${food ? food.per.k : ""}" /></div><div><label class="lab" for="f-p">P g</label><input class="field" id="f-p" type="number" inputmode="decimal" value="${food ? food.per.p : ""}" /></div><div><label class="lab" for="f-f">F g</label><input class="field" id="f-f" type="number" inputmode="decimal" value="${food ? food.per.f : ""}" /></div><div><label class="lab" for="f-c">C g</label><input class="field" id="f-c" type="number" inputmode="decimal" value="${food ? food.per.c : ""}" /></div></div>
+      <div class="grid2"><div><label class="lab" for="f-raw">Cooked ÷ raw yield</label><input class="field" id="f-raw" type="number" inputmode="decimal" step="0.01" value="${food && food.rawFactor != null ? food.rawFactor : ""}" placeholder="0.72 for meat" /></div><div><label class="lab" for="f-packg">Pack size (g) · name</label><div style="display:flex;gap:4px"><input class="field" id="f-packg" type="number" inputmode="decimal" value="${food && food.packG ? food.packG : ""}" placeholder="g" /><input class="field" id="f-packn" value="${esc(food && food.packName ? food.packName : "")}" placeholder="bowl" /></div></div></div>
+      <div><label class="lab" for="f-src">Source</label><input class="field" id="f-src" value="${esc(food ? food.source : "label")}" /></div>
+      <button class="btn btn-olive btn-block" data-save>Save food</button>`);
     $("[data-save]", sheetEl).onclick = () => {
       const name = $("#f-name").value.trim(); if (!name) { alert("Name the food."); return; }
       const f = food || { id: uid("f") };
@@ -551,34 +629,52 @@
     };
   }
 
-  /* ------------------------------------------------------------------ PLAN */
+  /* ------------------------------------------------------------------ WEEK PLAN */
   function renderPlan() {
+    renderHead();
     const mon = S.ui.week || mondayOf(today());
     const wk = week(mon);
-    const opts = (cat, sel) => `<option value="">—</option>` + Object.values(S.meals).filter((m) => !m.archived && m.cat === cat).sort((a, b) => a.order - b.order).map((m) => `<option value="${m.id}" ${m.id === sel ? "selected" : ""}>${esc(m.name)}</option>`).join("");
+    const opts = (cat, sel) => `<option value="">None</option>` + Object.values(S.meals).filter((m) => !m.archived && m.cat === cat).sort((a, b) => a.order - b.order).map((m) => `<option value="${m.id}" ${m.id === sel ? "selected" : ""}>${esc(m.name)}</option>`).join("");
     const need = weekNeeds(mon), rows = grocery(need);
     const batch = Object.entries(need).filter(([id]) => S.foods[id] && S.foods[id].unit !== "each" && ["Meat", "Grains", "Produce"].includes(S.foods[id].section)).sort((a, b) => b[1] - a[1]);
-    let planned = 0; for (let i = 0; i < 7; i++) { const p = wk.days[addDays(mon, i)]; if (p && (p.lunch || p.dinner)) planned++; }
     const t = targets(today());
-    $("#pane-plan").innerHTML = `
-      <div class="hero">
-        <div class="date-row"><button class="btn" data-wk="-1" aria-label="previous week">‹</button><div class="date-title"><div class="d1">Week of ${shortDate(mon)}</div><div class="d2">${planned} of 7 days planned · Sunday prep</div></div><button class="btn" data-wk="1" aria-label="next week">›</button></div>
-        <div class="plan-tools"><button class="btn" data-fill>Fill with rotation</button><button class="btn" data-clear>Clear week</button></div>
-        <div style="margin-top:6px">
-          <div class="plan-day" style="border:none;padding-bottom:2px"><div class="pd" style="color:var(--muted);font-size:10px;text-transform:uppercase">Day</div><div class="pd" style="color:var(--muted);font-size:10px;text-transform:uppercase">Lunch</div><div class="pd" style="color:var(--muted);font-size:10px;text-transform:uppercase">Dinner</div><div class="pd" style="color:var(--muted);font-size:10px;text-transform:uppercase;text-align:center">Salad</div></div>
-          ${DAYS.map((dn, i) => { const d = addDays(mon, i), p = wk.days[d] || {}; return `<div class="plan-day ${d === today() ? "today" : ""}"><div class="pd">${dn}</div><select data-slot="lunch" data-d="${d}">${opts("lunch", p.lunch)}</select><select data-slot="dinner" data-d="${d}">${opts("dinner", p.dinner)}</select><button class="salad ${p.salad ? "on" : ""}" data-salad="${d}" aria-label="salad">🥗</button></div>`; }).join("")}
-        </div>
-        ${t ? `<div class="hint">Each planned day: shakes + lunch + dinner${""} lands ${DAYS.map((dn, i) => { const p = wk.days[addDays(mon, i)]; if (!p || !(p.lunch || p.dinner)) return null; const m = [S.meals.b1, S.meals[p.lunch], S.meals[p.dinner], p.salad ? S.meals.v1 : null].filter(Boolean).map(mealMacros).reduce((a, x) => ({ k: a.k + x.k, p: a.p + x.p, f: a.f + x.f, c: a.c + x.c }), { k: 0, p: 0, f: 0, c: 0 }); return `${dn} ${r0(m.k)}`; }).filter(Boolean).join(" · ") || "nothing yet"} kcal against ${t.kcal}. What is left is snack and rice room.</div>` : ""}
-      </div>
-      <div class="card"><h2>Batch cook</h2><p>Cooked weights for the week's plan. Check off as it comes out of the oven.</p>
-        ${batch.length ? batch.map(([id, g]) => { const f = S.foods[id], done = !!wk.prep[id]; return `<div class="batch ${done ? "done" : ""}" data-prep="${id}"><div class="ex-check ${done ? "done" : ""}"><svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3 7-7"/></svg></div><div class="b-main">${esc(f.name)}<div class="b-sub">${f.packG ? `${Math.ceil(g / f.packG)} ${f.packName}${Math.ceil(g / f.packG) === 1 ? "" : "s"} · heat as you go` : f.rawFactor && f.rawFactor < 1 ? `cook about ${(g / f.rawFactor / 453.6).toFixed(1)} lb raw` : /raw/i.test(f.name) ? "wash and portion" : "steam as you go"}</div></div><div class="b-qty">${g >= 1000 ? (g / 1000).toFixed(2) + " kg" : r0(g) + " g"}</div></div>`; }).join("") : `<div class="empty">Plan a few days first.</div>`}
-      </div>
-      <div class="card"><h2>Grocery list</h2><p>Grouped by store section. Raw weights use the yield on each food (meat cooks down to about 72%).</p>
-        <div class="weigh" style="margin:0 0 8px"><label style="display:flex;align-items:center;gap:6px;font-size:12.5px"><input type="checkbox" id="g-shakes" ${wk.shakes !== false ? "checked" : ""} style="width:20px;height:20px" /> include 21 shakes (3 a day)</label></div>
-        ${rows.length ? SECTIONS.map((sec) => { const rs = rows.filter((r) => r.section === sec); if (!rs.length) return ""; return `<div class="sec-label" style="margin:10px 0 4px">${sec}</div>` + rs.map((r) => `<div class="batch" data-buy="${r.id}"><div class="ex-check ${wk.bought && wk.bought[r.id] ? "done" : ""}"><svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3 7-7"/></svg></div><div class="b-main ${wk.bought && wk.bought[r.id] ? "done" : ""}">${esc(r.name)}${r.detail ? `<div class="b-sub">${esc(r.detail)}</div>` : ""}</div><div class="b-qty">${esc(r.buy)}</div></div>`).join(""); }).join("") : `<div class="empty">Plan a few days first.</div>`}
-      </div>`;
-    const pane = $("#pane-plan");
-    pane.querySelectorAll("[data-wk]").forEach((b) => (b.onclick = () => { S.ui.week = addDays(mon, 7 * +b.dataset.wk); save(); renderPlan(); }));
+    const kcals = [];
+    DAYS.forEach((dn, i) => { const p = wk.days[addDays(mon, i)]; if (p && (p.lunch || p.dinner)) kcals.push(dayPlanMacros(p).k); });
+    const planned = kcals.length, avg = planned ? kcals.reduce((a, b) => a + b, 0) / planned : 0;
+    let banner = "";
+    if (t && planned) {
+      const gaps = kcals.map((k) => t.kcal - k), lo = Math.min(...gaps), hi = Math.max(...gaps);
+      if (lo >= 100) banner = `<section class="banner"><div class="eyebrow" style="color:var(--amber-ink)">Under target</div><p>${planned === 1 ? "The planned day lands" : "Every planned day lands"} ${lo === hi ? fmt(lo) : `${fmt(lo)} to ${fmt(hi)}`} kcal under your ${fmt(t.kcal)} target, on top of the cut already built in. Rice is the dial: a second Bibigo bowl at one meal adds ${S.foods.rice ? r0(foodMacros("rice", S.foods.rice.portion || 210).k) : 290} kcal.</p></section>`;
+      else if (hi <= -100) banner = `<section class="banner"><div class="eyebrow" style="color:var(--amber-ink)">Over target</div><p>Every planned day lands over your ${fmt(t.kcal)} target.</p></section>`;
+    }
+    const dayRows = DAYS.map((dn, i) => {
+      const d = addDays(mon, i), p = wk.days[d] || {};
+      const has = p.lunch || p.dinner, m = has ? dayPlanMacros(p) : null;
+      return `<div class="pday ${d === today() ? "today" : ""}">
+        <div class="dl"><span>${dn}</span><b>${parseD(d).getDate()}</b></div>
+        <div class="sl"><label><em>L</em><select data-slot="lunch" data-d="${d}" aria-label="${dn} lunch">${opts("lunch", p.lunch)}</select></label>
+          <label><em>D</em><select data-slot="dinner" data-d="${d}" aria-label="${dn} dinner">${opts("dinner", p.dinner)}</select></label>
+          <button class="salad ${p.salad ? "on" : ""}" data-salad="${d}" aria-pressed="${!!p.salad}">${p.salad ? "+ salad" : "add salad"}</button></div>
+        <div class="kk">${m ? `<b>${fmt(m.k)}</b>${t ? `<div class="bar"><i style="width:${Math.min(100, m.k / t.kcal * 100).toFixed(0)}%;background:var(--olive)"></i></div>` : ""}` : `<span class="hint">open</span>`}</div></div>`;
+    }).join("");
+    const boxI = (done) => `<span class="bx">${done ? I.check2 : ""}</span>`;
+    $("#pane").innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:0 4px;font-size:14px"><span><b>${planned} of 7</b> <span style="color:var(--muted)">days planned</span></span>${planned ? `<span><b>${fmt(avg)}</b> <span style="color:var(--muted)">kcal a day${t ? ` of ${fmt(t.kcal)}` : ""}</span></span>` : ""}</div>
+      ${banner}
+      <section class="card" style="overflow:hidden">${dayRows}</section>
+      <div class="hint" style="padding:0 4px">Each day counts the three shakes, lunch, dinner and the salad when it's on.</div>
+      <div class="actions2"><button class="btn" data-fill>Fill with rotation</button><button class="btn btn-ghost" data-clear>Clear week</button></div>
+      <div class="row-head"><div class="eyebrow">Sunday prep</div></div>
+      <section class="card pad" style="padding:14px 16px 6px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding-bottom:6px"><b style="font-size:16px">Batch cook</b><span class="hint">cooked weights · ${batch.filter(([id]) => wk.prep[id]).length} of ${batch.length} done</span></div>
+        ${batch.length ? batch.map(([id, g]) => { const f = S.foods[id], done = !!wk.prep[id]; return `<button class="chk ${done ? "done" : ""}" data-prep="${id}" aria-pressed="${done}">${boxI(done)}<span class="t"><b>${esc(f.name)}</b><small>${f.packG ? `${Math.ceil(g / f.packG)} ${f.packName}${Math.ceil(g / f.packG) === 1 ? "" : "s"} · heat as you go` : f.rawFactor && f.rawFactor < 1 ? `cook about ${(g / f.rawFactor / 453.6).toFixed(1)} lb raw` : /raw/i.test(f.name) ? "wash and portion" : "steam as you go"}</small></span><span class="q">${g >= 1000 ? (g / 1000).toFixed(2) + " kg" : r0(g) + " g"}</span></button>`; }).join("") : `<div class="empty">Plan a few days first.</div>`}
+      </section>
+      <section class="card pad" style="padding:14px 16px 6px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><b style="font-size:16px">Grocery list</b><span class="hint">raw weights · ${rows.filter((r) => wk.bought && wk.bought[r.id]).length} of ${rows.length} in the cart</span></div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;min-height:40px"><input type="checkbox" id="g-shakes" ${wk.shakes !== false ? "checked" : ""} style="width:20px;height:20px" /> Include 21 shakes (3 a day)</label>
+        ${rows.length ? SECTIONS.map((sec) => { const rs = rows.filter((r) => r.section === sec); if (!rs.length) return ""; return `<div class="sec">${sec}</div>` + rs.map((r) => { const b = !!(wk.bought && wk.bought[r.id]); return `<button class="chk ${b ? "done" : ""}" data-buy="${r.id}" aria-pressed="${b}">${boxI(b)}<span class="t"><b>${esc(r.name)}</b>${r.detail ? `<small>${esc(r.detail)}</small>` : ""}</span><span class="q">${esc(r.buy)}</span></button>`; }).join(""); }).join("") : `<div class="empty">Plan a few days first.</div>`}
+      </section>`;
+    const pane = $("#pane");
     $("[data-fill]", pane).onclick = () => { fillRotation(mon); renderPlan(); };
     $("[data-clear]", pane).onclick = () => { if (!confirm("Clear this week's plan?")) return; wk.days = {}; wk.prep = {}; wk.bought = {}; save(); renderPlan(); };
     pane.querySelectorAll("select[data-slot]").forEach((s) => (s.onchange = () => { const d = s.dataset.d; wk.days[d] = wk.days[d] || {}; wk.days[d][s.dataset.slot] = s.value || null; save(); renderPlan(); }));
@@ -588,77 +684,96 @@
     $("#g-shakes", pane).onchange = (e) => { wk.shakes = e.target.checked; save(); renderPlan(); };
   }
 
-  /* ------------------------------------------------------------------ TARGETS */
+  /* ------------------------------------------------------------------ TARGETS (+ data, sync, backup) */
   function renderTargets() {
-    const p = S.profile, date = today(), t = targets(date), wo = weightOn(date);
-    const step = (label, sub, key, stepBy, min, max, obj) => `<div class="stepper"><div class="sn">${label}<small>${sub}</small></div><button class="btn" data-step="${key}" data-by="${-stepBy}" data-min="${min}" data-max="${max}">−</button><input type="number" inputmode="decimal" step="${stepBy}" value="${(obj || p)[key]}" data-field="${key}" /><button class="btn" data-step="${key}" data-by="${stepBy}" data-min="${min}" data-max="${max}">+</button></div>`;
+    renderHead();
+    const p = S.profile, date = today(), t = targets(date);
+    const step = (label, sub, key, stepBy, min, max, obj) => `<div class="step"><div class="sn">${label}<small>${sub}</small></div><div class="ctl"><button data-step="${key}" data-by="${-stepBy}" data-min="${min}" data-max="${max}" aria-label="Less ${label}">−</button><input type="number" inputmode="decimal" step="${stepBy}" value="${(obj || p)[key]}" data-field="${key}" aria-label="${label}" /><button data-step="${key}" data-by="${stepBy}" data-min="${min}" data-max="${max}" aria-label="More ${label}">+</button></div></div>`;
+    const dstep = (label, sub, key, val, by, min, max) => `<div class="step"><div class="sn">${label}<small>${sub}</small></div><div class="ctl"><button data-dstep="${key}" data-by="${-by}" data-min="${min}" data-max="${max}" aria-label="Less ${label}">−</button><input type="number" inputmode="numeric" step="${by}" value="${val}" data-dfield="${key}" data-min="${min}" data-max="${max}" aria-label="${label}" /><button data-dstep="${key}" data-by="${by}" data-min="${min}" data-max="${max}" aria-label="More ${label}">+</button></div></div>`;
     const split = t ? pct(t) : null;
-    $("#pane-targets").innerHTML = `
-      <div class="card">
-        <h2>Daily target</h2>
-        <div class="seg"><button class="${p.mode === "auto" ? "on" : ""}" data-mode="auto">From bodyweight</button><button class="${p.mode === "manual" ? "on" : ""}" data-mode="manual">Set by hand</button></div>
-        ${t ? `<div class="derive">
-            ${t.mode === "auto" ? `<div class="k">Bodyweight used</div><div class="v">${t.w.toFixed(1)} lb <small>${t.wn > 1 ? `7-day avg of ${t.wn}` : t.stale ? `last weigh-in ${shortDate(t.stale)}` : "latest weigh-in"}</small></div>
-            <div class="k">Resting burn (Mifflin-St Jeor)</div><div class="v">${r0(t.bmr)} <small>kcal</small></div>
-            <div class="k">Maintenance × ${p.activity}</div><div class="v">${r0(t.tdee)} <small>kcal</small></div>
-            <div class="k">${p.goal === "cut" ? "Deficit" : p.goal === "build" ? "Surplus" : "Deficit"}</div><div class="v">${p.goal === "maintain" ? "0" : r0(Math.abs(t.deficit))} <small>${p.goal === "cut" ? `smaller of ${p.deficitPct}% and ${p.deficitCap}` : ""}</small></div>` : ""}
-            <div class="k"><b>Calories</b></div><div class="v"><b>${t.kcal}</b> <small>kcal</small></div>
-            <div class="k">Protein</div><div class="v">${t.p} g <small>${split.p}%</small></div>
-            <div class="k">Fat</div><div class="v">${t.f} g <small>${split.f}%</small></div>
-            <div class="k">Carbs</div><div class="v">${t.c} g <small>${split.c}%, the remainder</small></div>
-          </div>
-          <div class="pct-bar"><i class="p" style="width:${split.p}%"></i><i class="f" style="width:${split.f}%"></i><i class="c" style="width:${split.c}%"></i></div>
-          <div class="pct-key"><span><i style="background:#2563eb"></i>Protein</span><span><i style="background:#d97706"></i>Fat</span><span><i style="background:#4d7c0f"></i>Carbs</span></div>
-          <div class="hint">After the three shakes (480 kcal, 90 P, 9 F, 12 C) that leaves <b>${t.kcal - 480} kcal, ${t.p - 90} P, ${t.f - 9} F, ${t.c - 12} C</b> for lunch, dinner and snacks.</div>`
-        : `<div class="warn-box">No weigh-in yet. Enter one on the Today tab and the target computes from it, or switch to Set by hand.</div>`}
-      </div>
-      ${p.mode === "auto" ? `<div class="card"><h2>Adjust the balance</h2>
-        ${step("Protein", "g per lb bodyweight", "proteinPerLb", 0.05, 0.5, 1.5)}
-        ${step("Fat", "g per lb bodyweight", "fatPerLb", 0.05, 0.2, 0.6)}
-        <div class="hint">Carbs take whatever calories are left, so raising protein or fat lowers carbs.</div>
-        <h3>Goal</h3>
-        <div class="seg">${[["cut", "Cut"], ["maintain", "Maintain"], ["build", "Build"]].map(([k, l]) => `<button class="${p.goal === k ? "on" : ""}" data-goal="${k}">${l}</button>`).join("")}</div>
-        ${p.goal === "cut" ? step("Deficit", "% under maintenance", "deficitPct", 5, 5, 30) + step("Deficit cap", "kcal a day, at most", "deficitCap", 50, 100, 1000) : ""}
+    const b1 = S.meals.b1 && !S.meals.b1.archived ? mealMacros(S.meals.b1) : null;
+    let targetCard;
+    if (t) {
+      targetCard = `<section class="card pad" style="display:flex;flex-direction:column;gap:14px">
+        <div class="eyebrow">Daily target</div>
+        <div class="big"><b>${fmt(t.kcal)}</b><span>kcal a day</span></div>
+        <div class="pbar" aria-hidden="true"><i style="width:${split.p}%;background:var(--P)"></i><i style="width:${split.f}%;background:var(--F)"></i><i style="width:${split.c}%;background:var(--C)"></i></div>
+        <div class="leg3">${[["Protein", t.p, split.p, "var(--P)"], ["Fat", t.f, split.f, "var(--F)"], ["Carbs", t.c, split.c, "var(--C)"]].map(([l, g, pc, c]) => `<div><div class="k"><i style="background:${c}"></i>${l}</div><div class="v">${g} g <small>${pc}%</small></div></div>`).join("")}</div>
+        ${b1 ? `<div class="note">After breakfast: <b>${fmt(t.kcal - b1.k)} kcal · ${r0(t.p - b1.p)} P · ${r0(t.f - b1.f)} F · ${r0(t.c - b1.c)} C</b> for lunch, dinner and snacks.</div>` : ""}
+      </section>`;
+    } else {
+      targetCard = `<section class="card pad"><div class="eyebrow">Daily target</div><p style="margin:6px 0 0;font-size:14px">No weigh-in yet. Enter one on Day and the target computes from it, or switch to Set by hand.</p></section>`;
+    }
+    let ledger = "";
+    if (t && t.mode === "auto") {
+      const defLabel = p.goal === "cut" ? (p.deficitPct >= 100 ? "Deficit, set by hand" : `Deficit, smaller of ${p.deficitPct}% and ${p.deficitCap}`) : p.goal === "build" ? "Surplus" : "Maintain";
+      ledger = `<section class="card pad" style="padding:14px 18px 12px"><div class="eyebrow" style="padding-bottom:6px">How it's built</div><div class="ledger">
+        <span class="op"></span><span class="lb">Bodyweight <small>${t.wn > 1 ? `7-day average of ${t.wn}` : t.stale ? `last weigh-in ${shortDate(t.stale)}` : "latest weigh-in"}</small></span><span class="vl">${t.w.toFixed(1)} lb</span>
+        <span class="op"></span><span class="lb">Resting burn <small>Mifflin-St Jeor</small></span><span class="vl">${fmt(t.bmr)}</span>
+        <span class="op">×</span><span class="lb">Activity ${p.activity} <small>= maintenance</small></span><span class="vl">${fmt(t.tdee)}</span>
+        <span class="op">${p.goal === "build" ? "+" : "−"}</span><span class="lb">${defLabel}</span><span class="vl">${fmt(Math.abs(t.deficit))}</span>
+        <span class="rule"></span><span class="op tot-row">=</span><span class="lb tot-row">Daily target</span><span class="vl tot-row">${fmt(t.kcal)} kcal</span></div></section>`;
+    }
+    let adjust;
+    if (p.mode === "auto") {
+      adjust = `<section class="card pad" style="padding:12px 18px 10px">
+        <div class="eyebrow" style="padding:4px 0">Adjust the balance</div>
+        ${t ? `${dstep("Protein", `${p.proteinPerLb.toFixed(2)} g per lb, follows your weight`, "p", t.p, 5, 50, 400)}
+        ${dstep("Fat", `${p.fatPerLb.toFixed(2)} g per lb, follows your weight`, "f", t.f, 5, 20, 200)}
+        ${dstep("Calories", p.deficitPct >= 100 ? `${fmt(t.deficit)} under maintenance, set by hand` : `${fmt(t.deficit)} under maintenance by the rule below`, "kcal", t.kcal, 50, 1200, 5000)}
+        <div class="hint" style="padding:2px 0 10px">Type the grams you want. The app keeps them as a rate per pound, so as the 7-day average drops the grams ease down with it. Carbs take whatever calories are left.</div>` : `<div class="hint">Enter a weigh-in first; the grams need a bodyweight to work back from.</div>`}
+        <div style="height:1px;background:var(--line)"></div>
+        <div class="sub-h">Goal</div>
+        <div class="seg olive">${[["cut", "Cut"], ["maintain", "Maintain"], ["build", "Build"]].map(([k, l]) => `<button class="${p.goal === k ? "on" : ""}" data-goal="${k}">${l}</button>`).join("")}</div>
+        ${p.goal === "cut" ? (p.deficitPct >= 100 ? `<div class="hint" style="padding-top:10px">Calories are set by hand above (${p.deficitCap} under maintenance). <a href="#" data-rule-reset style="color:var(--olive);font-weight:700">Back to the rule: smaller of 20% and 500.</a></div>` : step("Deficit", "% under maintenance", "deficitPct", 5, 5, 30) + step("Deficit cap", "kcal a day, at most", "deficitCap", 50, 100, 1000)) : ""}
         ${p.goal === "build" ? step("Surplus", "kcal a day", "surplus", 50, 0, 600) : ""}
-        <h3>Profile</h3>
+        <div style="height:1px;background:var(--line);margin-top:6px"></div>
+        <div class="sub-h">Profile</div>
         ${step("Height", "inches", "heightIn", 1, 48, 90)}
         ${step("Age", "years", "age", 1, 18, 90)}
-        <div class="stepper"><div class="sn">Activity<small>lifting most days, desk job = 1.55</small></div><select data-field="activity" style="grid-column:2 / span 3;font-size:14px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--card);font-family:inherit">${[[1.2, "1.2 · sedentary"], [1.375, "1.375 · light, 1 to 3 days"], [1.55, "1.55 · moderate, 3 to 5 days"], [1.725, "1.725 · hard, 6 to 7 days"], [1.9, "1.9 · athlete, two-a-days"]].map(([v, l]) => `<option value="${v}" ${+p.activity === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>
-        <div class="hint">Re-check every 4 weeks: as the 7-day average drops, the target follows it on its own.</div>
-      </div>` : `<div class="card"><h2>Set by hand</h2>
+        <div class="step"><div class="sn">Activity<small>lifting most days, desk job = 1.55</small></div><select data-field="activity" aria-label="Activity">${[[1.2, "1.2 sedentary"], [1.375, "1.375 light"], [1.55, "1.55 moderate"], [1.725, "1.725 hard"], [1.9, "1.9 athlete"]].map(([v, l]) => `<option value="${v}" ${+p.activity === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+        <div class="hint" style="padding:6px 0">The target follows the 7-day average on its own. Nothing to redo every 4 weeks.</div>
+      </section>`;
+    } else {
+      adjust = `<section class="card pad" style="padding:12px 18px 10px"><div class="eyebrow" style="padding:4px 0">Set by hand</div>
         ${step("Calories", "kcal a day", "kcal", 50, 1200, 5000, p.manual)}
         ${step("Protein", "g a day", "p", 5, 50, 400, p.manual)}
         ${step("Fat", "g a day", "f", 5, 20, 200, p.manual)}
-        <div class="hint">Carbs are the remainder: (calories − protein × 4 − fat × 9) ÷ 4.</div>
-      </div>`}`;
-    const pane = $("#pane-targets");
-    const obj = () => (p.mode === "manual" ? p.manual : p);
+        <div class="hint" style="padding:6px 0">Carbs are the remainder: (calories − protein × 4 − fat × 9) ÷ 4.</div></section>`;
+    }
+    const nDays = Object.keys(S.days).filter((d) => S.days[d].log.length).length, nW = Object.keys(S.weights).length;
+    $("#pane").innerHTML = `
+      <div class="seg" role="group" aria-label="Target mode"><button class="${p.mode === "auto" ? "on" : ""}" data-mode="auto">From bodyweight</button><button class="${p.mode === "manual" ? "on" : ""}" data-mode="manual">Set by hand</button></div>
+      ${targetCard}${ledger}${adjust}
+      <section class="card pad sync-card">${SetLog.sync.notesHtml()}<p style="margin:10px 0 0">${nDays} day${nDays === 1 ? "" : "s"} logged · ${nW} weigh-in${nW === 1 ? "" : "s"}. To bring every program back on a new phone, use Restore everything in the Library.</p></section>
+      <section class="card pad"><div class="eyebrow" style="padding-bottom:8px">Backup file</div><div class="ex-actions"><button class="btn" data-export>Export JSON</button><button class="btn" data-import>Import JSON</button><button class="btn btn-danger" data-reset>Reset</button></div><input type="file" id="imp-file" accept="application/json" hidden /></section>
+      <section class="card pad about"><div class="eyebrow">How Fuel works</div><ul>
+        <li><b>Closed menu.</b> You eat from the meal library and log the grams you weighed. Off-plan food goes in as a quick add and is marked, so a week shows on-plan days honestly.</li>
+        <li><b>Targets follow bodyweight.</b> Mifflin-St Jeor from the 7-day average, protein and fat per pound, carbs the remainder, and on a cut the smaller of 20% and 500 kcal. Every number here is adjustable.</li>
+        <li><b>Meal macros are computed live</b> from the food table, so a corrected label fixes every meal. A logged day keeps the numbers it was logged with.</li>
+        <li><b>Sunday prep.</b> Plan the week's lunches and dinners, then cook from the batch list and shop from the grocery list.</li></ul></section>`;
+    const pane = $("#pane");
+    SetLog.sync.wireNotes(); SetLog.sync.paint();
     pane.querySelectorAll("[data-mode]").forEach((b) => (b.onclick = () => { p.mode = b.dataset.mode; save(); renderTargets(); }));
     pane.querySelectorAll("[data-goal]").forEach((b) => (b.onclick = () => { p.goal = b.dataset.goal; save(); renderTargets(); }));
     pane.querySelectorAll("[data-step]").forEach((b) => (b.onclick = () => { const o = ["kcal", "p", "f"].includes(b.dataset.step) ? p.manual : p; const v = Math.min(+b.dataset.max, Math.max(+b.dataset.min, Math.round((num(o[b.dataset.step]) + num(b.dataset.by)) * 100) / 100)); o[b.dataset.step] = v; save(); renderTargets(); }));
     pane.querySelectorAll("[data-field]").forEach((inp) => (inp.onchange = () => { const o = ["kcal", "p", "f"].includes(inp.dataset.field) ? p.manual : p; const v = num(inp.value); if (v > 0) o[inp.dataset.field] = v; save(); renderTargets(); }));
-  }
-
-  /* ------------------------------------------------------------------ ABOUT */
-  function renderAbout() {
-    const nDays = Object.keys(S.days).filter((d) => S.days[d].log.length).length, nW = Object.keys(S.weights).length;
-    $("#pane-about").innerHTML = `
-      <div class="card"><h2>How this works</h2>
-        <ul>
-          <li><b>Closed menu.</b> You eat from the meal library. Logging is one tap plus the grams you weighed. Off-plan food goes in as a quick add and is marked, so a week shows on-plan days honestly.</li>
-          <li><b>Targets follow bodyweight.</b> Mifflin-St Jeor from the 7-day average weigh-in, activity 1.55, protein 1 g per lb, fat 0.3 g per lb, carbs the remainder. On a cut the deficit is the smaller of 20% and 500 kcal. Every number is adjustable on Targets, or set the whole thing by hand.</li>
-          <li><b>Meal macros are computed live</b> from the food table, so a corrected label fixes every meal at once. A logged day keeps the numbers it was logged with.</li>
-          <li><b>Sunday plan.</b> Pick lunches and dinners for the week, get the batch-cook list in cooked grams and a grocery list in raw pounds, bowls and pouches.</li>
-        </ul>
-        <p style="margin-top:8px;font-size:12px;color:var(--muted)">${nDays} day${nDays === 1 ? "" : "s"} logged · ${nW} weigh-in${nW === 1 ? "" : "s"} · data lives on this phone.</p>
-      </div>
-      <div class="card">${SetLog.sync.notesHtml()}</div>
-      <div class="card"><h2>Backup</h2>
-        <div class="row-actions" style="margin:8px 0 0"><button class="btn" data-export>Export JSON</button><button class="btn" data-import>Import JSON</button><button class="btn btn-danger" data-reset>Reset</button></div>
-        <input type="file" id="imp-file" accept="application/json" hidden />
-      </div>`;
-    const pane = $("#pane-about");
-    SetLog.sync.wireNotes(); SetLog.sync.paint();
+    // Grams-first inputs in auto mode: store the rate, not the grams, so the target keeps following bodyweight.
+    const applyDerived = (key, v) => {
+      const tt = targets(today()); if (!tt || tt.mode !== "auto") return;
+      if (key === "p") p.proteinPerLb = Math.round(v / tt.w * 100) / 100;
+      if (key === "f") p.fatPerLb = Math.round(v / tt.w * 100) / 100;
+      if (key === "kcal") {
+        const d = Math.round(tt.tdee - v);
+        if (d > 0) { p.goal = "cut"; p.deficitPct = 100; p.deficitCap = d; }
+        else if (d === 0) { p.goal = "maintain"; }
+        else { p.goal = "build"; p.surplus = -d; }
+      }
+      save(); renderTargets();
+    };
+    pane.querySelectorAll("[data-dstep]").forEach((b) => (b.onclick = () => { const inp = pane.querySelector(`[data-dfield="${b.dataset.dstep}"]`); const v = Math.min(+b.dataset.max, Math.max(+b.dataset.min, num(inp.value) + num(b.dataset.by))); applyDerived(b.dataset.dstep, v); }));
+    pane.querySelectorAll("[data-dfield]").forEach((inp) => (inp.onchange = () => { const v = Math.min(+inp.dataset.max, Math.max(+inp.dataset.min, num(inp.value))); if (v > 0) applyDerived(inp.dataset.dfield, v); }));
+    const rr = pane.querySelector("[data-rule-reset]"); if (rr) rr.onclick = (e) => { e.preventDefault(); p.deficitPct = 20; p.deficitCap = 500; save(); renderTargets(); };
     $("[data-export]", pane).onclick = () => { const blob = new Blob([JSON.stringify(S, null, 1)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `nutrition-${today()}.json`; a.click(); };
     $("[data-import]", pane).onclick = () => $("#imp-file").click();
     $("#imp-file", pane).onchange = (e) => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { try { const j = JSON.parse(r.result); if (!j.meals || !j.foods) throw new Error("not a nutrition backup"); S = j; migrate(); save(); renderAll(); alert("Imported."); } catch (err) { alert("Could not import: " + err.message); } }; r.readAsText(f); };
@@ -666,18 +781,16 @@
   }
 
   /* ------------------------------------------------------------------ tabs + boot */
-  const TABS = [["today", "Today"], ["meals", "Meals"], ["plan", "Plan"], ["targets", "Targets"], ["about", "About"]];
-  const RENDER = { today: renderToday, meals: renderMeals, plan: renderPlan, targets: renderTargets, about: renderAbout };
+  const RENDER = { day: renderDay, meals: renderMeals, plan: renderPlan, targets: renderTargets };
   function showTab(id) {
+    if (!RENDER[id]) id = "day";
     S.ui.tab = id; save();
-    $("#tabs").innerHTML = TABS.map(([k, l]) => `<button class="tab ${k === id ? "active" : ""}" data-tab="${k}">${l}</button>`).join("");
-    $("#tabs").querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
-    document.querySelectorAll(".pane").forEach((p) => p.classList.toggle("active", p.id === "pane-" + id));
     RENDER[id]();
+    window.scrollTo(0, 0);
   }
-  function renderAll() { showTab(S.ui.tab || "today"); }
+  function renderAll() { showTab(S.ui.tab || "day"); }
 
-  /* Sync payload: state plus a flat per-day list Karl reads (totals, target, entries, weigh-in). */
+  /* Sync payload: state plus a flat per-day list Karl reads (totals, target, entries, weigh-in). Unchanged. */
   function exportDays() {
     const dates = new Set([...Object.keys(S.days), ...Object.keys(S.weights)]);
     return [...dates].sort().slice(-90).map((d) => { const t = targets(d), tot = dayTotals(d), log = S.days[d] ? S.days[d].log : []; return { date: d, weight: S.weights[d] || null, target: t ? { k: t.kcal, p: t.p, f: t.f, c: t.c } : null, total: { k: r0(tot.k), p: r0(tot.p), f: r0(tot.f), c: r0(tot.c) }, offplan: log.filter((e) => e.kind === "quick").length, entries: log.map((e) => ({ name: e.name, kind: e.kind, k: e.k, p: e.p, f: e.f, c: e.c, portion: e.kind === "meal" ? itemsStr(e.items) : e.note || "" })) }; });
@@ -686,7 +799,16 @@
   load();
   if (S.ui.date === today()) S.ui.date = null;
   SetLog.sync.init({ slug: SLUG, storageKey: KEY, payload: () => ({ state: S, days: exportDays(), targets: targets(today()), profile: S.profile }), hasData: () => Object.keys(S.days).length > 0 || Object.keys(S.weights).length > 0 });
+
+  // Deep links from Today: ?log=<mealId> opens that meal's portion editor, ?add=1 opens the picker, ?weigh=1 focuses the weigh-in.
+  const qs = new URLSearchParams(location.search);
+  if (qs.has("log") || qs.has("add") || qs.has("weigh")) { S.ui.tab = "day"; S.ui.date = null; }
   renderAll();
+  if (qs.has("log") && S.meals[qs.get("log")]) openPicker(today(), { mealId: qs.get("log"), tab: F.plannedOpen(S, today()).some((o) => o.id === qs.get("log")) ? "planned" : S.meals[qs.get("log")].cat });
+  else if (qs.has("add")) openPicker(today());
+  else if (qs.has("weigh")) { const w = $("#w-in"); if (w) { w.scrollIntoView({ block: "center" }); w.focus(); } }
+  if (qs.toString()) history.replaceState(null, "", location.pathname);
+
   window.__nutrition = { state: () => S, targets, save, renderAll };
 
   if ("serviceWorker" in navigator) {

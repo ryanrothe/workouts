@@ -6,460 +6,209 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="Exercise Library" />
-<meta name="theme-color" content="#d94f1c" />
+<meta name="theme-color" content="#F3F1EC" />
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="apple-touch-icon" href="icon-180.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png" />
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
 <link rel="icon" type="image/png" href="favicon.png" />
-<title>Exercise Library</title>
-<link rel="stylesheet" href="shared/styles.css" />
+<title>Today · Exercise Library</title>
+<link rel="stylesheet" href="shared/app.css" />
 <style>
-  /* Launcher-specific layout */
-  body[data-program="launcher"] {
-    min-height: 100vh;
-    padding-top: env(safe-area-inset-top);
-  }
-  .launcher-shell {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 28px 18px 24px;
-  }
-  .launcher-hero {
-    display: flex; align-items: center; gap: 14px;
-    margin-bottom: 22px;
-  }
-  .launcher-hero .icon {
-    width: 56px; height: 56px; border-radius: 14px;
-    background: #d94f1c;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 6px 18px rgba(217, 79, 28, 0.25), inset 0 -2px 0 rgba(0,0,0,0.08);
-  }
-  .launcher-hero .icon svg { width: 36px; height: 36px; color: white; }
-  .launcher-hero .lh-text h1 {
-    font-size: 22px; font-weight: 800; letter-spacing: -0.02em;
-  }
-  .launcher-hero .lh-text .sub {
-    font-size: 12.5px; color: var(--muted); margin-top: 2px;
-  }
+  .weigh { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+  .weigh.prompt { border: 1.5px solid var(--olive); color: var(--olive); font-weight: 700; }
+  .weigh .t { display: flex; flex-direction: column; line-height: 1.15; }
+  .weigh .t b { font-size: 15px; }
+  .weigh .t small { font-size: 11px; color: var(--muted); }
 
-  .launcher-section-label {
-    font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em;
-    color: var(--muted); font-weight: 700;
-    margin: 22px 4px 8px;
-  }
+  .fuel { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 14px; }
+  .fuel-main { display: flex; gap: 18px; align-items: center; }
+  .ring { position: relative; width: 118px; height: 118px; flex-shrink: 0; }
+  .ring svg { position: absolute; inset: 0; }
+  .ring .c { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring .c b { font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 30px; line-height: 1; }
+  .ring .c small { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .macs { flex: 1; display: flex; flex-direction: column; gap: 11px; min-width: 0; }
+  .mac-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .mac-top span { font-size: 13px; font-weight: 600; }
+  .mac-top em { font-style: normal; font-size: 12px; color: var(--muted); }
+  .mac-top em b { font-size: 14px; color: var(--ink); }
+  .divider { height: 1px; background: var(--line); }
+  .next { display: flex; align-items: center; gap: 10px; }
+  .next .t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .next .nm { font-size: 15px; font-weight: 600; }
+  .next .mm { font-size: 12px; color: var(--muted); }
 
-  .tile-stack { display: flex; flex-direction: column; gap: 12px; }
-
-  .tile {
-    display: flex; align-items: stretch;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    box-shadow: var(--shadow);
-    color: var(--text);
-    text-decoration: none;
-    transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
-  }
-  .tile:hover, .tile:active {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-lg);
-    border-color: #d5d9e1;
-  }
-  .tile-stripe {
-    flex: 0 0 8px;
-    background: var(--tile-accent, #d94f1c);
-  }
-  .tile-body {
-    flex: 1; min-width: 0;
-    padding: 16px 16px 16px 14px;
-    display: flex; gap: 14px; align-items: center;
-  }
-  .tile-icon {
-    flex: 0 0 52px; width: 52px; height: 52px; border-radius: 12px;
-    background: var(--tile-accent-soft, #fdece3);
-    color: var(--tile-accent, #d94f1c);
-    display: flex; align-items: center; justify-content: center;
-  }
-  .tile-icon svg { width: 28px; height: 28px; }
-  .tile-text { flex: 1; min-width: 0; }
-  .tile-name {
-    font-size: 16.5px; font-weight: 700; letter-spacing: -0.012em;
-    color: var(--text);
-  }
-  .tile-sub {
-    font-size: 12.5px; color: var(--muted); margin-top: 3px;
-    line-height: 1.4;
-  }
-  .tile-meta {
-    margin-top: 6px;
-    display: flex; gap: 6px; flex-wrap: wrap;
-  }
-  .tile-tag {
-    display: inline-block;
-    background: var(--card-2);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 1px 8px;
-    font-size: 10px;
-    color: var(--muted);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  .tile-chev {
-    flex: 0 0 auto;
-    color: var(--muted);
-    font-size: 16px;
-    margin-right: 4px;
-  }
-
-  /* Per-tile accents (override CSS variables locally) */
-  .tile.tile-father-son        { --tile-accent: #4338ca; --tile-accent-soft: #eef0ff; }
-  .tile.tile-tfm-1             { --tile-accent: #0e7490; --tile-accent-soft: #e0f4f8; }
-  .tile.tile-tfm-2             { --tile-accent: #b91c1c; --tile-accent-soft: #fdecec; }
-  .tile.tile-hyrox             { --tile-accent: #c8860a; --tile-accent-soft: #fbeecb; }
-  .tile.tile-achilles          { --tile-accent: #d94f1c; --tile-accent-soft: #fdece3; }
-  .tile.tile-athletic-af       { --tile-accent: #f25c2d; --tile-accent-soft: #ffe6db; }
-  .tile.tile-hotel             { --tile-accent: #2f6fdc; --tile-accent-soft: #e2ecfb; }
-  .tile.tile-full-body-aesthetics { --tile-accent: #7c3aed; --tile-accent-soft: #f5f0ff; }
-  .tile.tile-kb-shred          { --tile-accent: #059669; --tile-accent-soft: #ecfdf5; }
-  .tile.tile-ppl               { --tile-accent: #be185d; --tile-accent-soft: #fdf0f6; }
-  .tile.tile-nutrition         { --tile-accent: #4d7c0f; --tile-accent-soft: #f1f8e6; }
-
-  .launcher-foot {
-    margin-top: 28px;
-    text-align: center;
-    color: var(--muted);
-    font-size: 11px;
-    line-height: 1.5;
-  }
-  .launcher-foot .pwa-hint {
-    margin-top: 4px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 10px 12px;
-    font-size: 11.5px;
-    color: var(--text-body);
-    box-shadow: var(--shadow);
-    text-align: left;
-  }
-  .launcher-foot .pwa-hint strong { color: var(--text); }
+  .prog { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 14px; }
+  .prog-top { display: flex; gap: 12px; align-items: center; }
+  .prog-top .t { flex: 1; min-width: 0; }
+  .prog-top .pn { font-size: 13px; font-weight: 700; }
+  .prog-top .ps { font-size: 12px; color: var(--muted); }
+  .sess { font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 32px; line-height: 1.02; }
+  .sess-meta { font-size: 13px; color: var(--muted); margin-top: 5px; line-height: 1.4; }
+  .strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+  .strip > div { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .strip span { font-size: 11px; font-weight: 600; color: var(--muted); }
+  .strip span.now { font-weight: 800; color: var(--ink); }
+  .dot { width: 30px; height: 30px; border-radius: 15px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; color: #FFFFFF; }
+  .dot.open { border: 1.5px dashed #BDB6A8; }
+  .dot.past { border: 1.5px solid var(--track); }
+  .start { display: flex; align-items: center; justify-content: center; gap: 8px; height: 52px; border-radius: 14px; color: #FFFFFF; font-size: 16px; font-weight: 700; }
+  .compact { padding: 14px 10px 14px 16px; display: flex; gap: 12px; align-items: center; }
+  .compact .t { flex: 1; min-width: 0; }
+  .compact .pn { font-size: 13px; font-weight: 700; }
+  .compact .h { font-size: 15px; font-weight: 600; margin-top: 1px; }
+  .compact .s { font-size: 12px; color: var(--muted); }
+  .chev { width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); }
+  .rowlink { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 14px; border-radius: 16px; border: 1.5px dashed #CFC9BC; }
+  .rowlink .t { flex: 1; display: flex; flex-direction: column; }
+  .rowlink .t b { font-size: 14px; }
+  .rowlink .t small { font-size: 12px; color: var(--muted); }
+  .donechip { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; }
 </style>
 </head>
-<body data-program="launcher">
+<body data-shell="today">
+<main class="wrap" id="app" aria-live="polite"></main>
 
-<div class="launcher-shell">
-
-  <div class="launcher-hero">
-    <div class="icon" aria-hidden="true">
-      <!-- dumbbell SVG, matches the home-screen icon -->
-      <svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4"  y="22" width="6"  height="20" rx="2.5"/>
-        <rect x="11" y="17" width="6"  height="30" rx="2.5"/>
-        <rect x="18" y="29" width="28" height="6"  rx="2"/>
-        <rect x="47" y="17" width="6"  height="30" rx="2.5"/>
-        <rect x="54" y="22" width="6"  height="20" rx="2.5"/>
-      </svg>
-    </div>
-    <div class="lh-text">
-      <h1>Exercise Library</h1>
-      <div class="sub">Ten programs and a nutrition tracker, one place.</div>
-    </div>
-  </div>
-
-  <div class="launcher-section-label">Programs</div>
-
-  <div class="tile-stack">
-
-    <a class="tile tile-father-son" href="father-son/">
-      <div class="tile-stripe"></div>
-      <div class="tile-body">
-        <div class="tile-icon" aria-hidden="true">
-          <!-- two figures, one tall one short: father and son -->
-          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="7" r="3"/>
-            <path d="M11 10v9M11 19l-3 8M11 19l3 8M6 14l5-2 5 2"/>
-            <circle cx="23" cy="13" r="2.4"/>
-            <path d="M23 15.5v6M23 21.5l-2.3 5.5M23 21.5l2.3 5.5M19.5 18.5l3.5-1.5 3.5 1.5"/>
-          </svg>
-        </div>
-        <div class="tile-text">
-          <div class="tile-name">Father &amp; Son Strength</div>
-          <div class="tile-sub">12-week garage base for a young athlete. Two lifters, one session.</div>
-          <div class="tile-meta">
-            <span class="tile-tag">Strength</span>
-            <span class="tile-tag">Athletic</span>
-            <span class="tile-tag">Duo</span>
-          </div>
-        </div>
-        <div class="tile-chev">›</div>
-      </div>
-    </a>
-
-    <a class="tile tile-tfm-1" href="tfm-1/">
-      <div class="tile-stripe"></div>
-      <div class="tile-body">
-        <div class="tile-icon" aria-hidden="true">
-          <!-- TFM triangle-and-bells mark, simplified -->
-          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 8h24L16 27z"/>
-            <circle cx="16" cy="13" r="4.5"/>
-          </svg>
-        </div>
-        <div class="tile-text">
-          <div class="tile-name">The Functional Method 1.0</div>
-          <div class="tile-sub">JTM Fit 8-week functional strength — full body, upper, KB complexes, legs. Progression coach + timers.</div>
-          <div class="tile-meta">
-            <span class="tile-tag">8 weeks</span>
-            <span class="tile-tag">4-6×/week</span>
-            <span class="tile-tag">60-min mode</span>
-          </div>
-        </div>
-        <div class="tile-chev">›</div>
-      </div>
-    </a>
-    <a class="tile tile-tfm-2" href="tfm-2/">
-      <div class="tile-stripe"></div>
-      <div class="tile-body">
-        <div class="tile-icon" aria-hidden="true">
-          <!-- TFM mark with a heavy bar: 2.0 is the heavier program -->
-          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 8h24L16 27z"/>
-            <path d="M10 13h12"/>
-            <path d="M10 10.5v5"/>
-            <path d="M22 10.5v5"/>
-          </svg>
-        </div>
-        <div class="tile-text">
-          <div class="tile-name">The Functional Method 2.0</div>
-          <div class="tile-sub">JTM Fit 8-week sequel — heavy top sets, ladders and AMRAP finishers, KB complexes. Progression coach + timers.</div>
-          <div class="tile-meta">
-            <span class="tile-tag">8 weeks</span>
-            <span class="tile-tag">6×/week</span>
-            <span class="tile-tag">60-min mode</span>
-          </div>
-        </div>
-        <div class="tile-chev">›</div>
-      </div>
-    </a>
-    <a class="tile tile-ppl" href="ppl/">
-      <div class="tile-stripe"></div>
-      <div class="tile-body">
-        <div class="tile-icon" aria-hidden="true">
-          <!-- rotation arrow around a mini barbell: the push/pull/legs cycle -->
-          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M27 16a11 11 0 1 1-3.2-7.8"/>
-            <path d="M27 5v5h-5"/>
-            <path d="M11 16h10"/>
-            <path d="M11 13v6"/>
-            <path d="M21 13v6"/>
-          </svg>
-        </div>
-        <div class="tile-text">
-          <div class="tile-name">6-Day PPL</div>
-          <div class="tile-sub">Anyman Fitness push/pull/legs split. Every muscle twice a week, 45 min a session.</div>
-          <div class="tile-meta">
-            <span class="tile-tag">6×/week</span>
-            <span class="tile-tag">Barbell + DB</span>
-            <span class="tile-tag">Hypertrophy</span>
-          </div>
-        </div>
-        <div class="tile-chev">›</div>
-      </div>
-    </a>
-    <a class="tile tile-athletic-af" href="athletic-af/">
-      <div class="tile-stripe"></div>
-      <div class="tile-body">
-        <div class="tile-icon" aria-hidden="true">
-          <!-- barbell -->
-          <svg viewBox="0 0 32 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <rect x="2"  y="11" width="3"  height="10" rx="1.2"/>
-            <rect x="6"  y="8"  width="3"  height="16" rx="1.2"/>
-            <rect x="10" y="14" width="12" height="4"  rx="1.2"/>
-            <rect x="23" y="8"  width="3"  height="16" rx="1.2"/>
-            <rect x="27" y="11" width="3"  height="10" rx="1.2"/>
-          </svg>
-        </div>
-        <div class="tile-text">
-          <div class="tile-name">Athletic AF</div>
-          <div class="tile-sub">5-phase strength + conditioning program. Sets, PRs, plate calc, history.</div>
-          <div class="tile-meta">
-            <span class="tile-tag">5 phases + Wk 17</span>
-            <span class="tile-tag">Strength</span>
-            <span class="tile-tag">PR tracking</span>
-          </div>
-        </div>
-        <div class="tile-chev">›</div>
-      </div>
-    </a>
-    <a class="tile tile-kb-shred" href="kb-shred/">
-      <div class="tile-stripe"></div>
-      <div class="tile-body">
-        <div class="tile-icon" aria-hidden="true">
-          <!-- kettlebell shape -->
-          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="16" cy="20" r="9" fill="currentColor" stroke="none" opacity="0.15"/>
-            <circle cx="16" cy="20" r="9"/>
-            <path d="M12 11.5a5 5 0 0 1 8 0"/>
-            <rect x="13" y="7" width="6" height="4" rx="2"/>
-          </svg>
-        </div>
-        <div class="tile-text">
-          <div class="tile-name">KB Shred</div>
-          <div class="tile-sub">Adam Gooch's 8-week KB program. Full body daily with supersets and conditioning circuits.</div>
-          <div class="tile-meta">
-            <span class="tile-tag">8 weeks</span>
-            <span class="tile-tag">4×/week</span>
-            <span class="tile-tag">Kettlebell</span>
-          </div>
-        </div>
-        <div class="tile-chev">›</div>
-      </div>
-    </a>
-    <a class="tile tile-hyrox" href="hyrox/">
-      <div class="tile-stripe"></div>
-      <div class="tile-body">
-        <div class="tile-icon" aria-hidden="true">
-          <!-- stopwatch / race engine -->
-          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="16" cy="18" r="10"/>
-            <path d="M16 18l4-4"/>
-            <path d="M13 4h6"/>
-            <path d="M16 4v4"/>
-          </svg>
-        </div>
-        <div class="tile-text">
-          <div class="tile-name">Hyrox Home Engine</div>
-          <div class="tile-sub">12-week Hyrox build for a home gym. Low-impact cardio, sled substitutes, travel mode, benchmark charts.</div>
-          <div class="tile-meta">
-            <span class="tile-tag">12 weeks</span>
-            <span class="tile-tag">4×/week</span>
-            <span class="tile-tag">Hyrox</span>
-          </div>
-        </div>
-        <div class="tile-chev">›</div>
-      </div>
-    </a>
-    <a class="tile tile-hotel" href="hotel/">
-      <div class="tile-stripe"></div>
-      <div class="tile-body">
-        <div class="tile-icon" aria-hidden="true">
-          <!-- suitcase / travel -->
-          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="5" y="10" width="22" height="16" rx="2.5"/>
-            <path d="M12 10V7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3"/>
-            <path d="M5 17h22"/>
-          </svg>
-        </div>
-        <div class="tile-text">
-          <div class="tile-name">Hotel Workouts</div>
-          <div class="tile-sub">Madsen upper / lower splits. DB + bodyweight — works on the road.</div>
-          <div class="tile-meta">
-            <span class="tile-tag">Upper + Lower</span>
-            <span class="tile-tag">DB / bodyweight</span>
-            <span class="tile-tag">Travel-ready</span>
-          </div>
-        </div>
-        <div class="tile-chev">›</div>
-      </div>
-    </a>
-    <a class="tile tile-achilles" href="achilles/">
-      <div class="tile-stripe"></div>
-      <div class="tile-body">
-        <div class="tile-icon" aria-hidden="true">
-          <!-- foot / heel raise icon: rising arrow on a base -->
-          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 25h22"/>
-            <path d="M16 25V8"/>
-            <path d="M11 13l5-5 5 5"/>
-          </svg>
-        </div>
-        <div class="tile-text">
-          <div class="tile-name">Achilles Rebuild</div>
-          <div class="tile-sub">12-week tendon-specific rehab — isometrics, HSR, plyo progression.</div>
-          <div class="tile-meta">
-            <span class="tile-tag">12 weeks</span>
-            <span class="tile-tag">3×/week</span>
-            <span class="tile-tag">Rehab</span>
-          </div>
-        </div>
-        <div class="tile-chev">›</div>
-      </div>
-    </a>
-    <a class="tile tile-full-body-aesthetics" href="full-body-aesthetics/">
-      <div class="tile-stripe"></div>
-      <div class="tile-body">
-        <div class="tile-icon" aria-hidden="true">
-          <!-- dumbbell curl / aesthetics -->
-          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2"  y="13" width="4" height="6" rx="1.5" fill="currentColor" stroke="none"/>
-            <rect x="7"  y="10" width="3" height="12" rx="1.2" fill="currentColor" stroke="none"/>
-            <path d="M10 16h12"/>
-            <rect x="22" y="10" width="3" height="12" rx="1.2" fill="currentColor" stroke="none"/>
-            <rect x="26" y="13" width="4" height="6" rx="1.5" fill="currentColor" stroke="none"/>
-            <path d="M13 11 Q16 7 19 11" stroke-width="2" fill="none"/>
-          </svg>
-        </div>
-        <div class="tile-text">
-          <div class="tile-name">Full Body Aesthetics</div>
-          <div class="tile-sub">Ryan Fischer's 64-week DB program. Full body daily, cycling strength and hypertrophy.</div>
-          <div class="tile-meta">
-            <span class="tile-tag">64 weeks</span>
-            <span class="tile-tag">6×/week</span>
-            <span class="tile-tag">DB / Bodyweight</span>
-          </div>
-        </div>
-        <div class="tile-chev">›</div>
-      </div>
-    </a>
-
-    <a class="tile tile-nutrition" href="nutrition/">
-      <div class="tile-stripe"></div>
-      <div class="tile-body">
-        <div class="tile-icon" aria-hidden="true">
-          <!-- bowl with a spoon: meals and macros -->
-          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 15h22a11 11 0 0 1-22 0z"/>
-            <path d="M12 26h8"/>
-            <path d="M20 14L27 5"/>
-          </svg>
-        </div>
-        <div class="tile-text">
-          <div class="tile-name">Nutrition</div>
-          <div class="tile-sub">Macros against a bodyweight target, a closed meal library, and the Sunday prep list.</div>
-          <div class="tile-meta">
-            <span class="tile-tag">Macros</span>
-            <span class="tile-tag">Meal prep</span>
-            <span class="tile-tag">Cut</span>
-          </div>
-        </div>
-        <div class="tile-chev">›</div>
-      </div>
-    </a>
-
-  </div>
-
-  <div class="launcher-foot">
-    <div class="pwa-hint">
-      <strong>Tip:</strong> Tap the Safari <em>Share</em> icon and pick <strong>Add to Home Screen</strong> to install. Your logs are saved per program and stay on your phone.
-    </div>
-    <div style="margin-top:10px">Exercise Library · static PWA · iCloud / GitHub Pages</div>
-  </div>
-
-</div>
-
+<script src="shared/setlog.js"></script>
+<script src="shared/programs.js"></script>
+<script src="shared/fuel.js"></script>
+<script src="shared/shell.js"></script>
+<script src="shared/library.js"></script>
 <script>
-  // Register the shared service worker for offline use.
-  // Scope is the folder containing index.html so all 4 sub-apps are covered.
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("sw.js").catch(() => { /* offline only — non-fatal */ });
-    });
-  }
-</script>
+(function () {
+  "use strict";
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const fmt = (n) => Math.round(n).toLocaleString("en-US");
+  const I = {
+    chev: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg>',
+    play: '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>',
+    check: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8"/></svg>',
+    plus: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+    scale: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8 10a4 4 0 0 1 8 0"/><path d="M12 10l1.6-2"/></svg>',
+    suitcase: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="7" width="17" height="12.5" rx="2.5"/><path d="M8.5 7V5.5A1.5 1.5 0 0 1 10 4h4a1.5 1.5 0 0 1 1.5 1.5V7M3.5 12.5h17"/></svg>'
+  };
+  const DOW = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const SLOT = { breakfast: "breakfast", lunch: "lunch", dinner: "dinner", side: "side" };
 
+  const L = Lib.load();
+  Lib.initSync(L);                       // pushes Library settings and every program summary to Cloudflare on open
+
+  const mono = (p, cls) => `<div class="mono${cls ? " " + cls : ""}" style="background:${p.color};${cls && cls.indexOf("ghost") >= 0 ? "color:" + p.color : ""}">${esc(p.mono)}</div>`;
+  const prettyDate = (s) => { const d = Fuel.parseD(s); return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }); };
+  const progHref = (p) => `${p.slug}/`;
+
+  function weekDates() {
+    const mon = Fuel.mondayOf(HS.today());
+    return [0, 1, 2, 3, 4, 5, 6].map((i) => Fuel.addDays(mon, i));
+  }
+  function strip(sm, color) {
+    const done = new Set((sm && sm.sessions) || []);
+    const t = HS.today();
+    return `<div class="strip" aria-label="This week">${weekDates().map((d, i) => {
+      const letter = "MTWTFSS"[i];
+      let dot;
+      if (done.has(d)) dot = `<div class="dot" style="background:${color}" aria-label="${letter} done">${I.check}</div>`;
+      else if (d === t) dot = `<div class="dot" style="border:2.5px solid ${color}" aria-label="today"><div style="width:10px;height:10px;border-radius:5px;background:${color}"></div></div>`;
+      else if (d < t) dot = `<div class="dot past" aria-label="${letter}"></div>`;
+      else dot = `<div class="dot open" aria-label="${letter}"></div>`;
+      return `<div><span class="${d === t ? "now" : ""}">${letter}</span>${dot}</div>`;
+    }).join("")}</div>`;
+  }
+
+  /* ------------------------------------------------------------ fuel card */
+  function fuelCard() {
+    const S = Fuel.read();
+    if (!S) return `<section class="card fuel"><div class="eyebrow">Fuel</div><div style="font-size:15px">Fuel isn't set up on this phone yet.</div><a class="btn btn-olive" href="nutrition/">Open Fuel</a></section>`;
+    const st = Fuel.status(S, HS.today());
+    if (!st.target) return `<section class="card fuel"><div class="eyebrow">Fuel</div><div style="font-size:15px">Weigh in to set today's target.</div><a class="btn btn-olive" href="nutrition/?weigh=1">${I.scale} Weigh in</a></section>`;
+    const t = st.target, left = st.left, over = left.k < 0;
+    const r = 51, c = 2 * Math.PI * r, frac = Math.max(0, Math.min(1, st.eaten.k / t.kcal));
+    const ring = `<div class="ring"><svg width="118" height="118" viewBox="0 0 118 118" aria-hidden="true"><circle cx="59" cy="59" r="${r}" fill="none" stroke="var(--track)" stroke-width="11"/>${frac > 0 ? `<circle cx="59" cy="59" r="${r}" fill="none" stroke="${over ? "var(--F)" : "var(--olive)"}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${(c * frac).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 59 59)"/>` : ""}</svg><div class="c"><b>${fmt(Math.abs(left.k))}</b><small>kcal ${over ? "over" : "left"}</small></div></div>`;
+    const mac = (label, key, tkey, color) => {
+      const l = left[key], f = Math.max(0, Math.min(1, st.eaten[key] / t[tkey]));
+      return `<div><div class="mac-top"><span>${label}</span><em><b>${fmt(Math.abs(l))}</b> g ${l >= 0 ? "left" : "over"}</em></div><div class="bar"><i style="width:${(f * 100).toFixed(0)}%;background:${color}"></i></div></div>`;
+    };
+    const n = st.next;
+    const next = n
+      ? `<div class="next"><div class="t"><div class="eyebrow olive">Next · planned ${SLOT[n.slot] || n.slot}</div><div class="nm">${esc(n.name)}</div><div class="mm">${fmt(n.m.k)} kcal · ${Math.round(n.m.p)} P · ${Math.round(n.m.f)} F · ${Math.round(n.m.c)} C</div></div>
+         <a class="btn btn-olive" href="nutrition/?log=${encodeURIComponent(n.id)}">Log</a><a class="icon-btn" href="nutrition/?add=1" aria-label="Log something else">${I.plus}</a></div>`
+      : `<div class="next"><div class="t"><div class="eyebrow">Nothing planned left today</div><div class="mm">${st.logged} logged · plan the week on Fuel</div></div><a class="btn" href="nutrition/?add=1">${I.plus} Log food</a></div>`;
+    return `<section class="card fuel" aria-label="Fuel">
+      <div class="row-head" style="padding:0;min-height:0"><div class="eyebrow">Fuel · ${t.mode === "manual" ? "set by hand" : "cut target"} ${fmt(t.kcal)}</div><a class="link olive" href="nutrition/">Open ${I.chev}</a></div>
+      <div class="fuel-main">${ring}<div class="macs">${mac("Protein", "p", "p", "var(--P)")}${mac("Fat", "f", "f", "var(--F)")}${mac("Carbs", "c", "c", "var(--C)")}</div></div>
+      <div class="divider"></div>${next}</section>`;
+  }
+  function weighChip() {
+    const S = Fuel.read(); const st = S ? Fuel.status(S, HS.today()) : null;
+    if (st && st.weighIn != null) {
+      const avg = st.avg && st.avg.n > 1 ? `7-day ${st.avg.w.toFixed(1)}` : "today";
+      return `<a class="weigh" href="nutrition/?weigh=1"><span class="olive" style="display:flex">${I.scale}</span><span class="t"><b>${st.weighIn} lb</b><small>${avg}</small></span></a>`;
+    }
+    return `<a class="weigh prompt" href="nutrition/?weigh=1">${I.scale}<span>Weigh in</span></a>`;
+  }
+
+  /* ------------------------------------------------------------ programs */
+  function familyCard(p) {
+    if (p.placeholder) {
+      return `<section class="card compact">${mono(p, "ghost")}<div class="t"><div class="pn" style="color:${p.color}">${esc(p.name)}</div><div class="s">Not built yet · ask Karl when you're ready</div></div></section>`;
+    }
+    const sm = HS.readSummary(p.slug);
+    if (!sm) return connectCard(p);
+    if (sm.today && !sm.today.done) {
+      return `<section class="card prog" aria-label="${esc(p.name)}"><div class="prog-top">${mono(p)}<div class="t"><div class="pn" style="color:${p.color}">${esc(p.name)}</div><div class="ps">${esc(p.by)}${sm.week != null ? ` · week ${sm.week}` : ""}</div></div></div>
+        <div><div class="sess">${esc(sm.today.label || "Today")}</div>${sm.today.minutes ? `<div class="sess-meta">about ${sm.today.minutes} min</div>` : ""}</div>
+        <a class="start" style="background:${p.color}" href="${progHref(p)}">${I.play} Start ${esc(sm.today.label || "")}</a></section>`;
+    }
+    let h, s;
+    if (sm.today && sm.today.done) { h = `<span class="donechip" style="color:${p.color}">${I.check} Done today</span>`; s = sm.next && sm.next.date ? `Next: ${prettyDate(sm.next.date)} · ${esc(sm.next.label || "")}` : ""; }
+    else if (sm.kind === "setdays") { h = "Rest day"; s = sm.next ? `Next: ${sm.next.date ? prettyDate(sm.next.date) : ""} · ${esc(sm.next.label || "")}` : "Program complete"; }
+    else { h = sm.next ? esc(sm.next.label) : "Program complete"; s = sm.next ? esc(sm.next.sub || "") : ""; }
+    return `<section class="card compact">${mono(p)}<div class="t"><div class="pn" style="color:${p.color}">${esc(p.name)}</div><div class="h">${h}</div><div class="s">${s}</div></div><a class="chev" href="${progHref(p)}" aria-label="Open ${esc(p.name)}">${I.chev}</a></section>`;
+  }
+  function connectCard(p) {
+    return `<section class="card compact">${mono(p)}<div class="t"><div class="pn" style="color:${p.color}">${esc(p.name)}</div><div class="h">Open it once</div><div class="s">That connects it to Today.</div></div><a class="chev" href="${progHref(p)}" aria-label="Open ${esc(p.name)}">${I.chev}</a></section>`;
+  }
+  function mineCard(p) {
+    const sm = HS.readSummary(p.slug);
+    if (!sm) return connectCard(p);
+    const wk = sm.week != null && sm.weeks ? `Week ${sm.week} of ${sm.weeks}` : sm.week != null ? `Week ${sm.week}` : "Open-ended";
+    const tw = sm.thisWeek && sm.thisWeek.planned ? ` · ${sm.thisWeek.done} of ${sm.thisWeek.planned} this week` : sm.thisWeek ? ` · ${sm.thisWeek.done} this week` : "";
+    if (!sm.next) {
+      return `<section class="card prog"><div class="prog-top">${mono(p)}<div class="t"><div class="pn" style="color:${p.color}">${esc(p.name)}</div><div class="ps">${wk}</div></div></div>
+        <div class="sess">Program complete</div><a class="btn" href="library.html">Pick what's next in the Library</a></section>`;
+    }
+    const n = sm.next;
+    const time = n.minutes ? `about ${n.minutes} min` : n.listed ? `listed ${esc(n.listed)}` : "";
+    const meta = [n.sub, time].filter(Boolean).map((x) => x).join(" · ");
+    return `<section class="card prog" aria-label="${esc(p.name)}"><div class="prog-top">${mono(p)}<div class="t"><div class="pn" style="color:${p.color}">${esc(p.name)}</div><div class="ps">${wk}${tw}</div></div></div>
+      <div><div class="sess">${esc(n.label)}</div>${meta ? `<div class="sess-meta">${esc(meta)}</div>` : ""}</div>
+      ${strip(sm, p.color)}
+      <a class="start" style="background:${p.color}" href="${progHref(p)}">${I.play} Start ${esc(n.label)}</a></section>`;
+  }
+
+  function render() {
+    const now = new Date();
+    const fam = Lib.holders(L, "family"), mine = Lib.holders(L, "mine"), caps = Lib.caps(L);
+    const hotel = Lib.bySlug("hotel");
+    $("#app").innerHTML = `
+      <header class="page-head"><div><div class="eyebrow">${DOW[now.getDay()]} · ${now.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div><h1>Today</h1></div>${weighChip()}</header>
+      ${fuelCard()}
+      ${fam.length ? `<div class="row-head"><div class="eyebrow">Family · first</div><a class="link" href="library.html">Library ${I.chev}</a></div>${fam.map(familyCard).join("")}` : ""}
+      <div class="row-head"><div class="eyebrow">Mine · ${mine.length} of ${caps.mine}</div>${fam.length ? "" : `<a class="link" href="library.html">Library ${I.chev}</a>`}</div>
+      ${mine.length ? mine.map(mineCard).join("") : `<a class="rowlink" href="library.html"><span class="t"><b>No program of your own yet</b><small>Pick one in the Library.</small></span>${I.chev}</a>`}
+      <a class="rowlink" href="library.html#pool"><span class="t"><b>Pick any session from the pool</b><small>Every other program, one session at a time.</small></span>${I.chev}</a>
+      ${hotel && Lib.role(L, "hotel") !== "finished" ? `<a class="rowlink" href="hotel/"><span style="color:${hotel.color};display:flex">${I.suitcase}</span><span class="t"><b>On the road?</b><small>Swap today for a Hotel workout. Your programs stay put.</small></span>${I.chev}</a>` : ""}`;
+  }
+  render();
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") render(); });
+  window.addEventListener("pageshow", (e) => { if (e.persisted) render(); });
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+  }
+})();
+</script>
 </body>
 </html>

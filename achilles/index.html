@@ -334,6 +334,8 @@
 
 </div>
 
+<script src="../shared/setlog.js"></script>
+<script src="../shared/shell.js"></script>
 <script>
 /* ===========================================================================
    PROGRAM DATA
@@ -570,7 +572,104 @@ function loadState() {
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
   updateStats();
+  if (window.SetLog) SetLog.sync.schedule();
+  publishSummary();
 }
+
+/* ===========================================================================
+   SYNC + HEALTH-SYSTEM SUMMARY (2026-09-25). Sync transport and the device
+   token live in ../shared/setlog.js; the summary contract in ../shared/shell.js.
+   A day slot ("3_1A") carries a date in state.dates, stamped the first time
+   anything on it is checked or logged. Slots logged before stamping existed
+   fall back to their session-clock start, else stay undated.
+   Current week = the week of the most recently logged session (week 1 when
+   nothing is logged; undated history falls back to the highest logged week).
+   Next = the first day of that week that isDayComplete says is unfinished;
+   once all three are done, Day A of the following week (null after week 12).
+   =========================================================================== */
+function isoOf(x) { return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`; }
+function stampDay(wk, dayKey) {
+  if (!state.dates) state.dates = {};
+  const k = `${wk}_${dayKey}`;
+  if (!state.dates[k]) state.dates[k] = isoOf(new Date());
+}
+function dayDate(wk, dayKey) {
+  const k = `${wk}_${dayKey}`;
+  if (state.dates && state.dates[k]) return state.dates[k];
+  const c = state.clocks && state.clocks[k];
+  return c && c.start ? isoOf(new Date(c.start)) : null;
+}
+function logHasData(l) { return !!l && !!(String(l.weight || "").trim() || String(l.notes || "").trim()); }
+function dayWorked(wk, dayKey) {
+  return DAYS[dayKey].exercises.some((_, i) => { const k = `${wk}_${dayKey}_${i}`; return !!state.completed[k] || logHasData(state.logs[k]); });
+}
+function sessionWeek() {
+  let best = null, top = 0;
+  for (let wk = 1; wk <= 12; wk++) getPhaseForWeek(wk).dayKeys.forEach(dk => {
+    if (!dayWorked(wk, dk)) return;
+    top = wk;
+    const d = dayDate(wk, dk);
+    if (d && (!best || d > best.date || (d === best.date && wk > best.wk))) best = { date: d, wk };
+  });
+  return best ? best.wk : (top || 1);
+}
+function nextSession() {
+  const wk = sessionWeek();
+  const open = getPhaseForWeek(wk).dayKeys.find(dk => !isDayComplete(wk, dk));
+  if (open) return { wk, dk: open };
+  return wk < 12 ? { wk: wk + 1, dk: getPhaseForWeek(wk + 1).dayKeys[0] } : null;
+}
+/* The flat list Karl reads: one row per checked or logged exercise. Achilles
+   logs a load, not sets, so `sets` is the prescription and `logged` is the
+   load as typed. */
+function buildEntries() {
+  const out = [];
+  for (let wk = 1; wk <= 12; wk++) getPhaseForWeek(wk).dayKeys.forEach(dk => {
+    const date = dayDate(wk, dk);
+    DAYS[dk].exercises.forEach((ex, i) => {
+      const k = `${wk}_${dk}_${i}`;
+      const l = state.logs[k] || {};
+      const done = !!state.completed[k];
+      if (!done && !logHasData(l)) return;
+      out.push({ date, where: `W${wk} Day ${dk.slice(-1)}`, week: wk, day: dk, exercise: EXERCISES[ex.id].name,
+                 sets: `${ex.sets} × ${ex.reps}`, logged: String(l.weight || "").trim(), done, notes: l.notes || "" });
+    });
+  });
+  return out;
+}
+function publishSummary() {
+  try {
+    if (!window.HS || typeof HS.summary !== "function") return;
+    const cw = sessionWeek();
+    const nx = nextSession();
+    const ph = getPhaseForWeek(cw);
+    const sessions = [];
+    for (let wk = 1; wk <= 12; wk++) getPhaseForWeek(wk).dayKeys.forEach(dk => {
+      const d = dayDate(wk, dk);
+      if (d && dayWorked(wk, dk)) sessions.push(d);
+    });
+    let next = null;
+    if (nx) {
+      const day = DAYS[nx.dk];
+      const listed = day.focus.match(/~\s*\d+\s*min/);
+      next = { label: day.name.replace(/^Day [A-Z]\s*—\s*/, ""), sub: `Week ${nx.wk} · Day ${nx.dk.slice(-1)}`, date: null,
+               minutes: Math.round(dayPlan(nx.dk).total / 60), listed: listed ? listed[0] : null };
+    }
+    HS.summary("achilles", {
+      kind: "phased", week: cw, weeks: 12, phase: ph.name.replace(/^Phase \d+:\s*/, ""),
+      next, today: null, days: null,
+      thisWeek: { done: ph.dayKeys.filter(dk => isDayComplete(cw, dk)).length, planned: ph.dayKeys.length },
+      sessions
+    });
+  } catch (e) {}
+}
+if (window.SetLog) SetLog.sync.init({
+  slug: "achilles",
+  storageKey: STORAGE_KEY,
+  payload: () => ({ state, entries: buildEntries() }),
+  hasData: () => Object.values(state.completed || {}).some(Boolean) || Object.values(state.logs || {}).some(logHasData) ||
+                 Object.values(state.assessments || {}).some(x => x != null && String(x).trim() !== "")
+});
 
 /* ===========================================================================
    TIME MODEL + SESSION CLOCK — pacing backport (2026-08-30).
@@ -784,6 +883,7 @@ function renderExercise(ex, idx, dayKey, plan) {
 
   el.querySelector(".ex-check").onclick = () => {
     state.completed[stateKey] = !isDone;
+    if (!isDone) stampDay(state.currentWeek, dayKey);
     saveState();
     renderDays();
   };
@@ -795,11 +895,13 @@ function renderExercise(ex, idx, dayKey, plan) {
   el.querySelector(".log-weight").addEventListener("input", e => {
     if (!state.logs[stateKey]) state.logs[stateKey] = { weight: "", notes: "" };
     state.logs[stateKey].weight = e.target.value;
+    stampDay(state.currentWeek, dayKey);
     saveState();
   });
   el.querySelector(".log-notes").addEventListener("input", e => {
     if (!state.logs[stateKey]) state.logs[stateKey] = { weight: "", notes: "" };
     state.logs[stateKey].notes = e.target.value;
+    stampDay(state.currentWeek, dayKey);
     saveState();
   });
   return el;
@@ -970,7 +1072,10 @@ document.getElementById("reset-btn").onclick = () => {
   }
 };
 
+/* Open on the next session's week (was: the last week pill tapped, persisted in state.currentWeek). */
+(function openOnNext() { const nx = nextSession(); if (nx) state.currentWeek = nx.wk; })();
 renderAll();
+publishSummary();
 </script>
 </body>
 </html>

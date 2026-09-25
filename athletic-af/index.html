@@ -339,6 +339,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="../shared/setlog.js"></script>
+<script src="../shared/shell.js"></script>
 <script>
 /* ============================================================
    Athletic AF Tracker — single-file static app, iOS-friendly.
@@ -366,6 +367,7 @@ function loadState() {
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); } catch(e){ console.error(e); }
   if (PROGRAM) SetLog.sync.schedule();
+  publishSummary();
 }
 
 /* ---------------- helpers ---------------- */
@@ -1151,6 +1153,70 @@ function syncEntries() {
   return out;
 }
 
+/* ---------------- health-system summary (../shared/shell.js) ----------------
+   Today and Library read summary.athletic-af, never athleticAF.v1. Written after
+   boot and after every save. Completion rule (ratified by Ryan 2026-09-25):
+   the current week is the week of the most recently logged set (the first week
+   if nothing is logged); next is the first unfinished required day of that week
+   in order; once every required day is done, the first day of the following
+   week. Required = not a recovery day (Wednesday is optional). A day is finished
+   when every set is checked (the day chip's done state), or when it was started
+   and a later day that week has logged work (you moved on). */
+function aafDayStarted(w, di) {
+  const d = STATE.log[w.id]?.[di];
+  return !!d && Object.values(d).some(l => l && (l.checked || (Array.isArray(l.sets) && l.sets.some(s => s && s.done))));
+}
+function aafDayFinished(w, di) {
+  if (dayProgress(w.id, w.days[di], di) >= 1) return true;
+  if (!aafDayStarted(w, di)) return false;
+  for (let j = di + 1; j < w.days.length; j++) if (aafDayStarted(w, j)) return true;
+  return false;
+}
+/* → { wi, di } of the next session, or null when the program is complete. */
+function aafNext() {
+  let wi = 0, best = -1;
+  (STATE.sessions || []).forEach(s => {
+    const i = PROGRAM.weeks.findIndex(w => w.id === s.weekId);
+    if (i >= 0 && (s.ts || 0) > best) { best = s.ts || 0; wi = i; }
+  });
+  for (; wi < PROGRAM.weeks.length; wi++) {
+    const w = PROGRAM.weeks[wi];
+    const di = w.days.findIndex((d, i) => !d.is_recovery && !aafDayFinished(w, i));
+    if (di >= 0) return { wi, di };
+  }
+  return null;
+}
+function publishSummary() {
+  try {
+    if (!window.HS || !PROGRAM || !STATE) return;
+    const nx = aafNext();
+    const wi = nx ? nx.wi : PROGRAM.weeks.length - 1;
+    const w = PROGRAM.weeks[wi];
+    let next = null;
+    if (nx) {
+      const d = w.days[nx.di];
+      // dayPlanAAF() plans the selected day; borrow the selection, then put it back.
+      const keep = [STATE.currentWeekId, STATE.currentDayIdx];
+      let total = null;
+      try { STATE.currentWeekId = w.id; STATE.currentDayIdx = nx.di; total = dayPlanAAF().total; }
+      finally { STATE.currentWeekId = keep[0]; STATE.currentDayIdx = keep[1]; }
+      next = { label: d.focus || d.day, sub: `${w.label} · ${d.day}`, date: null,
+               minutes: total != null ? Math.round(total / 60) : null, listed: null };
+    }
+    const req = w.days.map((d, i) => i).filter(i => !w.days[i].is_recovery);
+    const dates = (STATE.sessions || []).filter(s => s.ts).map(s => HS.dstr(new Date(s.ts))).sort();
+    HS.summary('athletic-af', {
+      kind: 'phased', week: wi + 1, weeks: PROGRAM.weeks.length, phase: w.phase || null,
+      next,
+      today: null,
+      thisWeek: { done: req.filter(i => aafDayFinished(w, i)).length, planned: req.length },
+      days: null,
+      sessions: dates,
+      lastDate: dates.length ? dates[dates.length - 1] : null
+    });
+  } catch (e) {}
+}
+
 /* ---------------- export/import ---------------- */
 function doExport() {
   const payload = { app: 'athleticAF', version: 1, exportedAt: new Date().toISOString(), state: STATE };
@@ -1203,6 +1269,12 @@ async function init() {
     STATE.currentWeekId = PROGRAM.weeks[0].id;
     STATE.currentDayIdx = 0;
   }
+  // Open on the next session by the completion rule (see publishSummary);
+  // a finished program keeps the last selection.
+  try {
+    const nx = aafNext();
+    if (nx) { STATE.currentWeekId = PROGRAM.weeks[nx.wi].id; STATE.currentDayIdx = nx.di; }
+  } catch (e) {}
   SetLog.sync.init({
     slug: 'athletic-af',
     storageKey: STORAGE_KEY,
@@ -1211,6 +1283,7 @@ async function init() {
   });
   saveState();
   render();
+  publishSummary();
   // Service worker is registered at the umbrella level (../sw.js) by the launcher.
 }
 init();

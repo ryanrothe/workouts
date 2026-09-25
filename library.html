@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Exercise Library" />
+<meta name="theme-color" content="#F3F1EC" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<link rel="icon" type="image/png" href="favicon.png" />
+<title>Library · Exercise Library</title>
+<link rel="stylesheet" href="shared/app.css" />
+<style>
+  .intro { margin: 0; padding: 0 4px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+  .grp { display: flex; flex-direction: column; gap: 8px; }
+  .grp .eyebrow { padding: 0 4px; }
+  .rows { overflow: hidden; }
+  .row { display: flex; gap: 12px; align-items: center; width: 100%; padding: 13px 10px 13px 14px; min-height: 64px; border: 0; background: transparent; text-align: left; cursor: pointer; }
+  .row .t { flex: 1; min-width: 0; }
+  .row .nm { font-size: 15px; font-weight: 600; }
+  .row .mt { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .row .pg { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .row .pg .bar { flex: 1; height: 4px; }
+  .row .pg small { font-size: 11px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+  .row .chev { color: var(--muted); display: flex; }
+  .rows > .row + .row { border-top: 1px solid var(--line); }
+  .add { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 14px; border-radius: 18px; border: 1.5px dashed #BDB6A8; background: transparent; width: 100%; text-align: left; cursor: pointer; }
+  .add .sq { width: 40px; height: 40px; border-radius: 11px; background: var(--track); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .add .t { flex: 1; display: flex; flex-direction: column; }
+  .add .t b { font-size: 15px; }
+  .add .t small { font-size: 12px; color: var(--muted); }
+  .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .facts b { display: block; font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 22px; line-height: 1.1; }
+  .facts small { font-size: 12px; color: var(--muted); }
+  .opt { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 13px; border-radius: 16px; border: 1px solid var(--line); background: var(--card); text-align: left; cursor: pointer; }
+  .opt .t { flex: 1; display: flex; flex-direction: column; }
+  .opt .t b { font-size: 15px; font-weight: 600; }
+  .opt .t small { font-size: 12px; color: var(--muted); }
+  .src { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; }
+  .src + .src { border-top: 1px solid var(--line); }
+  .src b { display: block; font-size: 15px; }
+  .src small { font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+  .restore-list { font-size: 13px; line-height: 1.6; }
+  .restore-list .miss { color: var(--muted); }
+</style>
+</head>
+<body data-shell="library">
+<main class="wrap" id="app"></main>
+<div class="sheet-wrap" id="sheet-wrap" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+
+<script src="shared/setlog.js"></script>
+<script src="shared/programs.js"></script>
+<script src="shared/fuel.js"></script>
+<script src="shared/shell.js"></script>
+<script src="shared/library.js"></script>
+<script>
+(function () {
+  "use strict";
+  const $ = (s, el) => (el || document).querySelector(s);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const I = {
+    chev: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg>',
+    plus: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'
+  };
+  const HINT = { family: "up to 2 · outside your cap", pool: "any session, anytime", finished: "" };
+  const CAT = { all: "All", strength: "Strength", conditioning: "Conditioning", rehab: "Rehab" };
+  let L = Lib.load();
+  let filter = "all";
+  Lib.initSync(L);
+
+  const mono = (p) => p.placeholder
+    ? `<div class="mono ghost" style="color:${p.color}">${esc(p.mono)}</div>`
+    : `<div class="mono" style="background:${p.color}">${esc(p.mono)}</div>`;
+  const prettyDate = (s) => Fuel.parseD(s).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+  function row(p) {
+    const r = Lib.role(L, p.slug), sm = HS.readSummary(p.slug);
+    let meta = esc(p.meta), pg = "";
+    if (p.placeholder) meta = "Not built yet";
+    else if ((r === "family" || r === "mine") && sm) {
+      const nx = sm.next ? (sm.next.date ? `next ${prettyDate(sm.next.date)}, ${sm.next.label}` : `next: ${sm.next.label}`) : "complete";
+      meta = `${esc(p.by)} · ${esc(nx)}`;
+      if (sm.weeks && sm.week != null) pg = `<div class="pg"><div class="bar"><i style="width:${Math.max(3, (sm.week / sm.weeks) * 100).toFixed(0)}%;background:${p.color}"></i></div><small>Week ${sm.week} of ${sm.weeks}</small></div>`;
+    } else if (sm && sm.lastDate) meta = `${esc(p.meta)} · last ${prettyDate(sm.lastDate)}`;
+    return `<button class="row" data-p="${p.slug}">${mono(p)}<div class="t"><div class="nm">${esc(p.name)}</div><div class="mt">${meta}</div>${pg}</div><span class="chev">${I.chev}</span></button>`;
+  }
+  function group(title, hint, list, id) {
+    if (!list.length) return "";
+    return `<section class="grp" id="${id}"><div class="eyebrow">${title}${hint ? `<span class="lower"> · ${hint}</span>` : ""}</div><div class="card rows">${list.map(row).join("")}</div></section>`;
+  }
+
+  function render() {
+    const all = window.PROGRAMS.filter((p) => filter === "all" || p.cat === filter);
+    const by = (r) => all.filter((p) => Lib.role(L, p.slug) === r);
+    const caps = Lib.caps(L);
+    const real = window.PROGRAMS.filter((p) => !p.placeholder).length;
+    const active = window.PROGRAMS.filter((p) => !p.placeholder && ["family", "mine"].indexOf(Lib.role(L, p.slug)) >= 0).length;
+    $("#app").innerHTML = `
+      <header class="page-head"><div><div class="eyebrow">${real} programs · ${active} active</div><h1>Library</h1></div></header>
+      <p class="intro">The kids' programs come first and never count against your cap. You run ${caps.mine === 1 ? "one program" : "up to two programs"} of your own beside them. Everything else is a pool to pull single sessions from.</p>
+      <div class="utabs" role="tablist">${Object.entries(CAT).map(([k, l]) => `<button role="tab" aria-selected="${k === filter}" class="${k === filter ? "on" : ""}" data-f="${k}">${l}</button>`).join("")}</div>
+      ${group("Family", HINT.family, by("family"), "family")}
+      ${group("Mine", caps.mine === 1 ? "1 while a family program runs" : "up to 2", by("mine"), "mine")}
+      ${group("Pool", HINT.pool, by("pool"), "pool")}
+      ${group("Finished", "", by("finished"), "finished")}
+      <button class="add" data-add><span class="sq">${I.plus}</span><span class="t"><b>Add a program</b><small>A coach's PDF, photos, or build one with Karl</small></span></button>
+      <section class="card pad sync-card" id="data">
+        <h3>Cloudflare backup</h3>
+        <p>Every program, Fuel and these Library settings post to Cloudflare on every save, under one device token. A new phone gets everything back with Restore.</p>
+        <p><strong>Device token:</strong> <code style="user-select:all;font-size:13px">${esc(SetLog.sync.token())}</code><br><span id="sync-status" style="font-size:12px;color:var(--muted)">Sync: not yet</span></p>
+        <div class="ex-actions"><button class="btn" data-sync>Sync Library now</button><button class="btn" data-restore>Restore everything</button></div>
+      </section>`;
+    $("#app").querySelectorAll("[data-f]").forEach((b) => (b.onclick = () => { filter = b.dataset.f; render(); }));
+    $("#app").querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => openProgram(b.dataset.p)));
+    $("[data-add]").onclick = openAdd;
+    $("[data-sync]").onclick = () => { SetLog.sync.status = { at: null, ok: null, msg: "sending…" }; SetLog.sync.paint(); SetLog.sync.push(); };
+    $("[data-restore]").onclick = openRestore;
+    SetLog.sync.paint();
+    if (location.hash) { const el = document.getElementById(location.hash.slice(1)); if (el) el.scrollIntoView({ block: "start" }); }
+  }
+
+  /* ------------------------------------------------------------ sheet */
+  const wrap = $("#sheet-wrap"), sheet = $("#sheet");
+  function openSheet(html) { sheet.innerHTML = `<div class="grabber"></div>${html}`; wrap.hidden = false; document.body.style.overflow = "hidden"; const x = $("[data-close]", sheet); if (x) x.onclick = closeSheet; }
+  function closeSheet() { wrap.hidden = true; sheet.innerHTML = ""; document.body.style.overflow = ""; }
+  wrap.addEventListener("click", (e) => { if (e.target === wrap) closeSheet(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !wrap.hidden) closeSheet(); });
+  const head = (t) => `<div class="sheet-head"><h2>${esc(t)}</h2><button class="x-btn" data-close aria-label="Close">×</button></div>`;
+
+  function openProgram(slug) {
+    const p = Lib.bySlug(slug), r = Lib.role(L, slug), sm = HS.readSummary(slug);
+    if (p.placeholder) return openAdd();
+    const facts = sm ? `<div class="facts">
+        <div><b>${sm.week != null ? sm.week : "·"}</b><small>${sm.weeks ? `week of ${sm.weeks}` : "open-ended"}</small></div>
+        <div><b>${(sm.sessions || []).length}</b><small>days logged</small></div>
+        <div><b>${sm.lastDate ? prettyDate(sm.lastDate) : "·"}</b><small>last session</small></div></div>` : `<p class="hint" style="margin:0">Open it once and its progress shows here.</p>`;
+    const roles = [["mine", "Mine"], ["pool", "Pool"], ["finished", "Finished"]];
+    if (p.family) roles.unshift(["family", "Family"]);
+    openSheet(`${head(p.name)}
+      <div style="display:flex;gap:12px;align-items:center">${mono(p)}<div><div style="font-size:13px;font-weight:700;color:${p.color}">${esc(p.by)}</div><div class="hint">${esc(p.meta)}</div></div></div>
+      ${facts}
+      ${sm && sm.next ? `<div class="card pad" style="padding:12px 14px"><div class="eyebrow">Next up</div><div style="font-size:16px;font-weight:700;margin-top:2px">${esc(sm.next.label)}</div><div class="hint">${esc([sm.next.sub, sm.next.date ? prettyDate(sm.next.date) : "", sm.next.minutes ? `about ${sm.next.minutes} min` : ""].filter(Boolean).join(" · "))}</div></div>` : ""}
+      <a class="btn btn-block" style="background:${p.color};color:#fff;border-color:transparent" href="${p.slug}/">Open ${esc(p.short)}</a>
+      <div class="eyebrow" style="padding:4px 2px 0">Role</div>
+      <div class="seg" role="radiogroup">${roles.map(([k, l]) => `<button role="radio" aria-checked="${k === r}" class="${k === r ? "on" : ""}" data-role="${k}">${l}</button>`).join("")}</div>
+      <div class="hint" id="role-msg">${p.travel ? "Hotel is a travel swap: it works from the pool and never needs a slot." : r === "pool" ? "In the pool you can still open it and log any session." : ""}</div>`);
+    sheet.querySelectorAll("[data-role]").forEach((b) => (b.onclick = () => tryRole(slug, b.dataset.role)));
+  }
+  function tryRole(slug, r, bump) {
+    const res = Lib.setRole(L, slug, r, bump);
+    if (res.ok) { closeSheet(); render(); return; }
+    if (res.error) { $("#role-msg").textContent = res.error; return; }
+    const p = Lib.bySlug(slug);
+    const label = res.full === "family" ? "Both family slots are full." : Lib.caps(L).mine === 1 ? "Your slot is taken while a family program runs." : "Both of your slots are full.";
+    openSheet(`${head(`Make ${p.short} ${r === "family" ? "family" : "yours"}`)}
+      <p class="hint" style="font-size:14px;margin:0">${label} Pick one to move to the pool. It keeps its place and every log, so you can pick it back up.</p>
+      <div style="display:flex;flex-direction:column;gap:8px">${res.holders.map((h) => { const q = Lib.bySlug(h), sm = HS.readSummary(h); return `<button class="opt" data-bump="${h}">${mono(q)}<span class="t"><b>Move ${esc(q.short)} to the pool</b><small>${sm && sm.week != null ? `week ${sm.week}${sm.weeks ? ` of ${sm.weeks}` : ""}` : esc(q.meta)}</small></span></button>`; }).join("")}</div>
+      <button class="btn btn-ghost" data-close>Cancel</button>`);
+    sheet.querySelectorAll("[data-bump]").forEach((b) => (b.onclick = () => tryRole(slug, r, b.dataset.bump)));
+  }
+  function openAdd() {
+    openSheet(`${head("Add a program")}
+      <p class="hint" style="font-size:14px;margin:0">Karl builds new programs. Tell Karl who it's for and where it comes from, and it lands here with its own color, logs and Cloudflare sync.</p>
+      <div class="card pad" style="padding:6px 16px">
+        <div class="src"><div><b>A coach's PDF or photos</b><small>Karl transcribes it and you ratify it.</small></div></div>
+        <div class="src"><div><b>Describe it to Karl</b><small>Goals, days, equipment, and for a kid program their level and whether they have set days or join when they want.</small></div></div>
+        <div class="src"><div><b>Start from one in the Library</b><small>A lighter version of a program you already run.</small></div></div>
+      </div>
+      <p class="hint" style="margin:0">Family programs (for Porter or your daughter) sit outside your cap. Up to two.</p>
+      <button class="btn btn-block btn-primary" data-close>Got it</button>`);
+  }
+  function openRestore() {
+    const cur = SetLog.sync.token();
+    openSheet(`${head("Restore everything")}
+      <p class="hint" style="font-size:14px;margin:0">Pulls every program, Fuel and the Library settings from Cloudflare and replaces what's on this phone. Use it on a new phone, or after this one lost its data.</p>
+      <div><label class="lab" for="tok">Device token</label><input class="field" id="tok" value="${esc(cur)}" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="text" /></div>
+      <button class="btn btn-block btn-primary" data-look>Check what's there</button>
+      <div id="found"></div>`);
+    $("[data-look]", sheet).onclick = async () => {
+      const t = $("#tok", sheet).value.trim().toLowerCase();
+      if (!/^[a-f0-9]{24}$/.test(t)) { $("#found", sheet).innerHTML = `<p class="hint" style="color:var(--danger)">That isn't a 24-character token.</p>`; return; }
+      $("#found", sheet).innerHTML = `<p class="hint">Checking Cloudflare…</p>`;
+      const got = await Lib.fetchAll(t);
+      const n = got.filter((g) => g.found).length;
+      $("#found", sheet).innerHTML = `<div class="card pad restore-list">${got.map((g) => g.found ? `<div><b>${esc(g.name)}</b> · saved ${g.savedAt ? new Date(g.savedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "?"}</div>` : `<div class="miss">${esc(g.name)} · nothing stored</div>`).join("")}</div>
+        ${n ? `<button class="btn btn-block" style="margin-top:12px;background:var(--danger);color:#fff;border-color:transparent" data-apply>Replace this phone's data (${n})</button>` : `<p class="hint">Nothing to restore for that token.</p>`}`;
+      const ap = $("[data-apply]", sheet);
+      if (ap) ap.onclick = () => {
+        if (!confirm(`Replace this phone's data with what's in Cloudflare for ${n} store${n === 1 ? "" : "s"}? This can't be undone.`)) return;
+        localStorage.setItem("workout_sync_off", "1");        // stop this phone posting its old data while we swap
+        Lib.apply(t, got);
+        localStorage.removeItem("workout_sync_off");
+        location.reload();
+      };
+    };
+  }
+
+  render();
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { L = Lib.load(); render(); } });
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+  }
+})();
+</script>
+</body>
+</html>

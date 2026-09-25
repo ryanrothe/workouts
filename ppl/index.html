@@ -345,6 +345,7 @@
 </div>
 
 <script src="../shared/setlog.js"></script>
+<script src="../shared/shell.js"></script>
 <script>
 /* Set logging, the coach and sync come from ../shared/setlog.js. */
 const SL = window.SetLog;
@@ -536,6 +537,7 @@ function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
   updateStats();
   SL.sync.schedule();
+  publishSummary();
 }
 
 function todayISO() {
@@ -1086,6 +1088,42 @@ function render(workout) {
 }
 
 /* ===========================================================================
+   HEALTH-SYSTEM SUMMARY: the contract in ../shared/shell.js. Today and Library
+   read summary.ppl, never ppl_v1. Written after boot and after every save.
+   next = the page's own Up Next (rotates off the most recent session).
+   A session counts as logged work once an exercise is checked or a set logged.
+   =========================================================================== */
+function summaryHasWork(s) {
+  return Object.values(s.completed || {}).some(Boolean) ||
+    Object.values(s.logs || {}).some(raw => SL.hasSets(SL.normLog(raw, 0)));
+}
+function publishSummary() {
+  try {
+    if (!window.HS) return;
+    const dates = [];
+    WORKOUT_ORDER.forEach(k => state.sessions[k].forEach(s => {
+      if (s.date && summaryHasWork(s)) dates.push(s.date);
+    }));
+    const ws = weekStartISO();
+    const end = new Date(ws + "T00:00:00");
+    end.setDate(end.getDate() + 6);
+    const we = HS.dstr(end);
+    const k = nextUpKey(), w = WORKOUTS[k];
+    const sorted = dates.slice().sort();
+    HS.summary("ppl", {
+      kind: "open", week: null, weeks: null,
+      next: { label: w.name, sub: `${w.day} slot`, date: null,
+              minutes: Math.round(workoutPlan(k).total / 60), listed: "45 min" },
+      today: null,
+      thisWeek: { done: dates.filter(d => d >= ws && d <= we).length, planned: 6 },
+      days: null,
+      sessions: sorted,
+      lastDate: sorted.length ? sorted[sorted.length - 1] : null
+    });
+  } catch (e) {}
+}
+
+/* ===========================================================================
    REST TIMER — per-exercise duration; survives re-renders via a module-level map
    =========================================================================== */
 const activeTimers = {};
@@ -1254,6 +1292,7 @@ SL.sync.wireNotes();
   const tab = document.querySelector(`.tab[data-pane="${next}"]`);
   if (tab) tab.click();
 })();
+publishSummary();
 </script>
 </body>
 </html>

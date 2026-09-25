@@ -1,0 +1,118 @@
+/* Health system main pages (Today, Library, Fuel). Program pages keep ../shared/styles.css.
+   Tokens and components from the ratified Option 1 design (2026-09-25). Fonts are declared
+   by shared/shell.js from shared/fonts/, so they work offline. */
+:root {
+  color-scheme: light;
+  --bg: #F3F1EC;
+  --card: #FFFFFF;
+  --line: #E4E0D6;
+  --ink: #16171B;
+  --muted: #5C5F66;
+  --track: #EAE6DC;
+  --olive: #4D7C0F;
+  --olive-soft: #EDF1E1;
+  --P: #24507A;
+  --F: #C27C0E;
+  --C: #93B03A;
+  --P-ink: #24507A;
+  --F-ink: #8A5A08;
+  --C-ink: #5E7A12;
+  --amber-ink: #7A4E05;
+  --amber-soft: #F6EAD0;
+  --danger: #B3261E;
+  --disp: "Archivo", "Figtree", -apple-system, system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: "Figtree", -apple-system, system-ui, sans-serif; font-size: 15px; line-height: 1.4;
+  -webkit-font-smoothing: antialiased; padding-top: env(safe-area-inset-top);
+}
+a { color: inherit; text-decoration: none; }
+button, input, select { font: inherit; color: inherit; }
+button { -webkit-tap-highlight-color: transparent; }
+
+.wrap { max-width: 560px; margin: 0 auto; padding: 18px 16px 24px; display: flex; flex-direction: column; gap: 14px; }
+.disp { font-family: var(--disp); font-stretch: 80%; font-weight: 800; }
+.eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
+.eyebrow .lower { font-weight: 500; letter-spacing: 0; text-transform: none; }
+.olive { color: var(--olive); }
+
+.page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; padding: 4px 4px 0; }
+.page-head h1 { margin: 2px 0 0; font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 38px; line-height: 1.02; }
+.row-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 4px 4px 0; min-height: 36px; }
+.link { display: inline-flex; align-items: center; gap: 2px; min-height: 36px; font-size: 13px; font-weight: 700; }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; }
+.pad { padding: 16px 18px; }
+.list > * + * { border-top: 1px solid var(--line); }
+.hint { font-size: 12px; line-height: 1.45; color: var(--muted); }
+.empty { padding: 18px; text-align: center; color: var(--muted); font-size: 14px; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 16px;
+  border-radius: 12px; border: 1px solid var(--line); background: var(--card); font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.btn-primary { background: var(--ink); color: #FFFFFF; border-color: transparent; }
+.btn-olive { background: var(--olive); color: #FFFFFF; border-color: transparent; }
+.btn-ghost { background: transparent; border-color: transparent; color: var(--muted); }
+.btn-danger { color: var(--danger); }
+.btn-block { width: 100%; min-height: 52px; font-size: 16px; border-radius: 14px; }
+.icon-btn {
+  width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px; border: 1px solid var(--line); background: var(--card);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
+}
+
+.mono {
+  width: 40px; height: 40px; flex-shrink: 0; border-radius: 11px; color: #FFFFFF;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--disp); font-stretch: 75%; font-weight: 800; font-size: 13px; letter-spacing: 0.02em;
+}
+.mono.ghost { background: transparent !important; border: 2px dashed currentColor; }
+.mono.sm { width: 36px; height: 36px; border-radius: 10px; font-size: 12px; }
+
+.utabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.utabs::-webkit-scrollbar { display: none; }
+.utabs > * {
+  min-height: 44px; padding: 0 10px; border: 0; border-bottom: 2.5px solid transparent; margin-bottom: -1px; background: transparent;
+  font-size: 14px; font-weight: 600; color: var(--muted); cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center;
+}
+.utabs > .on { border-bottom-color: var(--ink); color: var(--ink); font-weight: 700; }
+.utabs.olive > .on { border-bottom-color: var(--olive); }
+
+.seg { display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--track); }
+.seg button { flex: 1 1 0; min-height: 40px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-size: 14px; font-weight: 600; cursor: pointer; }
+.seg button.on { background: var(--ink); color: #FFFFFF; font-weight: 700; }
+.seg.olive button.on { background: var(--olive); }
+
+.bar { height: 7px; border-radius: 4px; background: var(--track); overflow: hidden; }
+.bar > i { display: block; height: 100%; border-radius: 4px; }
+
+/* bottom sheet */
+.sheet-wrap { position: fixed; inset: 0; z-index: 100; background: rgba(22, 23, 27, 0.5); display: flex; align-items: flex-end; justify-content: center; }
+.sheet-wrap[hidden] { display: none; }
+.sheet {
+  width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+  background: var(--bg); border-radius: 26px 26px 0 0; padding: 10px 16px calc(26px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 12px;
+}
+.sheet > * { flex-shrink: 0; }   /* a tall sheet scrolls; it must never squash its search box or tabs */
+.grabber { width: 38px; height: 5px; border-radius: 3px; background: #CFC9BC; align-self: center; flex-shrink: 0; }
+.sheet-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 0 2px; }
+.sheet-head h2 { margin: 0; font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 27px; line-height: 1.05; }
+.x-btn { width: 44px; height: 44px; flex-shrink: 0; border-radius: 22px; border: 1px solid var(--line); background: var(--card); font-size: 22px; line-height: 1; color: var(--muted); cursor: pointer; }
+
+/* form fields (16px text keeps iOS from zooming) */
+.field { width: 100%; height: 46px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); padding: 0 12px; font-size: 16px; }
+select.field { padding-right: 8px; }
+.lab { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 5px 2px; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+
+/* SetLog sync panel (its markup uses these) */
+.ex-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.ex-actions .btn { flex: 1 1 auto; }
+code { font-family: ui-monospace, Menlo, monospace; }
+.sync-card h3 { margin: 0 0 6px; font-size: 15px; }
+.sync-card p { margin: 0 0 8px; font-size: 13px; line-height: 1.5; color: var(--muted); }

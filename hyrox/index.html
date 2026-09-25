@@ -266,6 +266,8 @@
 
 </div>
 
+<script src="../shared/setlog.js"></script>
+<script src="../shared/shell.js"></script>
 <script>
 /* ===========================================================================
    PROGRAM DATA — generated per phase, with home + travel prescriptions
@@ -514,7 +516,103 @@ function loadState(){
   try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) { const p = JSON.parse(raw); if (!p.clocks) p.clocks = {}; return p; } } catch(e){}
   return { currentWeek:1, travel:false, completed:{}, logs:{}, expanded:{}, bench:{}, sim:{}, clocks:{} };
 }
-function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} updateStats(); }
+function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} updateStats(); if (window.SetLog) SetLog.sync.schedule(); publishSummary(); }
+
+/* ===========================================================================
+   SYNC + HEALTH-SYSTEM SUMMARY (2026-09-25). Sync transport and the device
+   token live in ../shared/setlog.js; the summary contract in ../shared/shell.js.
+   A day slot ("5_0" = week 5, Day A) carries a date in state.dates, stamped the
+   first time anything on it is checked or logged. Slots logged before stamping
+   existed fall back to their session-clock start, else stay undated.
+   Current week = the week of the most recently logged session (week 1 when
+   nothing is logged; undated history falls back to the highest logged week).
+   Next = the first day of that week that isDayComplete says is unfinished;
+   once all four are done, Day A of the following week (null after week 12).
+   =========================================================================== */
+function isoOf(x){ return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`; }
+function stampDay(wk, di){
+  if (!state.dates) state.dates = {};
+  const k = `${wk}_${di}`;
+  if (!state.dates[k]) state.dates[k] = isoOf(new Date());
+}
+function dayDate(wk, di){
+  const k = `${wk}_${di}`;
+  if (state.dates && state.dates[k]) return state.dates[k];
+  const c = state.clocks && state.clocks[k];
+  return c && c.start ? isoOf(new Date(c.start)) : null;
+}
+function logHasData(l){ return !!l && !!(String(l.val || "").trim() || String(l.notes || "").trim()); }
+function dayWorked(wk, di){
+  const n = countItems(WEEKS[wk].days[di]);
+  for (let i = 0; i < n; i++){ const k = `${wk}_${di}_${i}`; if (state.completed[k] || logHasData(state.logs[k])) return true; }
+  return false;
+}
+function sessionWeek(){
+  let best = null, top = 0;
+  for (let wk = 1; wk <= 12; wk++) WEEKS[wk].days.forEach((_, di) => {
+    if (!dayWorked(wk, di)) return;
+    top = wk;
+    const d = dayDate(wk, di);
+    if (d && (!best || d > best.date || (d === best.date && wk > best.wk))) best = { date: d, wk };
+  });
+  return best ? best.wk : (top || 1);
+}
+function nextSession(){
+  const wk = sessionWeek();
+  const open = WEEKS[wk].days.findIndex((_, di) => !isDayComplete(wk, di));
+  if (open >= 0) return { wk, di: open };
+  return wk < 12 ? { wk: wk + 1, di: 0 } : null;
+}
+/* The flat list Karl reads: one row per checked or logged item. Hyrox logs one
+   free-text value (weight / time / reps), not sets, so `sets` is the home
+   prescription and `logged` is the value as typed. */
+function buildEntries(){
+  const out = [];
+  for (let wk = 1; wk <= 12; wk++) WEEKS[wk].days.forEach((day, di) => {
+    const date = dayDate(wk, di);
+    let idx = 0;
+    day.blocks.forEach(b => b.items.forEach(item => {
+      const k = `${wk}_${di}_${idx++}`;
+      const l = state.logs[k] || {};
+      const done = !!state.completed[k];
+      if (!done && !logHasData(l)) return;
+      out.push({ date, where: `W${wk} Day ${day.tag}`, week: wk, day: day.tag, exercise: item.name,
+                 sets: item.rx, logged: String(l.val || "").trim(), done, notes: l.notes || "" });
+    }));
+  });
+  return out;
+}
+function publishSummary(){
+  try {
+    if (!window.HS || typeof HS.summary !== "function") return;
+    const cw = sessionWeek();
+    const nx = nextSession();
+    const sessions = [];
+    for (let wk = 1; wk <= 12; wk++) WEEKS[wk].days.forEach((_, di) => {
+      const d = dayDate(wk, di);
+      if (d && dayWorked(wk, di)) sessions.push(d);
+    });
+    let next = null;
+    if (nx){
+      const day = WEEKS[nx.wk].days[nx.di];
+      next = { label: day.name, sub: `Week ${nx.wk} · Day ${day.tag}`, date: null,
+               minutes: Math.round(dayTargetSecs(nx.wk, nx.di) / 60), listed: null };
+    }
+    HS.summary("hyrox", {
+      kind: "phased", week: cw, weeks: 12, phase: WEEKS[cw].phase.name,
+      next, today: null, days: null,
+      thisWeek: { done: WEEKS[cw].days.filter((_, di) => isDayComplete(cw, di)).length, planned: WEEKS[cw].days.length },
+      sessions
+    });
+  } catch(e){}
+}
+if (window.SetLog) SetLog.sync.init({
+  slug: "hyrox",
+  storageKey: STORAGE_KEY,
+  payload: () => ({ state, entries: buildEntries() }),
+  hasData: () => Object.values(state.completed || {}).some(Boolean) || Object.values(state.logs || {}).some(logHasData) ||
+                 [state.bench, state.sim].some(g => Object.values(g || {}).some(o => Object.values(o || {}).some(x => x != null && String(x).trim() !== "")))
+});
 
 /* ===========================================================================
    TIME HELPERS
@@ -693,11 +791,11 @@ function renderExercise(item, wk, di, idx){
         </div>
       </div>
     </div>`;
-  el.querySelector(".ex-check").onclick = () => { state.completed[key] = !isDone; saveState(); renderDays(); };
+  el.querySelector(".ex-check").onclick = () => { state.completed[key] = !isDone; if (!isDone) stampDay(wk, di); saveState(); renderDays(); };
   el.querySelector(".log-toggle").onclick = () => el.querySelector(".ex-log").classList.toggle("open");
   if (log.val || log.notes) el.querySelector(".ex-log").classList.add("open");
-  el.querySelector(".log-val").addEventListener("input", e => { if(!state.logs[key]) state.logs[key]={val:"",notes:""}; state.logs[key].val=e.target.value; saveState(); });
-  el.querySelector(".log-notes").addEventListener("input", e => { if(!state.logs[key]) state.logs[key]={val:"",notes:""}; state.logs[key].notes=e.target.value; saveState(); });
+  el.querySelector(".log-val").addEventListener("input", e => { if(!state.logs[key]) state.logs[key]={val:"",notes:""}; state.logs[key].val=e.target.value; stampDay(wk, di); saveState(); });
+  el.querySelector(".log-notes").addEventListener("input", e => { if(!state.logs[key]) state.logs[key]={val:"",notes:""}; state.logs[key].notes=e.target.value; stampDay(wk, di); saveState(); });
   return el;
 }
 function tagLabel(t){ return ({str:"Strength",eng:"Engine",sled:"Sled Sub",sta:"Station",warm:"Warm-Up",mob:"Mobility",bench:"Benchmark"}[t])||t; }
@@ -856,7 +954,10 @@ document.getElementById("reset-btn").onclick = () => {
   }
 };
 
+/* Open on the next session's week (was: the last week pill tapped, persisted in state.currentWeek). */
+(function openOnNext(){ const nx = nextSession(); if (nx) state.currentWeek = nx.wk; })();
 renderAll();
+publishSummary();
 </script>
 </body>
 </html>

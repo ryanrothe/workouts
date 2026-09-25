@@ -272,6 +272,7 @@
 </div>
 
 <script src="../shared/setlog.js"></script>
+<script src="../shared/shell.js"></script>
 <script>
 /* ===========================================================================
    PROGRAM DATA — John Madsen Upper / Lower Split
@@ -346,6 +347,7 @@ function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
   updateStats();
   SetLog.sync.schedule();
+  publishSummary();
 }
 
 function todayISO() {
@@ -717,6 +719,57 @@ function render(workout) {
 }
 
 /* ===========================================================================
+   HEALTH-SYSTEM SUMMARY: the contract in ../shared/shell.js. Today and Library
+   read summary.hotel, never madsen_split_v1. Written after boot and every save.
+   No rotation here, so next = the workout NOT done most recently (Upper Body
+   when nothing is logged). A session counts as logged work once an exercise
+   is checked or a set logged.
+   =========================================================================== */
+function summaryHasWork(s) {
+  return Object.values(s.completed || {}).some(Boolean) ||
+    Object.values(s.logs || {}).some(raw => SetLog.hasSets(SetLog.normLog(raw, 0)));
+}
+function summaryNextKey() {
+  let bestKey = null, best = "";
+  Object.keys(WORKOUTS).forEach(k => {
+    const s = (state.sessions[k] || [])[0];   // newest first
+    if (!s) return;
+    const m = /^s_(\d+)_/.exec(s.id || "");
+    const key = (s.date || "") + "|" + String(m ? m[1] : 0).padStart(15, "0");
+    if (key > best) { best = key; bestKey = k; }
+  });
+  if (!bestKey) return "upper";
+  return bestKey === "upper" ? "lower" : "upper";
+}
+function publishSummary() {
+  try {
+    if (!window.HS) return;
+    const dates = [];
+    Object.keys(WORKOUTS).forEach(k => (state.sessions[k] || []).forEach(s => {
+      if (s.date && summaryHasWork(s)) dates.push(s.date);
+    }));
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - (start.getDay() + 6) % 7);   // Monday
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    const ws = HS.dstr(start), we = HS.dstr(end);
+    const k = summaryNextKey(), w = WORKOUTS[k];
+    const sorted = dates.slice().sort();
+    HS.summary("hotel", {
+      kind: "open", week: null, weeks: null,
+      next: { label: w.name, sub: w.focus, date: null,
+              minutes: Math.round(workoutPlan(k).total / 60), listed: null },
+      today: null,
+      thisWeek: { done: dates.filter(d => d >= ws && d <= we).length, planned: null },
+      days: null,
+      sessions: sorted,
+      lastDate: sorted.length ? sorted[sorted.length - 1] : null
+    });
+  } catch (e) {}
+}
+
+/* ===========================================================================
    REST TIMER (60s) — survives re-renders by tracking timers in a module-level map
    =========================================================================== */
 const REST_SECONDS = 60;
@@ -881,6 +934,7 @@ document.getElementById("reset-btn").onclick = () => {
 render();
 document.querySelector("#pane-notes .card").insertAdjacentHTML("beforeend", SetLog.sync.notesHtml());
 SetLog.sync.wireNotes();
+publishSummary();
 </script>
 </body>
 </html>

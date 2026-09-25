@@ -355,6 +355,7 @@ main { padding: 12px 14px 100px; max-width: 720px; margin: 0 auto; }
 <div class="toast" id="toast"></div>
 
 <script src="../shared/setlog.js"></script>
+<script src="../shared/shell.js"></script>
 <script>
 /* ============================================================
    KB Shred Tracker — Adam Gooch 8-Week Intermediate KB Program
@@ -382,6 +383,7 @@ function loadState() {
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); } catch(e) {}
   if (PROGRAM) SetLog.sync.schedule();
+  publishSummary();
 }
 
 /* ── helpers ────────────────────────────────────────────────── */
@@ -614,6 +616,51 @@ function syncEntries() {
     });
   }));
   return out;
+}
+
+/* ── health-system summary (../shared/shell.js) ──────────────────
+   HS.summary('kb-shred', …) after load and after every save; Today and Library
+   read it, never this page's storage. Current week = the week of the most
+   recently logged session (latest date, then latest program position; Week 1
+   if none). Next = that week's first day not marked done (what the hero's
+   "This Wk" counts), else Day 1 of the following week; null after Week 8. */
+function kbHasWork(lg) {
+  if (!lg) return false;
+  if (lg.done) return true;
+  return Object.values(lg.exercises || {}).some(x => x && Object.keys(x).some(k =>
+    k === 'notes' ? !!String(x[k] || '').trim() : /^s\d+$/.test(k) ? !!x[k] : /^[rw]\d+$/.test(k) && x[k] != null && x[k] !== ''));
+}
+function kbPosition() {
+  let best = null, pos = 0;
+  PROGRAM.weeks.forEach((w, wi) => w.days.forEach(d => {
+    pos++;
+    const lg = STATE.logs[logKey(w.id, d.day)];
+    if (!kbHasWork(lg)) return;
+    const key = `${lg.date || ''}|${String(pos).padStart(4, '0')}`;
+    if (!best || key > best.key) best = { key, wi };
+  }));
+  const wi = best ? best.wi : 0;
+  const week = PROGRAM.weeks[wi];
+  let nextWeek = week, nextDay = week.days.find(d => !dayDone(week.id, d));
+  if (!nextDay) { nextWeek = PROGRAM.weeks[wi + 1] || null; nextDay = nextWeek ? nextWeek.days[0] : null; }
+  return { week, nextWeek: nextDay ? nextWeek : null, nextDay: nextDay || null };
+}
+function publishSummary() {
+  try {
+    if (!PROGRAM || !STATE || !window.HS) return;
+    const { week, nextWeek, nextDay } = kbPosition();
+    const sessions = [];
+    for (const k in STATE.logs) { const lg = STATE.logs[k]; if (lg && lg.date && kbHasWork(lg)) sessions.push(lg.date); }
+    HS.summary('kb-shred', {
+      kind: 'phased', week: week.week, weeks: PROGRAM.weeks.length, phase: null,
+      next: nextDay ? { label: nextDay.label, sub: `${nextWeek.label} · ${nextDay.day}`, date: null,
+                        minutes: Math.round(dayPlanKB(nextDay).total / 60), listed: null } : null,
+      today: null,
+      thisWeek: { done: week.days.filter(d => dayDone(week.id, d)).length, planned: week.days.length },
+      days: null,
+      sessions
+    });
+  } catch (e) { console.warn('kb-shred summary failed', e); }
 }
 
 /* ── format prescription string ─────────────────────────────── */
@@ -923,7 +970,7 @@ function appendMarkDoneBtn(w, d, wrapper, log) {
   btn.addEventListener('click', () => {
     const l = getLog(w.id, d.day);
     l.done = !l.done;
-    if (!l.date) l.date = new Date().toISOString().slice(0, 10);
+    if (!l.date) l.date = (d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)(new Date());   // local date, not UTC (2026-09-25: evening sessions landed on tomorrow)
     setLog(w.id, d.day, l);
     toast(l.done ? 'Day complete! 🎉' : 'Unmarked');
     render();
@@ -1148,6 +1195,9 @@ async function init() {
     document.body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text)">Could not load program data. Make sure data.json is next to index.html.</div>';
     return;
   }
+  // Open on the next session (the summary's `next`); a finished program keeps the last view.
+  const nx = kbPosition();
+  if (nx.nextDay) { STATE.currentWeek = nx.nextWeek.id; STATE.currentDay = nx.nextDay.day; }
   if (!PROGRAM.weeks.find(w => w.id === STATE.currentWeek)) {
     STATE.currentWeek = PROGRAM.weeks[0].id;
   }
@@ -1163,6 +1213,7 @@ async function init() {
   });
   saveState();
   render();
+  publishSummary();
 }
 init();
 </script>

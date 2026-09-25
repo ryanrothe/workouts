@@ -415,6 +415,7 @@
 </div>
 
 <script src="../shared/setlog.js"></script>
+<script src="../shared/shell.js"></script>
 <script>
 /* Set logging, the coach and sync come from ../shared/setlog.js. */
 const SL = window.SetLog;
@@ -818,6 +819,7 @@ function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
   updateStats();
   SL.sync.schedule();
+  publishSummary();
 }
 
 /* ---------------------------------------------------------------------------
@@ -870,6 +872,70 @@ SL.sync.init({
   payload: () => ({ state, entries: syncEntries(), catalog: syncCatalog() }),
   hasData: () => Object.keys(state.days).length > 0
 });
+
+/* ---------------------------------------------------------------------------
+   HEALTH-SYSTEM SUMMARY. The contract lives in ../shared/shell.js; Today and
+   Library read summary.father-son, never this page's storage.
+   Set days on the calendar: W0 runs Mon Sep 21 to Sun Sep 27 2026 (Day 1 is
+   its Wednesday), week w starts 7w days later, Mon = upper, Wed = lower.
+   A session counts once EITHER lifter has logged anything on it (a check, a
+   set, a note, a finisher result). The page's own week pills and tabs are
+   unchanged: they still follow completion, not the calendar.
+   --------------------------------------------------------------------------- */
+const CAL_W0 = [2026, 8, 21];                // local date of W0's Monday
+const CAL_OFFSET = { mon: 0, wed: 2 };
+function isoOf(x) { return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`; }
+function calISO(w, d) { return isoOf(new Date(CAL_W0[0], CAL_W0[1], CAL_W0[2] + 7 * w + CAL_OFFSET[d])); }
+function calWeekOf(iso) {
+  const [y, m, dd] = iso.split("-").map(Number);
+  return Math.floor(Math.round((new Date(y, m - 1, dd) - new Date(CAL_W0[0], CAL_W0[1], CAL_W0[2])) / 86400000) / 7);
+}
+function dayHasWork(ds) {
+  if (!ds || !ds.per) return false;
+  return LIFTERS.some(l => {
+    const p = ds.per[l];
+    if (!p) return false;
+    if (Object.keys(p.completed || {}).some(k => p.completed[k])) return true;
+    if (Object.keys(p.logs || {}).some(k => SL.hasData(SL.normLog(p.logs[k], 0)))) return true;
+    return !!(p.fin && p.fin.result != null && p.fin.result !== "");
+  });
+}
+function publishSummary() {
+  try {
+    if (!window.HS || typeof HS.summary !== "function") return;
+    const today = todayISO();
+    const cw = Math.max(0, Math.min(NWEEKS - 1, calWeekOf(today)));
+    const slot = (w, d) => {
+      const day = PROGRAM.weeks[w][d];
+      return { label: day.title, sub: `Week ${w} · ${PROGRAM.dayLabels[d]}`, date: calISO(w, d),
+               minutes: Math.round(dayPlan(w, d).total / 60), listed: day.duration };
+    };
+    let next = null, todaySlot = null;
+    for (let w = cw; w < NWEEKS && !next; w++) {
+      for (const d of PROGRAM.dayOrder) {
+        if (!hasDay(w, d)) continue;
+        const iso = calISO(w, d);
+        if (iso < today) continue;
+        const worked = dayHasWork(dayState(w, d, false));
+        if (iso === today) { const s = slot(w, d); todaySlot = { label: s.label, minutes: s.minutes, done: worked }; }
+        if (!worked) { next = slot(w, d); break; }
+      }
+    }
+    const wkDays = PROGRAM.dayOrder.filter(d => hasDay(cw, d));
+    const sessions = [];
+    for (let w = 0; w < NWEEKS; w++) PROGRAM.dayOrder.forEach(d => {
+      if (!hasDay(w, d)) return;
+      const ds = dayState(w, d, false);
+      if (ds && ds.date && dayHasWork(ds)) sessions.push(ds.date);
+    });
+    HS.summary(PROGRAM.slug, {
+      kind: "setdays", week: cw, weeks: 12, phase: cw === 0 ? "Day 1" : BLOCKS[blockOf(cw) - 1].name,
+      days: ["Mon", "Wed"], next, today: todaySlot,
+      thisWeek: { done: wkDays.filter(d => dayHasWork(dayState(cw, d, false))).length, planned: wkDays.length },
+      sessions
+    });
+  } catch (e) {}
+}
 function L() { return state.lifter; }
 function dayState(w, d, create) {
   const k = dayKey(w, d);
@@ -1772,6 +1838,7 @@ SL.sync.wireNotes();
   const tab = document.querySelector(`.tab[data-pane="${dueDay(uiWeek)}"]`);
   if (tab) tab.click();
 })();
+publishSummary();
 </script>
 </body>
 </html>

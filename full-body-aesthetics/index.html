@@ -371,6 +371,8 @@ main { padding: 12px 14px 100px; max-width: 720px; margin: 0 auto; }
 
 <div class="toast" id="toast"></div>
 
+<script src="../shared/setlog.js"></script>
+<script src="../shared/shell.js"></script>
 <script>
 /* ============================================================
    Full Body Aesthetics Tracker — Ryan Fischer program
@@ -397,6 +399,8 @@ function loadState() {
 }
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); } catch(e) {}
+  if (PROGRAM) SetLog.sync.schedule();
+  publishSummary();
 }
 
 /* ── helpers ───────────────────────────────────────────────── */
@@ -796,7 +800,7 @@ function appendMarkDoneBtn(w, d, wrapper, log) {
   btn.addEventListener('click', () => {
     const l = getLog(w.id, d.day);
     l.done = !l.done;
-    if (!l.date) l.date = new Date().toISOString().slice(0,10);
+    if (!l.date) l.date = (d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)(new Date());   // local date, not UTC (2026-09-25: evening sessions landed on tomorrow)
     setLog(w.id, d.day, l);
     toast(l.done ? 'Day complete! 🎉' : 'Unmarked');
     render();
@@ -973,9 +977,10 @@ function openAbout() {
     el('span', {class:'modal-close', onclick: closeModal}, '×'),
     el('h3', {}, 'About'),
     el('div', {style:'font-size:14px;line-height:1.6;color:var(--text-body)',
-      html: `<p><strong>Full Body Aesthetics</strong> by Ryan Fischer (RyFischer.com)</p><p>64-week DB-based full body program. 5–6 training days per week, cycling through strength, hypertrophy, and conditioning blocks.</p><p>Your logs are saved in this browser's local storage. Use Export from the menu to save a backup.</p>`
+      html: `<p><strong>Full Body Aesthetics</strong> by Ryan Fischer (RyFischer.com)</p><p>64-week DB-based full body program. 5–6 training days per week, cycling through strength, hypertrophy, and conditioning blocks.</p><p>Your logs are saved in this browser's local storage. Use Export from the menu to save a backup.</p>` + SetLog.sync.notesHtml()
     })
   ));
+  SetLog.sync.wireNotes();
 }
 
 /* ── export / import / reset ───────────────────────────────── */
@@ -1024,6 +1029,98 @@ function toast(msg) {
   toastTimeout = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
+/* ── sync to Karl + health-system summary ──────────────────────
+   Transport and the device token live in ../shared/setlog.js; this page hands
+   it { state, entries }. HS.summary('full-body-aesthetics', …) runs after load
+   and after every save (../shared/shell.js). Current week = the week of the
+   most recently logged session (latest date, then latest program position;
+   Week 1 if none). Next = that week's first training day not marked done
+   (what the hero's "This Wk" counts), else the first training day of the
+   following week; null when no training day is left. */
+function fbaExLogged(x) {
+  return !!x && Object.keys(x).some(k =>
+    k === 'notes' ? !!String(x[k] || '').trim() : /^s\d+$/.test(k) ? !!x[k] : /^w\d+$/.test(k) && x[k] != null && x[k] !== '');
+}
+function fbaHasWork(lg) {
+  if (!lg) return false;
+  if (lg.done || (lg.notes && String(lg.notes).trim())) return true;
+  return Object.values(lg.exercises || {}).some(fbaExLogged);
+}
+function fbaPosition() {
+  let best = null, pos = 0;
+  PROGRAM.weeks.forEach((w, wi) => w.days.forEach(d => {
+    pos++;
+    const lg = d.rest ? null : STATE.logs[logKey(w.id, d.day)];
+    if (!fbaHasWork(lg)) return;
+    const key = `${lg.date || ''}|${String(pos).padStart(5, '0')}`;
+    if (!best || key > best.key) best = { key, wi };
+  }));
+  const wi = best ? best.wi : 0;
+  const week = PROGRAM.weeks[wi];
+  let nextWeek = week, nextDay = week.days.find(d => !d.rest && !dayDone(week.id, d));
+  for (let i = wi + 1; !nextDay && i < PROGRAM.weeks.length; i++) {
+    nextWeek = PROGRAM.weeks[i]; nextDay = nextWeek.days.find(d => !d.rest);
+  }
+  return { week, wi, nextWeek: nextDay ? nextWeek : null, nextDay: nextDay || null };
+}
+/* Same cycle grouping as the week picker: a week sits in the last cycle named on or before it. */
+function fbaCycle(wi) {
+  let cycle = null;
+  for (let i = 0; i <= wi; i++) {
+    const hit = PROGRAM.weeks[i].days.map(d => d.dayLabel && d.dayLabel.match(/CYCLE\s*(\d+)/i)).find(Boolean);
+    if (hit) cycle = parseInt(hit[1], 10);
+  }
+  return cycle ? `Cycle ${cycle}` : null;
+}
+/* The flat list Karl reads: one row per logged exercise per date. Card days give a
+   row per exercise (sets as logged; as prescribed when the day was only marked
+   done); text/conditioning days give one row carrying the notes. */
+function buildEntries() {
+  const out = [];
+  PROGRAM.weeks.forEach(w => w.days.forEach(d => {
+    if (d.rest) return;
+    const lg = STATE.logs[logKey(w.id, d.day)];
+    if (!fbaHasWork(lg)) return;
+    const where = `W${w.week} ${d.day.slice(0, 3)}`, date = lg.date || null;
+    if (!d.conditioning && d.exercises && d.exercises.length >= 2) {
+      d.exercises.forEach((ex, i) => {
+        const x = (lg.exercises || {})[i];
+        const logged = fbaExLogged(x);
+        if (!logged && !lg.done) return;
+        const sets = [];
+        for (let s = 0; s < (ex.sets || 0); s++) {
+          sets.push(logged ? { r: null, w: SetLog.parseWeight(x[`w${s}`]), done: !!x[`s${s}`] } : { r: null, w: null, done: true });
+        }
+        out.push({ date, where, exercise: ex.name, group: ex.group || '', target: ex.prescription || '', sets,
+                   source: logged ? 'logged' : 'prescribed', done: !!lg.done || (sets.length > 0 && sets.every(s => s.done)),
+                   notes: (x && x.notes) || '' });
+      });
+    } else {
+      out.push({ date, where, exercise: d.type || 'Metcon', target: String(d.notes || '').split('\n')[0].slice(0, 160), sets: [],
+                 source: 'text', done: !!lg.done, notes: lg.notes || '' });
+    }
+  }));
+  return out;
+}
+function publishSummary() {
+  try {
+    if (!PROGRAM || !STATE || !window.HS) return;
+    const { week, wi, nextWeek, nextDay } = fbaPosition();
+    const train = week.days.filter(d => !d.rest);
+    const sessions = [];
+    for (const k in STATE.logs) { const lg = STATE.logs[k]; if (lg && lg.date && fbaHasWork(lg)) sessions.push(lg.date); }
+    HS.summary('full-body-aesthetics', {
+      kind: 'phased', week: week.week, weeks: PROGRAM.weeks.length, phase: fbaCycle(wi),
+      next: nextDay ? { label: nextDay.type || 'Metcon', sub: `${nextWeek.label} · ${nextDay.day}`, date: null,
+                        minutes: Math.round(dayPlanFBA(nextDay).total / 60), listed: null } : null,
+      today: null,
+      thisWeek: { done: train.filter(d => dayDone(week.id, d)).length, planned: train.length },
+      days: null,
+      sessions
+    });
+  } catch (e) { console.warn('full-body-aesthetics summary failed', e); }
+}
+
 /* ── init ──────────────────────────────────────────────────── */
 $('#btnPickWeek').addEventListener('click', openWeekPicker);
 $('#btnMenu').addEventListener('click', openMenu);
@@ -1037,6 +1134,9 @@ async function init() {
     document.body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text)">Could not load program data. Make sure data.json is next to index.html.</div>';
     return;
   }
+  // Open on the next session (the summary's `next`); a finished program keeps the last view.
+  const nx = fbaPosition();
+  if (nx.nextDay) { STATE.currentWeek = nx.nextWeek.id; STATE.currentDay = nx.nextDay.day; }
   // Validate state
   if (!PROGRAM.weeks.find(w => w.id === STATE.currentWeek)) {
     STATE.currentWeek = PROGRAM.weeks[0].id;
@@ -1047,8 +1147,15 @@ async function init() {
     const first = w.days.find(d => !d.rest);
     if (first) STATE.currentDay = first.day;
   }
+  SetLog.sync.init({
+    slug: 'full-body-aesthetics',
+    storageKey: STORAGE_KEY,
+    payload: () => ({ state: STATE, entries: buildEntries() }),
+    hasData: () => Object.values(STATE.logs || {}).some(fbaHasWork)
+  });
   saveState();
   render();
+  publishSummary();
 }
 init();
 </script>

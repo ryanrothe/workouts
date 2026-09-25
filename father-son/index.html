@@ -334,6 +334,46 @@
   .card ul { padding-left: 18px; margin: 4px 0 8px; }
   .src { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 10px; }
 
+  /* In-session board (Phase 2 step 5). The shared "In-session layout" rules in
+     ../shared/styles.css draw the header and rows; these fill only the gaps:
+     the two-lifter control row, clock states, the check, track moves, timers. */
+  .fs-board .hs-sess-clock.running svg { color: var(--primary); }
+  .fs-board .hs-sess-clock:not(.running):not(.fs-stopped) .fs-clock-t { color: var(--primary); }
+  .fs-board .hs-sess-clock.fs-stopped .fs-clock-t { color: var(--muted); }
+  .fs-board .hs-sess-progress.fs-complete span { color: var(--primary); font-weight: 800; }
+  .fs-sess-ctl { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 2px 10px; }
+  .fs-seg { display: inline-flex; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 3px; }
+  .fs-seg button {
+    border: 0; background: transparent; color: var(--muted); font-family: inherit; font-size: 13px; font-weight: 700;
+    min-height: 36px; min-width: 58px; padding: 0 12px; border-radius: 9px; cursor: pointer;
+  }
+  .fs-seg button.on { background: var(--primary); color: #fff; }
+  .fs-pace { flex: 1; min-width: 0; font-size: 12px; font-weight: 600; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+  .fs-sess-ctl .fs-clear { min-height: 36px; padding: 0 4px; }
+  .fs-ctls { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 2px 14px 8px; margin: 0 0 10px; }
+  .fs-ctls-short .ctl { flex-wrap: nowrap; }
+  .fs-ctls-short .ctl-label { flex: 1; min-width: 0; }
+  .fs-ctls-short .toggle-btn { flex-shrink: 0; }
+  .fs-board .prep { background: var(--card); border-color: var(--border); margin: 0 0 4px; }
+  .fs-board .block-note { margin: -4px 4px 8px; font-size: 12px; }
+  .fs-board .block-off { margin: 10px 0; }
+  .fs-board .hs-row.hs-now { scroll-margin-top: 84px; }
+  .fs-board .hs-row-sum .hs-sum-r { flex-shrink: 1; min-width: 0; max-width: 46%; overflow: hidden; text-overflow: ellipsis; }
+  .fs-sum-timer { font-size: 13px; font-weight: 800; color: var(--primary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .fs-sum-timer.paused { color: var(--warning); }
+  .fs-board .hs-row.hs-now .ex-prescription { font-size: 13px; margin-top: 2px; }
+  .fs-board .hs-row.hs-now .ex-prescription strong { font-weight: 600; color: var(--text-body); }
+  .fs-rx-sub { color: var(--muted); }
+  .fs-board .hs-row.hs-now .ex-cue { font-size: 12.5px; }
+  .fs-track { display: flex; align-items: center; gap: 6px; margin: 8px 0 2px; font-size: 12px; font-weight: 700; color: var(--primary); }
+  .fs-track span { flex: 1; min-width: 0; }
+  .fs-track .btn { min-height: 36px; font-size: 12px; }
+  .fs-board .hs-tools .btn { padding: 7px 8px; }
+  .fs-board .hs-tools .btn svg { width: 17px; height: 17px; flex-shrink: 0; }
+  .fs-board .hs-tools .btn-timer { min-width: 64px; }
+  .fs-board .hs-tools .btn.fs-check { margin-left: auto; padding: 7px 14px; background: var(--primary); border-color: var(--primary); color: #fff; }
+  .fs-board .hs-tools .btn.fs-check.on { background: var(--primary-soft); border-color: var(--primary-line); color: var(--primary); }
+
   @media (max-width: 420px) {
     .hero-stats { gap: 6px; }
     .stat { padding: 6px 4px; }
@@ -1240,92 +1280,183 @@ function renderPhase() {
 }
 
 /* ===========================================================================
-   DAY RENDER
+   DAY RENDER: the in-session board (Phase 2 step 5, 2026-09-25). The classes
+   are the contract in ../shared/styles.css, "In-session layout". Every row
+   after the warm-up, the finisher included, is one .hs-row in exactly one
+   state FOR THE ACTIVE LIFTER:
+     done  its check is on (the finisher: a result is logged; on Monday Son
+           judges, so Ryan's result closes Son's finisher)
+     now   the row tapped last, else the first row not done. Full card, grid open.
+     next  everything else. One-line summary; a tap makes it Now.
+   The tapped row lives in memory only, never in state. It clears when that
+   row is completed, when the lifter changes, or when the day is cleared.
+   Rendering only: checks, logs, saves, promotions and sync are unchanged.
    =========================================================================== */
+const DAY_NAME = { mon: "Monday", wed: "Wednesday" };
+const FIN_KEY = "fin";
+const nowPick = {};          // dayKey -> row key tapped to be Now (for pickLifter)
+let pickLifter = null;       // the lifter those picks belong to; a change clears them all
+const prepOpen = {};         // dayKey -> { open, auto }: warm-up opened or closed by hand, while auto still reads the same
+let scrollToNow = false;     // set by a tap that moves Now; the next renderDay brings it into view
+const ICON = {
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8"/></svg>`,
+  clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M9.5 2.5h5"/></svg>`,
+  video: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="6" width="12" height="12" rx="2.5"/><path d="M15.5 10.5l5-3v9l-5-3z"/></svg>`,
+  note: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h9l4 4v13H6z"/><path d="M9 12h7"/><path d="M9 16h5"/></svg>`
+};
+
+function finDone(w, d, lifter) {
+  const ds = dayState(w, d, false);
+  if (!ds) return false;
+  const logged = l => { const f = ds.per[l] && ds.per[l].fin; return !!(f && f.result != null && f.result !== ""); };
+  return d === "mon" && lifter === "son" ? logged("ryan") : logged(lifter);
+}
+/* The board for the active lifter: every row in order with its state, n (1-based) and the counts. */
+function boardOf(w, d) {
+  const l = L(), dk = dayKey(w, d);
+  if (pickLifter !== l) { Object.keys(nowPick).forEach(k => delete nowPick[k]); pickLifter = l; }
+  const ds = dayState(w, d, false);
+  const ps = ds ? ds.per[l] : null;
+  const rows = mainRows(w, d).map(r => Object.assign({}, r, { done: !!(ps && ps.completed[r.key]) }));
+  if (!(ds && ds.short)) rows.push({ key: FIN_KEY, fin: true, done: finDone(w, d, l) });
+  if (nowPick[dk] && !rows.some(r => r.key === nowPick[dk])) delete nowPick[dk];
+  const first = rows.find(r => !r.done);
+  const nowKey = nowPick[dk] || (first ? first.key : null);
+  const done = rows.filter(r => r.done).length;
+  rows.forEach((r, i) => { r.n = i + 1; r.st = r.key === nowKey ? "now" : r.done ? "done" : "next"; });
+  return { rows, done, total: rows.length, complete: rows.length > 0 && done === rows.length };
+}
+function pickNow(w, d, key) { nowPick[dayKey(w, d)] = key; pickLifter = L(); scrollToNow = true; renderDay(d); }
+function dropPick(w, d, key) { const dk = dayKey(w, d); if (nowPick[dk] === key) delete nowPick[dk]; }
+/* Scheme lines. A track row's rx reads "3 sets · 3 × 3-5 · ..."; the summary drops the "3 sets". */
+function schemeOf(row, p) { return row.kind === "track" ? String(p.rx).replace(/^\d+ sets · /, "") : p.rx; }
+function shortRx(row, p) { return schemeOf(row, p).split(" · ")[0]; }
+function sumHtml(st, name, sub, right, timer) {
+  return `<button type="button" class="hs-row-sum">
+      <span class="hs-mark">${st === "done" ? ICON.check : ""}</span>
+      <span class="hs-sum-t"><b>${name}</b>${sub ? `<small>${sub}</small>` : ""}</span>
+      ${timer ? `<span class="fs-sum-timer" data-default=""></span>` : ""}
+      ${right ? `<span class="hs-sum-r">${right}</span>` : ""}
+    </button>`;
+}
+
 function renderDay(d) {
   const w = uiWeek;
   const day = PROGRAM.weeks[w][d];
   const container = document.getElementById("container-" + d);
   container.innerHTML = "";
+  container.className = "fs-board";
   if (!day) {
     container.innerHTML = `<div class="card"><h2>No Monday in Week 0</h2><p>Day 1 is Wednesday September 23. The first full Monday upper session is September 28, Week 1.</p></div>`;
     return;
   }
   const ds = dayState(w, d, false);
-  const ps = perState(w, d, false);
-  const rows = mainRows(w, d);
-  const done = rows.filter(x => ps && ps.completed[x.key]).length;
   const plan = dayPlan(w, d);
-  const clockKey = dayKey(w, d);
+  const dk = dayKey(w, d);
+  const bd = boardOf(w, d);
+  const byKey = {};
+  bd.rows.forEach(r => { byKey[r.key] = r; });
+  const who = LIFTER_LABEL[L()];
 
-  const toolbar = document.createElement("div");
-  toolbar.className = "day-toolbar";
-  toolbar.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px">
-      <button class="btn btn-timer" id="clock-${d}" data-clockkey="${clockKey}">▶ Session clock</button>
-      <span id="clockstat-${d}"></span>
+  /* Session header: eyebrow, title, clock, and progress for the active lifter. */
+  const head = document.createElement("header");
+  head.className = "hs-sess-head";
+  const pct = bd.total ? Math.round(100 * bd.done / bd.total) : 0;
+  head.innerHTML = `
+    <div class="hs-sess-eyebrow">Father &amp; Son · Week ${w} · ${DAY_NAME[d]}</div>
+    <div class="hs-sess-top">
+      <h2 class="hs-sess-title">${day.title}</h2>
+      <button type="button" class="hs-sess-clock">${ICON.clock}<span class="fs-clock-t">Start</span></button>
     </div>
-    <button class="btn btn-danger" data-action="clear">Clear ${LIFTER_LABEL[L()]}'s day</button>`;
-  toolbar.querySelector("[data-action=clear]").onclick = () => {
+    <div class="hs-sess-progress${bd.complete ? " fs-complete" : ""}">
+      <div class="hs-bar"><i style="width:${pct}%"></i></div>
+      <span>${bd.complete ? `Day complete · ${who} · ${bd.done} of ${bd.total}` : `${bd.done} of ${bd.total} done · ${who} · planned ${fmtMins(plan.total)}`}</span>
+    </div>`;
+  container.appendChild(head);
+
+  /* Compact row under the header: who is lifting, pace against the plan, clear this lifter's day. */
+  const ctl = document.createElement("div");
+  ctl.className = "fs-sess-ctl";
+  ctl.innerHTML = `
+    <div class="fs-seg" role="group" aria-label="Who is lifting">${LIFTERS.map(l => `<button type="button" class="${l === L() ? "on" : ""}" data-lifter="${l}" aria-pressed="${l === L()}">${LIFTER_LABEL[l]}</button>`).join("")}</div>
+    <span class="fs-pace"></span>
+    <button type="button" class="reset-link fs-clear">Clear ${who}'s day</button>`;
+  ctl.querySelectorAll("[data-lifter]").forEach(b => b.onclick = () => {
+    if (b.dataset.lifter === L()) return;
+    state.lifter = b.dataset.lifter; saveState(); render();   // same week: they train together
+  });
+  ctl.querySelector(".fs-clear").onclick = () => {
     if (!ds) return;
-    if (confirm(`Clear Week ${w} ${PROGRAM.dayLabels[d]} for ${LIFTER_LABEL[L()]}? Checks, logs and the finisher result go. The other lifter's day stays.`)) {
+    if (confirm(`Clear Week ${w} ${PROGRAM.dayLabels[d]} for ${who}? Checks, logs and the finisher result go. The other lifter's day stays.`)) {
       ds.per[L()] = emptyPer();
+      delete nowPick[dk];
       saveState(); render();
     }
   };
-  container.appendChild(toolbar);
-  wireClock(d, w, plan);
-
-  const el = document.createElement("div");
-  el.className = "day";
-  el.innerHTML = `
-    <div class="day-header">
-      <div class="day-title">
-        <div class="day-name">Week ${w} · ${PROGRAM.dayLabels[d]} · ${day.title}</div>
-        <div class="day-focus">${LIFTER_LABEL[L()]} · planned ${fmtMins(plan.total)} · listed ${day.duration}${ds && ds.date ? ` · trained ${shortDate(ds.date)}` : ""}</div>
-      </div>
-      <div class="day-meta"><span class="day-chip ${done === rows.length && rows.length ? "complete" : ""}">${done} / ${rows.length}</span></div>
-    </div>
-    <div class="day-body"></div>`;
-  const body = el.querySelector(".day-body");
+  container.appendChild(ctl);
+  wireClock(d, w, plan, head.querySelector(".hs-sess-clock"), ctl.querySelector(".fs-pace"));
 
   // Readiness (Wednesday) or short-Monday toggle
-  if (d === "wed" && w > 0) body.appendChild(renderReadiness(w, d));
-  if (d === "mon") body.appendChild(renderShortToggle(w, d));
+  if ((d === "wed" && w > 0) || d === "mon") {
+    const box = document.createElement("div");
+    box.className = "fs-ctls" + (d === "mon" ? " fs-ctls-short" : "");
+    box.appendChild(d === "mon" ? renderShortToggle(w, d) : renderReadiness(w, d));
+    container.appendChild(box);
+  }
 
-  if (day.warmup) body.appendChild(renderPrep(w, d, "Warm-up", "wu", day.warmup));
+  if (day.warmup) container.appendChild(renderPrep(w, d, "Warm-up", "wu", day.warmup, bd.done > 0));
 
+  const on = new Set(activeBlocks(w, d).map(x => x.bi));
   const low = ds && ds.readiness != null && ds.readiness <= 2;
-  const short = ds && ds.short;
+  let upNext = false;
+  const label = text => {
+    const el = document.createElement("div");
+    el.className = "hs-section-label";
+    el.textContent = text;
+    container.appendChild(el);
+  };
+  const offNote = text => {
+    const off = document.createElement("div");
+    off.className = "block-off";
+    off.textContent = text;
+    container.appendChild(off);
+  };
   day.blocks.forEach((b, bi) => {
-    const on = activeBlocks(w, d).some(x => x.bi === bi);
-    if (!on) {
-      const off = document.createElement("div");
-      off.className = "block-off";
-      off.textContent = b.plyo && low ? `${b.label} is off today: readiness ${ds.readiness}. Run one fewer set on the strength pairs too.` : `${b.label} skipped: short Monday.`;
-      body.appendChild(off);
+    if (!on.has(bi)) {
+      offNote(b.plyo && low ? `${b.label} is off today: readiness ${ds.readiness}. Run one fewer set on the strength pairs too.` : `${b.label} skipped: short Monday.`);
       return;
     }
-    if (b.label) {
-      const lab = document.createElement("div");
-      lab.className = "block-label";
-      lab.textContent = b.label;
-      body.appendChild(lab);
-    }
-    if (b.note) {
+    const items = b.rows.map((row, ri) => byKey[`b${bi}r${ri}`]);
+    let text = b.label || "";
+    if (items[0].st === "next" && !upNext) { text = text ? `Up next · ${text}` : "Up next"; upNext = true; }
+    if (text) label(text);
+    if (b.note && items.some(r => !r.done)) {
       const note = document.createElement("div");
       note.className = "block-note";
       note.textContent = b.note;
-      body.appendChild(note);
+      container.appendChild(note);
     }
-    b.rows.forEach((row, ri) => body.appendChild(renderRow(w, d, row, `b${bi}r${ri}`, plan)));
+    items.forEach((r, i) => {
+      if (i > 0 && r.st === "next" && !upNext) { label("Up next"); upNext = true; }
+      container.appendChild(renderRow(w, d, r.row, r.key, plan, r, bd.total));
+    });
   });
 
-  if (!short) body.appendChild(renderFinisher(w, d, day));
-  else {
-    const off = document.createElement("div"); off.className = "block-off"; off.textContent = "Finisher skipped: short Monday."; body.appendChild(off);
+  if (!(ds && ds.short)) {
+    const r = byKey[FIN_KEY];
+    const text = `Finisher · ${w === 0 ? "Day 1, cooperative" : "Block " + blockOf(w)}`;
+    label(r.st === "next" && !upNext ? `Up next · ${text}` : text);
+    container.appendChild(renderFinisherRow(w, d, day, r, bd.total));
+  } else offNote("Finisher skipped: short Monday.");
+
+  if (scrollToNow && container.offsetParent) {
+    scrollToNow = false;
+    const nowEl = container.querySelector(".hs-row.hs-now");
+    if (nowEl) {
+      const top = nowEl.getBoundingClientRect().top;
+      if (top < 80 || top > window.innerHeight * 0.5) nowEl.scrollIntoView({ block: "start", behavior: "smooth" });
+    }
   }
-  container.appendChild(el);
 }
 
 function renderReadiness(w, d) {
@@ -1356,15 +1487,23 @@ function renderShortToggle(w, d) {
   el.querySelector("button").onclick = () => { const cur = dayState(w, d, true); cur.short = !cur.short; saveState(); render(); };
   return el;
 }
-function renderPrep(w, d, title, prefix, items) {
+/* The warm-up checklist. It folds itself away once every item is ticked or a main row is done
+   for the active lifter; a tap on its head overrides that until the automatic answer changes. */
+function renderPrep(w, d, title, prefix, items, started) {
   const ds = dayState(w, d, false);
+  const dk = dayKey(w, d);
   const doneCount = items.filter((_, i) => ds && ds.prep[prefix + i]).length;
+  const auto = (doneCount === items.length && doneCount > 0) || !!started;
+  const hand = prepOpen[dk] && prepOpen[dk].auto === auto ? prepOpen[dk] : null;
   const el = document.createElement("div");
-  el.className = "prep" + (doneCount === items.length && doneCount > 0 ? " collapsed" : "");
+  el.className = "prep" + ((hand ? !hand.open : auto) ? " collapsed" : "");
   el.innerHTML = `
     <div class="prep-head"><span>${title} · ${doneCount}/${items.length}</span><span class="caret">▼</span></div>
     <div class="prep-body"></div>`;
-  el.querySelector(".prep-head").onclick = () => el.classList.toggle("collapsed");
+  el.querySelector(".prep-head").onclick = () => {
+    el.classList.toggle("collapsed");
+    prepOpen[dk] = { open: !el.classList.contains("collapsed"), auto };
+  };
   const bodyEl = el.querySelector(".prep-body");
   items.forEach((it, i) => {
     const k = prefix + i;
@@ -1383,7 +1522,9 @@ function tagLabel(t) {
 }
 function escapeHtml(s) { return String(s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
 
-function renderRow(w, d, row, key, plan) {
+/* One main row. r carries st ("done" | "now" | "next") and n from boardOf. */
+function renderRow(w, d, row, key, plan, r, total) {
+  const st = r.st;
   const ps = perState(w, d, false);
   const rawLog = ps && ps.logs[key];
   const p = resolve(row, null, rawLog && rawLog.step != null ? rawLog.step : undefined);
@@ -1392,6 +1533,17 @@ function renderRow(w, d, row, key, plan) {
   const spec = specOf(row, p);
   const log = SL.normLog(ps && ps.logs[key], canLog ? p.sets : 0);
   const hasLog = SL.hasSets(log);
+  const tKey = `${dayKey(w, d)}_${L()}_${key}`;
+
+  const el = document.createElement("div");
+  el.className = `hs-row hs-${st}`;
+  el.dataset.key = key;
+  const right = st === "done" ? (canLog && hasLog ? SL.lastText(SL.entry(log, spec), spec) : shortRx(row, p)) : "";
+  const liveTimer = st !== "now" && !!activeTimers[tKey];   // a rest still running after the row folded
+  el.innerHTML = sumHtml(st, p.name, st === "next" ? schemeOf(row, p) : "", right, liveTimer);
+  el.querySelector(".hs-row-sum").onclick = () => pickNow(w, d, key);
+  if (liveTimer) reattachTimer(tKey, el.querySelector(".fs-sum-timer"));
+  if (st !== "now") return el;
 
   let lastHtml = "";
   let sugg = null;
@@ -1407,44 +1559,48 @@ function renderRow(w, d, row, key, plan) {
   const detailHtml = row.detail ? `<div class="ex-detail">${row.detail.map(m => `<span class="dt-line">• ${m}</span>`).join("")}</div>` : "";
   const cueHtml = row.cue ? `<div class="ex-cue">${row.cue}</div>` : (row.kind === "track" ? `<div class="ex-cue"><strong>Promote when:</strong> ${p.promote}</div>` : "");
   const startAt = plan.offsets[key] != null ? Math.round(plan.offsets[key] / 60) : null;
-  const paceHtml = startAt !== null ? `<span style="color:var(--muted);font-weight:400"> · start ~${startAt} min in</span>` : "";
+  const subHtml = (canLog ? ` · rest ${fmtClock(row.rest)}` : "") + (startAt !== null ? ` · start ~${startAt} min in` : "");
 
   let timerLabel, timerMode;
   if (row.timer) { timerLabel = row.timer.label || "⏱"; timerMode = "special"; }
   else { timerLabel = row.rest >= 120 ? `⏱ ${Math.round(row.rest / 60)}m` : `⏱ ${row.rest}s`; timerMode = "rest"; }
 
-  const gridHtml = canLog ? SL.gridHtml(log, spec, sugg) : "";
+  let trackHtml = "";
+  if (row.kind === "track") {
+    const steps = TRACKS[row.trackKind][L()];
+    const ti = Math.min(state.tracks[L()][row.trackKind], steps.length - 1);
+    const top = ti === steps.length - 1;
+    trackHtml = `<div class="fs-track"><span>${TRACKS[row.trackKind].label} ${row.trackKind === "pullup" ? "step" : "level"} ${ti + 1} of ${steps.length}${top ? " · top" : ""}</span>
+      <button type="button" class="btn" data-dir="-1" ${ti === 0 ? "disabled" : ""}>▼ Back</button>
+      <button type="button" class="btn" data-dir="1" ${top ? "disabled" : ""}>▲ Promote</button></div>`;
+  }
 
-  const el = document.createElement("div");
-  el.className = "exercise";
-  el.innerHTML = `
-    <div class="ex-row">
-      <div class="ex-check ${isDone ? "done" : ""}">
-        <svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8 7 12 13 4"/></svg>
-      </div>
-      <div class="ex-info">
-        <div><span class="ex-tag ${row.tag}">${tagLabel(row.tag)}</span><span class="ex-name">${p.name}</span></div>
-        <div class="ex-prescription"><strong>${p.rx}</strong>${paceHtml}</div>
-        ${detailHtml}
-        ${cueHtml}
-        ${lastHtml}
-        ${suggHtml}
-        <div class="ex-actions">
-          <a class="btn" href="${v(p.name)}" target="_blank" rel="noopener">▶ Video</a>
-          <button class="btn log-toggle">${canLog ? "✎ Log sets" : "✎ Note"}</button>
-          <button class="btn btn-timer row-timer" data-default="${timerLabel}">${timerLabel}</button>
-        </div>
-        <div class="ex-log">
-          ${gridHtml}
-          <textarea class="log-notes" placeholder="${canLog ? "Notes: form, tempo, how it felt..." : "Notes..."}">${escapeHtml(log.notes)}</textarea>
-        </div>
-      </div>
+  const full = document.createElement("div");
+  full.className = "hs-row-full";
+  full.innerHTML = `
+    <div class="hs-now-eyebrow">Now · ${r.n} of ${total}</div>
+    <div class="ex-name">${p.name}</div>
+    <div class="ex-prescription"><strong>${p.rx}</strong><span class="fs-rx-sub">${subHtml}</span></div>
+    ${detailHtml}
+    ${cueHtml}
+    ${lastHtml || suggHtml ? `<div class="hs-lastbox">${lastHtml}${suggHtml}</div>` : ""}
+    ${trackHtml}
+    ${canLog ? `<div class="ex-log open fs-grid">${SL.gridHtml(log, spec, sugg)}</div>` : ""}
+    <div class="ex-log fs-notes${log.notes ? " open" : ""}">
+      <textarea class="log-notes" placeholder="${canLog ? "Notes: form, tempo, how it felt..." : "Notes..."}">${escapeHtml(log.notes)}</textarea>
+    </div>
+    <div class="hs-tools">
+      <a class="btn" href="${v(p.name)}" target="_blank" rel="noopener">${ICON.video}Video</a>
+      <button type="button" class="btn fs-note-btn">${ICON.note}Note</button>
+      <button type="button" class="btn btn-timer row-timer" data-default="${timerLabel}">${timerLabel}</button>
+      <button type="button" class="btn fs-check${isDone ? " on" : ""}" aria-pressed="${isDone}">${ICON.check}${isDone ? "Undo" : "Done"}</button>
     </div>`;
+  el.appendChild(full);
 
-  el.querySelector(".ex-check").onclick = () => {
+  full.querySelector(".fs-check").onclick = () => {
     const cur = dayState(w, d, true);
     cur.per[L()].completed[key] = !isDone;
-    if (!isDone) stampDate(cur);
+    if (!isDone) { stampDate(cur); dropPick(w, d, key); scrollToNow = true; }
     saveState(); renderDay(d); renderWeekBar();
   };
   function ensureLog() {
@@ -1456,8 +1612,11 @@ function renderRow(w, d, row, key, plan) {
     stampDate(cur);
     return pp.logs[key];
   }
-  el.querySelector(".log-toggle").onclick = () => el.querySelector(".ex-log").classList.toggle("open");
-  if (hasLog || log.notes) el.querySelector(".ex-log").classList.add("open");
+  full.querySelector(".fs-note-btn").onclick = () => {
+    const box = full.querySelector(".fs-notes");
+    box.classList.toggle("open");
+    if (box.classList.contains("open")) box.querySelector("textarea").focus();
+  };
 
   SL.wireGrid(el, {
     spec, sugg,
@@ -1469,16 +1628,56 @@ function renderRow(w, d, row, key, plan) {
       if (i + 1 < steps.length && confirm(`Promote ${LIFTER_LABEL[L()]} to ${steps[i + 1].name}?`)) { state.tracks[L()][kind] = i + 1; saveState(); render(); }
     }
   });
-  el.querySelector(".log-notes").addEventListener("input", e => { ensureLog().notes = e.target.value; saveState(); });
+  full.querySelector(".log-notes").addEventListener("input", e => { ensureLog().notes = e.target.value; saveState(); });
 
-  const tKey = `${dayKey(w, d)}_${L()}_${key}`;
-  const tBtn = el.querySelector(".row-timer");
+  /* Back / Promote on a track row: the same move as the hero card's buttons. */
+  full.querySelectorAll(".fs-track [data-dir]").forEach(b => b.onclick = () => {
+    const kind = row.trackKind, steps = TRACKS[kind][L()];
+    const i = Math.min(state.tracks[L()][kind], steps.length - 1);
+    const n = i + parseInt(b.dataset.dir, 10);
+    if (n < 0 || n >= steps.length) return;
+    if (b.dataset.dir === "1" && !confirm(`Promote ${LIFTER_LABEL[L()]} to ${kind === "pullup" ? "step" : "level"} ${n + 1}: ${steps[n].name}?`)) return;
+    state.tracks[L()][kind] = n; saveState(); render();
+  });
+
+  const tBtn = full.querySelector(".row-timer");
   reattachTimer(tKey, tBtn);
   tBtn.onclick = () => {
     if (activeTimers[tKey]) tapActiveTimer(tKey);
     else if (timerMode === "special") startSpecialTimer(tKey, tBtn, row.timer);
     else startCountdown(tKey, tBtn, row.rest, "rest");
   };
+  return el;
+}
+
+/* The finisher as the board's last row. Its full card holds the pick-and-log block below. */
+function renderFinisherRow(w, d, day, r, total) {
+  const st = r.st;
+  const ps = perState(w, d, false);
+  const fin = (ps && ps.fin) || { pick: null, result: null, notes: "" };
+  const judge = d === "mon" && L() === "son";
+  const menuN = w === 0 ? 1 : finMenu(w, d).length;
+  let right = "", sub = "";
+  if (st === "done") {
+    const f = judge ? perState(w, d, false, "ryan").fin : fin;
+    right = `${judge ? "judged · " : ""}${fmtWeight(parseFloat(f.result))} ${finUnit(f.pick)}`.trim();
+  } else if (st === "next") {
+    sub = fin.pick ? (judge ? "Ryan's result, Son judges" : "Log the result") : menuN > 1 ? `Pick one of ${menuN}` : "Cooperative";
+  }
+  const el = document.createElement("div");
+  el.className = `hs-row hs-${st}`;
+  el.dataset.key = FIN_KEY;
+  el.innerHTML = sumHtml(st, fin.pick || "Finisher", sub, right, false);
+  el.querySelector(".hs-row-sum").onclick = () => pickNow(w, d, FIN_KEY);
+  if (st !== "now") return el;
+  const full = document.createElement("div");
+  full.className = "hs-row-full";
+  full.innerHTML = `
+    <div class="hs-now-eyebrow">Now · ${r.n} of ${total}</div>
+    <div class="ex-name">Finisher</div>
+    <div class="ex-prescription"><span class="fs-rx-sub">${day.finNote}</span></div>`;
+  full.appendChild(renderFinisher(w, d, day, true));
+  el.appendChild(full);
   return el;
 }
 
@@ -1500,14 +1699,15 @@ function finUnit(name) {
   return "";
 }
 function lowerIsBetter(name) { return /time trial|shuttle/i.test(name); }
-function renderFinisher(w, d, day) {
+/* inBoard: drawn inside the board's finisher card, which already carries the label and the note. */
+function renderFinisher(w, d, day, inBoard) {
   const ds = dayState(w, d, false);
   const ps = perState(w, d, false);
   const fin = (ps && ps.fin) || { pick: null, result: null, notes: "" };
   const menu = w === 0 ? [{ name: "Plank high-fives", how: "Face to face in a plank, alternate hand slaps to 20.", hc: "Cooperative", unit: "slaps", coop: true }] : finMenu(w, d);
   const wrap = document.createElement("div");
   const judge = d === "mon" && L() === "son";
-  wrap.innerHTML = `<div class="block-label">Finisher · ${w === 0 ? "Day 1, cooperative" : "Block " + blockOf(w)}</div><div class="block-note">${day.finNote}</div>`;
+  if (!inBoard) wrap.innerHTML = `<div class="block-label">Finisher · ${w === 0 ? "Day 1, cooperative" : "Block " + blockOf(w)}</div><div class="block-note">${day.finNote}</div>`;
   const menuEl = document.createElement("div");
   menuEl.className = "fin-menu";
   menu.forEach(f => {
@@ -1542,6 +1742,7 @@ function renderFinisher(w, d, day) {
       res.querySelector("input").addEventListener("change", e => {
         const c = dayState(w, d, true);
         c.per[L()].fin.result = e.target.value === "" ? null : e.target.value;
+        if (c.per[L()].fin.result != null) dropPick(w, d, FIN_KEY);   // logged: the board moves on
         stampDate(c); saveState(); renderDay(d);
       });
     }
@@ -1733,24 +1934,29 @@ function render() {
    SESSION CLOCK
    =========================================================================== */
 const sessionClocks = {};
-function wireClock(d, w, plan) {
-  const btn = document.getElementById("clock-" + d);
-  const stat = document.getElementById("clockstat-" + d);
+/* btn is the header's .hs-sess-clock (tap: start, stop, reset, as before); stat is the pace line under it. */
+function wireClock(d, w, plan, btn, stat) {
   const key = dayKey(w, d);
+  const txt = btn.querySelector(".fs-clock-t");
   function paint() {
     const cur = dayState(w, d, false);
-    if (!cur || !cur.clockStart) { btn.textContent = "▶ Session clock"; btn.classList.remove("running"); stat.textContent = ""; return; }
+    if (!cur || !cur.clockStart) {
+      txt.textContent = "Start"; btn.classList.remove("running", "fs-stopped");
+      btn.setAttribute("aria-label", "Start the session clock"); stat.textContent = ""; return;
+    }
     const elapsed = Math.round(((cur.clockStop || Date.now()) - cur.clockStart) / 1000);
-    btn.textContent = (cur.clockStop ? "■ " : "") + fmtClock(elapsed);
+    txt.textContent = fmtClock(elapsed);
     btn.classList.toggle("running", !cur.clockStop);
+    btn.classList.toggle("fs-stopped", !!cur.clockStop);
+    btn.setAttribute("aria-label", cur.clockStop ? `Session clock stopped at ${fmtClock(elapsed)}. Tap to reset.` : `Session clock ${fmtClock(elapsed)}. Tap to stop.`);
     const rows = mainRows(w, d);
     const ps = cur.per[L()];
     const next = rows.find(x => !ps.completed[x.key]);
-    let msg = `target ${fmtMins(plan.total)}`;
+    let msg = cur.clockStop ? "clock stopped" : `target ${fmtMins(plan.total)}`;
     if (next && rows.indexOf(next) > 0) {
       const planned = plan.offsets[next.key] != null ? plan.offsets[next.key] : plan.total;
       const delta = Math.round((planned - elapsed) / 60);
-      msg = (delta >= 1 ? `${delta} min ahead` : delta <= -1 ? `${-delta} min behind` : "on pace") + ` · target ${fmtMins(plan.total)}`;
+      msg = (delta >= 1 ? `${delta} min ahead` : delta <= -1 ? `${-delta} min behind` : "on pace") + (cur.clockStop ? " · clock stopped" : ` · target ${fmtMins(plan.total)}`);
     } else if (!next && rows.length) msg = `done in ${fmtClock(elapsed)}`;
     stat.textContent = msg;
   }

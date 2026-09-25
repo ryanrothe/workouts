@@ -505,3 +505,62 @@ body[data-program] .prep-check { border-color: #cfc9bc; border-radius: 6px; }
 body[data-program] .prep-item.done .prep-check { background: var(--primary); border-color: var(--primary); }
 body[data-program] .set-num { border-radius: 10px; }
 body[data-program] .superset-group { border-radius: var(--radius-lg); box-shadow: none; }
+
+/* ============================================================================
+   In-session layout (Phase 2 step 5, 2026-09-25). TFM 1.0 / 2.0 and Father & Son
+   opt in by rendering these classes; other programs are untouched.
+   Contract:
+     .hs-sess-head        session header: .hs-sess-eyebrow, .hs-sess-title, .hs-sess-clock, .hs-sess-progress
+     .hs-row              every main exercise row, plus exactly one of .hs-done / .hs-now / .hs-next
+     .hs-row-sum          the one-line summary (shown when done or next)
+     .hs-row-full         the full row (shown when now)
+     .hs-now-eyebrow      "Now · 2 of 7" inside the now row
+     .hs-lastbox          tinted box around the Last line and the coach chip
+     .hs-tools            the row's bottom tool bar (video, note, timer, log)
+     .hs-section-label    "Up next" / block labels between rows
+   ============================================================================ */
+.hs-sess-head { display: flex; flex-direction: column; gap: 6px; padding: 4px 2px 10px; }
+.hs-sess-eyebrow { font-size: 11px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: var(--primary); }
+.hs-sess-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.hs-sess-title { margin: 0; font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 34px; line-height: 1; color: var(--text); }
+.hs-sess-clock { display: inline-flex; align-items: center; gap: 6px; font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 22px; color: var(--text); background: none; border: 0; padding: 0; min-height: 44px; cursor: pointer; }
+.hs-sess-clock svg { width: 18px; height: 18px; color: var(--muted); }
+.hs-sess-progress { display: flex; align-items: center; gap: 10px; }
+.hs-sess-progress .hs-bar { flex: 1; height: 5px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.hs-sess-progress .hs-bar > i { display: block; height: 100%; background: var(--primary); border-radius: 3px; }
+.hs-sess-progress span { font-size: 12px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+
+.hs-row { list-style: none; }
+.hs-row.hs-done, .hs-row.hs-next {
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+  padding: 0; margin: 0 0 8px; box-shadow: none;
+}
+.hs-row.hs-done .hs-row-full, .hs-row.hs-next .hs-row-full { display: none; }
+.hs-row.hs-now .hs-row-sum { display: none; }
+.hs-row-sum {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 10px 14px;
+  border: 0; background: transparent; text-align: left; cursor: pointer; font: inherit; color: inherit;
+}
+.hs-row-sum .hs-mark { width: 28px; height: 28px; flex-shrink: 0; border-radius: 14px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
+.hs-done .hs-row-sum .hs-mark { background: var(--primary); color: #fff; }
+.hs-next .hs-row-sum .hs-mark { border: 1.5px solid #cfc9bc; }
+.hs-row-sum .hs-mark svg { width: 15px; height: 15px; }
+.hs-row-sum .hs-sum-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.hs-row-sum .hs-sum-t b { font-size: 15px; font-weight: 600; line-height: 1.3; }
+.hs-done .hs-row-sum .hs-sum-t b { color: var(--muted); }
+.hs-row-sum .hs-sum-t small { font-size: 12px; color: var(--muted); }
+.hs-row-sum .hs-sum-r { font-size: 13px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.hs-row.hs-now {
+  background: var(--card); border: 2px solid var(--primary); border-radius: 20px;
+  padding: 14px 14px 8px; margin: 0 0 10px; box-shadow: none;
+}
+.hs-now-eyebrow { font-size: 11px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: var(--primary); margin-bottom: 2px; }
+.hs-row.hs-now .ex-name { font-size: 20px; font-weight: 700; line-height: 1.25; }
+.hs-lastbox { background: var(--primary-soft); border-radius: 12px; padding: 10px 12px; margin: 10px 0 6px; display: flex; flex-direction: column; gap: 4px; }
+.hs-lastbox .ex-last { margin-top: 0; font-size: 13px; color: var(--text-body); }
+.hs-lastbox .ex-suggest { margin-top: 2px; background: transparent; border-color: transparent; padding: 0; font-size: 13px; font-weight: 800; color: var(--primary); }
+.hs-tools { display: flex; flex-wrap: wrap; gap: 6px; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 10px; }
+.hs-tools .btn { background: transparent; border-color: transparent; color: var(--muted); font-size: 13.5px; min-height: 40px; }
+.hs-tools .btn.running { background: var(--primary); color: #fff; border-color: var(--primary); }
+.hs-section-label { font-size: 11px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin: 14px 4px 8px; }

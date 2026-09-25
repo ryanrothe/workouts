@@ -211,6 +211,31 @@
     font-family: inherit;
   }
 
+  /* In-session day pane. The hs-* classes are styled in ../shared/styles.css
+     ("In-session layout"); these rules only fill the gaps it leaves. */
+  .hs-sess-title.long { font-size: 27px; }
+  .hs-sess-clock .hs-clock-t { font-variant-numeric: tabular-nums; }
+  .hs-sess-clock:not(.running):not(.stopped) .hs-clock-t { color: var(--primary); font-size: 18px; }
+  .hs-sess-clock.stopped .hs-clock-t { color: var(--muted); }
+  .hs-sess-progress { flex-wrap: wrap; row-gap: 6px; }
+  .hs-sess-progress .hs-bar { flex: 1 1 90px; }
+  .hs-sess-progress span { white-space: normal; }
+  .hs-sess-ctl { display: flex; align-items: center; gap: 6px; margin: 0 2px 10px; }
+  .hs-sess-pace { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); }
+  .hs-mini { min-height: 32px; padding: 0 10px; font-size: 12px; }
+  .hs-mini.on { background: var(--warning-soft); color: var(--warning); border-color: #edd9a6; }
+  .hs-block-note { margin: -4px 4px 8px; }
+  .hs-row-sum .hs-sum-r { max-width: 50%; overflow: hidden; text-overflow: ellipsis; }
+  .hs-row-sum .row-timer { min-height: 34px; padding: 0 10px; }
+  .hs-row.hs-now .ex-prescription { margin-top: 2px; font-size: 13px; color: var(--muted); }
+  .hs-row.hs-now .hs-pace { color: var(--muted); }
+  .hs-row.hs-now .ex-log { margin-top: 12px; }
+  .hs-tools .btn { padding: 0 8px; gap: 5px; }
+  .hs-tools .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .hs-tools .btn-timer-x { color: var(--danger); }
+  .hs-tools .hs-done-btn { margin-left: auto; color: var(--primary); font-weight: 800; }
+  .hs-tools .hs-done-btn.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+
   @media (max-width: 420px) {
     .hero-stats { gap: 6px; }
     .stat { padding: 6px 4px; }
@@ -723,6 +748,7 @@ const PROGRAM = {
   slug: "tfm-1",
   storageKey: "tfm1_v1",
   appbarName: "The Functional Method 1.0",
+  shortName: "TFM 1.0",
   heroTitle: "The Functional Method 1.0",
   badge: "JTM Fit · John Madsen",
   sub: "8-week functional strength · full body, upper, complexes, legs · Sunday rest",
@@ -1053,8 +1079,53 @@ function renderWeekBar() {
 }
 
 /* ---------------------------------------------------------------------------
-   DAY RENDER
+   DAY RENDER: the in-session layout. The classes are the contract in the header
+   of ../shared/styles.css, "In-session layout (Phase 2 step 5)". Warm-up and
+   cool-down stay checklists; every main row is exactly one of:
+     done  its done check is on: one summary line
+     now   the row tapped on this day, else the first row not done: the full
+           row, set grid already open
+     next  everything else: one summary line
+   The tapped row lives in memory only (never saved) and is dropped when that
+   row is completed. With every row done there is no now row.
    --------------------------------------------------------------------------- */
+const tappedNow = {};   // dayKey → main-row idx the user tapped
+const prepOpen = {};    // `${dayKey}_${prefix}` → open, once the user toggles a checklist
+const DAY_FULL = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
+const ICON = {
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8"/></svg>`,
+  clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M9.5 2.5h5"/></svg>`,
+  video: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="6" width="12" height="12" rx="2.5"/><path d="M15.5 10.5l5-3v9l-5-3z"/></svg>`,
+  note: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h9l4 4v13H6z"/><path d="M9 12h7"/><path d="M9 16h5"/></svg>`
+};
+
+/* One-line scheme for a summary: the prescription up to its " — " aside;
+   accumulate holds read "2:00 accumulated". */
+function shortRx(row) {
+  if (row.timer && row.timer.kind === "accum") return `${fmtClock(row.timer.target)} accumulated`;
+  return String(row.rx || "").split(" — ")[0];
+}
+/* What was logged, compact: "3 × 8 @ 185 lb" when every set matches, else
+   SetLog's own "8, 8, 7 @ 185 lb". Null when nothing is logged. */
+function loggedRx(row, spec, log) {
+  if (!row.track || !SL.hasSets(log)) return null;
+  const sets = log.sets.filter(x => x.r != null || x.w != null);
+  const same = sets.length > 1 && sets.every(x => x.r === sets[0].r && x.w === sets[0].w);
+  if (same && sets[0].r != null) {
+    return `${sets.length} × ${sets[0].r}${spec.unit === "s" ? " s" : ""}${sets[0].w != null ? " @ " + fmtLoad(sets[0].w, spec.bw) : ""}`;
+  }
+  return SL.lastText(SL.entry(log, spec), spec);
+}
+
+/* Bring the now row into view after it moves (a tap, or a row completed). */
+function revealNow(d) {
+  const el = document.querySelector(`#container-${d} .hs-now`);
+  if (!el || !el.offsetParent) return;
+  const bar = document.querySelector(".appbar");
+  const top = el.getBoundingClientRect().top - (bar ? bar.getBoundingClientRect().bottom : 0) - 8;
+  if (top < 0 || top > window.innerHeight * 0.6) window.scrollBy({ top, behavior: "smooth" });
+}
+
 function renderDay(d) {
   const w = uiWeek;
   const day = PROGRAM.weeks[w][d];
@@ -1062,88 +1133,101 @@ function renderDay(d) {
   container.innerHTML = "";
   const ds = dayState(w, d, false);
   const rows = mainRows(w, d);
-  const done = rows.filter(x => ds && ds.completed["m" + x.idx]).length;
+  const k = dayKey(w, d);
+  const isDoneAt = i => !!(ds && ds.completed["m" + i]);
+  const done = rows.filter(x => isDoneAt(x.idx)).length;
+  const complete = rows.length > 0 && done === rows.length;
   const plan = dayPlan(w, d);
 
-  // Toolbar: session clock + clear-day
-  const clockKey = dayKey(w, d);
-  const toolbar = document.createElement("div");
-  toolbar.className = "day-toolbar";
-  toolbar.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px">
-      <button class="btn btn-timer" id="clock-${d}" data-clockkey="${clockKey}">▶ Session clock</button>
-      <span id="clockstat-${d}"></span>
+  // Now: the tapped row, else the first row not done (-1 once the day is done).
+  const nowIdx = tappedNow[k] != null && tappedNow[k] < rows.length ? tappedNow[k] : rows.findIndex(x => !isDoneAt(x.idx));
+  // "Up next" sits above the first next row after now (or the first next row, when none follow it).
+  const nextIdxs = rows.map(x => x.idx).filter(i => i !== nowIdx && !isDoneAt(i));
+  const afterNow = nextIdxs.find(i => i > nowIdx);
+  const upNextAt = afterNow != null ? afterNow : nextIdxs[0];
+
+  // Session header: eyebrow, title, clock, progress
+  const trained = ds && ds.date && ds.date !== todayISO() ? ` · trained ${shortDate(ds.date)}` : "";
+  const progress = complete
+    ? `Day complete · ${done} of ${rows.length}${trained}`
+    : `${done} of ${rows.length} done · planned ${fmtMins(plan.total)}${plan.sixty ? " · 60-min mode" : ` · listed ${day.duration}`}${trained}`;
+  const head = document.createElement("div");
+  head.className = "hs-sess-head";
+  head.innerHTML = `
+    <div class="hs-sess-eyebrow">${PROGRAM.shortName || PROGRAM.appbarName} · Week ${w + 1} · ${DAY_FULL[d] || PROGRAM.dayLabels[d]}${day.optional ? " · Optional" : ""}</div>
+    <div class="hs-sess-top">
+      <h2 class="hs-sess-title${day.title.length > 16 ? " long" : ""}">${day.title}</h2>
+      <button type="button" class="hs-sess-clock" id="clock-${d}" data-clockkey="${k}">${ICON.clock}<span class="hs-clock-t">Start</span></button>
     </div>
-    <button class="btn btn-danger" data-action="clear">Clear day</button>`;
-  toolbar.querySelector("[data-action=clear]").onclick = () => {
+    <div class="hs-sess-progress"><div class="hs-bar"><i style="width:${rows.length ? Math.round(100 * done / rows.length) : 0}%"></i></div><span>${progress}</span></div>`;
+  container.appendChild(head);
+
+  // Small row under the header: pace vs plan, 60-min mode, clear day
+  const ctl = document.createElement("div");
+  ctl.className = "hs-sess-ctl";
+  ctl.innerHTML = `
+    <span class="hs-sess-pace" id="clockstat-${d}"></span>
+    <button type="button" class="btn hs-mini${state.sixty ? " on" : ""}" data-action="sixty">60-min ${state.sixty ? "on" : "off"}</button>
+    <button type="button" class="btn hs-mini btn-danger" data-action="clear">Clear day</button>`;
+  ctl.querySelector("[data-action=sixty]").onclick = () => { const b = document.getElementById("sixty-btn"); if (b) b.click(); };
+  ctl.querySelector("[data-action=clear]").onclick = () => {
     if (!ds) return;
     if (confirm(`Clear Week ${w + 1} ${PROGRAM.dayLabels[d]}? Checks and logs for this day will be gone.`)) {
-      delete state.days[clockKey];
+      delete state.days[k];
+      delete tappedNow[k];
       saveState(); render();
     }
   };
-  container.appendChild(toolbar);
+  container.appendChild(ctl);
   wireClock(d, w, plan);
-
-  // Day card
-  const el = document.createElement("div");
-  el.className = "day";
-  const optHtml = day.optional ? `<span class="day-optional">Optional</span>` : "";
-  const est = fmtMins(plan.total);
-  const target = plan.sixty ? " · 60-min mode" : ` · listed ${day.duration}`;
-  el.innerHTML = `
-    <div class="day-header">
-      <div class="day-title">
-        <div class="day-name">Week ${w + 1} · ${PROGRAM.dayLabels[d]} · ${day.title}${optHtml}</div>
-        <div class="day-focus">Planned ${est}${target}${ds && ds.date ? ` · trained ${shortDate(ds.date)}` : ""}</div>
-      </div>
-      <div class="day-meta"><span class="day-chip ${done === rows.length && rows.length ? "complete" : ""}">${done} / ${rows.length}</span></div>
-    </div>
-    <div class="day-body"></div>`;
-  const body = el.querySelector(".day-body");
 
   if (plan.sixty && plan.adjustments.length) {
     const box = document.createElement("div");
     box.className = "block-note";
     box.innerHTML = `<strong style="color:var(--warning)">60-min plan:</strong> ` + plan.adjustments.join(" · ");
-    body.appendChild(box);
+    container.appendChild(box);
   }
 
-  if (day.warmup) body.appendChild(renderPrep(w, d, "Warm-up", "wu", day.warmup));
+  // Warm-up folds away once the main work has started.
+  if (day.warmup) container.appendChild(renderPrep(w, d, "Warm-up", "wu", day.warmup, done > 0));
 
   let flatIdx = 0;
-  day.blocks.forEach((b, bi) => {
-    if (b.label) {
-      const lab = document.createElement("div");
-      lab.className = "block-label";
-      lab.textContent = b.label;
-      body.appendChild(lab);
-    }
-    if (b.note) {
-      const note = document.createElement("div");
-      note.className = "block-note";
-      note.textContent = b.note;
-      body.appendChild(note);
-    }
-    b.rows.forEach(row => {
-      body.appendChild(renderRow(w, d, row, flatIdx, plan));
-      flatIdx++;
+  day.blocks.forEach(b => {
+    b.rows.forEach((row, ri) => {
+      const idx = flatIdx++;
+      const st = idx === nowIdx ? "now" : isDoneAt(idx) ? "done" : "next";
+      let label = ri === 0 && b.label ? b.label : "";
+      if (idx === upNextAt) label = label ? `Up next · ${label}` : "Up next";
+      if (label) {
+        const lab = document.createElement("div");
+        lab.className = "hs-section-label";
+        lab.textContent = label;
+        container.appendChild(lab);
+      }
+      if (ri === 0 && b.note) {
+        const note = document.createElement("div");
+        note.className = "block-note hs-block-note";
+        note.textContent = b.note;
+        container.appendChild(note);
+      }
+      container.appendChild(renderRow(w, d, row, idx, plan, st, rows.length));
     });
   });
 
-  if (day.cooldown) body.appendChild(renderPrep(w, d, plan.sixty ? "Cool-down — half holds" : "Cool-down", "cd", day.cooldown));
-  container.appendChild(el);
+  if (day.cooldown) container.appendChild(renderPrep(w, d, plan.sixty ? "Cool-down — half holds" : "Cool-down", "cd", day.cooldown, false));
 }
 
-function renderPrep(w, d, title, prefix, items) {
+function renderPrep(w, d, title, prefix, items, autoCollapse) {
   const ds = dayState(w, d, false);
   const doneCount = items.filter((_, i) => ds && ds.completed[prefix + i]).length;
+  const pk = `${dayKey(w, d)}_${prefix}`;
+  const collapsed = pk in prepOpen ? !prepOpen[pk] : (doneCount === items.length && doneCount > 0) || !!autoCollapse;
   const el = document.createElement("div");
-  el.className = "prep" + (doneCount === items.length && doneCount > 0 ? " collapsed" : "");
+  el.className = "prep" + (collapsed ? " collapsed" : "");
   el.innerHTML = `
     <div class="prep-head"><span>${title} · ${doneCount}/${items.length}</span><span class="caret">▼</span></div>
     <div class="prep-body"></div>`;
-  el.querySelector(".prep-head").onclick = () => el.classList.toggle("collapsed");
+  el.querySelector(".prep-head").onclick = () => { el.classList.toggle("collapsed"); prepOpen[pk] = !el.classList.contains("collapsed"); };
   const bodyEl = el.querySelector(".prep-body");
   items.forEach((it, i) => {
     const k = prefix + i;
@@ -1166,15 +1250,55 @@ function tagLabel(t) {
 }
 function escapeHtml(s) { return String(s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
 
-function renderRow(w, d, row, idx, plan) {
+/* st is "done" | "now" | "next"; total is the day's main-row count. */
+function renderRow(w, d, row, idx, plan, st, total) {
   const ds = dayState(w, d, false);
+  const k = dayKey(w, d);
   const ck = "m" + idx;
   const isDone = !!(ds && ds.completed[ck]);
-  const sixty = plan.sixty;
-  const rest = effRest(row.rest, sixty);
+  const rest = effRest(row.rest, plan.sixty);
   const trimmedSets = plan.trims[idx];
   const spec = specOf(row, plan, idx);
   const log = SL.normLog(ds && ds.logs[idx], row.track ? spec.sets : 0);
+  const trimHtml = trimmedSets != null ? ` · <span style="color:var(--warning);font-weight:700">60-min: ${trimmedSets} sets</span>` : "";
+
+  // Timer button
+  const tKey = `${k}_${idx}`;
+  let timerLabel, timerMode;
+  if (row.timer) { timerLabel = row.timer.label || "⏱"; timerMode = "special"; }
+  else { timerLabel = rest >= 120 ? `⏱ ${Math.round(rest / 60)}m` : `⏱ ${rest}s`; timerMode = "rest"; }
+  function tapTimer(btn) {
+    if (activeTimers[tKey]) tapActiveTimer(tKey);
+    else if (timerMode === "special") startSpecialTimer(tKey, btn, row.timer);
+    else startCountdown(tKey, btn, rest, "rest");
+  }
+
+  const el = document.createElement("div");
+  el.className = "hs-row hs-" + st;
+  el.dataset.idx = idx;
+
+  if (st !== "now") {
+    // A timer still running on a row that folded (ticked done mid-rest) stays on screen.
+    const live = !!activeTimers[tKey];
+    const right = live ? `<button type="button" class="btn btn-timer row-timer" data-default="${timerLabel}">${timerLabel}</button>`
+      : st === "done" ? escapeHtml(loggedRx(row, spec, log) || shortRx(row)) : "";
+    el.innerHTML = `
+      <div class="hs-row-sum" role="button" tabindex="0">
+        <span class="hs-mark">${st === "done" ? ICON.check : ""}</span>
+        <span class="hs-sum-t"><b>${row.name}</b>${st === "next" ? `<small>${escapeHtml(shortRx(row))}${trimHtml}</small>` : ""}</span>
+        ${right ? `<span class="hs-sum-r">${right}</span>` : ""}
+      </div>`;
+    const sum = el.querySelector(".hs-row-sum");
+    const pick = () => { tappedNow[k] = idx; renderDay(d); revealNow(d); };
+    sum.addEventListener("click", e => { if (!e.target.closest(".btn")) pick(); });
+    sum.addEventListener("keydown", e => { if (e.target === sum && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); pick(); } });
+    if (live) {
+      const tb = el.querySelector(".row-timer");
+      reattachTimer(tKey, tb);
+      tb.onclick = () => tapTimer(tb);
+    }
+    return el;
+  }
 
   // "Last:" reference across the whole program by exercise name, and the coach
   let lastHtml = "";
@@ -1191,49 +1315,37 @@ function renderRow(w, d, row, idx, plan) {
 
   const detailHtml = row.detail
     ? `<div class="ex-detail">${row.detail.map(m => `<span class="dt-line">• ${m}</span>`).join("")}</div>` : "";
-
-  let rx = row.rx;
-  if (trimmedSets != null) rx += ` · <span style="color:var(--warning);font-weight:700">60-min: ${trimmedSets} sets</span>`;
   const startAt = plan.offsets[idx] != null ? Math.round(plan.offsets[idx] / 60) : null;
-  const paceHtml = startAt !== null ? `<span style="color:var(--muted);font-weight:400"> · start ~${startAt} min in</span>` : "";
+  const paceHtml = startAt !== null ? `<span class="hs-pace"> · start ~${startAt} min in</span>` : "";
+  const restTxt = row.timer || /rest/i.test(row.rx) ? "" : ` · rest ${fmtClock(rest)}`;
+  const hasNotes = !!(log.notes && log.notes.trim());
 
-  // Timer button
-  let timerLabel, timerMode;
-  if (row.timer) { timerLabel = row.timer.label || "⏱"; timerMode = "special"; }
-  else { timerLabel = rest >= 120 ? `⏱ ${Math.round(rest / 60)}m` : `⏱ ${rest}s`; timerMode = "rest"; }
-
-
-  const el = document.createElement("div");
-  el.className = "exercise";
   el.innerHTML = `
-    <div class="ex-row">
-      <div class="ex-check ${isDone ? "done" : ""}">
-        <svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8 7 12 13 4"/></svg>
-      </div>
-      <div class="ex-info">
-        <div><span class="ex-tag ${row.tag}">${tagLabel(row.tag)}</span><span class="ex-name">${row.name}</span></div>
-        <div class="ex-prescription"><strong>${rx}</strong>${paceHtml}</div>
-        ${detailHtml}
-        ${lastHtml}
-        ${suggHtml}
-        <div class="ex-actions">
-          <a class="btn" href="${v(row.name)}" target="_blank" rel="noopener">▶ Video</a>
-          ${row.track ? `<button class="btn log-toggle">✎ Log sets</button>` : ""}
-          <button class="btn btn-timer row-timer" data-default="${timerLabel}">${timerLabel}</button>
-        </div>
-        ${row.track ? `
-        <div class="ex-log">
-          ${SL.gridHtml(log, spec, sugg)}
-          <textarea class="log-notes" placeholder="Notes: form, tempo, RPE, how it felt...">${escapeHtml(log.notes)}</textarea>
-        </div>` : ""}
+    <div class="hs-row-full">
+      <div class="hs-now-eyebrow">Now · ${idx + 1} of ${total}</div>
+      <div class="ex-name">${row.name}</div>
+      <div class="ex-prescription">${row.rx}${restTxt}${trimHtml}${paceHtml}</div>
+      ${detailHtml}
+      ${lastHtml || suggHtml ? `<div class="hs-lastbox">${lastHtml}${suggHtml}</div>` : ""}
+      ${row.track ? `
+      <div class="ex-log open">
+        ${SL.gridHtml(log, spec, sugg)}
+        <textarea class="log-notes" placeholder="Notes: form, tempo, RPE, how it felt..."${hasNotes ? "" : " hidden"}>${escapeHtml(log.notes)}</textarea>
+      </div>` : ""}
+      <div class="hs-tools">
+        <a class="btn" href="${v(row.name)}" target="_blank" rel="noopener">${ICON.video}Video</a>
+        ${row.track ? `<button type="button" class="btn hs-note-btn">${ICON.note}Note</button>` : ""}
+        <button type="button" class="btn btn-timer row-timer" data-default="${timerLabel}">${timerLabel}</button>
+        <button type="button" class="btn hs-done-btn${isDone ? " on" : ""}" aria-pressed="${isDone}">${ICON.check}Done</button>
       </div>
     </div>`;
 
-  el.querySelector(".ex-check").onclick = () => {
+  el.querySelector(".hs-done-btn").onclick = () => {
     const dstate = dayState(w, d, true);
     dstate.completed[ck] = !isDone;
-    if (!isDone) stampDate(dstate);
+    if (!isDone) { stampDate(dstate); if (tappedNow[k] === idx) delete tappedNow[k]; }
     saveState(); renderDay(d); renderWeekBar();
+    if (!isDone) revealNow(d);
   };
 
   function ensureLog() {
@@ -1244,25 +1356,20 @@ function renderRow(w, d, row, idx, plan) {
   }
 
   if (row.track) {
-    el.querySelector(".log-toggle").onclick = () => el.querySelector(".ex-log").classList.toggle("open");
-    if (SL.hasSets(log) || log.notes) el.querySelector(".ex-log").classList.add("open");
     SL.wireGrid(el, {
       spec, sugg,
       getLog: ensureLog,
       save: saveState,
       rerender: () => renderDay(d)
     });
-    el.querySelector(".log-notes").addEventListener("input", e => { ensureLog().notes = e.target.value; saveState(); });
+    const notes = el.querySelector(".log-notes");
+    notes.addEventListener("input", e => { ensureLog().notes = e.target.value; saveState(); });
+    el.querySelector(".hs-note-btn").onclick = () => { notes.hidden = !notes.hidden; if (!notes.hidden) notes.focus(); };
   }
 
-  const tKey = `${dayKey(w, d)}_${idx}`;
   const tBtn = el.querySelector(".row-timer");
   reattachTimer(tKey, tBtn);
-  tBtn.onclick = () => {
-    if (activeTimers[tKey]) tapActiveTimer(tKey);
-    else if (timerMode === "special") startSpecialTimer(tKey, tBtn, row.timer);
-    else startCountdown(tKey, tBtn, rest, "rest");
-  };
+  tBtn.onclick = () => tapTimer(tBtn);
   return el;
 }
 
@@ -1458,18 +1565,22 @@ function wireClock(d, w, plan) {
   const stat = document.getElementById("clockstat-" + d);
   const key = dayKey(w, d);
   const ds = dayState(w, d, false);
+  const txt = btn.querySelector(".hs-clock-t") || btn;   // the header clock keeps its icon
 
   function paint() {
     const cur = dayState(w, d, false);
     if (!cur || !cur.clockStart) {
-      btn.textContent = "▶ Session clock";
-      btn.classList.remove("running");
+      txt.textContent = "Start";
+      btn.classList.remove("running", "stopped");
+      btn.setAttribute("aria-label", "Start the session clock");
       stat.textContent = "";
       return;
     }
     const elapsed = Math.round(((cur.clockStop || Date.now()) - cur.clockStart) / 1000);
-    btn.textContent = (cur.clockStop ? "■ " : "") + fmtClock(elapsed);
+    txt.textContent = fmtClock(elapsed);
     btn.classList.toggle("running", !cur.clockStop);
+    btn.classList.toggle("stopped", !!cur.clockStop);
+    btn.setAttribute("aria-label", cur.clockStop ? `Session clock stopped at ${fmtClock(elapsed)}, tap to reset` : `Session clock ${fmtClock(elapsed)}, tap to stop`);
     // Pace vs plan: planned offset of the first unchecked main row
     const rows = mainRows(w, d);
     let nextIdx = rows.findIndex(x => !(cur.completed["m" + x.idx]));

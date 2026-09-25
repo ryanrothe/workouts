@@ -322,6 +322,33 @@ main { padding: 12px 14px 100px; max-width: 720px; margin: 0 auto; }
 .mg-core      { color: #6b7280; border-color: #e5e7eb; background: #f9fafb; }
 .mg-glutes    { color: #7c3aed; border-color: #ddd6fe; background: #f5f3ff; }
 .mg-default   { color: #7c3aed; border-color: #ddd6fe; background: #f5f3ff; }
+
+/* In-session day pane. The hs-* classes are styled in ../shared/styles.css
+   ("In-session layout"); these rules fit the page's own cards into them. */
+.hs-sess-title.long { font-size: 27px; }
+.hs-sess-clock .hs-clock-t { font-variant-numeric: tabular-nums; }
+.hs-sess-clock:not(.running):not(.stopped) .hs-clock-t { color: var(--primary); font-size: 18px; }
+.hs-sess-clock.stopped .hs-clock-t { color: var(--muted); }
+.hs-sess-progress { flex-wrap: wrap; row-gap: 6px; }
+.hs-sess-progress .hs-bar { flex: 1 1 90px; }
+.hs-sess-progress span { white-space: normal; }
+.hs-sess-ctl { display: flex; align-items: center; gap: 6px; margin: 0 2px 10px; }
+.hs-sess-pace { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); }
+.hs-mini { min-height: 32px; padding: 0 10px; font-size: 12px; }
+.hs-mini.on { background: var(--warning-soft); color: var(--warning); border-color: #edd9a6; }
+.hs-row-sum .hs-sum-r { max-width: 50%; overflow: hidden; text-overflow: ellipsis; }
+.hs-row .ex-group-badge { display: none; }   /* the section label above the row names the group */
+.hs-row.hs-now .ex-card { background: transparent; border: 0; border-radius: 0; box-shadow: none; padding: 0; margin: 0; opacity: 1; }
+.hs-row.hs-now .ex-head { margin-bottom: 2px; }
+.hs-row.hs-now .cond-text { border: 0; box-shadow: none; padding: 0; margin: 4px 0 12px; background: transparent; }
+.hs-row.hs-now .cond-notes { box-shadow: none; }
+.hs-row.hs-now .cond-notes-wrap { margin-bottom: 0; }
+.hs-tools .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+.hs-tools .btn, .hs-tools .vid-link { padding: 0 8px; gap: 5px; min-height: 40px; background: transparent; border-color: transparent; color: var(--muted); font-size: 13.5px; }
+.hs-tools .vid-link svg { width: 14px; height: 14px; }
+.hs-tools .timer-btn { margin-top: 0; height: 40px; }
+.hs-tools .timer-btn.running { background: var(--primary); border-color: var(--primary); color: #fff; }
+.hs-tools .timer-btn.done { background: var(--success-soft); border-color: var(--success-line); color: var(--success); }
 </style>
 </head>
 <body data-program="full-body-aesthetics">
@@ -554,18 +581,22 @@ let currentPlanFBA = null;
 
 const sessionClockIvs = {};
 function wireDayClock(clockKey, d, plan, btn, stat) {
+  const txt = btn.querySelector('.hs-clock-t') || btn;   // the session header's clock keeps its icon
   function paint() {
     const c = STATE.clocks[clockKey];
     const planTxt = `plan ~${Math.round(plan.total / 60)} min`;
     if (!c || !c.start) {
-      btn.textContent = '▶ Clock';
-      btn.classList.remove('running');
-      stat.textContent = planTxt;
+      txt.textContent = 'Start';
+      btn.classList.remove('running', 'stopped');
+      btn.setAttribute('aria-label', 'Start the session clock');
+      stat.textContent = '';   // the header already shows the plan
       return;
     }
     const elapsed = Math.round(((c.stop || Date.now()) - c.start) / 1000);
-    btn.textContent = (c.stop ? '■ ' : '') + fmtTime(elapsed);
+    txt.textContent = fmtTime(elapsed);
     btn.classList.toggle('running', !c.stop);
+    btn.classList.toggle('stopped', !!c.stop);
+    btn.setAttribute('aria-label', c.stop ? `Session clock stopped at ${fmtTime(elapsed)}, tap to reset` : `Session clock ${fmtTime(elapsed)}, tap to stop`);
     let msg = planTxt;
     if (!plan.cond && d.exercises) {
       const log = getLog(STATE.currentWeek, d.day);
@@ -600,177 +631,297 @@ function wireDayClock(clockKey, d, plan, btn, stat) {
   paint();
 }
 
+/* ── in-session layout (../shared/styles.css, "In-session layout") ──
+   A training day is a column of rows: done rows fold to one line, one Now row
+   shows the full card, the rest are "Up next" one-liners, each under its
+   muscle-group label. A written (prose) day is one row. Done is the page's own
+   rule: every set of an exercise checked; on a written day, the day marked
+   done. Now is the tapped row, else the first row not done; it lives in
+   memory only, never in STATE. Rest days keep their plain card. */
+const HS_ICON = {
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M9.5 2.5h5"/></svg>'
+};
+const hsTapped = {};    // logKey → { u, wasDone }: the tapped row, in memory only
+let hsLastNow = null;   // { key, u } from the previous render, to bring a Now that moved into view
+
+function fbaExDone(log, ex, idx) {
+  const exLog = (log.exercises || {})[idx] || {};
+  return ex.sets > 0 && Array.from({length: ex.sets}, (_, i) => !!exLog[`s${i}`]).every(Boolean);
+}
+/* The session title. Nearly every day's type is the generic "Metcon (No
+   Measure)", so the title comes from the day's label ("DAY 8 (CYCLE 2) -
+   FULL BODY") or its muscle groups: four or more read as "Full Body". */
+const FBA_GROUP_LINE = /^(legs|chest|back|shoulders|biceps?|triceps?|abs|core|calves|glutes)\s*:/i;
+function fbaGroupName(g) {
+  const s = String(g || '').trim().toLowerCase();
+  const n = s === 'bicep' ? 'biceps' : s === 'tricep' ? 'triceps' : s;
+  return n.charAt(0).toUpperCase() + n.slice(1);
+}
+function fbaTitle(d) {
+  if (d.type && !/^metcon\b/i.test(d.type)) return d.type;
+  const m = /-\s*([A-Za-z][A-Za-z ]*[A-Za-z])\s*$/.exec(d.dayLabel || '');
+  if (m) return m[1].toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase());
+  let groups = (d.exercises || []).map(ex => ex.group);
+  if (!groups.length) groups = String(d.notes || '').split('\n').map(l => (FBA_GROUP_LINE.exec(l.trim()) || [])[1]);
+  groups = [...new Set(groups.filter(Boolean).map(fbaGroupName))];
+  if (groups.length >= 4) return 'Full Body';
+  if (groups.length) return groups.join(' + ');
+  return d.type || 'Workout';
+}
+/* One-line scheme for an Up next row: the prescription's parenthetical ("3x10 on ea. leg"). */
+function fbaShortRx(ex) {
+  const p = String(ex.prescription || '').trim(), n = String(ex.name || '').trim();
+  const rest = p.startsWith(n) ? p.slice(n.length).trim().replace(/^\((.*?)\)/, '$1').trim() : '';
+  return rest ? fbaCut(rest, 64) : `${ex.sets} sets`;
+}
+/* What was logged: "3 sets @ 25 lb", else "3 sets · 20, 25, 25 lb". */
+function fbaLogged(log, ex, idx) {
+  const exLog = (log.exercises || {})[idx] || {};
+  const ws = Array.from({length: ex.sets}, (_, i) => parseFloat(exLog[`w${i}`])).filter(x => !isNaN(x));
+  const n = `${ex.sets} set${ex.sets === 1 ? '' : 's'}`;
+  if (!ws.length) return n;
+  return ws.every(x => x === ws[0]) ? `${n} @ ${ws[0]} lb` : `${n} · ${ws.join(', ')} lb`;
+}
+function hsReveal() {
+  const n = document.querySelector('#main .hs-now');
+  if (!n || !n.offsetParent) return;
+  const bar = document.querySelector('.fba-topbar');
+  const top = n.getBoundingClientRect().top - (bar ? bar.getBoundingClientRect().bottom : 0) - 8;
+  if (top < 0 || top > window.innerHeight * 0.6) window.scrollBy({ top, behavior: 'smooth' });
+}
+/* The row shell: summary + full, both always built; the shared CSS shows one.
+   st is "done" | "now" | "next". */
+function hsRowShell(w, d, ui, st, total, name, small, right) {
+  const row = el('div', {class: `hs-row hs-${st}`});
+  const sum = el('div', {class: 'hs-row-sum', role: 'button', tabindex: '0'},
+    el('span', {class: 'hs-mark', html: st === 'done' ? HS_ICON.check : ''}),
+    el('span', {class: 'hs-sum-t'}, el('b', {}, name), st === 'next' && small ? el('small', {}, small) : null),
+    st === 'done' && right ? el('span', {class: 'hs-sum-r'}, right) : null);
+  const pick = () => { hsTapped[logKey(w.id, d.day)] = { u: ui, wasDone: st === 'done' }; render(); hsReveal(); };
+  sum.addEventListener('click', pick);
+  sum.addEventListener('keydown', e => { if (e.target === sum && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); pick(); } });
+  const full = el('div', {class: 'hs-row-full'}, el('div', {class: 'hs-now-eyebrow'}, `Now · ${ui + 1} of ${total}`));
+  row.appendChild(sum);
+  row.appendChild(full);
+  return { row, full };
+}
+function videoLinks(d) {
+  return (d.links || []).map((url, li) => {
+    const a = el('a', {class:'vid-link', href:url, target:'_blank', rel:'noopener',
+      html:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21"/></svg>'});
+    a.appendChild(document.createTextNode(` Video ${d.links.length > 1 ? li+1 : ''}`));
+    return a;
+  });
+}
+
 function renderDayContent() {
   const w = currentWeek();
   const d = currentDay();
   const main = $('#main');
 
   const wrapper = el('div', {});
-
-  // Day header
   const log = getLog(w.id, d.day);
   const isDone = !!log.done;
-  const h2 = el('h2', {}, d.day);
-  if (isDone) h2.appendChild(el('span', {class:'done-badge', html:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8l4 4 6-8"/></svg>&nbsp;Done'}));
-  const header = el('div', {class:'day-header'}, h2);
-  if (d.dayLabel && !d.rest) {
-    header.appendChild(el('div', {class:'day-sublabel'}, d.dayLabel));
-  }
-  wrapper.appendChild(header);
-
   currentPlanFBA = dayPlanFBA(d);
-  if (!d.rest) {
-    const clockBtn = el('button', {class:'timer-btn', style:'margin:0'}, '▶ Clock');
-    const clockStat = el('span', {style:'font-size:12px;color:var(--muted)'}, '');
-    const sixtyBtn = el('button', {
-      class: 'timer-btn',
-      style: 'margin:0' + (STATE.sixty ? ';background:var(--warning-soft);color:var(--warning);border-color:#edd9a6' : ''),
-      onclick: () => { STATE.sixty = !STATE.sixty; saveState(); render(); }
-    }, STATE.sixty ? '⏱ 60-min: ON' : '⏱ 60-min: off');
-    wrapper.appendChild(el('div', {style:'display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px'},
-      clockBtn, clockStat, sixtyBtn));
-    wireDayClock(`${w.id}_${d.day}`, d, currentPlanFBA, clockBtn, clockStat);
-  }
 
   if (d.rest) {
+    wrapper.appendChild(el('div', {class:'day-header'}, el('h2', {}, d.day)));
     wrapper.appendChild(el('div', {class:'rest-card'},
       el('div', {class:'rest-icon'}, '💤'),
       el('h3', {}, 'Rest Day'),
       el('p', {}, 'Recover, hydrate, and get ready for tomorrow.')
     ));
-  } else if (!d.conditioning && d.exercises && d.exercises.length >= 2) {
-    renderStructured(w, d, wrapper, log);
-  } else {
-    renderConditioning(w, d, wrapper, log);
+    main.appendChild(wrapper);
+    return;
   }
 
-  main.appendChild(wrapper);
-}
+  const key = logKey(w.id, d.day);
+  const structured = !d.conditioning && d.exercises && d.exercises.length >= 2;
+  const rowDone = structured ? d.exercises.map((ex, idx) => fbaExDone(log, ex, idx)) : [isDone];
+  const doneN = rowDone.filter(Boolean).length;
+  const complete = rowDone.every(Boolean);
 
-/* ── structured day ────────────────────────────────────────── */
-function renderStructured(w, d, wrapper, log) {
+  // Now: the tapped row (until it finishes), else the first row not done; -1 once the day is done.
+  const tap = hsTapped[key];
+  if (tap && (tap.u >= rowDone.length || (!tap.wasDone && rowDone[tap.u]))) delete hsTapped[key];
+  const nowU = hsTapped[key] ? hsTapped[key].u : rowDone.indexOf(false);
+  // "Up next" sits above the first next row after Now (or the first next row, when none follow it).
+  const nextUs = rowDone.map((_, i) => i).filter(i => i !== nowU && !rowDone[i]);
+  const afterNow = nextUs.find(i => i > nowU);
+  const upNextAt = afterNow != null ? afterNow : nextUs[0];
+
+  // Session header: eyebrow, title, clock, progress
+  const title = fbaTitle(d);
+  const planMin = Math.round(currentPlanFBA.total / 60);
+  const progress = complete
+    ? `Day complete · ${doneN} of ${rowDone.length}`
+    : structured
+      ? `${isDone ? 'Marked done · ' : ''}${doneN} of ${rowDone.length} done · planned ~${planMin} min${STATE.sixty ? ' · 60-min mode' : ''}`
+      : `Written workout · planned ~${planMin} min`;
+  const clockBtn = el('button', {type:'button', class:'hs-sess-clock', html:`${HS_ICON.clock}<span class="hs-clock-t">Start</span>`});
+  wrapper.appendChild(el('div', {class:'hs-sess-head'},
+    el('div', {class:'hs-sess-eyebrow'}, `FBA · ${w.label} · ${d.day}`),
+    el('div', {class:'hs-sess-top'},
+      el('h2', {class:'hs-sess-title' + (title.length > 16 ? ' long' : '')}, title),
+      clockBtn),
+    el('div', {class:'hs-sess-progress'},
+      el('div', {class:'hs-bar'}, el('i', {style:`width:${Math.round(100 * doneN / rowDone.length)}%`})),
+      el('span', {}, progress))
+  ));
+
+  // Pace vs plan + 60-min mode toggle
+  const clockStat = el('span', {class:'hs-sess-pace'}, '');
+  const sixtyBtn = el('button', {
+    type: 'button', class: 'btn hs-mini' + (STATE.sixty ? ' on' : ''),
+    onclick: () => { STATE.sixty = !STATE.sixty; saveState(); render(); }
+  }, STATE.sixty ? '60-min on' : '60-min off');
+  wrapper.appendChild(el('div', {class:'hs-sess-ctl'}, clockStat, sixtyBtn));
+  wireDayClock(`${w.id}_${d.day}`, d, currentPlanFBA, clockBtn, clockStat);
+
   if (d.type) wrapper.appendChild(el('div', {class:'workout-type'}, d.type));
 
-  d.exercises.forEach((ex, exIdx) => {
-    const exLog = (log.exercises || {})[exIdx] || {};
-    const allChecked = Array.from({length: ex.sets}, (_, i) => !!(exLog[`s${i}`]));
-    const exDone = ex.sets > 0 && allChecked.every(Boolean);
-
-    const card = el('div', {class:`ex-card${exDone ? ' done-card' : ''}`});
-
-    // Head: badge + name
-    const badge = el('span', {class:`ex-group-badge ${groupClass(ex.group)}`}, ex.group);
-    const nameEl = el('div', {class:'ex-name'}, ex.name);
-    card.appendChild(el('div', {class:'ex-head'}, badge, nameEl));
-
-    let prescText = ex.prescription || '';
-    if (currentPlanFBA && !currentPlanFBA.cond && currentPlanFBA.offsets[exIdx] != null) {
-      prescText += (prescText ? ' · ' : '') + `start ~${Math.round(currentPlanFBA.offsets[exIdx] / 60)} min in`;
-    }
-    if (prescText) card.appendChild(el('div', {class:'ex-prescription'}, prescText));
-
-    // Set rows
-    const setsEl = el('div', {class:'sets'});
-    for (let i = 0; i < ex.sets; i++) {
-      const checked = !!exLog[`s${i}`];
-      const weight = exLog[`w${i}`] || '';
-
-      const weightInput = el('input', {
-        type:'text', inputmode:'decimal', placeholder:'lb', class:'set-weight',
-        value: weight
-      });
-      weightInput.addEventListener('input', e => {
-        ensureExLog(w.id, d.day, exIdx)[`w${i}`] = e.target.value;
-        saveState();
-      });
-
-      const checkBtn = el('button', {class:`check-btn${checked ? ' checked' : ''}`, 'aria-label':'Mark set done'});
-      checkBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l5 5 9-12"/></svg>';
-      checkBtn.addEventListener('click', () => {
-        const exL = ensureExLog(w.id, d.day, exIdx);
-        exL[`s${i}`] = !exL[`s${i}`];
-        if (exL[`s${i}`]) {
-          startRestTimer(`${w.id}_${d.day}_${exIdx}_${i}`, null);
-        } else {
-          cancelRestTimer(`${w.id}_${d.day}_${exIdx}_${i}`);
-        }
-        saveState();
-        render();
-      });
-
-      const row = el('div', {class:`set-row${checked ? ' done-row' : ''}`},
-        el('div', {class:'set-num'}, String(i+1)),
-        weightInput,
-        checkBtn
-      );
-      setsEl.appendChild(row);
-    }
-    card.appendChild(setsEl);
-
-    // Notes
-    const notesInput = el('textarea', {class:'ex-notes-input', placeholder:'Notes…', rows:'1'});
-    notesInput.value = exLog.notes || '';
-    notesInput.addEventListener('input', e => {
-      ensureExLog(w.id, d.day, exIdx).notes = e.target.value;
-      saveState();
-    });
-    card.appendChild(notesInput);
-
-    // Timer
-    const timerKey = `${w.id}_${d.day}_${exIdx}`;
-    const timerBtn = el('button', {class:'timer-btn', 'data-timer':timerKey}, restBtnLabel());
-    timerBtn.addEventListener('click', () => {
-      ensureAudio();
-      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-      if (activeTimers[timerKey]) {
-        cancelRestTimer(timerKey);
-      } else {
-        startRestTimer(timerKey, timerBtn);
-      }
-    });
-    reattachTimer(timerKey, timerBtn);
-    card.appendChild(timerBtn);
-
-    // Video links
-    if (d.links && d.links.length) {
-      const linksRow = el('div', {class:'links-row'});
-      d.links.forEach((url, li) => {
-        const a = el('a', {class:'vid-link', href:url, target:'_blank', rel:'noopener',
-          html:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21"/></svg>'});
-        a.appendChild(document.createTextNode(` Video ${d.links.length > 1 ? li+1 : ''}`));
-        linksRow.appendChild(a);
-      });
-      card.appendChild(linksRow);
-    }
-
-    wrapper.appendChild(card);
-  });
+  const ctx = { rowDone, nowU, upNextAt };
+  if (structured) renderStructured(w, d, wrapper, log, ctx);
+  else renderConditioning(w, d, wrapper, log, ctx);
 
   appendMarkDoneBtn(w, d, wrapper, log);
+  main.appendChild(wrapper);
+
+  // A Now that moved on its own (its row just finished) comes into view.
+  const moved = hsLastNow && hsLastNow.key === key && hsLastNow.u !== nowU && nowU >= 0 && rowDone[hsLastNow.u];
+  hsLastNow = { key, u: nowU };
+  if (moved) hsReveal();
 }
 
-/* ── conditioning day ──────────────────────────────────────── */
-function renderConditioning(w, d, wrapper, log) {
-  if (d.type) wrapper.appendChild(el('div', {class:'workout-type'}, d.type));
+/* ── structured day: one row per exercise, under its muscle-group label ── */
+function renderStructured(w, d, wrapper, log, ctx) {
+  const total = d.exercises.length;
+  d.exercises.forEach((ex, exIdx) => {
+    const st = exIdx === ctx.nowU ? 'now' : ctx.rowDone[exIdx] ? 'done' : 'next';
+    let label = ex.group && (exIdx === 0 || d.exercises[exIdx - 1].group !== ex.group) ? ex.group : '';
+    if (exIdx === ctx.upNextAt) label = label ? `Up next · ${label}` : 'Up next';
+    if (label) wrapper.appendChild(el('div', {class:'hs-section-label'}, label));
+
+    const { row, full } = hsRowShell(w, d, exIdx, st, total, ex.name, fbaShortRx(ex), fbaLogged(log, ex, exIdx));
+    const card = buildExCard(w, d, exIdx, ex, log);
+    full.appendChild(card);
+    // Tool bar: the day's videos and the rest timer, moved out of the card with their listeners.
+    const tools = el('div', {class:'hs-tools'});
+    card.querySelectorAll('.links-row .vid-link').forEach(a => tools.appendChild(a));
+    const lr = card.querySelector('.links-row');
+    if (lr) lr.remove();
+    const tb = card.querySelector('.timer-btn');
+    if (tb) { tb.classList.add('btn'); tools.appendChild(tb); }
+    if (tools.children.length) full.appendChild(tools);
+    wrapper.appendChild(row);
+  });
+}
+
+/* The page's exercise card, unchanged: badge, name, prescription, set rows
+   (each check starts the rest bar), notes, rest timer, video links. */
+function buildExCard(w, d, exIdx, ex, log) {
+  const exLog = (log.exercises || {})[exIdx] || {};
+  const allChecked = Array.from({length: ex.sets}, (_, i) => !!(exLog[`s${i}`]));
+  const exDone = ex.sets > 0 && allChecked.every(Boolean);
+
+  const card = el('div', {class:`ex-card${exDone ? ' done-card' : ''}`});
+
+  // Head: badge + name
+  const badge = el('span', {class:`ex-group-badge ${groupClass(ex.group)}`}, ex.group);
+  const nameEl = el('div', {class:'ex-name'}, ex.name);
+  card.appendChild(el('div', {class:'ex-head'}, badge, nameEl));
+
+  let prescText = ex.prescription || '';
+  if (currentPlanFBA && !currentPlanFBA.cond && currentPlanFBA.offsets[exIdx] != null) {
+    prescText += (prescText ? ' · ' : '') + `start ~${Math.round(currentPlanFBA.offsets[exIdx] / 60)} min in`;
+  }
+  if (prescText) card.appendChild(el('div', {class:'ex-prescription'}, prescText));
+
+  // Set rows
+  const setsEl = el('div', {class:'sets'});
+  for (let i = 0; i < ex.sets; i++) {
+    const checked = !!exLog[`s${i}`];
+    const weight = exLog[`w${i}`] || '';
+
+    const weightInput = el('input', {
+      type:'text', inputmode:'decimal', placeholder:'lb', class:'set-weight',
+      value: weight
+    });
+    weightInput.addEventListener('input', e => {
+      ensureExLog(w.id, d.day, exIdx)[`w${i}`] = e.target.value;
+      saveState();
+    });
+
+    const checkBtn = el('button', {class:`check-btn${checked ? ' checked' : ''}`, 'aria-label':'Mark set done'});
+    checkBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l5 5 9-12"/></svg>';
+    checkBtn.addEventListener('click', () => {
+      const exL = ensureExLog(w.id, d.day, exIdx);
+      exL[`s${i}`] = !exL[`s${i}`];
+      if (exL[`s${i}`]) {
+        startRestTimer(`${w.id}_${d.day}_${exIdx}_${i}`, null);
+      } else {
+        cancelRestTimer(`${w.id}_${d.day}_${exIdx}_${i}`);
+      }
+      saveState();
+      render();
+    });
+
+    const row = el('div', {class:`set-row${checked ? ' done-row' : ''}`},
+      el('div', {class:'set-num'}, String(i+1)),
+      weightInput,
+      checkBtn
+    );
+    setsEl.appendChild(row);
+  }
+  card.appendChild(setsEl);
+
+  // Notes
+  const notesInput = el('textarea', {class:'ex-notes-input', placeholder:'Notes…', rows:'1'});
+  notesInput.value = exLog.notes || '';
+  notesInput.addEventListener('input', e => {
+    ensureExLog(w.id, d.day, exIdx).notes = e.target.value;
+    saveState();
+  });
+  card.appendChild(notesInput);
+
+  // Timer
+  const timerKey = `${w.id}_${d.day}_${exIdx}`;
+  const timerBtn = el('button', {class:'timer-btn', 'data-timer':timerKey}, restBtnLabel());
+  timerBtn.addEventListener('click', () => {
+    ensureAudio();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    if (activeTimers[timerKey]) {
+      cancelRestTimer(timerKey);
+    } else {
+      startRestTimer(timerKey, timerBtn);
+    }
+  });
+  reattachTimer(timerKey, timerBtn);
+  card.appendChild(timerBtn);
+
+  // Video links
+  if (d.links && d.links.length) {
+    const linksRow = el('div', {class:'links-row'});
+    videoLinks(d).forEach(a => linksRow.appendChild(a));
+    card.appendChild(linksRow);
+  }
+
+  return card;
+}
+
+/* ── written (prose) day: one row holding the text, the videos and the notes ── */
+function renderConditioning(w, d, wrapper, log, ctx) {
+  const st = ctx.nowU === 0 ? 'now' : ctx.rowDone[0] ? 'done' : 'next';
+  const firstLine = String(d.notes || '').split('\n').map(s => s.trim()).find(Boolean) || '';
+  const { row, full } = hsRowShell(w, d, 0, st, 1, 'Written workout', fbaCut(firstLine, 70), 'Marked done');
 
   // Workout text
   const raw = d.notes || '';
   if (raw) {
     const textBlock = el('div', {class:'cond-text'});
     textBlock.textContent = raw;
-    wrapper.appendChild(textBlock);
-  }
-
-  // Video links
-  if (d.links && d.links.length) {
-    const linksRow = el('div', {class:'links-row', style:'margin-bottom:12px'});
-    d.links.forEach((url, li) => {
-      const a = el('a', {class:'vid-link', href:url, target:'_blank', rel:'noopener',
-        html:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21"/></svg>'});
-      a.appendChild(document.createTextNode(` Video ${d.links.length > 1 ? li+1 : ''}`));
-      linksRow.appendChild(a);
-    });
-    wrapper.appendChild(linksRow);
+    full.appendChild(textBlock);
   }
 
   // Notes
@@ -785,9 +936,16 @@ function renderConditioning(w, d, wrapper, log) {
     setLog(w.id, d.day, l);
   });
   notesWrap.appendChild(notesTA);
-  wrapper.appendChild(notesWrap);
+  full.appendChild(notesWrap);
 
-  appendMarkDoneBtn(w, d, wrapper, log);
+  // Video links, as the row's tool bar
+  if (d.links && d.links.length) {
+    const tools = el('div', {class:'hs-tools'});
+    videoLinks(d).forEach(a => tools.appendChild(a));
+    full.appendChild(tools);
+  }
+
+  wrapper.appendChild(row);
 }
 
 /* ── shared mark-done button ───────────────────────────────── */

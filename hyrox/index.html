@@ -118,6 +118,38 @@
   .sim-cell input { background: white; border: 1px solid var(--border); border-radius: 7px; padding: 8px; font-size: 15px; font-family: inherit; text-align: center; width: 100%; margin-top: 6px; font-variant-numeric: tabular-nums; }
   .empty-hint { color: var(--muted); font-size: 11.5px; font-style: italic; padding: 4px 0; }
 
+  /* In-session day card (Phase 2 step 5). The hs-* classes are styled in
+     ../shared/styles.css; these rules fit them into the collapsible day card.
+     An open card drops its white box and compact header: the session header
+     (with its own fold control) takes over, rows sit on the page like TFM. */
+  .day.hs-open { background: transparent; border: 0; box-shadow: none; overflow: visible; }
+  .day.hs-open > .day-header { display: none; }
+  .day.hs-open > .day-body { border-top: 0; padding: 2px 0 10px; }
+  .hs-sess-fold { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; min-height: 30px; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+  .hs-sess-fold .caret { padding: 0 4px; }
+  .hs-sess-title.long { font-size: 27px; }
+  .hs-sess-title.xlong { font-size: 23px; line-height: 1.05; }
+  .hs-sess-focus { font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+  .hs-sess-clock { flex-shrink: 0; }
+  .hs-sess-clock .hs-clock-t { font-variant-numeric: tabular-nums; }
+  .hs-sess-clock:not(.running):not(.stopped) .hs-clock-t { color: var(--primary); font-size: 18px; }
+  .hs-sess-clock.stopped .hs-clock-t { color: var(--muted); }
+  .hs-sess-progress { flex-wrap: wrap; row-gap: 6px; }
+  .hs-sess-progress .hs-bar { flex: 1 1 90px; }
+  .hs-sess-progress span { white-space: normal; }
+  .hs-check-block { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 0 14px; margin: 0 0 8px; }
+  .hs-row-sum .hs-sum-t small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .hs-row-sum .hs-sum-r { max-width: 45%; overflow: hidden; text-overflow: ellipsis; }
+  .hs-row-sum .hs-rx-trav { display: none; }
+  body.travel .hs-row-sum .hs-rx-home { display: none; }
+  body.travel .hs-row-sum .hs-rx-trav { display: inline; color: var(--primary); }
+  .hs-row.hs-now .ex-prescription { margin-top: 2px; font-size: 13px; }
+  .hs-row.hs-now .ex-log { margin-top: 12px; }
+  .hs-tools .btn { padding: 0 8px; gap: 5px; }
+  .hs-tools .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .hs-tools .hs-done-btn { margin-left: auto; color: var(--primary); font-weight: 800; }
+  .hs-tools .hs-done-btn.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+
   @media (max-width: 420px) {
     .hero-stats { gap: 6px; } .stat { padding: 6px 4px; } .stat-num { font-size: 15px; } .stat-label { font-size: 8.5px; }
     .info-grid { grid-template-columns: 1fr; }
@@ -704,20 +736,25 @@ window.HS_CATALOG = function(){
   return { slug: "hyrox", kind: "phased", sessions };
 };
 const sessionClockIvs = {};
+/* Paints into the session header's clock (.hs-clock-t keeps the icon beside it). */
 function wireDayClock(wk, di, btn, stat){
   const clockKey = `${wk}_${di}`;
   const target = dayTargetSecs(wk, di);
+  const txt = btn.querySelector(".hs-clock-t") || btn;
   function paint(){
     const c = state.clocks[clockKey];
     if (!c || !c.start){
-      btn.textContent = "▶ Session clock";
-      btn.classList.remove("running");
+      txt.textContent = "Start";
+      btn.classList.remove("running", "stopped");
+      btn.setAttribute("aria-label", "Start the session clock");
       stat.textContent = `target ~${Math.round(target / 60)} min`;
       return;
     }
     const elapsed = Math.round(((c.stop || Date.now()) - c.start) / 1000);
-    btn.textContent = (c.stop ? "■ " : "") + fmtClock(elapsed);
+    txt.textContent = fmtClock(elapsed);
     btn.classList.toggle("running", !c.stop);
+    btn.classList.toggle("stopped", !!c.stop);
+    btn.setAttribute("aria-label", c.stop ? `Session clock stopped at ${fmtClock(elapsed)}, tap to reset` : `Session clock ${fmtClock(elapsed)}, tap to stop`);
     const left = Math.round((target - elapsed) / 60);
     stat.textContent = isDayComplete(wk, di)
       ? `done in ${fmtClock(elapsed)}`
@@ -777,12 +814,14 @@ function renderDays(){
   container.innerHTML = "";
   w.days.forEach((day, di) => {
     const dayId = `${w.week}_${di}`;
-    const isExpanded = state.expanded[dayId] !== false;
+    // A saved open/closed choice wins; otherwise only this visit's target day starts open.
+    const saved = state.expanded[dayId];
+    const isExpanded = typeof saved === "boolean" ? saved : !!(OPEN_DEFAULT && OPEN_DEFAULT.wk === w.week && OPEN_DEFAULT.di === di);
     const total = countItems(day);
     const completed = countCompleted(w.week, di, day);
     const full = completed === total;
     const el = document.createElement("div");
-    el.className = "day" + (isExpanded ? "" : " collapsed");
+    el.className = "day" + (isExpanded ? " hs-open" : " collapsed");
     el.innerHTML = `
       <div class="day-header">
         <div class="day-title">
@@ -795,22 +834,151 @@ function renderDays(){
         </div>
       </div>
       <div class="day-body"></div>`;
-    el.querySelector(".day-header").onclick = () => { state.expanded[dayId] = !isExpanded; saveState(); renderDays(); };
-    const body = el.querySelector(".day-body");
-    const clockRow = document.createElement("div");
-    clockRow.className = "day-clock-row";
-    clockRow.innerHTML = `<button class="btn btn-timer" data-role="clock" style="display:inline-flex;align-items:center;border:1px solid var(--border);background:var(--card-2);border-radius:6px;padding:5px 9px;font-size:11.5px;font-weight:600;cursor:pointer">▶ Session clock</button><span data-role="clockstat"></span>`;
-    body.appendChild(clockRow);
-    wireDayClock(w.week, di, clockRow.querySelector("[data-role=clock]"), clockRow.querySelector("[data-role=clockstat]"));
-    let idx = 0;
-    day.blocks.forEach(block => {
-      const lab = document.createElement("h4");
-      lab.style.margin = "12px 0 2px"; lab.textContent = block.label;
-      body.appendChild(lab);
-      block.items.forEach(item => { body.appendChild(renderExercise(item, w.week, di, idx)); idx++; });
-    });
+    const toggle = () => { state.expanded[dayId] = !isExpanded; saveState(); renderDays(); };
+    el.querySelector(".day-header").onclick = toggle;
+    if (isExpanded) renderSession(el.querySelector(".day-body"), w.week, di, toggle);
     container.appendChild(el);
   });
+}
+
+/* ===========================================================================
+   IN-SESSION LAYOUT (Phase 2 step 5, 2026-09-25). An open day card renders the
+   .hs-* contract from ../shared/styles.css: session header, then every main row
+   as exactly one of done (one-line summary), now (the full row) or next
+   (summary). Warm-up and Cooldown blocks stay a checklist of the original rows.
+   Now = the row tapped this visit (tappedNow, memory only, never saved), else
+   the first main row not checked. Counts ("2 of 7", "Now · 3 of 7") cover every
+   item, the same count as the day chip and isDayComplete.
+   =========================================================================== */
+const tappedNow = {};   // "wk_di" → flat item index
+const ICON = {
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8"/></svg>`,
+  clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M9.5 2.5h5"/></svg>`,
+  video: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="6" width="12" height="12" rx="2.5"/><path d="M15.5 10.5l5-3v9l-5-3z"/></svg>`,
+  note: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h9l4 4v13H6z"/><path d="M9 12h7"/><path d="M9 16h5"/></svg>`
+};
+function isCheckBlock(block){ return /^(warm-?up|cool-?down)/i.test(block.label); }
+/* One-line scheme for a summary: the prescription up to its " — " aside
+   (a bare heading like "BENCHMARK —" keeps the whole line; CSS clamps it). */
+function shortRx(rx){
+  const s = String(rx || "").trim();
+  const head = s.split(" — ")[0];
+  return head !== s && !/^[A-Z]+$/.test(head) ? head : s;
+}
+/* Bring the now row into view after it moves (a tap, or a row completed). */
+function revealNow(di){
+  const day = document.getElementById("days-container").children[di];
+  const el = day && day.querySelector(".hs-now");
+  if (!el || !el.offsetParent) return;
+  const bar = document.querySelector(".appbar");
+  const top = el.getBoundingClientRect().top - (bar ? bar.getBoundingClientRect().bottom : 0) - 8;
+  if (top < 0 || top > window.innerHeight * 0.6) window.scrollBy({ top, behavior: "smooth" });
+}
+function renderSession(body, wk, di, toggle){
+  const day = WEEKS[wk].days[di];
+  const k = `${wk}_${di}`;
+  const total = countItems(day);
+  const done = countCompleted(wk, di, day);
+  const isDoneAt = i => !!state.completed[`${wk}_${di}_${i}`];
+  const items = [];
+  let n = 0;
+  day.blocks.forEach((block, bi) => block.items.forEach(item => items.push({ item, block, bi, idx: n++, check: isCheckBlock(block) })));
+  const main = items.filter(x => !x.check).map(x => x.idx);
+  const firstOpen = main.find(i => !isDoneAt(i));
+  const nowIdx = tappedNow[k] != null && main.includes(tappedNow[k]) ? tappedNow[k] : (firstOpen != null ? firstOpen : -1);
+  // "Up next" sits above the first next row after now (or the first next row, when none follow it).
+  const nextIdxs = main.filter(i => i !== nowIdx && !isDoneAt(i));
+  const afterNow = nextIdxs.find(i => i > nowIdx);
+  const upNextAt = afterNow != null ? afterNow : nextIdxs[0];
+
+  const titleCls = day.name.length > 28 ? " xlong" : day.name.length > 16 ? " long" : "";
+  const head = document.createElement("div");
+  head.className = "hs-sess-head";
+  head.innerHTML = `
+    <button type="button" class="hs-sess-fold" aria-label="Collapse Day ${day.tag}"><span class="hs-sess-eyebrow">Hyrox · Week ${wk} · Day ${day.tag}</span><span class="caret">▼</span></button>
+    <div class="hs-sess-top">
+      <h2 class="hs-sess-title${titleCls}">${escapeHtml(day.name)}</h2>
+      <button type="button" class="hs-sess-clock">${ICON.clock}<span class="hs-clock-t">Start</span></button>
+    </div>
+    <div class="hs-sess-focus">${escapeHtml(day.focus)}</div>
+    <div class="hs-sess-progress"><div class="hs-bar"><i style="width:${total ? Math.round(100 * done / total) : 0}%"></i></div><span>${done === total ? `Day complete · ${done} of ${total}` : `${done} of ${total} done`} · <span data-role="clockstat"></span></span></div>`;
+  head.querySelector(".hs-sess-fold").onclick = toggle;
+  body.appendChild(head);
+  wireDayClock(wk, di, head.querySelector(".hs-sess-clock"), head.querySelector("[data-role=clockstat]"));
+
+  const addLabel = text => {
+    const lab = document.createElement("div");
+    lab.className = "hs-section-label";
+    lab.textContent = text;
+    body.appendChild(lab);
+  };
+  let curBlock = -1, wrap = null;
+  items.forEach(x => {
+    if (x.bi !== curBlock){
+      curBlock = x.bi;
+      addLabel(x.idx === upNextAt ? `Up next · ${x.block.label}` : x.block.label);
+      wrap = null;
+      if (x.check){ wrap = document.createElement("div"); wrap.className = "hs-check-block"; body.appendChild(wrap); }
+    } else if (x.idx === upNextAt) addLabel("Up next");
+    if (x.check) wrap.appendChild(renderExercise(x.item, wk, di, x.idx));
+    else body.appendChild(renderRow(x.item, wk, di, x.idx, x.idx === nowIdx ? "now" : isDoneAt(x.idx) ? "done" : "next", total));
+  });
+}
+/* st is "done" | "now" | "next"; total is the day's item count. Saving is the
+   same as the checklist row below: same keys, same stampDay, same saveState. */
+function renderRow(item, wk, di, idx, st, total){
+  const key = `${wk}_${di}_${idx}`;
+  const k = `${wk}_${di}`;
+  const isDone = !!state.completed[key];
+  const log = state.logs[key] || { val:"", notes:"" };
+  const el = document.createElement("div");
+  el.className = "hs-row hs-" + st;
+
+  if (st !== "now"){
+    const logged = String(log.val || "").trim();
+    const right = st === "done" ? escapeHtml(logged || shortRx(item.rx)) : "";
+    const sub = st === "next"
+      ? `<small><span class="hs-rx-home">${escapeHtml(shortRx(item.rx))}</span>${item.travel ? `<span class="hs-rx-trav">✈ ${escapeHtml(shortRx(item.travel))}</span>` : ""}</small>` : "";
+    el.innerHTML = `
+      <div class="hs-row-sum" role="button" tabindex="0">
+        <span class="hs-mark">${st === "done" ? ICON.check : ""}</span>
+        <span class="hs-sum-t"><b>${escapeHtml(item.name)}</b>${sub}</span>
+        ${right ? `<span class="hs-sum-r">${right}</span>` : ""}
+      </div>`;
+    const sum = el.querySelector(".hs-row-sum");
+    const pick = () => { tappedNow[k] = idx; renderDays(); revealNow(di); };
+    sum.addEventListener("click", pick);
+    sum.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); pick(); } });
+    return el;
+  }
+
+  el.innerHTML = `
+    <div class="hs-row-full">
+      <div class="hs-now-eyebrow">Now · ${idx + 1} of ${total} · ${tagLabel(item.tag)}</div>
+      <div class="ex-name">${escapeHtml(item.name)}</div>
+      <div class="ex-prescription">${escapeHtml(item.rx)}</div>
+      ${item.travel?`<div class="ex-travel"><b>✈ Travel:</b> ${escapeHtml(item.travel)}</div>`:""}
+      <div class="ex-log open">
+        <div class="log-row"><input type="text" class="log-val" placeholder="Weight / time / reps" value="${escapeAttr(log.val)}"></div>
+        <textarea class="log-notes" placeholder="How it felt, RPE, pace, cues..."${String(log.notes || "").trim() ? "" : " hidden"}>${escapeHtml(log.notes)}</textarea>
+      </div>
+      <div class="hs-tools">
+        <a class="btn" href="${v(item.q)}" target="_blank" rel="noopener">${ICON.video}Video</a>
+        <button type="button" class="btn hs-note-btn">${ICON.note}Note</button>
+        <button type="button" class="btn hs-done-btn${isDone ? " on" : ""}" aria-pressed="${isDone}">${ICON.check}Done</button>
+      </div>
+    </div>`;
+  el.querySelector(".hs-done-btn").onclick = () => {
+    state.completed[key] = !isDone;
+    if (!isDone){ stampDay(wk, di); if (tappedNow[k] === idx) delete tappedNow[k]; }
+    saveState(); renderDays();
+    if (!isDone) revealNow(di);
+  };
+  const notes = el.querySelector(".log-notes");
+  el.querySelector(".hs-note-btn").onclick = () => { notes.hidden = !notes.hidden; if (!notes.hidden) notes.focus(); };
+  el.querySelector(".log-val").addEventListener("input", e => { if(!state.logs[key]) state.logs[key]={val:"",notes:""}; state.logs[key].val=e.target.value; stampDay(wk, di); saveState(); });
+  notes.addEventListener("input", e => { if(!state.logs[key]) state.logs[key]={val:"",notes:""}; state.logs[key].notes=e.target.value; stampDay(wk, di); saveState(); });
+  return el;
 }
 function renderExercise(item, wk, di, idx){
   const key = `${wk}_${di}_${idx}`;
@@ -996,6 +1164,7 @@ document.getElementById("travel-switch").onclick = () => { state.travel = !state
 document.getElementById("reset-btn").onclick = () => {
   if (confirm("Reset all Hyrox tracking? Checks, logs, and benchmark times will be cleared.")){
     state = { currentWeek:1, travel:false, completed:{}, logs:{}, expanded:{}, bench:{}, sim:{}, clocks:{} };
+    for (const k in tappedNow) delete tappedNow[k];
     saveState(); renderAll();
   }
 };
@@ -1012,10 +1181,13 @@ const DEEP = (function(){
   return di >= 0 ? { wk, di } : null;
 })();
 
-/* Open on the next session's week (was: the last week pill tapped, persisted in state.currentWeek). */
+/* Open on the next session's week (was: the last week pill tapped, persisted in state.currentWeek).
+   OPEN_DEFAULT is the one day card that starts open when no choice is saved for it: the deep-link
+   target, else the day holding summary.next. Fixed for the visit, never saved. */
+let OPEN_DEFAULT = null;
 (function openOnNext(){
-  if (DEEP){ state.currentWeek = DEEP.wk; if (state.expanded[`${DEEP.wk}_${DEEP.di}`] === false) delete state.expanded[`${DEEP.wk}_${DEEP.di}`]; return; }
-  const nx = nextSession(); if (nx) state.currentWeek = nx.wk;
+  if (DEEP){ state.currentWeek = DEEP.wk; OPEN_DEFAULT = DEEP; if (state.expanded[`${DEEP.wk}_${DEEP.di}`] === false) delete state.expanded[`${DEEP.wk}_${DEEP.di}`]; return; }
+  const nx = nextSession(); if (nx){ state.currentWeek = nx.wk; OPEN_DEFAULT = nx; }
 })();
 renderAll();
 if (DEEP){

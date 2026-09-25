@@ -127,14 +127,31 @@
     100% { transform: scale(1); }
   }
 
-  /* Session toolbar */
-  .session-toolbar {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 8px;
-    font-size: 12px; color: var(--muted);
-  }
-  .session-toolbar .left { display: flex; align-items: center; gap: 8px; }
   .btn-danger { color: var(--danger); border-color: #f3c8c4; }
+
+  /* In-session layout. The hs-* classes are styled in ../shared/styles.css
+     ("In-session layout"); these rules only fill the gaps it leaves. */
+  .hs-sess-title.long { font-size: 27px; }
+  .hs-sess-clock .hs-clock-t { font-variant-numeric: tabular-nums; }
+  .hs-sess-clock:not(.running):not(.stopped) .hs-clock-t { color: var(--primary); font-size: 18px; }
+  .hs-sess-clock.stopped .hs-clock-t { color: var(--muted); }
+  .hs-sess-progress { flex-wrap: wrap; row-gap: 6px; }
+  .hs-sess-progress .hs-bar { flex: 1 1 90px; }
+  .hs-sess-progress span { white-space: normal; }
+  .hs-sess-ctl { display: flex; align-items: center; gap: 6px; margin: 0 2px 10px; }
+  .hs-sess-pace { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); }
+  .hs-mini { min-height: 32px; padding: 0 10px; font-size: 12px; }
+  .hs-mini.on { background: var(--warning-soft); color: var(--warning); border-color: #edd9a6; }
+  .hs-row-sum .hs-sum-r { max-width: 50%; overflow: hidden; text-overflow: ellipsis; }
+  .hs-row-sum .row-timer { min-height: 34px; min-width: 0; padding: 0 10px; }
+  .hs-row.hs-now .ex-prescription { margin-top: 2px; font-size: 13px; color: var(--muted); }
+  .hs-row.hs-now .ex-cue { margin-top: 4px; font-size: 12.5px; color: var(--text-body); }
+  .hs-row.hs-now .ex-log { margin-top: 12px; }
+  .hs-tools .btn { padding: 0 8px; gap: 5px; }
+  .hs-tools .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .hs-tools .btn-timer { min-width: 64px; }
+  .hs-tools .hs-done-btn { margin-left: auto; color: var(--primary); font-weight: 800; }
+  .hs-tools .hs-done-btn.on { background: var(--primary); border-color: var(--primary); color: #fff; }
 
   /* Notes pane */
   .quote-box {
@@ -231,10 +248,10 @@
   <div class="pane" id="pane-notes">
     <div class="card">
       <h2>How this tracker works</h2>
-      <p>Two workouts, both from John Madsen. Tap <strong>Upper Body</strong> or <strong>Legs</strong> to switch between them. Within each, tap the <strong>+ New</strong> pill to start a new dated session, check off exercises as you finish them, and tap <strong>✎ Log sets</strong> to record every set.</p>
+      <p>Two workouts, both from John Madsen. Tap <strong>Upper Body</strong> or <strong>Legs</strong> to switch between them. Within each, tap the <strong>+ New</strong> pill to start a new dated session. The exercise you're on opens with its set grid ready; log every set and tap <strong>Done</strong> to move to the next. Tap any other exercise to jump to it.</p>
       <p>Each set logs <strong>reps and weight</strong> (added weight on pull-ups and leg raises). The <strong>= 3 × 15</strong> button fills the targets in one tap; type over what was different. Pull-up waves log reps per wave (target 10: 2 + 3 + 5).</p>
       <p>The <strong>Last:</strong> line under each exercise shows the sets from your previous session ("15, 15, 12 @ 25 lb · short"), and a chip suggests the load: every set at the target adds 5 lb, falling short holds the weight, three short sessions at one weight drop it ~10%. Max-rep work says <strong>Beat last</strong>.</p>
-      <p>Each workout header shows a <strong>planned time</strong> and every exercise a <em>"start ~N min in"</em> marker. Tap <strong>▶ Clock</strong> in the session toolbar when you start — it survives reloads and reports pace against the plan once you check off your first exercise. The <strong>⏱ 60-min mode</strong> toggle tightens every rest one step (90s→60s, 60s→45s) and recomputes the plan and the rest timers; sets and reps stay as written.</p>
+      <p>Each workout header shows a <strong>planned time</strong> and every exercise a <em>"start ~N min in"</em> marker. Tap <strong>Start</strong> by the clock in the session header when you start — it survives reloads and reports pace against the plan once you check off your first exercise. The <strong>⏱ 60-min mode</strong> toggle tightens every rest one step (90s→60s, 60s→45s) and recomputes the plan and the rest timers; sets and reps stay as written.</p>
 
       <h3>Upper Body — original message</h3>
       <div class="quote-box">
@@ -485,16 +502,20 @@ function fmtClock(s) {
 const sessionClockIvs = {};
 
 function wireSessionClock(workout, session, plan, btn, stat) {
+  const txt = btn.querySelector(".hs-clock-t") || btn;   // the header clock keeps its icon
   function paint() {
     if (!session.clockStart) {
-      btn.textContent = "▶ Clock";
-      btn.classList.remove("running");
+      txt.textContent = "Start";
+      btn.classList.remove("running", "stopped");
+      btn.setAttribute("aria-label", "Start the session clock");
       stat.textContent = "";
       return;
     }
     const elapsed = Math.round(((session.clockStop || Date.now()) - session.clockStart) / 1000);
-    btn.textContent = (session.clockStop ? "■ " : "") + fmtClock(elapsed);
+    txt.textContent = fmtClock(elapsed);
     btn.classList.toggle("running", !session.clockStop);
+    btn.classList.toggle("stopped", !!session.clockStop);
+    btn.setAttribute("aria-label", session.clockStop ? `Session clock stopped at ${fmtClock(elapsed)}, tap to reset` : `Session clock ${fmtClock(elapsed)}, tap to stop`);
     const exs = WORKOUTS[workout].exercises;
     let nextIdx = exs.findIndex((_, i) => !session.completed[i]);
     let msg = `target ${fmtMins(plan.total)}`;
@@ -554,6 +575,46 @@ function renderSessionBar(workout) {
   });
 }
 
+/* ---------------------------------------------------------------------------
+   IN-SESSION LAYOUT. The classes are the contract in the header of
+   ../shared/styles.css, "In-session layout (Phase 2 step 5)". The open session
+   renders a header (clock, progress) and every exercise as exactly one of:
+     done  checked off: one summary line with what was logged
+     now   the row tapped in this session, else the first row not done: the
+           full row, set grid already open
+     next  everything else: one summary line
+   The tapped row lives in memory only (never saved) and is dropped when that
+   row is completed. With every row done there is no now row.
+   --------------------------------------------------------------------------- */
+const tappedNow = {};   // `${workout}_${session.id}` → exercise idx the user tapped
+const ICON = {
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8"/></svg>`,
+  clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M9.5 2.5h5"/></svg>`,
+  video: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="6" width="12" height="12" rx="2.5"/><path d="M15.5 10.5l5-3v9l-5-3z"/></svg>`,
+  note: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h9l4 4v13H6z"/><path d="M9 12h7"/><path d="M9 16h5"/></svg>`
+};
+
+/* What was logged, compact: "3 × 15 @ 25 lb" when every set matches, else
+   SetLog's own "15, 15, 12 @ 25 lb". Null when nothing is logged. */
+function loggedRx(spec, log) {
+  if (!SetLog.hasSets(log)) return null;
+  const sets = log.sets.filter(x => x.r != null || x.w != null);
+  const same = sets.length > 1 && sets.every(x => x.r === sets[0].r && x.w === sets[0].w);
+  if (same && sets[0].r != null) {
+    return `${sets.length} × ${sets[0].r}${spec.unit === "s" ? " s" : ""}${sets[0].w != null ? " @ " + SetLog.fmtLoad(sets[0].w, spec.bw) : ""}`;
+  }
+  return SetLog.lastText(SetLog.entry(log, spec), spec);
+}
+
+/* Bring the now row into view after it moves (a tap, or a row completed). */
+function revealNow(workout) {
+  const el = document.querySelector(`#container-${workout} .hs-now`);
+  if (!el || !el.offsetParent) return;
+  const bar = document.querySelector(".appbar");
+  const top = el.getBoundingClientRect().top - (bar ? bar.getBoundingClientRect().bottom : 0) - 8;
+  if (top < 0 || top > window.innerHeight * 0.6) window.scrollBy({ top, behavior: "smooth" });
+}
+
 function renderWorkout(workout) {
   renderSessionBar(workout);
   const container = document.getElementById("container-" + workout);
@@ -571,104 +632,136 @@ function renderWorkout(workout) {
   }
 
   const w = WORKOUTS[workout];
-  const completed = Object.values(session.completed).filter(Boolean).length;
   const total = w.exercises.length;
-  const isFullyDone = completed === total;
+  const isDoneAt = i => !!session.completed[i];
+  const completed = w.exercises.filter((_, i) => isDoneAt(i)).length;
+  const isFullyDone = total > 0 && completed === total;
   const plan = workoutPlan(workout);
+  const nk = `${workout}_${session.id}`;
 
-  const toolbar = document.createElement("div");
-  toolbar.className = "session-toolbar";
-  toolbar.innerHTML = `
-    <div class="left">
-      <span>Session on <strong style="color:var(--text)">${session.date}</strong></span>
-      <button class="btn btn-timer" data-action="clock">▶ Clock</button>
-      <span data-role="clockstat"></span>
-    </div>
-    <button class="btn btn-danger" data-action="delete">Delete session</button>
-  `;
-  toolbar.querySelector("[data-action=delete]").onclick = () => deleteSession(workout, session.id);
-  wireSessionClock(workout, session, plan,
-    toolbar.querySelector("[data-action=clock]"),
-    toolbar.querySelector("[data-role=clockstat]"));
-  container.appendChild(toolbar);
+  // Now: the tapped row, else the first row not done (-1 once the session is done).
+  const nowIdx = tappedNow[nk] != null && tappedNow[nk] < total ? tappedNow[nk] : w.exercises.findIndex((_, i) => !isDoneAt(i));
+  // "Up next" sits above the first next row after now (or the first next row, when none follow it).
+  const nextIdxs = w.exercises.map((_, i) => i).filter(i => i !== nowIdx && !isDoneAt(i));
+  const afterNow = nextIdxs.find(i => i > nowIdx);
+  const upNextAt = afterNow != null ? afterNow : nextIdxs[0];
 
-  const dayEl = document.createElement("div");
-  dayEl.className = "day";
-  dayEl.innerHTML = `
-    <div class="day-header">
-      <div class="day-title">
-        <div class="day-name">${w.name}</div>
-        <div class="day-focus">${w.focus} · planned ${fmtMins(plan.total)}${state.sixty ? " · 60-min mode" : ""}</div>
-      </div>
-      <div class="day-meta">
-        <span class="day-chip ${isFullyDone ? "complete" : ""}">${completed} / ${total}</span>
-      </div>
+  // Session header: eyebrow, title, clock, progress
+  const trained = session.date && session.date !== todayISO() ? ` · trained ${shortDate(session.date)}` : "";
+  const progress = isFullyDone
+    ? `Session complete · ${completed} of ${total}${trained}`
+    : `${completed} of ${total} done · planned ${fmtMins(plan.total)}${state.sixty ? " · 60-min mode" : ""}${trained}`;
+  const head = document.createElement("div");
+  head.className = "hs-sess-head";
+  head.innerHTML = `
+    <div class="hs-sess-eyebrow">Hotel · ${w.focus}</div>
+    <div class="hs-sess-top">
+      <h2 class="hs-sess-title${w.name.length > 16 ? " long" : ""}">${w.name}</h2>
+      <button type="button" class="hs-sess-clock">${ICON.clock}<span class="hs-clock-t">Start</span></button>
     </div>
-    <div class="day-body"></div>
-  `;
-  const body = dayEl.querySelector(".day-body");
+    <div class="hs-sess-progress"><div class="hs-bar"><i style="width:${total ? Math.round(100 * completed / total) : 0}%"></i></div><span>${progress}</span></div>`;
+  container.appendChild(head);
+
+  // Small row under the header: pace vs plan, 60-min mode, delete session
+  const ctl = document.createElement("div");
+  ctl.className = "hs-sess-ctl";
+  ctl.innerHTML = `
+    <span class="hs-sess-pace" data-role="clockstat"></span>
+    <button type="button" class="btn hs-mini${state.sixty ? " on" : ""}" data-action="sixty">60-min ${state.sixty ? "on" : "off"}</button>
+    <button type="button" class="btn hs-mini btn-danger" data-action="delete">Delete session</button>`;
+  ctl.querySelector("[data-action=sixty]").onclick = () => { const b = document.getElementById("sixty-btn"); if (b) b.click(); };
+  ctl.querySelector("[data-action=delete]").onclick = () => deleteSession(workout, session.id);
+  container.appendChild(ctl);
+  wireSessionClock(workout, session, plan, head.querySelector(".hs-sess-clock"), ctl.querySelector("[data-role=clockstat]"));
+
   w.exercises.forEach((ex, idx) => {
-    body.appendChild(renderExercise(workout, session, ex, idx));
+    const st = idx === nowIdx ? "now" : isDoneAt(idx) ? "done" : "next";
+    if (idx === upNextAt) {
+      const lab = document.createElement("div");
+      lab.className = "hs-section-label";
+      lab.textContent = "Up next";
+      container.appendChild(lab);
+    }
+    container.appendChild(renderExercise(workout, session, ex, idx, st, total, plan));
   });
-  container.appendChild(dayEl);
 }
 
-function renderExercise(workout, session, ex, idx) {
+/* st is "done" | "now" | "next"; total is the workout's exercise count. */
+function renderExercise(workout, session, ex, idx, st, total, plan) {
   const exDef = EXERCISES[ex.id];
   const isDone = !!session.completed[idx];
   const spec = specFor(ex);
   const log = SetLog.normLog(session.logs[idx], spec.sets);
+  const restSecs = effRestSecs(ex.rest || 60);
+  const restLabel = `⏱ ${restSecs}s`;
+  const scheme = `${ex.sets} × ${ex.reps}`;
+  const nk = `${workout}_${session.id}`;
+  const timerKey = `${workout}_${session.id}_${idx}`;
+
+  const el = document.createElement("div");
+  el.className = "hs-row hs-" + st;
+  el.dataset.idx = idx;
+
+  if (st !== "now") {
+    // A rest timer still running on a row that folded (Done mid-rest) stays on screen.
+    const live = !!activeTimers[timerKey];
+    const right = live ? `<button type="button" class="btn btn-timer rest-timer row-timer" data-default="${restLabel}">${restLabel}</button>`
+      : st === "done" ? escapeHtml(loggedRx(spec, log) || scheme) : "";
+    el.innerHTML = `
+      <div class="hs-row-sum" role="button" tabindex="0">
+        <span class="hs-mark">${st === "done" ? ICON.check : ""}</span>
+        <span class="hs-sum-t"><b>${exDef.name}</b>${st === "next" ? `<small>${escapeHtml(scheme)}</small>` : ""}</span>
+        ${right ? `<span class="hs-sum-r">${right}</span>` : ""}
+      </div>`;
+    const sum = el.querySelector(".hs-row-sum");
+    const pick = () => { tappedNow[nk] = idx; render(workout); revealNow(workout); };
+    sum.addEventListener("click", e => { if (!e.target.closest(".btn")) pick(); });
+    sum.addEventListener("keydown", e => { if (e.target === sum && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); pick(); } });
+    if (live) {
+      const tb = el.querySelector(".rest-timer");
+      reattachTimer(timerKey, tb);
+      tb.onclick = () => toggleRestTimer(timerKey, tb, restSecs);
+    }
+    return el;
+  }
+
   const legacyText = session.logs[idx] && typeof session.logs[idx].weight === "string" && /[a-z]/i.test(session.logs[idx].weight) ? session.logs[idx].weight : "";
   const hist = priorEntries(workout, idx, session.id);
   const sugg = SetLog.suggest(hist, spec, { inc: 5 });
-  const restSecs = effRestSecs(ex.rest || 60);
-  const restLabel = `⏱ ${restSecs}s`;
-  const planOffset = workoutPlan(workout).offsets[idx];
-  const paceHtml = planOffset != null
-    ? `<span style="color:var(--muted);font-weight:400"> · start ~${Math.round(planOffset / 60)} min in</span>` : "";
+  const planOffset = plan.offsets[idx];
+  const paceHtml = planOffset != null ? ` · start ~${Math.round(planOffset / 60)} min in` : "";
+  const lastHtml = hist.length ? SetLog.lastHtml(hist[0], spec, shortDate(hist[0].date)) : "";
+  const suggHtml = SetLog.suggestHtml(sugg);
+  const hasNotes = !!(log.notes && log.notes.trim());
 
-  const el = document.createElement("div");
-  el.className = "exercise";
   el.innerHTML = `
-    <div class="ex-row">
-      <div class="ex-check ${isDone ? "done" : ""}">
-        <svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="3 8 7 12 13 4"></polyline>
-        </svg>
+    <div class="hs-row-full">
+      <div class="hs-now-eyebrow">Now · ${idx + 1} of ${total}</div>
+      <div class="ex-name">${exDef.name}</div>
+      <div class="ex-prescription">${scheme} · rest ${fmtClock(restSecs)}${paceHtml}</div>
+      ${ex.load ? `<div class="ex-cue">${ex.load}</div>` : ""}
+      ${lastHtml || suggHtml ? `<div class="hs-lastbox">${lastHtml}${suggHtml}</div>` : ""}
+      <div class="ex-log open">
+        ${legacyText ? `<div class="ex-last">Logged as: ${escapeHtml(legacyText)}</div>` : ""}
+        ${SetLog.gridHtml(log, spec, sugg)}
+        <textarea class="log-notes" placeholder="Notes: RPE, how it felt..."${hasNotes ? "" : " hidden"}>${escapeHtml(log.notes)}</textarea>
       </div>
-      <div class="ex-info">
-        <div>
-          <span class="ex-tag ${exDef.tag}">${tagLabel(exDef.tag)}</span>
-          <span class="ex-name">${exDef.name}</span>
-        </div>
-        <div class="ex-prescription"><strong>${ex.sets} × ${ex.reps}</strong>${ex.load ? " · " + ex.load : ""}${paceHtml}</div>
-        ${hist.length ? SetLog.lastHtml(hist[0], spec, shortDate(hist[0].date)) : ""}
-        ${SetLog.suggestHtml(sugg)}
-        <div class="ex-actions">
-          <a class="btn" href="${v(exDef.q)}" target="_blank" rel="noopener">▶ Video</a>
-          <button class="btn log-toggle">✎ Log sets</button>
-          <button class="btn btn-timer rest-timer" data-default="${restLabel}">${restLabel}</button>
-        </div>
-        <div class="ex-log">
-          ${legacyText ? `<div class="ex-last">Logged as: ${escapeHtml(legacyText)}</div>` : ""}
-          ${SetLog.gridHtml(log, spec, sugg)}
-          <textarea class="log-notes" placeholder="Notes: RPE, how it felt...">${escapeHtml(log.notes)}</textarea>
-        </div>
+      <div class="hs-tools">
+        <a class="btn" href="${v(exDef.q)}" target="_blank" rel="noopener">${ICON.video}Video</a>
+        <button type="button" class="btn hs-note-btn">${ICON.note}Note</button>
+        <button type="button" class="btn btn-timer rest-timer" data-default="${restLabel}">${restLabel}</button>
+        <button type="button" class="btn hs-done-btn${isDone ? " on" : ""}" aria-pressed="${isDone}">${ICON.check}Done</button>
       </div>
-    </div>
-  `;
+    </div>`;
 
-  el.querySelector(".ex-check").onclick = () => {
+  el.querySelector(".hs-done-btn").onclick = () => {
     session.completed[idx] = !isDone;
+    if (!isDone && tappedNow[nk] === idx) delete tappedNow[nk];
     saveState();
     render(workout);
+    if (!isDone) revealNow(workout);
   };
-  el.querySelector(".log-toggle").onclick = () => {
-    el.querySelector(".ex-log").classList.toggle("open");
-  };
-  if (SetLog.hasSets(log) || log.notes || legacyText) el.querySelector(".ex-log").classList.add("open");
 
-  const timerKey = `${workout}_${session.id}_${idx}`;
   const timerBtn = el.querySelector(".rest-timer");
   reattachTimer(timerKey, timerBtn);
   timerBtn.onclick = () => toggleRestTimer(timerKey, timerBtn, restSecs);
@@ -682,10 +775,12 @@ function renderExercise(workout, session, ex, idx) {
     return lg;
   }
   SetLog.wireGrid(el, { spec, sugg, getLog: ensureLog, save: saveState, rerender: () => render(workout) });
-  el.querySelector(".log-notes").addEventListener("input", e => {
+  const notes = el.querySelector(".log-notes");
+  notes.addEventListener("input", e => {
     ensureLog().notes = e.target.value;
     saveState();
   });
+  el.querySelector(".hs-note-btn").onclick = () => { notes.hidden = !notes.hidden; if (!notes.hidden) notes.focus(); };
   return el;
 }
 

@@ -305,6 +305,33 @@ main { padding: 12px 14px 100px; max-width: 720px; margin: 0 auto; }
   white-space: nowrap; pointer-events: none;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* In-session day pane. The hs-* classes are styled in ../shared/styles.css
+   ("In-session layout"); these rules fit the page's own cards into them. */
+.hs-sess-title.long { font-size: 27px; }
+.hs-sess-title.xlong { font-size: 23px; line-height: 1.05; }
+.hs-sess-clock .hs-clock-t { font-variant-numeric: tabular-nums; }
+.hs-sess-clock:not(.running):not(.stopped) .hs-clock-t { color: var(--primary); font-size: 18px; }
+.hs-sess-clock.stopped .hs-clock-t { color: var(--muted); }
+.hs-sess-progress { flex-wrap: wrap; row-gap: 6px; }
+.hs-sess-progress .hs-bar { flex: 1 1 90px; }
+.hs-sess-progress span { white-space: normal; }
+.hs-sess-ctl { display: flex; align-items: center; gap: 6px; margin: 0 2px 10px; }
+.hs-sess-pace { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); }
+.hs-mini { min-height: 32px; padding: 0 10px; font-size: 12px; }
+.hs-mini.on { background: var(--warning-soft); color: var(--warning); border-color: #edd9a6; }
+.hs-row-sum .hs-sum-r { max-width: 50%; overflow: hidden; text-overflow: ellipsis; }
+.hs-now-note { font-size: 12px; color: var(--muted); margin: 0 0 10px; }
+.hs-row.hs-now .ex-card:not(.sub-card) { background: transparent; border: 0; border-radius: 0; box-shadow: none; padding: 0; margin: 0; }
+.hs-row.hs-now .ex-card:not(.sub-card) + .ex-card:not(.sub-card) { border-top: 1px solid var(--border); margin-top: 14px; padding-top: 14px; }
+.hs-row.hs-now .ex-card.sub-card { margin: 0 0 8px; }
+.hs-row.hs-now.hs-multi .ex-name { font-size: 16.5px; }
+.hs-row.hs-now .ex-head { margin-bottom: 2px; }
+.hs-lastbox .ex-last, .hs-lastbox .ex-suggest { margin: 0; }
+.hs-tools .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+.hs-tools .btn { padding: 0 8px; gap: 5px; }
+.hs-tools .timer-btn { margin-top: 0; height: 40px; }
+.hs-tools .timer-btn.running { background: var(--primary); border-color: var(--primary); color: #fff; }
 </style>
 </head>
 <body data-program="kb-shred">
@@ -453,18 +480,22 @@ let currentPlanKB = null;
 
 const sessionClockIvs = {};
 function wireDayClock(clockKey, d, plan, btn, stat) {
+  const txt = btn.querySelector('.hs-clock-t') || btn;   // the session header's clock keeps its icon
   function paint() {
     const c = STATE.clocks[clockKey];
     const planTxt = `plan ~${Math.round(plan.total / 60)} min`;
     if (!c || !c.start) {
-      btn.textContent = '▶ Clock';
-      btn.classList.remove('running');
-      stat.textContent = planTxt;
+      txt.textContent = 'Start';
+      btn.classList.remove('running', 'stopped');
+      btn.setAttribute('aria-label', 'Start the session clock');
+      stat.textContent = '';   // the header already shows the plan
       return;
     }
     const elapsed = Math.round(((c.stop || Date.now()) - c.start) / 1000);
-    btn.textContent = (c.stop ? '■ ' : '') + fmtTime(elapsed);
+    txt.textContent = fmtTime(elapsed);
     btn.classList.toggle('running', !c.stop);
+    btn.classList.toggle('stopped', !!c.stop);
+    btn.setAttribute('aria-label', c.stop ? `Session clock stopped at ${fmtTime(elapsed)}, tap to reset` : `Session clock ${fmtTime(elapsed)}, tap to stop`);
     let msg = planTxt;
     if (!plan.cond && d.exercises) {
       const log = getLog(STATE.currentWeek, d.day);
@@ -774,6 +805,54 @@ function renderHero() {
   ));
 }
 
+/* ── in-session layout (../shared/styles.css, "In-session layout") ──
+   The day is a column of rows: done rows fold to one line, one Now row shows
+   the full card(s), the rest are "Up next" one-liners. A superset is one row
+   (its members inside the Now card); a circuit day is one row holding every
+   move. Done is the page's own rule: every set of the row checked. Now is
+   the tapped row, else the first row not done; it lives in memory only,
+   never in STATE. Cards still come from buildExCard(). */
+const HS_ICON = {
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M9.5 2.5h5"/></svg>',
+  video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="6" width="12" height="12" rx="2.5"/><path d="M15.5 10.5l5-3v9l-5-3z"/></svg>'
+};
+const hsTapped = {};    // logKey → { u, wasDone }: the tapped row, in memory only
+let hsLastNow = null;   // { key, u } from the previous render, to bring a Now that moved into view
+
+function kbExDone(log, ex, idx) {
+  const exLog = (log.exercises || {})[idx] || {};
+  return ex.sets > 0 && Array.from({ length: ex.sets }, (_, i) => !!exLog[`s${i}`]).every(Boolean);
+}
+/* Rows in page order: buildRenderGroups() for a lifting day, one circuit row otherwise. */
+function kbUnits(d) {
+  const exs = d.exercises || [];
+  if (!exs.length) return [];
+  if (d.conditioning) return [{ kind: 'circuit', label: null, items: exs.map((ex, idx) => ({ idx, ex })) }];
+  return buildRenderGroups(exs).map(g => g.type === 'single'
+    ? { kind: 'single', label: null, items: [{ idx: g.idx, ex: g.ex }] }
+    : { kind: 'superset', label: g.label, items: g.items });
+}
+function kbCut(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s; }
+/* What was logged, compact: "4 × 8 @ 35 lb", else SetLog's "8, 8, 7 @ 35 lb". */
+function kbLogged(log, ex, idx) {
+  const spec = kbSpec(ex);
+  const lg = kbLog((log.exercises || {})[idx] || {}, ex.sets);
+  if (!SetLog.hasSets(lg)) return `${ex.sets} set${ex.sets === 1 ? '' : 's'}`;
+  const sets = lg.sets.filter(x => x.r != null || x.w != null);
+  if (sets.length > 1 && sets[0].r != null && sets.every(x => x.r === sets[0].r && x.w === sets[0].w)) {
+    return `${sets.length} × ${sets[0].r}${spec.unit === 's' ? ' s' : ''}${sets[0].w != null ? ' @ ' + SetLog.fmtLoad(sets[0].w, false) : ''}`;
+  }
+  return SetLog.lastText(SetLog.entry(lg, spec), spec);
+}
+function hsReveal() {
+  const n = document.querySelector('#main .hs-now');
+  if (!n || !n.offsetParent) return;
+  const bar = document.querySelector('.kbs-topbar');
+  const top = n.getBoundingClientRect().top - (bar ? bar.getBoundingClientRect().bottom : 0) - 8;
+  if (top < 0 || top > window.innerHeight * 0.6) window.scrollBy({ top, behavior: 'smooth' });
+}
+
 function renderDayContent() {
   const w = currentWeek();
   const d = currentDay();
@@ -781,79 +860,121 @@ function renderDayContent() {
   const wrapper = el('div', {});
   const log = getLog(w.id, d.day);
   const isDone = !!log.done;
+  const key = logKey(w.id, d.day);
 
-  // Day header
-  const h2 = el('h2', {}, d.day);
-  if (isDone) h2.appendChild(el('span', {
-    class: 'done-badge',
-    html: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8l4 4 6-8"/></svg>&nbsp;Done'
-  }));
-  const header = el('div', { class: 'day-header' }, h2);
-  if (d.label) header.appendChild(el('div', { class: 'day-sublabel' }, d.label));
-  wrapper.appendChild(header);
-
-  // Pacing row: session clock + planned time + 60-min mode toggle
   currentPlanKB = dayPlanKB(d);
-  const clockBtn = el('button', { class: 'timer-btn', style: 'margin:0' }, '▶ Clock');
-  const clockStat = el('span', { style: 'font-size:12px;color:var(--muted)' }, '');
+  const exs = d.exercises || [];
+  const units = kbUnits(d);
+  const exDone = exs.map((ex, idx) => kbExDone(log, ex, idx));
+  const rowDone = units.map(u => u.items.every(it => exDone[it.idx]));
+  const doneEx = exDone.filter(Boolean).length;
+  const complete = units.length > 0 && rowDone.every(Boolean);
+
+  // Now: the tapped row (until it finishes), else the first row not done; -1 once the day is done.
+  const tap = hsTapped[key];
+  if (tap && (tap.u >= units.length || (!tap.wasDone && rowDone[tap.u]))) delete hsTapped[key];
+  const nowU = hsTapped[key] ? hsTapped[key].u : rowDone.indexOf(false);
+  // "Up next" sits above the first next row after Now (or the first next row, when none follow it).
+  const nextUs = units.map((_, i) => i).filter(i => i !== nowU && !rowDone[i]);
+  const afterNow = nextUs.find(i => i > nowU);
+  const upNextAt = afterNow != null ? afterNow : nextUs[0];
+
+  // Session header: eyebrow, title, clock, progress. "(RPE 8-9)" moves from the title to the eyebrow.
+  const rpe = /\s*\(([^)]*)\)\s*$/.exec(d.label || '');
+  const title = rpe ? d.label.slice(0, rpe.index) : (d.label || d.day);
+  const planMin = Math.round(currentPlanKB.total / 60);
+  const progress = complete
+    ? `Day complete · ${doneEx} of ${exs.length}`
+    : `${isDone ? 'Marked done · ' : ''}${doneEx} of ${exs.length} done · planned ~${planMin} min${STATE.sixty && !currentPlanKB.cond ? ' · 60-min mode' : ''}`;
+  const clockBtn = el('button', { type: 'button', class: 'hs-sess-clock', html: `${HS_ICON.clock}<span class="hs-clock-t">Start</span>` });
+  wrapper.appendChild(el('div', { class: 'hs-sess-head' },
+    el('div', { class: 'hs-sess-eyebrow' }, `KB Shred · ${w.label} · ${d.day}${rpe ? ' · ' + rpe[1] : ''}`),
+    el('div', { class: 'hs-sess-top' },
+      el('h2', { class: 'hs-sess-title' + (title.length > 28 ? ' xlong' : title.length > 16 ? ' long' : '') }, title),
+      clockBtn),
+    el('div', { class: 'hs-sess-progress' },
+      el('div', { class: 'hs-bar' }, el('i', { style: `width:${exs.length ? Math.round(100 * doneEx / exs.length) : 0}%` })),
+      el('span', {}, progress))
+  ));
+
+  // Pace vs plan + 60-min mode toggle
+  const clockStat = el('span', { class: 'hs-sess-pace' }, '');
   const sixtyBtn = el('button', {
-    class: 'timer-btn',
-    style: 'margin:0' + (STATE.sixty ? ';background:var(--warning-soft);color:var(--warning);border-color:#edd9a6' : ''),
+    type: 'button', class: 'btn hs-mini' + (STATE.sixty ? ' on' : ''),
     onclick: () => { STATE.sixty = !STATE.sixty; saveState(); render(); }
-  }, STATE.sixty ? '⏱ 60-min: ON' : '⏱ 60-min: off');
-  wrapper.appendChild(el('div', { style: 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px' },
-    clockBtn, clockStat, sixtyBtn));
-  wireDayClock(`${w.id}_${d.day}`, d, currentPlanKB, clockBtn, clockStat);
+  }, STATE.sixty ? '60-min on' : '60-min off');
+  wrapper.appendChild(el('div', { class: 'hs-sess-ctl' }, clockStat, sixtyBtn));
+  wireDayClock(key, d, currentPlanKB, clockBtn, clockStat);
 
-  // Type badge
-  if (d.conditioning) {
-    wrapper.appendChild(el('div', { class: 'cond-badge' }, '⚡ Circuit / Conditioning'));
-  } else {
-    wrapper.appendChild(el('div', { class: 'workout-type' }, 'Full Body'));
-  }
-
-  // Video link
-  if (d.link) {
-    const a = el('a', {
-      class: 'vid-link', href: d.link, target: '_blank', rel: 'noopener',
-      html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21"/></svg>'
-    });
-    a.appendChild(document.createTextNode(' Watch Workout'));
-    wrapper.appendChild(a);
-  }
-
-  // Exercises
-  if (d.exercises && d.exercises.length) {
-    renderExercises(w, d, wrapper, log);
-  }
+  units.forEach((u, ui) => {
+    const st = ui === nowU ? 'now' : rowDone[ui] ? 'done' : 'next';
+    let label = u.kind === 'superset' ? `Superset ${u.label}` : u.kind === 'circuit' ? 'Circuit / conditioning' : '';
+    if (ui === upNextAt) label = label ? `Up next · ${label}` : 'Up next';
+    if (label) wrapper.appendChild(el('div', { class: 'hs-section-label' }, label));
+    wrapper.appendChild(kbRow(w, d, log, u, ui, st, units.length));
+  });
 
   appendMarkDoneBtn(w, d, wrapper, log);
   main.appendChild(wrapper);
+
+  // A Now that moved on its own (its row just finished) comes into view.
+  const moved = hsLastNow && hsLastNow.key === key && hsLastNow.u !== nowU && nowU >= 0 && rowDone[hsLastNow.u];
+  hsLastNow = { key, u: nowU };
+  if (moved) hsReveal();
 }
 
-/* ── exercise renderer ──────────────────────────────────────── */
-function renderExercises(w, d, wrapper, log) {
-  const groups = buildRenderGroups(d.exercises);
+/* st is "done" | "now" | "next". Each row carries both its one-line summary and
+   its full card(s); the shared CSS shows one or the other. */
+function kbRow(w, d, log, u, ui, st, total) {
+  const multi = u.items.length > 1;
+  const row = el('div', { class: `hs-row hs-${st}${multi ? ' hs-multi' : ''}` });
+  const names = u.items.map(it => cleanName(it.ex.name));
+  let name, small, right;
+  if (u.kind === 'circuit') {
+    const rounds = Math.max(...u.items.map(it => it.ex.sets || 1));
+    name = `${names.length}-move circuit`;
+    small = kbCut(`${rounds} rounds · ${names.join(', ')}`, 80);
+    right = `${rounds} rounds`;
+  } else {
+    name = names.join(' + ');
+    small = u.items.map(it => `${it.ex.sets} × ${it.ex.reps}`).join(' + ') + (multi ? '' : ` · rest ${effRestSecs(parseInt(u.items[0].ex.rest) || 60)}s`);
+    right = multi ? `${u.items.reduce((n, it) => n + (it.ex.sets || 0), 0)} sets` : kbLogged(log, u.items[0].ex, u.items[0].idx);
+  }
+  const sum = el('div', { class: 'hs-row-sum', role: 'button', tabindex: '0' },
+    el('span', { class: 'hs-mark', html: st === 'done' ? HS_ICON.check : '' }),
+    el('span', { class: 'hs-sum-t' }, el('b', {}, name), st === 'next' ? el('small', {}, small) : null),
+    st === 'done' ? el('span', { class: 'hs-sum-r' }, right) : null);
+  const pick = () => { hsTapped[logKey(w.id, d.day)] = { u: ui, wasDone: st === 'done' }; render(); hsReveal(); };
+  sum.addEventListener('click', pick);
+  sum.addEventListener('keydown', e => { if (e.target === sum && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); pick(); } });
 
-  groups.forEach(group => {
-    if (group.type === 'single') {
-      wrapper.appendChild(buildExCard(w, d, group.idx, group.ex, log, null, false));
-    } else {
-      const supCard = el('div', { class: 'superset-group' });
-
-      const header = el('div', { class: 'superset-header' });
-      header.appendChild(el('span', { class: 'superset-label' }, `Superset ${group.label}`));
-      header.appendChild(el('span', { class: 'superset-note' }, 'Alternate A then B, rest between rounds'));
-      supCard.appendChild(header);
-
-      group.items.forEach((item, subIdx) => {
-        const subLabel = `${group.label}${subIdx + 1}`; // A1, A2, B1, B2
-        supCard.appendChild(buildExCard(w, d, item.idx, item.ex, log, subLabel, true));
-      });
-
-      wrapper.appendChild(supCard);
+  const full = el('div', { class: 'hs-row-full' }, el('div', { class: 'hs-now-eyebrow' }, `Now · ${ui + 1} of ${total}`));
+  if (u.kind === 'superset') full.appendChild(el('div', { class: 'hs-now-note' }, 'Alternate A then B, rest between rounds'));
+  const cards = u.items.map((it, subIdx) => u.kind === 'superset'
+    ? buildExCard(w, d, it.idx, it.ex, log, `${u.label}${subIdx + 1}`, true)   // A1, A2, B1, B2
+    : buildExCard(w, d, it.idx, it.ex, log, null, false));
+  cards.forEach(card => {
+    // Last + coach go in the tinted box.
+    const last = card.querySelector('.ex-last'), chip = card.querySelector('.ex-suggest');
+    if (last || chip) {
+      const box = el('div', { class: 'hs-lastbox' });
+      card.insertBefore(box, last || chip);
+      if (last) box.appendChild(last);
+      if (chip) box.appendChild(chip);
     }
+    full.appendChild(card);
   });
+  // Tool bar: the day's workout video, and a single lift's rest timer (members keep theirs in their cards).
+  const tools = el('div', { class: 'hs-tools' });
+  if (d.link) tools.appendChild(el('a', { class: 'btn', href: d.link, target: '_blank', rel: 'noopener', html: HS_ICON.video + 'Video' }));
+  if (cards.length === 1) {
+    const tb = cards[0].querySelector('.timer-btn');
+    if (tb) { tb.classList.add('btn'); tools.appendChild(tb); }
+  }
+  if (tools.children.length) full.appendChild(tools);
+  row.appendChild(sum);
+  row.appendChild(full);
+  return row;
 }
 
 function buildExCard(w, d, exIdx, ex, log, subLabel, isSubCard) {

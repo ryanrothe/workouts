@@ -374,6 +374,111 @@
   .fs-board .hs-tools .btn.fs-check { margin-left: auto; padding: 7px 14px; background: var(--primary); border-color: var(--primary); color: #fff; }
   .fs-board .hs-tools .btn.fs-check.on { background: var(--primary-soft); border-color: var(--primary-line); color: var(--primary); }
 
+
+  /* Supersets (2026-10-19): one outline, codes A1/A2 tied by a bracket, the round in the
+     header, the one rest rule in the footer. Phone and iPad. */
+  .fs-ss { border: 2px solid var(--primary); border-radius: 16px; background: var(--card); overflow: hidden; margin: 0 0 10px; }
+  .fs-ss-head { display: flex; align-items: baseline; gap: 10px; padding: 9px 14px; background: var(--primary-soft); border-bottom: 1px solid var(--primary-line); }
+  .fs-ss-kind { font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary); white-space: nowrap; }
+  .fs-ss-head b { flex: 1; min-width: 0; font-family: var(--disp); font-stretch: 85%; font-size: 16px; font-weight: 800; color: var(--text); }
+  .fs-ss-round { font-family: var(--disp); font-stretch: 85%; font-weight: 800; font-size: 14px; color: var(--primary); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .fs-ss-note { font-size: 12px; color: var(--muted); padding: 8px 14px 0; line-height: 1.5; }
+  .fs-ss-body { position: relative; padding: 2px 10px 2px 42px; }
+  .fs-ss-body::before { content: ""; position: absolute; left: 20px; top: 26px; bottom: 26px; width: 2px; background: var(--primary-line); }
+  .fs-ss-now .fs-ss-body::before { background: var(--primary); }
+  .fs-board .fs-ss .hs-row.fs-in-ss { position: relative; border: 0; border-radius: 0; margin: 0; background: transparent; padding-left: 0; padding-right: 0; }
+  .fs-board .fs-ss .hs-row.fs-in-ss + .hs-row.fs-in-ss { border-top: 1px dashed var(--primary-line); }
+  .fs-board .fs-ss .hs-row.hs-now.fs-in-ss { padding-top: 12px; padding-bottom: 6px; }
+  .fs-board .fs-ss .hs-row-sum { padding-left: 0; padding-right: 4px; }
+  .fs-code { position: absolute; left: -38px; top: 13px; width: 32px; height: 26px; display: grid; place-items: center; background: var(--card); font-family: var(--disp); font-weight: 800; font-size: 14px; color: var(--primary); border-radius: 6px; z-index: 1; }
+  .fs-code.on { background: var(--primary); color: #fff; }
+  .fs-code.done { color: var(--muted); }
+  .fs-ss-foot { padding: 8px 14px; border-top: 1px solid var(--primary-line); font-size: 12.5px; font-weight: 700; color: var(--primary); }
+  .fs-ss-done { border-color: var(--border); }
+  .fs-ss-done .fs-ss-head { background: var(--card-2); border-color: var(--border); }
+  .fs-ss-done .fs-ss-kind, .fs-ss-done .fs-ss-round { color: var(--muted); }
+  .fs-ss-done .fs-ss-foot { display: none; }
+  .fs-ss-done .fs-ss-body::before { background: var(--border); }
+
+  /* iPad lanes (2026-10-19). One lane per lifter, a rail, the session map on the bottom edge. */
+  body.fs-wide .container { max-width: 1400px; }
+  body[data-program="father-son"] { --porter: #0e7c7b; }   /* Porter's lane color; --accent is remapped by the shared restyle */
+  .fs-wide-board { height: calc(100dvh - var(--fs-top, 60px)); display: flex; flex-direction: column; padding-top: 10px; box-sizing: border-box; }
+  .fs-lanes { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 290px; gap: 14px; }
+  .fs-solo .fs-lanes { grid-template-columns: minmax(0, 1fr) 330px; }
+  .fs-lane { min-height: 0; min-width: 0; display: flex; flex-direction: column; }
+  .fs-lane-son { --lane: var(--porter); }
+  .fs-lane-ryan { --lane: var(--primary); }
+  .fs-lane-name { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; border-bottom: 3px solid var(--lane); background: none; padding: 0 4px 8px; color: var(--lane); text-align: left; font: inherit; cursor: pointer; }
+  .fs-lane-name b { font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 28px; line-height: 1; }
+  .fs-lane-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .fs-lane-count { font-size: 12px; font-weight: 800; }
+  .fs-lane-meta small { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fs-lane-act { flex-shrink: 0; font-size: 12px; font-weight: 700; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; background: var(--card); }
+  .fs-lane-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 10px 2px 28px; }
+  .fs-lane-clear { display: block; margin: 8px auto 0; }
+  .fs-lane .sl-rest .sl-rest-bar i { background: var(--lane); }
+
+  .fs-rail { min-height: 0; min-width: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 10px; padding-bottom: 12px; }
+  .fs-rail-main, .fs-rail-more { display: flex; flex-direction: column; gap: 10px; }
+  .fs-clock-card { background: var(--text); color: #fff; border-radius: 16px; padding: 10px 16px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .fs-rail-top { align-self: flex-start; background: none; border: 0; padding: 0; min-height: 28px; color: #a9abb3; font: inherit; font-size: 11px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; cursor: pointer; }
+  .fs-clock-title { font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 20px; line-height: 1.1; }
+  .fs-board .fs-rail-clock.hs-sess-clock { color: #fff; font-size: 56px; line-height: 1; min-height: 60px; font-variant-numeric: tabular-nums; }
+  .fs-board .fs-rail-clock.hs-sess-clock:not(.running):not(.fs-stopped) .fs-clock-t { color: #c7c9f5; }
+  .fs-board .fs-rail-clock.hs-sess-clock.fs-stopped .fs-clock-t { color: #a9abb3; }
+  .fs-rail-pace { font-size: 12.5px; color: #c9cad1; min-height: 18px; }
+  .fs-rest-card { display: flex; flex-direction: column; gap: 4px; text-align: left; font: inherit; color: var(--text); background: var(--card); border: 2px solid var(--lane); border-radius: 14px; padding: 10px 14px; cursor: pointer; min-width: 0; }
+  .fs-rc-son { --lane: var(--porter); }
+  .fs-rc-ryan { --lane: var(--primary); }
+  .fs-rc-who { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .fs-rc-who b { font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--lane); }
+  .fs-rc-s { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .fs-rc-t { font-family: var(--disp); font-stretch: 75%; font-weight: 800; font-size: 34px; line-height: 1; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .fs-rest-card.resting .fs-rc-t { color: var(--text); }
+  .fs-rest-card.go .fs-rc-t { color: var(--success); }
+  .fs-rc-bar { height: 5px; border-radius: 3px; background: var(--border); overflow: hidden; }
+  .fs-rc-bar i { display: block; height: 100%; width: 0; background: var(--lane); transition: width 0.25s linear; }
+  .fs-rc-n { font-size: 12.5px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fs-here { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .fs-here .fs-seg button { min-width: 0; padding: 0 10px; }
+  .fs-more-btn { display: none; }
+  .fs-coming { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+  .fs-coming-k { font-size: 11px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
+  .fs-coming-n { font-size: 14.5px; font-weight: 800; line-height: 1.3; }
+  .fs-coming-l { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; font-size: 12.5px; color: var(--text-body); line-height: 1.4; }
+  .fs-cl-son { color: var(--porter); font-weight: 800; }
+  .fs-cl-ryan { color: var(--primary); font-weight: 800; }
+  .fs-coming-then { font-size: 12px; color: var(--muted); border-top: 1px solid var(--border-soft); padding-top: 6px; }
+  .fs-rail .fs-ctls, .fs-rail .prep { margin: 0; }
+
+  .fs-map { flex: none; display: flex; gap: 6px; margin-top: 8px; padding: 10px 0 12px; border-top: 1px solid var(--border); }
+  .fs-seg2 { flex: 1 1 0; min-width: 0; min-height: 50px; display: flex; flex-direction: column; justify-content: center; gap: 5px; padding: 8px 9px; border-radius: 10px; background: var(--card); border: 1px solid var(--border); text-align: left; font: inherit; cursor: pointer; }
+  .fs-seg2 b { font-size: 12px; font-weight: 700; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fs-seg2.now { border: 2px solid var(--primary); padding: 7px 8px; }
+  .fs-seg2.now b { color: var(--primary); }
+  .fs-seg2.done b { color: var(--success); }
+  .fs-bars { display: flex; flex-direction: column; gap: 3px; }
+  .fs-bars > i { display: block; height: 4px; border-radius: 2px; background: var(--border-soft); overflow: hidden; }
+  .fs-bars > i > i { display: block; height: 100%; }
+  .fs-bar-son > i { background: var(--porter); }
+  .fs-bar-ryan > i { background: var(--primary); }
+
+  /* iPad portrait: the rail becomes a band across the top; warm-up and setup open on demand. */
+  @media (max-width: 999px) {
+    .fs-lanes { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+    .fs-solo .fs-lanes { grid-template-columns: minmax(0, 1fr); }
+    .fs-rail { grid-row: 1; grid-column: 1 / -1; overflow: visible; padding: 0; }
+    .fs-rail-main { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); grid-template-rows: auto auto; gap: 8px 10px; }
+    .fs-clock-card, .fs-rest-card { grid-row: span 2; }
+    .fs-board .fs-rail-clock.hs-sess-clock { font-size: 40px; min-height: 44px; }
+    .fs-rc-t { font-size: 28px; }
+    .fs-here { flex-wrap: wrap; }
+    .fs-more-btn { display: block; border: 1px solid var(--border); background: var(--card); border-radius: 10px; font: inherit; font-size: 12.5px; font-weight: 700; color: var(--primary); min-height: 40px; padding: 0 10px; cursor: pointer; }
+    .fs-rail-more { display: none; }
+    .fs-rail.more-open .fs-rail-more { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; max-height: 42vh; overflow-y: auto; }
+  }
+
   @media (max-width: 420px) {
     .hero-stats { gap: 6px; }
     .stat { padding: 6px 4px; }
@@ -412,7 +517,7 @@
     </div>
 
     <div class="lifter-bar" id="lifter-bar">
-      <button class="lifter-btn" data-lifter="son">Son</button>
+      <button class="lifter-btn" data-lifter="son">Porter</button>
       <button class="lifter-btn" data-lifter="ryan">Ryan</button>
     </div>
     <div class="lifter-hint" id="lifter-hint"></div>
@@ -469,7 +574,7 @@ const VIDEO_BASE = "https://www.youtube.com/results?search_query=";
 function v(q) { return VIDEO_BASE + encodeURIComponent(q + " exercise form"); }
 
 const LIFTERS = ["son", "ryan"];
-const LIFTER_LABEL = { son: "Son", ryan: "Ryan" };
+const LIFTER_LABEL = { son: "Porter", ryan: "Ryan" };
 
 const BW_RE = /pull.?up|chin.?up|push.?up|\bdip\b|dips\b|hanging|hollow|plank|nordic|copenhagen|bodyweight|dead bug|lunge \(bw\)|calf raise \(bw\)/i;
 const LOADED_RE = /^(kb|db|weighted|med ball|medicine ball|plate|kettlebell|dumbbell|goblet)|\b(kb|db)\b/i;
@@ -593,7 +698,7 @@ const TRACKS = {
 };
 
 /* ===========================================================================
-   FINISHER MENUS. He picks from three. Monday: Ryan does it, Son judges.
+   FINISHER MENUS. He picks from three. Monday: Ryan does it, Porter judges.
    =========================================================================== */
 const FIN = {
   mon: {
@@ -649,7 +754,7 @@ const WEEK_NOTES = [
   "<strong>Swings begin.</strong> 18 lb two-hand, hips drive, arms along for the ride. If it looks like a squat, back to the deadlift. Nordics 2 × 5.",
   "<strong>Benchmark week, lighter.</strong> Championship stretch begins: Monday can be the short version. Enter W4 numbers under Benchmarks.",
   "<strong>Last championship week.</strong> Upper progresses (rows to 3 × 10, press +5 if hit). Legs hold at 2 sets. Sunday lights out by 9. Race well.",
-  "<strong>Cross-country is over.</strong> Legs open to 3 sets. Son moves to the 24 in box if the 18 in landings are silent. Ryan adds pogos and depth drops.",
+  "<strong>Cross-country is over.</strong> Legs open to 3 sets. Porter moves to the 24 in box if the 18 in landings are silent. Ryan adds pogos and depth drops.",
   "<strong>Build.</strong> Heavier goblet and swings if the chips say so. Nordics 3 × 5. Still 2 reps in the tank.",
   "<strong>Benchmark week, lighter.</strong> 5-10-5 shuttle joins the tests. Enter W8 numbers. Check the height mark: half an inch a month means peak growth.",
   "<strong>Express begins.</strong> Jumps capped at 40 contacts while soccer is on. DB bench enters once floor push-ups reach 15 clean. Pull-up singles if at step 4.",
@@ -688,17 +793,17 @@ function monday(w) {
   ]});
   const bRows = [
     duo(`Inverted Row ${rowRx} (bar in the uprights)`, `Inverted Row ${rowRx} (feet on the bench)`, 90, "pull", { track: false, cue: "Progress by lowering the bar or walking the feet forward. Body straight as a plank." }),
-    duo(`Half-Kneeling DB Overhead Press ${pressRx} (each side)`, `Half-Kneeling DB Overhead Press ${pressRx} (each side)`, 90, "push", { cue: "Son starts at 10 lb. Ryan 30 lb. No body English." })
+    duo(`Half-Kneeling DB Overhead Press ${pressRx} (each side)`, `Half-Kneeling DB Overhead Press ${pressRx} (each side)`, 90, "push", { cue: "Porter starts at 10 lb. Ryan 30 lb. No body English." })
   ];
   blocks.push({ label: "B · Row and press", note: "Superset. Rest 90 s after the pair.", rows: bRows });
   const cRows = [
-    duo(`Chest-Supported DB Row ${csRx} (on the incline bench)`, `Chest-Supported DB Row ${csRx} (on the incline bench)`, 75, "pull", { cue: "Son starts at 15 lb. Ryan 40 lb. The bench stops the body swing." })
+    duo(`Chest-Supported DB Row ${csRx} (on the incline bench)`, `Chest-Supported DB Row ${csRx} (on the incline bench)`, 75, "pull", { cue: "Porter starts at 15 lb. Ryan 40 lb. The bench stops the body swing." })
   ];
-  if (b === 3) cRows.unshift(duo("DB Floor Press 3 x 8", "DB Bench Press 3 x 8", 90, "push", { cue: "Enters once floor push-ups reach 15 clean. Son 15-20 lb. Ryan 60s. Barbell waits for Cycle 2." }));
+  if (b === 3) cRows.unshift(duo("DB Floor Press 3 x 8", "DB Bench Press 3 x 8", 90, "push", { cue: "Enters once floor push-ups reach 15 clean. Porter 15-20 lb. Ryan 60s. Barbell waits for Cycle 2." }));
   if (b === 3) cRows.push(duo("Rotational Med Ball Throw 3 x 5 (each side · 10 lb)", "Rotational Med Ball Throw 3 x 5 (each side · 15 lb)", 60, "power", { track: false, cue: "For soccer. Hips turn first, arms follow." }));
   blocks.push({ label: "C", note: null, rows: cRows });
   blocks.push({ label: "Arms", note: "For the buy-in. Two easy sets.", rows: [
-    duo("DB Curl 2 x 10", "DB Curl 2 x 10", 45, "arms", { cue: "Son 10 lb. Ryan 25 lb." }),
+    duo("DB Curl 2 x 10", "DB Curl 2 x 10", 45, "arms", { cue: "Porter 10 lb. Ryan 25 lb." }),
     effort("Band Pushdown", "2 × 10", "arms", { rest: 45 })
   ]});
   blocks.push({ label: "Core", note: null, rows: [
@@ -707,7 +812,7 @@ function monday(w) {
   ]});
   return {
     title: "Upper", duration: "40-45 min", warmup: WU.mon, blocks,
-    finNote: "Monday finisher: Ryan does it, Son judges and counts. No extra fatigue on race day. Competitive finishers for both live on Wednesday."
+    finNote: "Monday finisher: Ryan does it, Porter judges and counts. No extra fatigue on race day. Competitive finishers for both live on Wednesday."
   };
 }
 
@@ -729,23 +834,23 @@ function wednesday(w) {
     duo("Broad Jump 3 x 3 (stuck landing)", "Broad Jump 3 x 3 (stuck landing)", 60, "power", { track: false, cue: "Silent landing. Hold it for a two-count." }),
     duo("Lateral Bound 2 x 3 (each side · stick)", "Lateral Bound 2 x 3 (each side · stick)", 60, "power", { track: false })
   ];
-  plyo.push(duo("Single-Leg Hop 2 x 3 (each side · stick)", "Left-Leg Hop 2 x 5 (stick)", 60, "power", { track: false, cue: "Son: both sides, quiet landings. Ryan: left only until the hop gap closes; retest at W4, target 85% by W8, 90% by W12." }));
+  plyo.push(duo("Single-Leg Hop 2 x 3 (each side · stick)", "Left-Leg Hop 2 x 5 (stick)", 60, "power", { track: false, cue: "Porter: both sides, quiet landings. Ryan: left only until the hop gap closes; retest at W4, target 85% by W8, 90% by W12." }));
   if (b >= 2) plyo.push(duo("Pogo Hops 2 x 8 (only if not in peak growth)", "Pogo Hops 3 x 10", 45, "power", { track: false, cue: "Short ground contact. Stiff ankle, quiet feet." }));
   if (b >= 2) plyo.push(duo("Depth Drop 2 x 3 (from the 18 in box · stick · Block 3 only)", `Depth Drop 3 x 3 (from the 18 in box${b === 3 ? " into a jump" : " · stick"})`, 60, "power", { track: false, cue: "Ryan's reactive rebuild. Step off, land, stick. Block 3: land and jump." }));
-  blocks.push({ label: "Plyo", plyo: true, note: `In-season cap: ${b === 3 ? "40" : "20 to 30"} ground contacts for Son. Readiness 1 or 2 turns this block off.`, rows: plyo });
+  blocks.push({ label: "Plyo", plyo: true, note: `In-season cap: ${b === 3 ? "40" : "20 to 30"} ground contacts for Porter. Readiness 1 or 2 turns this block off.`, rows: plyo });
 
   const aRows = [
-    duo(`Goblet Squat ${S} 8 (3-second lower)`, `KB Goblet Squat ${S} 8 (3-second lower)`, 90, "legs", { cue: "Son 15-20 lb DB. Ryan 70 lb bell. Earn the next weight with no wobble." })
+    duo(`Goblet Squat ${S} 8 (3-second lower)`, `KB Goblet Squat ${S} 8 (3-second lower)`, 90, "legs", { cue: "Porter 15-20 lb DB. Ryan 70 lb bell. Earn the next weight with no wobble." })
   ];
-  if (w <= 2) aRows.push(duo(`KB Deadlift ${S} 8`, `KB Deadlift ${S} 8`, 90, "legs", { cue: "Teach the hinge before the swing. Son 35 lb. Ryan 100 lb. Flat back every rep." }));
-  else aRows.push(duo(`KB Swing ${S} 10`, `KB Swing ${S} 10`, 90, "legs", { cue: "Son's ladder: 18 lb two-hand 3 × 10, then 3 × 15, then one-arm 3 × 8 each, then 35 lb 3 × 6. Ryan 70 lb. If it looks like a squat, he is not ready." }));
+  if (w <= 2) aRows.push(duo(`KB Deadlift ${S} 8`, `KB Deadlift ${S} 8`, 90, "legs", { cue: "Teach the hinge before the swing. Porter 35 lb. Ryan 100 lb. Flat back every rep." }));
+  else aRows.push(duo(`KB Swing ${S} 10`, `KB Swing ${S} 10`, 90, "legs", { cue: "Porter's ladder: 18 lb two-hand 3 × 10, then 3 × 15, then one-arm 3 × 8 each, then 35 lb 3 × 6. Ryan 70 lb. If it looks like a squat, he is not ready." }));
   blocks.push({ label: "A · Squat and hinge", note: "Superset. Rest 90 s after the pair.", rows: aRows });
 
   const bRows = b === 3
-    ? [ duo(`Bulgarian Split Squat ${S} 6 (each side · rear foot on the bench)`, `DB Bulgarian Split Squat ${S} 6 (each side)`, 90, "legs", { cue: "Son bodyweight, then 10 lb DBs. Ryan 40s." }),
-        duo(`Single-Leg RDL ${S} 6 (each side)`, `KB Single-Leg RDL ${S} 6 (each side)`, 90, "legs", { cue: "Son 10-15 lb. Ryan 35 lb bell." }) ]
-    : [ duo(`Reverse Lunge ${S} 6 (each side)`, `DB Reverse Lunge ${S} 6 (each side)`, 90, "legs", { cue: b === 1 ? "Son bodyweight first. Ryan 30 lb DBs." : "Son adds 10 lb DBs when 2 × 6 is clean. Ryan 35s." }),
-        duo(`Single-Leg RDL ${S} 6 (each side)`, `KB Single-Leg RDL ${S} 6 (each side)`, 90, "legs", { cue: b === 1 ? "Son bodyweight, hips square. Ryan 35 lb bell." : "Son 10-15 lb. Ryan 35 lb bell." }) ];
+    ? [ duo(`Bulgarian Split Squat ${S} 6 (each side · rear foot on the bench)`, `DB Bulgarian Split Squat ${S} 6 (each side)`, 90, "legs", { cue: "Porter bodyweight, then 10 lb DBs. Ryan 40s." }),
+        duo(`Single-Leg RDL ${S} 6 (each side)`, `KB Single-Leg RDL ${S} 6 (each side)`, 90, "legs", { cue: "Porter 10-15 lb. Ryan 35 lb bell." }) ]
+    : [ duo(`Reverse Lunge ${S} 6 (each side)`, `DB Reverse Lunge ${S} 6 (each side)`, 90, "legs", { cue: b === 1 ? "Porter bodyweight first. Ryan 30 lb DBs." : "Porter adds 10 lb DBs when 2 × 6 is clean. Ryan 35s." }),
+        duo(`Single-Leg RDL ${S} 6 (each side)`, `KB Single-Leg RDL ${S} 6 (each side)`, 90, "legs", { cue: b === 1 ? "Porter bodyweight, hips square. Ryan 35 lb bell." : "Porter 10-15 lb. Ryan 35 lb bell." }) ];
   blocks.push({ label: "B · Single leg", note: "Superset. Rest 90 s after the pair.", rows: bRows });
 
   blocks.push({ label: "Armor", note: "The best-evidenced injury prevention a runner and soccer player can do. Nordics cause real soreness at first; add one rep a week.", rows: [
@@ -772,7 +877,7 @@ function day1() {
         effort("Height mark on the wall", "Both names, both dates", "test")
       ]},
       { label: "Day 1 records", note: "Contests with handicaps. Rest about 2 minutes between tests. Enter every number under the Benchmarks tab, Day 1 column.", rows: [
-        effort("Dead hang", "Max time, one attempt each", "test", { detail: ["Ryan starts 15 s after Son"], timer: tWatch("⏱ Stopwatch") }),
+        effort("Dead hang", "Max time, one attempt each", "test", { detail: ["Ryan starts 15 s after Porter"], timer: tWatch("⏱ Stopwatch") }),
         effort("Pull-up negative", "Jump to chin over the bar, lower as slowly as possible. Count the seconds out loud.", "test", { detail: ["Ryan does a weighted one"], timer: tWatch("⏱ Stopwatch") }),
         effort("Max clean push-ups", "Floor. Under 5 clean, retest on the 18 in box. That sets the push-up level.", "test", { detail: ["Ryan: feet on the bench"] }),
         effort("Broad jump", "Best of 3, tape on the floor", "test", { detail: ["Scored as a ratio to height"] }),
@@ -781,7 +886,7 @@ function day1() {
       { label: "Teach the Monday movements", note: "Two easy sets each, technique only, nothing near hard. One cue per set.", rows: [
         duo("Inverted Row 2 x 6-8 (bar in the uprights)", "Inverted Row 2 x 6-8 (feet on the bench)", 60, "pull", { track: false, cue: "Body straight as a plank. Pull the bar to the chest." }),
         effort("Push-ups at your level", "2 × 6-8", "push", { rest: 60, cue: "Level comes from the test above. Elbows at 45 degrees, chest to the target." }),
-        duo("Half-Kneeling DB Overhead Press 2 x 6-8 (each side)", "Half-Kneeling DB Overhead Press 2 x 6-8 (each side)", 60, "push", { cue: "Son 10 lb. Ryan 30 lb." }),
+        duo("Half-Kneeling DB Overhead Press 2 x 6-8 (each side)", "Half-Kneeling DB Overhead Press 2 x 6-8 (each side)", 60, "push", { cue: "Porter 10 lb. Ryan 30 lb." }),
         duo("Hollow Hold 2 x 15 seconds", "Hollow Hold 2 x 20 seconds", 45, "core", { track: false }),
         duo("Med Ball Chest Pass 2 x 5 (10 lb)", "Med Ball Chest Pass 2 x 5 (20 lb)", 45, "power", { track: false, cue: "The one he will want more of." })
       ]}
@@ -910,7 +1015,9 @@ SL.sync.init({
   slug: PROGRAM.slug,
   storageKey: PROGRAM.storageKey,
   payload: () => ({ state, entries: syncEntries(), catalog: syncCatalog() }),
-  hasData: () => Object.keys(state.days).length > 0
+  hasData: () => Object.keys(state.days).length > 0,
+  // Two-way: the other device's sets were merged into storage; redraw in place, no reload.
+  apply: () => { state = loadState(); render(); publishSummary(); }
 });
 
 /* ---------------------------------------------------------------------------
@@ -977,7 +1084,7 @@ function publishSummary() {
     });
   } catch (e) {}
 }
-/* Son's current pull-up step and push-up level, exactly as the hero card shows them. */
+/* Porter's current pull-up step and push-up level, exactly as the hero card shows them. */
 function sonTracks() {
   const out = {};
   ["pullup", "pushup"].forEach(kind => {
@@ -1038,7 +1145,11 @@ window.HS_CATALOG = function () {
   });
   return { slug: PROGRAM.slug, kind: "setdays", sessions };
 };
-function L() { return state.lifter; }
+/* The lifter a render or an event acts for. Phone: the switch (state.lifter). iPad lanes:
+   each lane renders under asLifter(l) and its events set ctxLifter while they run. */
+let ctxLifter = null;
+function L() { return ctxLifter || state.lifter; }
+function asLifter(l, fn) { const prev = ctxLifter; ctxLifter = l; try { return fn(); } finally { ctxLifter = prev; } }
 function dayState(w, d, create) {
   const k = dayKey(w, d);
   if (!state.days[k] && create) {
@@ -1169,7 +1280,7 @@ function specOf(row, p) {
 
 /* ===========================================================================
    HISTORY + PROGRESSION COACH, per lifter, by exercise name. The rules live in
-   SetLog.suggest. Son: +5 lb flat. Ryan: +5 upper / +10 lower. Miss holds.
+   SetLog.suggest. Porter: +5 lb flat. Ryan: +5 upper / +10 lower. Miss holds.
    3 misses at one weight: plateau, drop 10%, add 2 reps. No log, no suggestion.
    =========================================================================== */
 function priorEntries(name, beforeW, beforeD, lifter) {
@@ -1215,6 +1326,7 @@ function buildShell() {
       document.querySelectorAll(".pane").forEach(p => p.classList.remove("active"));
       tab.classList.add("active");
       document.getElementById("pane-" + tab.dataset.pane).classList.add("active");
+      if (tab.dataset.pane === "mon" || tab.dataset.pane === "wed") scrollBoardIntoView(tab.dataset.pane);
     };
   });
   document.querySelectorAll(".lifter-btn").forEach(btn => {
@@ -1226,7 +1338,7 @@ function buildShell() {
 function renderLifter() {
   document.querySelectorAll(".lifter-btn").forEach(b => b.classList.toggle("active", b.dataset.lifter === L()));
   document.getElementById("lifter-hint").textContent = L() === "son"
-    ? "Tracking Son. Every check, load and record below is his."
+    ? "Tracking Porter. Every check, load and record below is his."
     : "Tracking Ryan. Same session, your own prescriptions and loads.";
 }
 function renderTracks() {
@@ -1284,8 +1396,8 @@ function renderPhase() {
    are the contract in ../shared/styles.css, "In-session layout". Every row
    after the warm-up, the finisher included, is one .hs-row in exactly one
    state FOR THE ACTIVE LIFTER:
-     done  its check is on (the finisher: a result is logged; on Monday Son
-           judges, so Ryan's result closes Son's finisher)
+     done  its check is on (the finisher: a result is logged; on Monday Porter
+           judges, so Ryan's result closes Porter's finisher)
      now   the row tapped last, else the first row not done. Full card, grid open.
      next  everything else. One-line summary; a tap makes it Now.
    The tapped row lives in memory only, never in state. It clears when that
@@ -1294,10 +1406,10 @@ function renderPhase() {
    =========================================================================== */
 const DAY_NAME = { mon: "Monday", wed: "Wednesday" };
 const FIN_KEY = "fin";
-const nowPick = {};          // dayKey -> row key tapped to be Now (for pickLifter)
-let pickLifter = null;       // the lifter those picks belong to; a change clears them all
+const nowPick = {};          // "<dayKey>_<lifter>" -> row key tapped to be Now for that lifter
 const prepOpen = {};         // dayKey -> { open, auto }: warm-up opened or closed by hand, while auto still reads the same
 let scrollToNow = false;     // set by a tap that moves Now; the next renderDay brings it into view
+let scrollToNowFor = null;   // the lane that tap came from (iPad)
 const ICON = {
   check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8"/></svg>`,
   clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M9.5 2.5h5"/></svg>`,
@@ -1312,9 +1424,9 @@ function finDone(w, d, lifter) {
   return d === "mon" && lifter === "son" ? logged("ryan") : logged(lifter);
 }
 /* The board for the active lifter: every row in order with its state, n (1-based) and the counts. */
+function pickKey(w, d, l) { return `${dayKey(w, d)}_${l || L()}`; }
 function boardOf(w, d) {
-  const l = L(), dk = dayKey(w, d);
-  if (pickLifter !== l) { Object.keys(nowPick).forEach(k => delete nowPick[k]); pickLifter = l; }
+  const l = L(), dk = pickKey(w, d, l);
   const ds = dayState(w, d, false);
   const ps = ds ? ds.per[l] : null;
   const rows = mainRows(w, d).map(r => Object.assign({}, r, { done: !!(ps && ps.completed[r.key]) }));
@@ -1323,11 +1435,15 @@ function boardOf(w, d) {
   const first = rows.find(r => !r.done);
   const nowKey = nowPick[dk] || (first ? first.key : null);
   const done = rows.filter(r => r.done).length;
-  rows.forEach((r, i) => { r.n = i + 1; r.st = r.key === nowKey ? "now" : r.done ? "done" : "next"; });
+  // A superset opens as one: every open member of the Now row's group is Now too.
+  const nowRow = rows.find(r => r.key === nowKey);
+  const blocks = PROGRAM.weeks[w][d].blocks;
+  const pairedNow = nowRow && !nowRow.fin && isPaired(blocks[nowRow.bi]) ? nowRow.bi : null;
+  rows.forEach((r, i) => { r.n = i + 1; r.st = r.key === nowKey ? "now" : r.done ? "done" : (pairedNow !== null && !r.fin && r.bi === pairedNow) ? "now" : "next"; });
   return { rows, done, total: rows.length, complete: rows.length > 0 && done === rows.length };
 }
-function pickNow(w, d, key) { nowPick[dayKey(w, d)] = key; pickLifter = L(); scrollToNow = true; renderDay(d); }
-function dropPick(w, d, key) { const dk = dayKey(w, d); if (nowPick[dk] === key) delete nowPick[dk]; }
+function pickNow(w, d, key) { nowPick[pickKey(w, d)] = key; scrollToNow = true; scrollToNowFor = L(); renderDay(d); }
+function dropPick(w, d, key) { const dk = pickKey(w, d); if (nowPick[dk] === key) delete nowPick[dk]; }
 /* Scheme lines. A track row's rx reads "3 sets · 3 × 3-5 · ..."; the summary drops the "3 sets". */
 function schemeOf(row, p) { return row.kind === "track" ? String(p.rx).replace(/^\d+ sets · /, "") : p.rx; }
 function shortRx(row, p) { return schemeOf(row, p).split(" · ")[0]; }
@@ -1340,7 +1456,134 @@ function sumHtml(st, name, sub, right, timer) {
     </button>`;
 }
 
+/* ===========================================================================
+   SUPERSETS (2026-10-19). A block whose note says "Superset" (or "the two
+   tracks") is done back to back: one outline, codes A1/A2, the round in the
+   header, one rest after the last open member. Same test the time plan uses.
+   =========================================================================== */
+function isPaired(b) { return /superset|the two tracks/i.test(`${b.label || ""} ${b.note || ""}`) && b.rows.length > 1; }   // A is marked in its label
+function blockLetter(b) { const m = String(b.label || "").match(/^([A-Z])\s*·/); return m ? m[1] : ""; }
+function blockName(b) { return String(b.label || "").replace(/^[A-Z]\s*·\s*/, ""); }
+function fmtRest(s) { return s >= 120 && s % 60 === 0 ? `${s / 60} min` : `${s} s`; }
+/* The round the active lifter is on, and which member is up: the open one with the fewest checked sets. */
+function groupInfo(w, d, items) {
+  const ps = perState(w, d, false);
+  const info = items.map(r => {
+    const raw = ps && ps.logs[r.key];
+    const p = resolve(r.row, null, raw && raw.step != null ? raw.step : undefined);
+    const log = SL.normLog(raw, loggable(r.row) ? p.sets : 0);
+    return { r, sets: p.sets || 1, checked: log.sets.filter(x => x.d).length };
+  });
+  const rounds = Math.max(...info.map(x => x.sets));
+  const open = info.filter(x => !x.r.done);
+  if (!open.length) return { round: "Done", up: null };
+  const minC = Math.min(...open.map(x => x.checked));
+  return { round: `Round ${Math.min(rounds, minC + 1)} of ${rounds}`, up: open.find(x => x.checked === minC).r.key };
+}
+/* True when a set check on row bi/ri should NOT start a rest: a later member of its superset is still open. */
+function restWaits(w, d, key) {
+  const m = key.match(/^b(\d+)r(\d+)$/); if (!m) return false;
+  const bi = +m[1], ri = +m[2], b = PROGRAM.weeks[w][d].blocks[bi];
+  if (!b || !isPaired(b)) return false;
+  const ps = perState(w, d, false);
+  return b.rows.some((_, j) => j > ri && !(ps && ps.completed[`b${bi}r${j}`]));
+}
+function renderGroup(w, d, b, items, plan, total) {
+  const letter = blockLetter(b);
+  const gi = groupInfo(w, d, items);
+  const kind = items.length === 2 ? "Superset" : items.length === 3 ? "Triset" : "Circuit";
+  const allDone = items.every(r => r.done);
+  const g = document.createElement("div");
+  g.className = "fs-ss" + (allDone ? " fs-ss-done" : "") + (items.some(r => r.st === "now") ? " fs-ss-now" : "");
+  const last = items[items.length - 1];
+  const note = b.note && !/^superset/i.test(b.note) && !allDone ? `<div class="fs-ss-note">${b.note}</div>` : "";
+  g.innerHTML = `
+    <div class="fs-ss-head"><span class="fs-ss-kind">${kind}${letter ? " " + letter : ""}</span><b>${blockName(b)}</b><span class="fs-ss-round">${gi.round}</span></div>
+    ${note}<div class="fs-ss-body"></div>
+    <div class="fs-ss-foot">↻ Rest ${fmtRest(last.row.rest)} after ${letter ? letter + items.length : "the last one"}${letter ? `, then back to ${letter}1` : ""}</div>`;
+  const body = g.querySelector(".fs-ss-body");
+  items.forEach((r, i) => {
+    const el = renderRow(w, d, r.row, r.key, plan, r, total);
+    el.classList.add("fs-in-ss");
+    const code = document.createElement("span");
+    code.className = "fs-code" + (r.key === gi.up ? " on" : "") + (r.done ? " done" : "");
+    code.textContent = (letter || "") + (i + 1);
+    el.prepend(code);
+    body.appendChild(el);
+  });
+  return g;
+}
+
+/* Every block, the finisher last, for the ACTIVE lifter (L()), appended to container.
+   Each block sits in a .fs-block anchor so the session map can scroll to it. */
+function renderBlocks(w, d, container, bd, plan) {
+  const day = PROGRAM.weeks[w][d];
+  const ds = dayState(w, d, false);
+  const byKey = {};
+  bd.rows.forEach(r => { byKey[r.key] = r; });
+  const on = new Set(activeBlocks(w, d).map(x => x.bi));
+  const low = ds && ds.readiness != null && ds.readiness <= 2;
+  let upNext = false;
+  const label = (text, parent) => {
+    const el = document.createElement("div");
+    el.className = "hs-section-label";
+    el.textContent = text;
+    parent.appendChild(el);
+  };
+  const offNote = text => {
+    const off = document.createElement("div");
+    off.className = "block-off";
+    off.textContent = text;
+    container.appendChild(off);
+  };
+  day.blocks.forEach((b, bi) => {
+    if (!on.has(bi)) {
+      offNote(b.plyo && low ? `${b.label} is off today: readiness ${ds.readiness}. Run one fewer set on the strength pairs too.` : `${b.label} skipped: short Monday.`);
+      return;
+    }
+    const anchor = document.createElement("div");
+    anchor.className = "fs-block";
+    anchor.dataset.block = bi;
+    container.appendChild(anchor);
+    const items = b.rows.map((row, ri) => byKey[`b${bi}r${ri}`]);
+    if (isPaired(b)) {
+      if (items[0].st === "next" && !upNext && items.every(r => r.st !== "now")) { label("Up next", anchor); upNext = true; }
+      anchor.appendChild(renderGroup(w, d, b, items, plan, bd.total));
+      return;
+    }
+    let text = b.label || "";
+    if (items[0].st === "next" && !upNext) { text = text ? `Up next · ${text}` : "Up next"; upNext = true; }
+    if (text) label(text, anchor);
+    if (b.note && items.some(r => !r.done)) {
+      const note = document.createElement("div");
+      note.className = "block-note";
+      note.textContent = b.note;
+      anchor.appendChild(note);
+    }
+    items.forEach((r, i) => {
+      if (i > 0 && r.st === "next" && !upNext) { label("Up next", anchor); upNext = true; }
+      anchor.appendChild(renderRow(w, d, r.row, r.key, plan, r, bd.total));
+    });
+  });
+  if (!(ds && ds.short)) {
+    const anchor = document.createElement("div");
+    anchor.className = "fs-block";
+    anchor.dataset.block = "fin";
+    container.appendChild(anchor);
+    const r = byKey[FIN_KEY];
+    const text = `Finisher · ${w === 0 ? "Day 1, cooperative" : "Block " + blockOf(w)}`;
+    label(r.st === "next" && !upNext ? `Up next · ${text}` : text, anchor);
+    anchor.appendChild(renderFinisherRow(w, d, day, r, bd.total));
+  } else offNote("Finisher skipped: short Monday.");
+}
+
 function renderDay(d) {
+  if (laneMode()) return asLifter(null, () => renderLanes(d));
+  return renderPhoneDay(d);
+}
+
+/* Phone: one lifter at a time, the Porter / Ryan switch under the header. */
+function renderPhoneDay(d) {
   const w = uiWeek;
   const day = PROGRAM.weeks[w][d];
   const container = document.getElementById("container-" + d);
@@ -1354,8 +1597,6 @@ function renderDay(d) {
   const plan = dayPlan(w, d);
   const dk = dayKey(w, d);
   const bd = boardOf(w, d);
-  const byKey = {};
-  bd.rows.forEach(r => { byKey[r.key] = r; });
   const who = LIFTER_LABEL[L()];
 
   /* Session header: eyebrow, title, clock, and progress for the active lifter. */
@@ -1385,69 +1626,16 @@ function renderDay(d) {
     if (b.dataset.lifter === L()) return;
     state.lifter = b.dataset.lifter; saveState(); render();   // same week: they train together
   });
-  ctl.querySelector(".fs-clear").onclick = () => {
-    if (!ds) return;
-    if (confirm(`Clear Week ${w} ${PROGRAM.dayLabels[d]} for ${who}? Checks, logs and the finisher result go. The other lifter's day stays.`)) {
-      ds.per[L()] = emptyPer();
-      delete nowPick[dk];
-      saveState(); render();
-    }
-  };
+  ctl.querySelector(".fs-clear").onclick = () => clearDay(w, d, L());
   container.appendChild(ctl);
   wireClock(d, w, plan, head.querySelector(".hs-sess-clock"), ctl.querySelector(".fs-pace"));
 
   // Readiness (Wednesday) or short-Monday toggle
-  if ((d === "wed" && w > 0) || d === "mon") {
-    const box = document.createElement("div");
-    box.className = "fs-ctls" + (d === "mon" ? " fs-ctls-short" : "");
-    box.appendChild(d === "mon" ? renderShortToggle(w, d) : renderReadiness(w, d));
-    container.appendChild(box);
-  }
-
+  const ctls = dayCtls(w, d);
+  if (ctls) container.appendChild(ctls);
   if (day.warmup) container.appendChild(renderPrep(w, d, "Warm-up", "wu", day.warmup, bd.done > 0));
 
-  const on = new Set(activeBlocks(w, d).map(x => x.bi));
-  const low = ds && ds.readiness != null && ds.readiness <= 2;
-  let upNext = false;
-  const label = text => {
-    const el = document.createElement("div");
-    el.className = "hs-section-label";
-    el.textContent = text;
-    container.appendChild(el);
-  };
-  const offNote = text => {
-    const off = document.createElement("div");
-    off.className = "block-off";
-    off.textContent = text;
-    container.appendChild(off);
-  };
-  day.blocks.forEach((b, bi) => {
-    if (!on.has(bi)) {
-      offNote(b.plyo && low ? `${b.label} is off today: readiness ${ds.readiness}. Run one fewer set on the strength pairs too.` : `${b.label} skipped: short Monday.`);
-      return;
-    }
-    const items = b.rows.map((row, ri) => byKey[`b${bi}r${ri}`]);
-    let text = b.label || "";
-    if (items[0].st === "next" && !upNext) { text = text ? `Up next · ${text}` : "Up next"; upNext = true; }
-    if (text) label(text);
-    if (b.note && items.some(r => !r.done)) {
-      const note = document.createElement("div");
-      note.className = "block-note";
-      note.textContent = b.note;
-      container.appendChild(note);
-    }
-    items.forEach((r, i) => {
-      if (i > 0 && r.st === "next" && !upNext) { label("Up next"); upNext = true; }
-      container.appendChild(renderRow(w, d, r.row, r.key, plan, r, bd.total));
-    });
-  });
-
-  if (!(ds && ds.short)) {
-    const r = byKey[FIN_KEY];
-    const text = `Finisher · ${w === 0 ? "Day 1, cooperative" : "Block " + blockOf(w)}`;
-    label(r.st === "next" && !upNext ? `Up next · ${text}` : text);
-    container.appendChild(renderFinisherRow(w, d, day, r, bd.total));
-  } else offNote("Finisher skipped: short Monday.");
+  renderBlocks(w, d, container, bd, plan);
 
   if (scrollToNow && container.offsetParent) {
     scrollToNow = false;
@@ -1458,6 +1646,280 @@ function renderDay(d) {
     }
   }
 }
+function dayCtls(w, d) {
+  if (!((d === "wed" && w > 0) || d === "mon")) return null;
+  const box = document.createElement("div");
+  box.className = "fs-ctls" + (d === "mon" ? " fs-ctls-short" : "");
+  box.appendChild(d === "mon" ? renderShortToggle(w, d) : renderReadiness(w, d));
+  return box;
+}
+function clearDay(w, d, l) {
+  const ds = dayState(w, d, false);
+  if (!ds) return;
+  if (confirm(`Clear Week ${w} ${PROGRAM.dayLabels[d]} for ${LIFTER_LABEL[l]}? Checks, logs and the finisher result go. The other lifter's day stays.`)) {
+    ds.per[l] = emptyPer();
+    delete nowPick[pickKey(w, d, l)];
+    saveState(); render();
+  }
+}
+
+/* ===========================================================================
+   iPAD LANES (2026-10-19). Wide screens (iPad, either orientation) get one
+   lane per lifter, each scrolling on its own, a rail with the session clock,
+   a rest timer per lifter and what's coming up, and the session map along the
+   bottom edge. Every session opens with Both; tapping a lane's name (or the
+   Here control) goes solo and the lane left gets the room. Phones keep the
+   one-lifter board above. Rendering only: the data is the same per-lifter state.
+   =========================================================================== */
+const LANE_MQ = window.matchMedia("(min-width: 740px) and (min-height: 600px)");
+function laneMode() { return LANE_MQ.matches; }
+let soloLifter = null;       // null = both lanes; never saved, so every session opens with Both
+const laneScroll = {};       // "<d>_<lifter>" -> scrollTop, kept across re-renders
+let jumpBlock = null;        // set by a tap on the map: the next render scrolls both lanes to it
+let railMoreOpen = false;    // portrait: the rail's warm-up / settings drawer
+
+/* Events inside a lane act for that lane's lifter: L() reads ctxLifter while the event runs. */
+function bindLane(el, l) {
+  ["pointerdown", "click", "input", "change", "focusin", "keydown"].forEach(t => el.addEventListener(t, () => {
+    ctxLifter = l;
+    clearTimeout(bindLane.t);
+    bindLane.t = setTimeout(() => { ctxLifter = null; }, 0);
+  }, true));
+}
+function laneWho() { return soloLifter ? [soloLifter] : LIFTERS.slice(); }
+function setSolo(l) { soloLifter = l; jumpBlock = null; render(); }
+function trackLine(l) {
+  return ["pullup", "pushup"].map(k => {
+    const steps = TRACKS[k][l], st = steps[Math.min(state.tracks[l][k], steps.length - 1)];
+    return `${TRACKS[k].label}: ${st.name}`;
+  }).join(" · ");
+}
+function setBoardTop() {
+  const bar = document.querySelector(".appbar");
+  document.documentElement.style.setProperty("--fs-top", `${bar ? bar.getBoundingClientRect().height : 60}px`);
+}
+function scrollBoardIntoView(d) {
+  if (!laneMode()) return;
+  const el = document.getElementById("container-" + d);
+  if (!el || !el.offsetParent) return;
+  setBoardTop();
+  const bar = document.querySelector(".appbar");
+  const top = el.getBoundingClientRect().top + window.scrollY - (bar ? bar.getBoundingClientRect().height : 0);
+  window.scrollTo({ top: Math.max(0, top), behavior: "auto" });
+}
+
+function renderLanes(d) {
+  const w = uiWeek;
+  const day = PROGRAM.weeks[w][d];
+  const container = document.getElementById("container-" + d);
+  container.querySelectorAll(".fs-lane-scroll").forEach(el => { laneScroll[`${d}_${el.dataset.lifter}`] = el.scrollTop; });
+  container.innerHTML = "";
+  container.className = "fs-board fs-wide-board" + (soloLifter ? " fs-solo" : "");
+  setBoardTop();
+  if (!day) {
+    container.innerHTML = `<div class="card"><h2>No Monday in Week 0</h2><p>Day 1 is Wednesday September 23. The first full Monday upper session is September 28, Week 1.</p></div>`;
+    container.className = "fs-board";
+    return;
+  }
+  const ds = dayState(w, d, false);
+  const plan = dayPlan(w, d);
+  const who = laneWho();
+  const boards = {};
+  who.forEach(l => { boards[l] = asLifter(l, () => boardOf(w, d)); });
+
+  const main = document.createElement("div");
+  main.className = "fs-lanes";
+  const lanes = {};
+  who.forEach(l => {
+    const bd = boards[l];
+    const lane = document.createElement("section");
+    lane.className = `fs-lane fs-lane-${l}`;
+    lane.innerHTML = `
+      <button type="button" class="fs-lane-name" aria-label="${soloLifter ? "Show both lifters" : `Only ${LIFTER_LABEL[l]} today`}">
+        <b>${LIFTER_LABEL[l]}</b>
+        <span class="fs-lane-meta"><span class="fs-lane-count">${bd.complete ? "Day complete" : `${bd.done} of ${bd.total} done`}</span><small>${trackLine(l)}</small></span>
+        <span class="fs-lane-act">${soloLifter ? "Both" : "Solo"}</span>
+      </button>
+      <div class="fs-lane-scroll" data-lifter="${l}"></div>`;
+    lane.querySelector(".fs-lane-name").onclick = () => setSolo(soloLifter ? null : l);
+    const sc = lane.querySelector(".fs-lane-scroll");
+    asLifter(l, () => renderBlocks(w, d, sc, bd, plan));
+    const clear = document.createElement("button");
+    clear.type = "button";
+    clear.className = "reset-link fs-lane-clear";
+    clear.textContent = `Clear ${LIFTER_LABEL[l]}'s day`;
+    clear.onclick = () => clearDay(w, d, l);
+    sc.appendChild(clear);
+    bindLane(lane, l);
+    lanes[l] = sc;
+    main.appendChild(lane);
+  });
+  main.appendChild(renderRail(w, d, day, plan, who, boards));
+  container.appendChild(main);
+  container.appendChild(renderMap(w, d, who, boards));
+
+  // Scroll: a map jump wins, then bringing a moved Now into view, else where each lane was.
+  who.forEach(l => {
+    const sc = lanes[l];
+    const at = (el) => el.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop;
+    const prev = laneScroll[`${d}_${l}`];
+    if (prev != null) sc.scrollTop = prev;
+    if (jumpBlock != null) {
+      const a = sc.querySelector(`.fs-block[data-block="${jumpBlock}"]`);
+      if (a) sc.scrollTop = Math.max(0, at(a) - 6);
+    } else if (scrollToNow && scrollToNowFor === l) {
+      const nowEl = sc.querySelector(".hs-row.hs-now");
+      const target = nowEl ? (nowEl.closest(".fs-ss") || nowEl) : null;
+      if (target) {
+        const y = at(target) - sc.scrollTop;
+        if (y < 0 || y > sc.clientHeight * 0.55) sc.scrollTop = Math.max(0, at(target) - 6);
+      }
+    }
+    laneScroll[`${d}_${l}`] = sc.scrollTop;
+  });
+  jumpBlock = null;
+  if (scrollToNow) { scrollToNow = false; scrollToNowFor = null; }
+  paintRestCards();
+}
+
+function renderRail(w, d, day, plan, who, boards) {
+  const rail = document.createElement("aside");
+  rail.className = "fs-rail" + (railMoreOpen ? " more-open" : "");
+  const nowName = l => {
+    const r = boards[l].rows.find(x => x.st === "now");
+    if (!r) return "Day complete";
+    if (r.fin) return "Finisher";
+    const p = resolve(r.row, l);
+    const b = PROGRAM.weeks[w][d].blocks[r.bi];
+    const code = isPaired(b) && blockLetter(b) ? `${blockLetter(b)}${r.ri + 1} · ` : "";
+    return code + p.name;
+  };
+  rail.innerHTML = `
+    <div class="fs-rail-main">
+      <div class="fs-clock-card">
+        <button type="button" class="fs-rail-top" aria-label="Show the week and tabs">Week ${w} · ${DAY_NAME[d]} ↑</button>
+        <div class="fs-clock-title">${day.title}</div>
+        <button type="button" class="fs-rail-clock hs-sess-clock"><span class="fs-clock-t">Start</span></button>
+        <span class="fs-rail-pace"></span>
+      </div>
+      ${who.map(l => `
+      <button type="button" class="fs-rest-card fs-rc-${l}" data-l="${l}" aria-label="${LIFTER_LABEL[l]}'s rest: tap to skip">
+        <span class="fs-rc-who"><b>${LIFTER_LABEL[l]}</b><span class="fs-rc-s">Ready</span></span>
+        <span class="fs-rc-t">Ready</span>
+        <span class="fs-rc-bar"><i></i></span>
+        <span class="fs-rc-n">${nowName(l)}</span>
+      </button>`).join("")}
+      <div class="fs-here" role="group" aria-label="Who is here today">
+        <span>Here</span>
+        <div class="fs-seg">${LIFTERS.map(l => `<button type="button" data-solo="${l}" class="${soloLifter === l ? "on" : ""}">${LIFTER_LABEL[l]}</button>`).join("")}<button type="button" data-solo="" class="${soloLifter ? "" : "on"}">Both</button></div>
+      </div>
+      <button type="button" class="fs-more-btn">${railMoreOpen ? "Hide warm-up and setup" : "Warm-up and setup"}</button>
+    </div>
+    <div class="fs-rail-more"></div>`;
+  rail.querySelector(".fs-rail-top").onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+  rail.querySelectorAll("[data-solo]").forEach(b => b.onclick = () => setSolo(b.dataset.solo || null));
+  rail.querySelectorAll(".fs-rest-card").forEach(b => b.onclick = () => SL.rest.stop(b.dataset.l));
+  rail.querySelector(".fs-more-btn").onclick = () => { railMoreOpen = !railMoreOpen; renderDay(d); };
+  wireClock(d, w, plan, rail.querySelector(".fs-rail-clock"), rail.querySelector(".fs-rail-pace"));
+
+  const more = rail.querySelector(".fs-rail-more");
+  const coming = renderComing(w, d, who, boards);
+  if (coming) more.appendChild(coming);
+  const ctls = dayCtls(w, d);
+  if (ctls) more.appendChild(ctls);
+  const started = who.some(l => boards[l].done > 0);
+  if (day.warmup) more.appendChild(renderPrep(w, d, "Warm-up", "wu", day.warmup, started));
+  return rail;
+}
+
+/* The next group after the one the first lane is on, with each lifter's last numbers on its first row. */
+function renderComing(w, d, who, boards) {
+  const day = PROGRAM.weeks[w][d];
+  const act = activeBlocks(w, d);
+  const now = boards[who[0]].rows.find(r => r.st === "now");
+  if (!now || now.fin) return null;
+  const idx = act.findIndex(x => x.bi === now.bi);
+  const nxt = act.slice(idx + 1).find(({ b, bi }) => who.some(l => b.rows.some((_, ri) => !boards[l].rows.find(r => r.key === `b${bi}r${ri}`).done)));
+  const ds = dayState(w, d, false);
+  const el = document.createElement("div");
+  el.className = "fs-coming";
+  if (!nxt) {
+    if (ds && ds.short) return null;
+    el.innerHTML = `<div class="fs-coming-k">Coming up</div><div class="fs-coming-n">Finisher</div><div class="fs-coming-l">${day.finNote}</div>`;
+    return el;
+  }
+  const { b, bi } = nxt;
+  const row = b.rows[0];
+  const lines = who.map(l => {
+    const p = resolve(row, l);
+    let last = shortRx(row, p);
+    if (loggable(row)) {
+      const hist = priorEntries(p.name, w, d, l);
+      if (hist.length) last = `Last: ${SL.lastText(hist[0], specOf(row, p))}`;
+    }
+    return `<span class="fs-cl-${l}">${LIFTER_LABEL[l]}</span><span>${last}</span>`;
+  }).join("");
+  const later = act.slice(act.findIndex(x => x.bi === bi) + 1).map(x => x.b.label.split(" · ")[0]);
+  if (!(ds && ds.short)) later.push("Finisher");
+  el.innerHTML = `
+    <div class="fs-coming-k">Coming up</div>
+    <div class="fs-coming-n">${b.label} · ${resolve(row, who[0]).name}${b.rows.length > 1 ? ` + ${b.rows.length - 1} more` : ""}</div>
+    <div class="fs-coming-l">${lines}</div>
+    ${later.length ? `<div class="fs-coming-then">Then ${later.join(", ")}</div>` : ""}`;
+  return el;
+}
+
+/* The session map along the bottom edge: one segment per group, one bar per lifter. Tap jumps both lanes. */
+function renderMap(w, d, who, boards) {
+  const ds = dayState(w, d, false);
+  const map = document.createElement("nav");
+  map.className = "fs-map";
+  map.setAttribute("aria-label", "Session map");
+  const segs = activeBlocks(w, d).map(({ b, bi }) => ({ label: b.label, bi, keys: b.rows.map((_, ri) => `b${bi}r${ri}`) }));
+  if (!(ds && ds.short)) segs.push({ label: "Finisher", bi: "fin", keys: [FIN_KEY] });
+  segs.forEach(s => {
+    const per = who.map(l => {
+      const rows = boards[l].rows.filter(r => s.keys.includes(r.key));
+      const done = rows.filter(r => r.done).length;
+      return { l, pct: rows.length ? Math.round(100 * done / rows.length) : 0, now: rows.some(r => r.st === "now"), all: rows.length > 0 && done === rows.length };
+    });
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "fs-seg2" + (per.some(x => x.now) ? " now" : "") + (per.every(x => x.all) ? " done" : "");
+    btn.innerHTML = `<b>${s.label}</b><span class="fs-bars">${per.map(x => `<i class="fs-bar-${x.l}"><i style="width:${x.pct}%"></i></i>`).join("")}</span>`;
+    btn.onclick = () => {
+      who.forEach(l => asLifter(l, () => {
+        const bd = boardOf(w, d);
+        const first = bd.rows.find(r => s.keys.includes(r.key) && !r.done) || bd.rows.find(r => s.keys.includes(r.key));
+        if (first) nowPick[pickKey(w, d, l)] = first.key;
+      }));
+      jumpBlock = s.bi;
+      renderDay(d);
+    };
+    map.appendChild(btn);
+  });
+  return map;
+}
+function paintRestCards() {
+  document.querySelectorAll(".fs-rest-card").forEach(el => {
+    const c = SL.rest.chan(el.dataset.l);
+    const t = el.querySelector(".fs-rc-t"), s = el.querySelector(".fs-rc-s"), bar = el.querySelector(".fs-rc-bar i");
+    const resting = !!(c.key && c.end);
+    el.classList.toggle("resting", resting);
+    el.classList.toggle("go", !resting && !!c.goUntil);
+    if (resting) {
+      const left = SL.rest.left(c);
+      t.textContent = SL.rest.fmt(left); s.textContent = "Resting · tap to skip";
+      bar.style.width = `${Math.min(100, (1 - left / c.total) * 100).toFixed(1)}%`;
+    } else {
+      t.textContent = c.goUntil ? "Go" : "Ready"; s.textContent = c.goUntil ? "Rest done" : "Up now";
+      bar.style.width = c.goUntil ? "100%" : "0%";
+    }
+  });
+}
+SL.rest.onPaint(paintRestCards);
+LANE_MQ.addEventListener("change", () => { render(); const a = document.querySelector(".tab.active"); if (a && (a.dataset.pane === "mon" || a.dataset.pane === "wed")) scrollBoardIntoView(a.dataset.pane); });
+window.addEventListener("resize", () => { if (laneMode()) setBoardTop(); });
 
 function renderReadiness(w, d) {
   const ds = dayState(w, d, false);
@@ -1600,7 +2062,7 @@ function renderRow(w, d, row, key, plan, r, total) {
   full.querySelector(".fs-check").onclick = () => {
     const cur = dayState(w, d, true);
     cur.per[L()].completed[key] = !isDone;
-    if (!isDone) { stampDate(cur); dropPick(w, d, key); scrollToNow = true; }
+    if (!isDone) { stampDate(cur); dropPick(w, d, key); scrollToNow = true; scrollToNowFor = L(); }
     saveState(); renderDay(d); renderWeekBar();
   };
   function ensureLog() {
@@ -1618,8 +2080,12 @@ function renderRow(w, d, row, key, plan, r, total) {
     if (box.classList.contains("open")) box.querySelector("textarea").focus();
   };
 
+  const lifter = L();
   SL.wireGrid(el, {
     spec, sugg,
+    restKey: `${lifter}|${key}`,      // one rest per lifter: Porter's and Ryan's run side by side
+    restChannel: lifter,
+    noRest: () => restWaits(w, d, key),   // first half of a superset: the rest comes after the pair
     getLog: ensureLog,
     save: saveState,
     rerender: () => renderDay(d),
@@ -1662,7 +2128,7 @@ function renderFinisherRow(w, d, day, r, total) {
     const f = judge ? perState(w, d, false, "ryan").fin : fin;
     right = `${judge ? "judged · " : ""}${fmtWeight(parseFloat(f.result))} ${finUnit(f.pick)}`.trim();
   } else if (st === "next") {
-    sub = fin.pick ? (judge ? "Ryan's result, Son judges" : "Log the result") : menuN > 1 ? `Pick one of ${menuN}` : "Cooperative";
+    sub = fin.pick ? (judge ? "Ryan's result, Porter judges" : "Log the result") : menuN > 1 ? `Pick one of ${menuN}` : "Cooperative";
   }
   const el = document.createElement("div");
   el.className = `hs-row hs-${st}`;
@@ -1735,7 +2201,7 @@ function renderFinisher(w, d, day, inBoard) {
     const res = document.createElement("div");
     if (judge) {
       res.className = "block-note";
-      res.innerHTML = `<strong>Son judges today.</strong> Count Dad's reps, call the no-reps, run the clock. Switch to Ryan to log his result.`;
+      res.innerHTML = `<strong>Porter judges today.</strong> Count Dad's reps, call the no-reps, run the clock. ${laneMode() ? "Ryan logs his result in his lane." : "Switch to Ryan to log his result."}`;
     } else {
       res.className = "fin-result";
       res.innerHTML = `<span class="unit">${LIFTER_LABEL[L()]}'s result</span><input type="number" inputmode="decimal" step="0.1" placeholder="${unit}" value="${fin.result == null ? "" : fin.result}"><span class="unit">${unit}${isPR ? '<span class="pr-flag">PR</span>' : ""}</span>`;
@@ -1808,7 +2274,7 @@ function renderBench() {
     html += `<td>${a != null && h ? (a / h).toFixed(2) : "–"}</td>`;
   });
   html += `</tr></table></div>
-    <div class="note-box">Symmetry within about 10% (90%+) means the two legs are even. Ryan: that is the Achilles number. Son: a growth spurt of about half an inch a month in the height row means hold the jump volume flat.</div>`;
+    <div class="note-box">Symmetry within about 10% (90%+) means the two legs are even. Ryan: that is the Achilles number. Porter: a growth spurt of about half an inch a month in the height row means hold the jump volume flat.</div>`;
   card.innerHTML = html;
   card.querySelectorAll("input[data-wk]").forEach(inp => inp.addEventListener("change", e => {
     const wk = e.target.dataset.wk, k = e.target.dataset.k;
@@ -1876,7 +2342,9 @@ function buildPrinciples() {
 function buildNotes() {
   document.getElementById("notes-card").innerHTML = `
     <h2>How this tracker works</h2>
-    <p><strong>Two lifters, one phone.</strong> The Son / Ryan toggle at the top switches every check, load, track, benchmark and finisher result to that person. Both of you check off the same session standing at the same phone.</p>
+    <p><strong>On the iPad</strong> the session opens with a lane for each of you, side by side, each scrolling on its own. The rail on the right has the session clock, a rest timer for each lifter and what's coming up; the map along the bottom shows each lifter's progress through the session and jumps both lanes to a group when you tap it. Tap a lane's name, or Porter or Ryan under Here, to train solo; Both brings the second lane back.</p>
+    <p><strong>Supersets</strong> sit in one outline with codes (B1, B2) and the round in the header. Checking a set on B1 doesn't start a rest; checking B2 does. The filled code is who's up.</p>
+    <p><strong>Two lifters, one phone.</strong> The Porter / Ryan toggle at the top switches every check, load, track, benchmark and finisher result to that person. Both of you check off the same session standing at the same phone.</p>
     <p><strong>Week pills</strong> pick the week, <strong>Mon / Wed</strong> pick the session. Week 0 is this week and has only Wednesday: Day 1. W1 to W12 are the full weeks. Pills with an amber underline are benchmark weeks.</p>
     <h3>The two tracks</h3>
     <p>The pull-up step and the push-up level live in the hero card and drive the A block on Mondays. When the promotion rule under the track is met, tap <strong>▲ Promote</strong>. Tap ▼ if a level turns out too early. Growth can push a level back and that is normal.</p>
@@ -1886,7 +2354,7 @@ function buildNotes() {
     <h3>Readiness and short Monday</h3>
     <p>Wednesday opens with <strong>legs, 1 to 5</strong>. A 1 or 2 turns the jump block off and reminds you to drop a set. Monday has a <strong>Short Monday</strong> toggle that collapses the session to the two tracks: for a late Sunday, a championship week, or a rough morning.</p>
     <h3>Finishers and records</h3>
-    <p>Every session ends with a pick from three. Log the result and the app flags a PR against that lifter's history. The Records tab is the whiteboard. Monday finishers are Ryan's, with Son as judge; Wednesday is both.</p>
+    <p>Every session ends with a pick from three. Log the result and the app flags a PR against that lifter's history. The Records tab is the whiteboard. Monday finishers are Ryan's, with Porter as judge; Wednesday is both.</p>
     <h3>Benchmarks</h3>
     <p>Day 1, W4, W8, W12. Dead hang, negative, push-up level and reps, pull-up attempt, broad jump, single-leg hop left and right, height, and the 5-10-5 from W8. The delta under each cell is against Day 1. Symmetry and jump-to-height ratio are computed.</p>
     <h3>Timers</h3>
@@ -1902,7 +2370,8 @@ function buildNotes() {
 /* ===========================================================================
    STATS
    =========================================================================== */
-function updateStats() {
+function updateStats() { asLifter(null, updateStatsNow); }
+function updateStatsNow() {
   const cw = currentWeek();
   document.getElementById("stat-week").textContent = "W" + cw;
   let daysDone = 0, total = 0;
@@ -1920,14 +2389,17 @@ function updateStats() {
   });
 }
 function render() {
-  renderLifter();
-  renderTracks();
-  renderWeekBar();
-  renderPhase();
-  PROGRAM.dayOrder.forEach(renderDay);
-  renderBench();
-  renderRecords();
-  updateStats();
+  asLifter(null, () => {
+    document.body.classList.toggle("fs-wide", laneMode());
+    renderLifter();
+    renderTracks();
+    renderWeekBar();
+    renderPhase();
+    PROGRAM.dayOrder.forEach(renderDay);
+    renderBench();
+    renderRecords();
+    updateStats();
+  });
 }
 
 /* ===========================================================================

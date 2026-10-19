@@ -88,9 +88,13 @@
   }
   function apply(token, pulled) {
     let n = 0;
+    if (window.SetLog && SetLog.sync && SetLog.sync.forgetHistory) SetLog.sync.forgetHistory();   // new token, new history
     pulled.forEach((x) => {
       if (!x.found || !x.payload || !x.payload.state) return;
       lsSet(x.storageKey, JSON.stringify(x.payload.state));
+      // Two-way sync (SetLog): what was just restored IS the server copy, so it is the agreed base.
+      lsSet(x.storageKey + "_sync_base", JSON.stringify(x.payload.state));
+      if (x.payload.rev != null) lsSet(x.storageKey + "_sync_rev", String(x.payload.rev));
       if (x.sync === "library" && x.payload.summaries) {
         Object.entries(x.payload.summaries).forEach(([slug, sm]) => lsSet("summary." + slug, JSON.stringify(sm)));
       }

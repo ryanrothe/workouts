@@ -165,15 +165,22 @@
   };
 
   /* ---------------------------------------------------------------------------
-     REST BAR (2026-09-25). One rest at a time per page. A set check starts it; the
-     length comes from the row's own rest timer button (data-default "90s" / "2:00"),
-     else spec.rest, else 90 s. Survives re-renders: every grid with the same key
-     repaints from this state. Ends with a vibration and two short beeps.
+     REST BAR (2026-09-25; channels 2026-10-19). One rest at a time PER CHANNEL. A
+     program with one lifter uses the default channel ("page"), so it behaves as
+     before: one rest per page. Father & Son passes the lifter as the channel, so
+     Porter and Ryan each run their own rest at the same time. A set check starts
+     it; the length comes from the row's own rest timer button (data-default "90s" /
+     "2:00"), else spec.rest, else 90 s. Survives re-renders: every grid with the
+     same key repaints from this state. Ends with a vibration and two short beeps.
+     onPaint(fn) lets a page draw its own readout (fn gets the channel map).
      --------------------------------------------------------------------------- */
   SL.rest = (function () {
-    const st = { key: null, end: 0, total: 0, goUntil: 0, timer: null };
+    const chans = {};
+    const listeners = [];
+    let timer = null;
     let ctx = null;
     const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+    function chan(c) { const k = c || "page"; return chans[k] || (chans[k] = { key: null, end: 0, total: 0, goUntil: 0 }); }
     function unlock() {
       try { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === "suspended") ctx.resume(); } catch (e) { ctx = null; }
     }
@@ -201,34 +208,47 @@
       if (m) return +m[1] * 60;
       return spec && spec.rest ? spec.rest : 90;
     }
+    const live = (c) => !!(c.key && (c.end || c.goUntil));
+    function left(c) { return Math.max(0, Math.ceil((c.end - Date.now()) / 1000)); }
     function paintAll() {
-      const now = Date.now();
       document.querySelectorAll(".sl-rest").forEach((el) => {
         const grid = el.closest(".sl-grid");
-        const mine = grid && grid.dataset.slKey === st.key;
-        if (!mine || (!st.end && !st.goUntil)) { el.hidden = true; el.classList.remove("go"); return; }
+        const k = grid && grid.dataset.slKey;
+        const c = k ? Object.values(chans).find((x) => live(x) && x.key === k) : null;
+        if (!c) { el.hidden = true; el.classList.remove("go"); return; }
         el.hidden = false;
-        const left = Math.max(0, Math.ceil((st.end - now) / 1000));
-        const go = left === 0;
+        const l = left(c);
+        const go = l === 0;
         el.classList.toggle("go", go);
-        el.querySelector(".sl-rest-t").textContent = go ? "Go" : fmt(left);
+        el.querySelector(".sl-rest-t").textContent = go ? "Go" : fmt(l);
         el.querySelector(".sl-rest-l").textContent = go ? "Rest done" : "Rest";
-        el.querySelector(".sl-rest-bar i").style.width = `${go ? 100 : Math.min(100, (1 - left / st.total) * 100).toFixed(1)}%`;
+        el.querySelector(".sl-rest-bar i").style.width = `${go ? 100 : Math.min(100, (1 - l / c.total) * 100).toFixed(1)}%`;
       });
+      listeners.forEach((fn) => { try { fn(chans); } catch (e) {} });
     }
     function tick() {
       const now = Date.now();
-      if (st.end && now >= st.end) { st.end = 0; st.goUntil = now + 4000; beep(); }
-      if (!st.end && st.goUntil && now >= st.goUntil) { st.goUntil = 0; st.key = null; clearInterval(st.timer); st.timer = null; }
+      let any = false;
+      Object.values(chans).forEach((c) => {
+        if (c.end && now >= c.end) { c.end = 0; c.goUntil = now + 4000; beep(); }
+        if (!c.end && c.goUntil && now >= c.goUntil) { c.goUntil = 0; c.key = null; }
+        if (live(c)) any = true;
+      });
+      if (!any && timer) { clearInterval(timer); timer = null; }
       paintAll();
     }
-    function start(key, secs) {
-      st.key = key; st.total = secs; st.end = Date.now() + secs * 1000; st.goUntil = 0;
-      if (!st.timer) st.timer = setInterval(tick, 250);
+    function start(key, secs, channel) {
+      const c = chan(channel);
+      c.key = key; c.total = secs; c.end = Date.now() + secs * 1000; c.goUntil = 0;
+      if (!timer) timer = setInterval(tick, 250);
       paintAll();
     }
-    function stop() { st.end = 0; st.goUntil = 0; st.key = null; if (st.timer) { clearInterval(st.timer); st.timer = null; } paintAll(); }
-    return { start, stop, paintAll, secsFor, unlock, state: st };
+    function stop(channel) {
+      (channel === undefined ? Object.values(chans) : [chan(channel)]).forEach((c) => { c.end = 0; c.goUntil = 0; c.key = null; });
+      paintAll();
+    }
+    function onPaint(fn) { listeners.push(fn); }
+    return { start, stop, paintAll, secsFor, unlock, chan, left, fmt, onPaint, state: chan("page") };
   })();
 
   /* ---------------------------------------------------------------------------
@@ -335,12 +355,16 @@
       ${rest}
       <div class="sl-tools">
         ${fill ? `<button type="button" class="btn sl-fill">${fill}</button>` : ""}
+        ${hasW && log.sets.length > 1 ? `<button type="button" class="btn sl-same" title="Copy set 1's weight to every open set">Same lb ↓</button>` : ""}
         <button type="button" class="btn sl-clear">Clear</button>
       </div>
     </div>`;
   };
   /* cfg: { spec, sugg, getLog() → the stored, normalized log (created on demand),
-            save(), rerender(), onPromote() } */
+            save(), rerender(), onPromote(),
+            restKey?, restChannel? (one rest per channel; default one per page),
+            noRest? → true when a set check should not start a rest (the first
+            half of a superset: the rest comes after the pair) } */
   SL.wireGrid = function (root, cfg) {
     const spec = cfg.spec, sugg = cfg.sugg;
     const hasW = !!spec.loaded;
@@ -375,12 +399,22 @@
       SL.rest.unlock();
       const secs = SL.rest.secsFor(root, spec);
       cfg.save(); cfg.rerender();
-      if (secs > 0) SL.rest.start(restKey, secs);
+      const skipRest = typeof cfg.noRest === "function" ? cfg.noRest() : !!cfg.noRest;
+      if (secs > 0 && !skipRest) SL.rest.start(restKey, secs, cfg.restChannel);
     }));
+    // Same weight: copy set 1's weight (else the first set with one) to every set not yet checked.
+    const sameBtn = root.querySelector(".sl-same");
+    if (sameBtn) sameBtn.onclick = () => {
+      const lg = cfg.getLog();
+      const src = lg.sets.find((x) => x.w != null);
+      if (!src) return;
+      lg.sets.forEach((x) => { if (!x.d) x.w = src.w; });
+      cfg.save(); cfg.rerender();
+    };
     const clearBtn = root.querySelector(".sl-clear");
     if (clearBtn) clearBtn.onclick = () => { cfg.getLog().sets.forEach(x => { x.r = null; x.w = null; delete x.d; }); cfg.save(); cfg.rerender(); };
     const skip = root.querySelector(".sl-rest-skip");
-    if (skip) skip.onclick = () => SL.rest.stop();
+    if (skip) skip.onclick = () => SL.rest.stop(cfg.restChannel);
     SL.rest.paintAll();
     root.querySelectorAll(".sl-r").forEach(inp => inp.addEventListener("input", e => {
       const i = parseInt(e.target.dataset.i, 10), raw = e.target.value.trim();
@@ -407,21 +441,75 @@
   };
 
   /* ---------------------------------------------------------------------------
-     SYNC. Local storage stays the source of truth. Every save also PUTs the
-     program's state to the workout-sync Worker so Karl can read it; a failed
-     post retries on the next save. One device token covers the whole library
-     (programs share an origin, so they share localStorage). The first program
-     to run adopts Father & Son's existing token, so nothing new is read off
-     the phone.
-     cfg: { slug, storageKey, payload() → { state, entries, ...extras }, hasData() }
+     MERGE (2026-10-19). Three-way JSON merge: base is the copy both devices last
+     agreed on (what the server held at the last pull or push). A field changed on
+     one side only takes that side; a field changed on both takes `prefer` ("local"
+     or "remote", whichever was edited last). Objects merge key by key, equal-length
+     arrays index by index, so Porter's sets on the iPad and Ryan's on the iPhone,
+     or two different sets of one lifter, both survive. A key deleted on one side
+     and untouched on the other is deleted. Pure: returns a new object.
+     --------------------------------------------------------------------------- */
+  const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+  SL.canon = function canon(v) {
+    if (Array.isArray(v)) return "[" + v.map(canon).join(",") + "]";
+    if (isObj(v)) return "{" + Object.keys(v).sort().filter((k) => v[k] !== undefined).map((k) => JSON.stringify(k) + ":" + canon(v[k])).join(",") + "}";
+    return JSON.stringify(v === undefined ? null : v);
+  };
+  const same = (x, y) => SL.canon(x) === SL.canon(y);
+  const clone = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
+  SL.merge3 = function merge3(base, a, b, prefer) {
+    if (base === null) base = undefined;
+    if (same(a, b)) return clone(a);
+    if (base !== undefined && same(a, base)) return clone(b);
+    if (base !== undefined && same(b, base)) return clone(a);
+    if (isObj(a) && isObj(b)) {
+      const out = {};
+      new Set(Object.keys(a).concat(Object.keys(b))).forEach((k) => {
+        const bk = isObj(base) ? base[k] : undefined;
+        const inA = a[k] !== undefined, inB = b[k] !== undefined;
+        if (inA && inB) out[k] = merge3(bk, a[k], b[k], prefer);
+        else if (inA) { if (!(bk !== undefined && same(a[k], bk))) out[k] = clone(a[k]); }   // b deleted it and a didn't touch it: gone
+        else if (inB) { if (!(bk !== undefined && same(b[k], bk))) out[k] = clone(b[k]); }
+      });
+      return out;
+    }
+    if (Array.isArray(a) && Array.isArray(b) && a.length === b.length) {
+      const bb = Array.isArray(base) && base.length === a.length ? base : null;
+      return a.map((x, i) => merge3(bb ? bb[i] : undefined, x, b[i], prefer));
+    }
+    return clone(prefer === "local" ? a : b);
+  };
+
+  /* ---------------------------------------------------------------------------
+     SYNC. Two-way since 2026-10-19, so an iPad and an iPhone on one token share
+     one log. Every save PUTs the program's state to the workout-sync Worker (Karl
+     reads it there too). Opening a program, and coming back to it, pulls the
+     server copy and merges it in (SL.merge3) before you touch anything; the merged
+     result goes back up if it differs. A PUT names the revision it was built on
+     (x-base-rev); if another device wrote since, the Worker answers 409 with its
+     copy, and this device merges and posts again. Local storage still holds a
+     full copy, so a phone offline in the garage loses nothing: the next pull
+     merges it. One device token covers the whole library (programs share an
+     origin, so they share localStorage). The first program to run adopts Father &
+     Son's existing token. Pair a second device once with "Pair with another
+     device" (Notes) or Library → Restore everything.
+     cfg: { slug, storageKey, payload() → { state, entries, ...extras }, hasData(),
+            apply?(mergedState) → redraw in place; without it the page reloads }
      --------------------------------------------------------------------------- */
   const SYNC_BASE = "https://workout-sync.ryanrothe.workers.dev/v1/";
   const LIB_TOKEN_KEY = "workout_sync_token";
   const OLD_TOKEN_KEYS = ["father_son_v1_sync_token"];
   const TOKEN_RE = /^[a-f0-9]{24}$/;
-  const sync = { cfg: null, timer: null, status: { at: null, ok: null, msg: "not yet" } };
+  const sync = { cfg: null, timer: null, busy: false, status: { at: null, ok: null, msg: "not yet" } };
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+  const K = {
+    base: () => sync.cfg.storageKey + "_sync_base",     // the server copy last agreed on
+    rev: () => sync.cfg.storageKey + "_sync_rev",       // its revision number
+    edited: () => sync.cfg.storageKey + "_edited_at"    // when this device last saved an edit
+  };
+  const off = () => lsGet("workout_sync_off") === "1";
   sync.token = function () {
     let t = lsGet(LIB_TOKEN_KEY);
     if (t && TOKEN_RE.test(t)) return t;
@@ -435,6 +523,7 @@
     lsSet(LIB_TOKEN_KEY, t);
     return t;
   };
+  const url = () => `${SYNC_BASE}${sync.cfg.slug}/${sync.token()}`;
   sync.init = function (cfg) {
     sync.cfg = cfg;
     sync.token();
@@ -442,43 +531,122 @@
     // "← Library" right after typing) must still post it: flush on hide AND on pagehide,
     // which is the event an in-app navigation fires (found 2026-09-24: an edit never synced).
     const flush = () => { if (sync.timer) sync.push(true); };
-    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flush(); });
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") flush();
+      else sync.refresh();                                   // back from the other device: pull first
+    });
     window.addEventListener("pagehide", flush);
-    // Push once on open: the first run of an upgraded program backs up the untouched data.
-    // Held in sync.timer so leaving within the 0.8 s still posts it through flush() (found
-    // 2026-09-25: tapping quickly through every program synced almost none of them).
-    if (!cfg.hasData || cfg.hasData()) { clearTimeout(sync.timer); sync.timer = setTimeout(sync.push, 800); }
+    window.addEventListener("pageshow", (e) => { if (e.persisted) sync.refresh(); });
+    // Open: pull and merge, which posts whatever this device has that the server lacks (the
+    // first run of an upgraded program still backs up its untouched data this way). Held in
+    // sync.timer so leaving within the 0.3 s still posts through flush().
+    clearTimeout(sync.timer); sync.timer = setTimeout(sync.refresh, 300);
+    // While a page that can redraw in place stays open, look for the other device's sets each minute.
+    if (cfg.apply) setInterval(() => { if (document.visibilityState === "visible") sync.refresh(); }, 60000);
   };
-  sync.schedule = function () { if (!sync.cfg) return; clearTimeout(sync.timer); sync.timer = setTimeout(sync.push, 1500); };
-  sync.push = async function (unloading) {
+  sync.schedule = function () {
+    if (!sync.cfg) return;
+    lsSet(K.edited(), String(Date.now()));
+    clearTimeout(sync.timer); sync.timer = setTimeout(sync.push, 1500);
+  };
+  function buildPayload() {
+    const payload = Object.assign({ program: sync.cfg.slug, schema: 2, savedAt: new Date().toISOString(), ua: navigator.userAgent }, sync.cfg.payload());
+    // Each program's own push carries its Today summary (shared/shell.js), so Cloudflare has
+    // it even when the Library page hasn't been opened since.
+    const sm = window.HS && window.HS.readSummary ? window.HS.readSummary(sync.cfg.slug) : null;
+    if (sm && !payload.summary) payload.summary = sm;
+    // Keep the flat entries on the phone too, so Gaps and Progress (Today, Phase 2) can read every
+    // program's logged sets offline. Written before the off switch, so it works in the preview.
+    if (Array.isArray(payload.entries)) lsSet("entries." + sync.cfg.slug, JSON.stringify(payload.entries));
+    return payload;
+  }
+  sync.push = async function (unloading, attempt) {
     if (!sync.cfg) return;
     clearTimeout(sync.timer); sync.timer = null;
     let payload;
-    try {
-      payload = Object.assign({ program: sync.cfg.slug, schema: 2, savedAt: new Date().toISOString(), ua: navigator.userAgent }, sync.cfg.payload());
-      // Each program's own push carries its Today summary (shared/shell.js), so Cloudflare has
-      // it even when the Library page hasn't been opened since.
-      const sm = window.HS && window.HS.readSummary ? window.HS.readSummary(sync.cfg.slug) : null;
-      if (sm && !payload.summary) payload.summary = sm;
-      // Keep the flat entries on the phone too, so Gaps and Progress (Today, Phase 2) can read every
-      // program's logged sets offline. Written before the off switch, so it works in the preview.
-      if (Array.isArray(payload.entries)) lsSet("entries." + sync.cfg.slug, JSON.stringify(payload.entries));
-    } catch (e) { sync.status = { at: Date.now(), ok: false, msg: "could not build the payload: " + e.message }; sync.paint(); return; }
-    if (lsGet("workout_sync_off") === "1") { sync.status = { at: Date.now(), ok: null, msg: "off on this device (testing)" }; sync.paint(); return; }
+    try { payload = buildPayload(); }
+    catch (e) { sync.status = { at: Date.now(), ok: false, msg: "could not build the payload: " + e.message }; sync.paint(); return; }
+    if (off()) { sync.status = { at: Date.now(), ok: null, msg: "off on this device (testing)" }; sync.paint(); return; }
     try {
       const body = JSON.stringify(payload);
       // keepalive lets a post outlive the page, but browsers refuse keepalive bodies over
       // 64 KB outright. Use it only for the unload flush, and only while the body fits.
       const keepalive = !!unloading && body.length < 60000;
-      const r = await fetch(`${SYNC_BASE}${sync.cfg.slug}/${sync.token()}`, { method: "PUT", headers: { "content-type": "application/json" }, body, keepalive });
-      sync.status = { at: Date.now(), ok: r.ok, msg: r.ok ? "synced" : `server said ${r.status}` };
+      const headers = { "content-type": "application/json" };
+      const rev = lsGet(K.rev());
+      if (rev) headers["x-base-rev"] = rev;
+      const r = await fetch(url(), { method: "PUT", headers, body, keepalive });
+      if (r.status === 409 && !unloading && (attempt || 0) < 3) {
+        // Another device wrote since our copy: merge theirs in, then post again.
+        const cur = await r.json();
+        await sync.absorb(cur.current || cur, (attempt || 0) + 1);
+        return;
+      }
+      let j = null;
+      try { j = await r.json(); } catch (e) {}
+      if (r.ok) {
+        if (j && j.rev != null) lsSet(K.rev(), String(j.rev));
+        lsSet(K.base(), JSON.stringify(payload.state));
+      }
+      sync.status = { at: Date.now(), ok: r.ok, msg: r.ok ? "synced" : r.status === 409 ? "the other device saved at the same moment, will merge on the next save" : `server said ${r.status}` };
     } catch (e) {
       sync.status = { at: Date.now(), ok: false, msg: "offline, will retry on the next save" };
     }
     sync.paint();
   };
+  /* The token changed: every program's agreed copy and revision belong to the old token. */
+  sync.forgetHistory = function () {
+    const ks = [];
+    try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/_sync_(base|rev)$/.test(k)) ks.push(k); } } catch (e) {}
+    ks.forEach(lsDel);
+  };
+  /* Pull the server copy and merge it in. Quiet on failure: local data is untouched. */
+  sync.refresh = async function () {
+    if (!sync.cfg || sync.busy) return;
+    if (sync.timer) { clearTimeout(sync.timer); sync.timer = null; }   // the pull decides whether to post
+    if (off()) { sync.status = { at: Date.now(), ok: null, msg: "off on this device (testing)" }; sync.paint(); return; }
+    sync.busy = true;
+    try {
+      const r = await fetch(url(), { cache: "no-store" });
+      if (r.status === 404) { if (!sync.cfg.hasData || sync.cfg.hasData()) await sync.push(); return; }
+      if (!r.ok) { sync.status = { at: Date.now(), ok: false, msg: `server said ${r.status}` }; sync.paint(); return; }
+      await sync.absorb(await r.json(), 0);
+    } catch (e) {
+      sync.status = { at: Date.now(), ok: false, msg: "offline, will retry on the next save" }; sync.paint();
+    } finally { sync.busy = false; }
+  };
+  /* Merge a server document into this device, redraw if anything changed, post if the server lacks something. */
+  sync.absorb = async function (remote, attempt) {
+    const key = sync.cfg.storageKey;
+    if (!remote || !remote.state) { await sync.push(false, attempt); return; }
+    const local = sync.cfg.payload().state;
+    let base = null;
+    try { base = JSON.parse(lsGet(K.base()) || "null"); } catch (e) {}
+    // First two-way run on a device that has only ever pushed: the server copy is this device's
+    // own older save, so it is the common ancestor (else a set unchecked since would come back).
+    if (base == null && remote.ua && remote.ua === navigator.userAgent) base = remote.state;
+    const editedAt = parseInt(lsGet(K.edited()) || "0", 10) || 0;
+    const remoteAt = Date.parse(remote.savedAt || "") || 0;
+    const merged = SL.merge3(base, local, remote.state, editedAt > remoteAt ? "local" : "remote");
+    if (remote.rev != null) lsSet(K.rev(), String(remote.rev));
+    lsSet(K.base(), JSON.stringify(remote.state));
+    const changedHere = !same(merged, local);
+    if (changedHere) {
+      lsSet(key, JSON.stringify(merged));
+      if (sync.cfg.apply) { try { sync.cfg.apply(merged); } catch (e) {} }
+      else {
+        // No in-place redraw: reload once. A second reload inside 15 s means something keeps
+        // changing the state on load, so stop and say so instead of looping.
+        const last = parseInt(sessionStorage.getItem("sync_reload_at") || "0", 10);
+        if (Date.now() - last > 15000) { try { sessionStorage.setItem("sync_reload_at", String(Date.now())); } catch (e) {} location.reload(); return; }
+        sync.status = { at: Date.now(), ok: null, msg: "merged the other device's changes; reopen to see them" }; sync.paint();
+      }
+    }
+    if (!same(merged, remote.state)) await sync.push(false, attempt);
+    else { sync.status = { at: Date.now(), ok: true, msg: changedHere ? "merged from the other device" : "up to date" }; sync.paint(); }
+  };
   sync.pull = async function (token) {
-    const r = await fetch(`${SYNC_BASE}${sync.cfg.slug}/${token}`);
+    const r = await fetch(`${SYNC_BASE}${sync.cfg.slug}/${token}`, { cache: "no-store" });
     if (!r.ok) throw new Error(r.status === 404 ? "no data for that token" : `server said ${r.status}`);
     return r.json();
   };
@@ -492,29 +660,31 @@
   };
   sync.notesHtml = function () {
     return `
-    <h3>Sync to Karl</h3>
-    <p>Every save also posts this program's data to a private sync endpoint so Karl can read it and coach from it. The phone stays the source of truth; if the post fails it retries on the next save. One device token covers every program in the library.</p>
+    <h3>Sync</h3>
+    <p>Every save posts this program's data to a private sync endpoint, where Karl reads it. Opening the program, or coming back to it, pulls the latest copy and merges it in, so an iPad and an iPhone paired to one token keep one log. Each device keeps a full copy, so nothing is lost offline.</p>
     <p><strong>Device token:</strong> <code id="sync-token" style="user-select:all;font-size:13px">${sync.token()}</code><br><span id="sync-status" style="font-size:12px;color:var(--muted)">Sync: not yet</span></p>
     <div class="ex-actions" style="margin-top:6px">
-      <button class="btn" id="sync-now">↑ Sync now</button>
-      <button class="btn" id="sync-restore">↓ Restore from a token</button>
-    </div>`;
+      <button class="btn" id="sync-now">↻ Sync now</button>
+      <button class="btn" id="sync-restore">⇄ Pair with another device</button>
+    </div>
+    <p style="font-size:12px;color:var(--muted)">Pairing: on the new device, tap Pair and paste the token shown on the device you already use. Both then share every program's log. Nothing is replaced: the two copies merge.</p>`;
   };
   /* Call after notesHtml() is in the DOM. */
   sync.wireNotes = function () {
     const now = document.getElementById("sync-now");
-    if (now) now.onclick = () => { sync.status = { at: null, ok: null, msg: "sending…" }; sync.paint(); sync.push(); };
+    if (now) now.onclick = () => { sync.status = { at: null, ok: null, msg: "syncing…" }; sync.paint(); sync.refresh(); };
     const rest = document.getElementById("sync-restore");
     if (rest) rest.onclick = async () => {
-      const t = prompt("Paste the device token from the other phone (24 characters). This REPLACES this program's data on this phone with that phone's.");
+      const t = prompt("Paste the device token from the device you already use (24 characters). This device then shares its log; the two copies merge.");
       if (!t || !TOKEN_RE.test(t.trim())) { if (t) alert("That is not a 24-character token."); return; }
       try {
         const payload = await sync.pull(t.trim());
-        if (!payload.state || !confirm(`Found data saved ${payload.savedAt}. Replace this phone's data with it?`)) return;
+        if (!payload.state || !confirm(`Found data saved ${payload.savedAt}. Pair this device and merge the two logs?`)) return;
         lsSet(LIB_TOKEN_KEY, t.trim());
-        lsSet(sync.cfg.storageKey, JSON.stringify(payload.state));
-        location.reload();
-      } catch (e) { alert("Restore failed: " + e.message); }
+        sync.forgetHistory();                      // a new pairing has no common history yet, in any program
+        await sync.absorb(payload, 0);
+        sync.paint();
+      } catch (e) { alert("Pairing failed: " + e.message); }
     };
     sync.paint();
   };

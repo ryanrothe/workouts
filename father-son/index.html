@@ -744,24 +744,30 @@ function finMenu(w, d) { return FIN[d][blockOf(w)]; }
 /* ===========================================================================
    PHASES + weekly coaching note (index = week - 1)
    =========================================================================== */
+/* Calendar anchor (more in HEALTH-SYSTEM SUMMARY below) and the cross-country season end.
+   The legs rules key off the date, not the week number, so a calendar move keeps them right. */
+const CAL_W0 = [2026, 9, 12];                // local date of W0's Monday (month is 0-based: 9 = October)
+const XC_END = new Date(2026, 9, 31);        // cross-country ends about Oct 31
+function inXcSeason(w) { return new Date(CAL_W0[0], CAL_W0[1], CAL_W0[2] + 7 * w) <= XC_END; }   // the week starts on or before it
+
 const BLOCKS = [
-  { name: "Learn", span: [1, 4], theme: "Own the positions. Cross-country in season: 2 sets on legs, tempo reps, stuck landings. W4 opens the championship stretch." },
-  { name: "Build", span: [5, 8], theme: "Add load and reps. W5 is the last championship week (XC ends about Oct 31): upper progresses, legs hold. W6-8 legs open to 3 sets." },
-  { name: "Express", span: [9, 12], theme: "Be fast. Club soccer runs to early December, so W9-10 stay a one-sport dose: jumps capped at 40 contacts. W11-12 are the first post-season weeks. Then a full rest week." }
+  { name: "Learn", span: [1, 4], theme: "Own the positions. W1-2 are the cross-country championship weeks (the season ends about Oct 31): 2 sets on legs, tempo reps, stuck landings. W3 opens legs to 3 sets." },
+  { name: "Build", span: [5, 8], theme: "Add load and reps. Club soccer runs to early December (about W7), so jumps stay at 20 to 30 contacts while it is on." },
+  { name: "Express", span: [9, 12], theme: "Be fast. Both seasons are over: jumps go to 40 contacts. W12 is the last benchmark. Then a full rest week." }
 ];
 const WEEK_NOTES = [
   "<strong>W0 · Day 1 is Wednesday.</strong> The tests are the workout. They are the starting line, not scores. Pencil the height mark on the wall, both of you, and enter every number under Benchmarks.",
-  "<strong>First full week.</strong> Tempo and positions. Deadlift the bell, no swings yet. Nordics start at 2 × 3 (Ryan holds the ankles). One coaching cue per set.",
-  "<strong>Same loads, cleaner reps.</strong> Last KB deadlift week. Nordics 2 × 4. If a landing is loud, lower the box.",
-  "<strong>Swings begin.</strong> 18 lb two-hand, hips drive, arms along for the ride. If it looks like a squat, back to the deadlift. Nordics 2 × 5.",
-  "<strong>Benchmark week, lighter.</strong> Championship stretch begins: Monday can be the short version. Enter W4 numbers under Benchmarks.",
-  "<strong>Last championship week.</strong> Upper progresses (rows to 3 × 10, press +5 if hit). Legs hold at 2 sets. Sunday lights out by 9. Race well.",
-  "<strong>Cross-country is over.</strong> Legs open to 3 sets. Porter moves to the 24 in box if the 18 in landings are silent. Ryan adds pogos and depth drops.",
-  "<strong>Build.</strong> Heavier goblet and swings if the chips say so. Nordics 3 × 5. Still 2 reps in the tank.",
+  "<strong>First full week, championship stretch.</strong> Tempo and positions. Deadlift the bell, no swings yet. Nordics start at 2 × 3 (Ryan holds the ankles). On a race week Monday can be the short version.",
+  "<strong>Last cross-country week.</strong> The season ends about Oct 31. Same loads, cleaner reps. Last KB deadlift week. Legs hold at 2 sets, nordics 2 × 4. Sunday lights out by 9. Race well.",
+  "<strong>Cross-country is over.</strong> Legs open to 3 sets, nordics to 3 × 5. Swings begin: 18 lb two-hand, hips drive, arms along for the ride; if it looks like a squat, back to the deadlift. Porter moves to the 24 in box if the 18 in landings are silent. That is a lot of new at once: keep the 18 in box another week if he needs it.",
+  "<strong>Benchmark week, lighter.</strong> Enter W4 numbers under Benchmarks.",
+  "<strong>Build begins.</strong> Upper progresses (rows to 3 × 10, press +5 if hit). Ryan adds pogos and depth drops. Jumps stay at 20 to 30 contacts while soccer is on.",
+  "<strong>Build.</strong> Heavier goblet and swings if the chips say so. Still 2 reps in the tank.",
+  "<strong>Last club soccer week,</strong> about. Hold the jump volume; nothing new this week.",
   "<strong>Benchmark week, lighter.</strong> 5-10-5 shuttle joins the tests. Enter W8 numbers. Check the height mark: half an inch a month means peak growth.",
-  "<strong>Express begins.</strong> Jumps capped at 40 contacts while soccer is on. DB bench enters once floor push-ups reach 15 clean. Pull-up singles if at step 4.",
-  "<strong>Reactive work,</strong> only if the height mark says he is not in peak growth. Otherwise hold the jump volume flat. Airdyne sprints as the finisher.",
-  "<strong>Soccer is done, or nearly.</strong> Heaviest week of the cycle. Still 2 reps in the tank. Nothing grinds.",
+  "<strong>Express begins.</strong> Both seasons are over: jumps go to 40 contacts. DB bench enters once floor push-ups reach 15 clean. Pull-up singles if at step 4.",
+  "<strong>Reactive work,</strong> only if the height mark says he is not in peak growth. Otherwise hold the jump volume flat. Airdyne sprints as the finisher. Christmas week: move a session rather than skip it.",
+  "<strong>Heaviest week of the cycle.</strong> Still 2 reps in the tank. Nothing grinds.",
   "<strong>Final benchmark week.</strong> Enter W12 numbers and compare to Day 1. Then one full rest week, and Cycle 2 in the winter window."
 ];
 const BENCH_WEEKS = [0, 4, 8, 12];
@@ -820,12 +826,13 @@ function monday(w) {
 
 function wednesday(w) {
   const b = blockOf(w);
-  const sets = (w <= 5) ? 2 : 3;         // W1-5 in season (XC ends ~Oct 31, end of W5): 2 sets; W6+ opens to 3
+  const xc = inXcSeason(w);
+  const sets = xc ? 2 : 3;               // cross-country weeks (through Oct 31): 2 sets; after it legs open to 3
   const S = `${sets} x`;
-  const sonBox = w >= 6 ? "24 in" : "18 in";
-  const ryanBox = w >= 6 ? "30 in" : "24 in";
+  const sonBox = xc ? "18 in" : "24 in";
+  const ryanBox = xc ? "24 in" : "30 in";
   const nordic = Math.min(2 + w, b === 3 ? 6 : 5);          // 2x3 in W1, +1 a week, capped
-  const nordicSets = w >= 6 ? 3 : 2;
+  const nordicSets = xc ? 2 : 3;
   const blocks = [];
 
   blocks.push({ label: "Ladder", note: "Footwork and coordination. Not a conditioning piece.", rows: [
@@ -839,7 +846,7 @@ function wednesday(w) {
   plyo.push(duo("Single-Leg Hop 2 x 3 (each side · stick)", "Left-Leg Hop 2 x 5 (stick)", 60, "power", { track: false, cue: "Porter: both sides, quiet landings. Ryan: left only until the hop gap closes; retest at W4, target 85% by W8, 90% by W12." }));
   if (b >= 2) plyo.push(duo("Pogo Hops 2 x 8 (only if not in peak growth)", "Pogo Hops 3 x 10", 45, "power", { track: false, cue: "Short ground contact. Stiff ankle, quiet feet." }));
   if (b >= 2) plyo.push(duo("Depth Drop 2 x 3 (from the 18 in box · stick · Block 3 only)", `Depth Drop 3 x 3 (from the 18 in box${b === 3 ? " into a jump" : " · stick"})`, 60, "power", { track: false, cue: "Ryan's reactive rebuild. Step off, land, stick. Block 3: land and jump." }));
-  blocks.push({ label: "Plyo", plyo: true, note: `In-season cap: ${b === 3 ? "40" : "20 to 30"} ground contacts for Porter. Readiness 1 or 2 turns this block off.`, rows: plyo });
+  blocks.push({ label: "Plyo", plyo: true, note: `Cap: ${b === 3 ? "40" : "20 to 30"} ground contacts for Porter${b === 3 ? "" : " while a season is on"}. Readiness 1 or 2 turns this block off.`, rows: plyo });
 
   const aRows = [
     duo(`Goblet Squat ${S} 8 (3-second lower)`, `KB Goblet Squat ${S} 8 (3-second lower)`, 90, "legs", { cue: "Porter 15-20 lb DB. Ryan 70 lb bell. Earn the next weight with no wobble." })
@@ -1034,7 +1041,6 @@ SL.sync.init({
    set, a note, a finisher result). The page's own week pills and tabs are
    unchanged: they still follow completion, not the calendar.
    --------------------------------------------------------------------------- */
-const CAL_W0 = [2026, 9, 12];                // local date of W0's Monday (month is 0-based: 9 = October)
 const CAL_OFFSET = { mon: 0, wed: 2 };
 function isoOf(x) { return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`; }
 function calISO(w, d) { return isoOf(new Date(CAL_W0[0], CAL_W0[1], CAL_W0[2] + 7 * w + CAL_OFFSET[d])); }

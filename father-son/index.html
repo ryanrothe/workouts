@@ -745,9 +745,9 @@ function finMenu(w, d) { return FIN[d][blockOf(w)]; }
    PHASES + weekly coaching note (index = week - 1)
    =========================================================================== */
 const BLOCKS = [
-  { name: "Learn", weeks: "W1-4 · Sep 28 to Oct 25", theme: "Own the positions. Cross-country in season: 2 sets on legs, tempo reps, stuck landings. W4 opens the championship stretch." },
-  { name: "Build", weeks: "W5-8 · Oct 26 to Nov 22", theme: "Add load and reps. W5 is the last championship week (XC ends about Oct 31): upper progresses, legs hold. W6-8 legs open to 3 sets." },
-  { name: "Express", weeks: "W9-12 · Nov 23 to Dec 20", theme: "Be fast. Club soccer runs to early December, so W9-10 stay a one-sport dose: jumps capped at 40 contacts. W11-12 are the first post-season weeks. Then a full rest week." }
+  { name: "Learn", span: [1, 4], theme: "Own the positions. Cross-country in season: 2 sets on legs, tempo reps, stuck landings. W4 opens the championship stretch." },
+  { name: "Build", span: [5, 8], theme: "Add load and reps. W5 is the last championship week (XC ends about Oct 31): upper progresses, legs hold. W6-8 legs open to 3 sets." },
+  { name: "Express", span: [9, 12], theme: "Be fast. Club soccer runs to early December, so W9-10 stay a one-sport dose: jumps capped at 40 contacts. W11-12 are the first post-season weeks. Then a full rest week." }
 ];
 const WEEK_NOTES = [
   "<strong>W0 · Day 1 is Wednesday.</strong> The tests are the workout. They are the starting line, not scores. Pencil the height mark on the wall, both of you, and enter every number under Benchmarks.",
@@ -1025,16 +1025,34 @@ SL.sync.init({
 /* ---------------------------------------------------------------------------
    HEALTH-SYSTEM SUMMARY. The contract lives in ../shared/shell.js; Today and
    Library read summary.father-son, never this page's storage.
-   Set days on the calendar: W0 runs Mon Sep 21 to Sun Sep 27 2026 (Day 1 is
-   its Wednesday), week w starts 7w days later, Mon = upper, Wed = lower.
+   Set days on the calendar: W0 starts on CAL_W0's Monday (Day 1 is its
+   Wednesday), week w starts 7w days later, Mon = upper, Wed = lower.
+   Re-anchored 2026-10-19 (was Sep 21): the two of them came back after three
+   weeks off with W1 Monday done, so W1 is the week of Oct 19 and W1 Wednesday
+   is Oct 21. Move CAL_W0 again after any long break; every date derives from it.
    A session counts once EITHER lifter has logged anything on it (a check, a
    set, a note, a finisher result). The page's own week pills and tabs are
    unchanged: they still follow completion, not the calendar.
    --------------------------------------------------------------------------- */
-const CAL_W0 = [2026, 8, 21];                // local date of W0's Monday
+const CAL_W0 = [2026, 9, 12];                // local date of W0's Monday (month is 0-based: 9 = October)
 const CAL_OFFSET = { mon: 0, wed: 2 };
 function isoOf(x) { return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`; }
 function calISO(w, d) { return isoOf(new Date(CAL_W0[0], CAL_W0[1], CAL_W0[2] + 7 * w + CAL_OFFSET[d])); }
+function calDate(w, off) { return new Date(CAL_W0[0], CAL_W0[1], CAL_W0[2] + 7 * w + off); }
+function weekSpan(a, b) {
+  const f = x => x.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return `${f(calDate(a, 0))} to ${f(calDate(b, 6))}`;
+}
+/* The next session on the calendar nobody has logged yet: today or later. */
+function calNext() {
+  const today = todayISO();
+  const cw = Math.max(0, Math.min(NWEEKS - 1, calWeekOf(today)));
+  for (let w = cw; w < NWEEKS; w++) for (const d of PROGRAM.dayOrder) {
+    if (!hasDay(w, d) || calISO(w, d) < today) continue;
+    if (!dayHasWork(dayState(w, d, false))) return { w, d };
+  }
+  return null;
+}
 function calWeekOf(iso) {
   const [y, m, dd] = iso.split("-").map(Number);
   return Math.floor(Math.round((new Date(y, m - 1, dd) - new Date(CAL_W0[0], CAL_W0[1], CAL_W0[2])) / 86400000) / 7);
@@ -1388,7 +1406,7 @@ function renderPhase() {
   const blk = BLOCKS[blockOf(w) - 1];
   document.getElementById("phase-card").innerHTML = `
     <div class="phase-name">${w === 0 ? "Week 0 · <span>Day 1</span>" : `Block ${blockOf(w)} · <span>${blk.name}</span> · Week ${w}`}</div>
-    <div class="phase-dates">${w === 0 ? "Sep 21 to Sep 27 · records on Wednesday" : blk.weeks}</div>
+    <div class="phase-dates">${w === 0 ? `${weekSpan(0, 0)} · records on Wednesday` : `W${blk.span[0]}-${blk.span[1]} · ${weekSpan(blk.span[0], blk.span[1])}`}</div>
     <div class="phase-note">${WEEK_NOTES[w]}</div>
     <div class="phase-note" style="color:var(--muted);font-size:11.5px">${blk.theme}</div>`;
 }
@@ -1592,7 +1610,7 @@ function renderPhoneDay(d) {
   container.innerHTML = "";
   container.className = "fs-board";
   if (!day) {
-    container.innerHTML = `<div class="card"><h2>No Monday in Week 0</h2><p>Day 1 is Wednesday September 23. The first full Monday upper session is September 28, Week 1.</p></div>`;
+    container.innerHTML = `<div class="card"><h2>No Monday in Week 0</h2><p>Week 0 is Day 1 only, on Wednesday. The first Monday upper session is Week 1.</p></div>`;
     return;
   }
   const ds = dayState(w, d, false);
@@ -1719,7 +1737,7 @@ function renderLanes(d) {
   container.className = "fs-board fs-wide-board" + (soloLifter ? " fs-solo" : "");
   setBoardTop();
   if (!day) {
-    container.innerHTML = `<div class="card"><h2>No Monday in Week 0</h2><p>Day 1 is Wednesday September 23. The first full Monday upper session is September 28, Week 1.</p></div>`;
+    container.innerHTML = `<div class="card"><h2>No Monday in Week 0</h2><p>Week 0 is Day 1 only, on Wednesday. The first Monday upper session is Week 1.</p></div>`;
     container.className = "fs-board";
     return;
   }
@@ -2596,11 +2614,12 @@ const DEEP = (function () {
 })();
 
 buildShell();
-uiWeek = DEEP ? DEEP.w : currentWeek();
+const OPEN_AT = DEEP || calNext();        // a deep link, else the next session on the calendar
+uiWeek = OPEN_AT ? OPEN_AT.w : currentWeek();
 render();
 SL.sync.wireNotes();
 (function openDueTab() {
-  const tab = document.querySelector(`.tab[data-pane="${DEEP ? DEEP.d : dueDay(uiWeek)}"]`);
+  const tab = document.querySelector(`.tab[data-pane="${OPEN_AT ? OPEN_AT.d : dueDay(uiWeek)}"]`);
   if (tab) tab.click();
 })();
 publishSummary();

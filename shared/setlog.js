@@ -616,7 +616,7 @@
     } finally { sync.busy = false; }
   };
   /* Merge a server document into this device, redraw if anything changed, post if the server lacks something. */
-  sync.absorb = async function (remote, attempt) {
+  sync.absorb = async function (remote, attempt, prefer) {
     const key = sync.cfg.storageKey;
     if (!remote || !remote.state) { await sync.push(false, attempt); return; }
     const local = sync.cfg.payload().state;
@@ -627,7 +627,7 @@
     if (base == null && remote.ua && remote.ua === navigator.userAgent) base = remote.state;
     const editedAt = parseInt(lsGet(K.edited()) || "0", 10) || 0;
     const remoteAt = Date.parse(remote.savedAt || "") || 0;
-    const merged = SL.merge3(base, local, remote.state, editedAt > remoteAt ? "local" : "remote");
+    const merged = SL.merge3(base, local, remote.state, prefer || (editedAt > remoteAt ? "local" : "remote"));
     if (remote.rev != null) lsSet(K.rev(), String(remote.rev));
     lsSet(K.base(), JSON.stringify(remote.state));
     const changedHere = !same(merged, local);
@@ -682,7 +682,9 @@
         if (!payload.state || !confirm(`Found data saved ${payload.savedAt}. Pair this device and merge the two logs?`)) return;
         lsSet(LIB_TOKEN_KEY, t.trim());
         sync.forgetHistory();                      // a new pairing has no common history yet, in any program
-        await sync.absorb(payload, 0);
+        // The device you already use wins any value both sides hold (found 2026-10-19: the new
+        // iPad's default push-up level beat the iPhone's real one). Values only one side has still merge in.
+        await sync.absorb(payload, 0, "remote");
         sync.paint();
       } catch (e) { alert("Pairing failed: " + e.message); }
     };

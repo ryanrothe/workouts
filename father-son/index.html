@@ -428,6 +428,8 @@
   .fs-board .fs-rail-clock.hs-sess-clock:not(.running):not(.fs-stopped) .fs-clock-t { color: #c7c9f5; }
   .fs-board .fs-rail-clock.hs-sess-clock.fs-stopped .fs-clock-t { color: #a9abb3; }
   .fs-rail-pace { font-size: 12.5px; color: #c9cad1; min-height: 18px; }
+  .fs-rail-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #3a3c44; }
+  .fs-rail-nav button { border: 1px solid #4a4c55; background: transparent; color: #e6e7ec; font: inherit; font-size: 12.5px; font-weight: 700; min-height: 34px; padding: 0 10px; border-radius: 8px; cursor: pointer; }
   .fs-rest-card { display: flex; flex-direction: column; gap: 4px; text-align: left; font: inherit; color: var(--text); background: var(--card); border: 2px solid var(--lane); border-radius: 14px; padding: 10px 14px; cursor: pointer; min-width: 0; }
   .fs-rc-son { --lane: var(--porter); }
   .fs-rc-ryan { --lane: var(--primary); }
@@ -1801,6 +1803,12 @@ function renderRail(w, d, day, plan, who, boards) {
         <div class="fs-clock-title">${day.title}</div>
         <button type="button" class="fs-rail-clock hs-sess-clock"><span class="fs-clock-t">Start</span></button>
         <span class="fs-rail-pace"></span>
+        <nav class="fs-rail-nav" aria-label="Other tabs">
+          <button type="button" data-tab="notes">Notes</button>
+          <button type="button" data-tab="bench">Benchmarks</button>
+          <button type="button" data-tab="records">Records</button>
+          <button type="button" data-tab="weeks">Weeks</button>
+        </nav>
       </div>
       ${who.map(l => `
       <button type="button" class="fs-rest-card fs-rc-${l}" data-l="${l}" aria-label="${LIFTER_LABEL[l]}'s rest: tap to skip">
@@ -1817,6 +1825,14 @@ function renderRail(w, d, day, plan, who, boards) {
     </div>
     <div class="fs-rail-more"></div>`;
   rail.querySelector(".fs-rail-top").onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+  // The board fills the screen, so the tabs sit above it: these jump there (Mon / Wed brings the board back).
+  rail.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => {
+    if (b.dataset.tab === "weeks") { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+    const tab = document.querySelector(`.tab[data-pane="${b.dataset.tab}"]`);
+    if (tab) tab.click();
+    const tabs = document.getElementById("tabs"), bar = document.querySelector(".appbar");
+    window.scrollTo({ top: Math.max(0, tabs.getBoundingClientRect().top + window.scrollY - (bar ? bar.getBoundingClientRect().height : 0) - 8), behavior: "auto" });
+  });
   rail.querySelectorAll("[data-solo]").forEach(b => b.onclick = () => setSolo(b.dataset.solo || null));
   rail.querySelectorAll(".fs-rest-card").forEach(b => b.onclick = () => SL.rest.stop(b.dataset.l));
   rail.querySelector(".fs-more-btn").onclick = () => { railMoreOpen = !railMoreOpen; renderDay(d); };
@@ -2341,7 +2357,8 @@ function buildPrinciples() {
 }
 function buildNotes() {
   document.getElementById("notes-card").innerHTML = `
-    <h2>How this tracker works</h2>
+    ${SL.sync.notesHtml()}
+    <h2 style="margin-top:18px">How this tracker works</h2>
     <p><strong>On the iPad</strong> the session opens with a lane for each of you, side by side, each scrolling on its own. The rail on the right has the session clock, a rest timer for each lifter and what's coming up; the map along the bottom shows each lifter's progress through the session and jumps both lanes to a group when you tap it. Tap a lane's name, or Porter or Ryan under Here, to train solo; Both brings the second lane back.</p>
     <p><strong>Supersets</strong> sit in one outline with codes (B1, B2) and the round in the header. Checking a set on B1 doesn't start a rest; checking B2 does. The filled code is who's up.</p>
     <p><strong>Two lifters, one phone.</strong> The Porter / Ryan toggle at the top switches every check, load, track, benchmark and finisher result to that person. Both of you check off the same session standing at the same phone.</p>
@@ -2363,7 +2380,6 @@ function buildNotes() {
       <li><strong>⏱ Stopwatch</strong> for the hang and negative tests. Tap to stop, tap again to reset.</li>
       <li><strong>Session clock</strong> in the day toolbar tells you if you are ahead of or behind the planned time.</li>
     </ul>
-    ${SL.sync.notesHtml()}
     <div class="note-box">Designed 2026-09-21 for a 13-year-old cross-country and club soccer athlete and his dad. Cycle 2 (winter, no competing sport) is where volume, the barbell and full plyo dose belong.</div>`;
 }
 

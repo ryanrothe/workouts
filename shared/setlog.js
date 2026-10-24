@@ -5,8 +5,10 @@
 
    Each program keeps its own data, state shape and history walk. This file
    owns the parts that must behave the same everywhere:
-     · a log is { sets: [{ r, w }], notes }; r is reps (or seconds on timed
-       rows), w is the weight (added weight on bodyweight rows)
+     · a log is { sets: [{ r, w, d?, t? }], notes }; r is reps (or seconds on
+       timed rows), w is the weight (added weight on bodyweight rows), d marks
+       the set checked and t is when (ms, since 2026-10-24; the iPad cockpit
+       learns an exercise's minutes from it)
      · legacy logs fold in at read time and are never bulk-rewritten:
        { weight, hit } keeps its hit as `legacyHit`, "50 lb DBs" parses to 50
      · a hit is inferred: every required set at or above the target
@@ -96,6 +98,7 @@
           const w = x.w != null ? x.w : x.weight;
           const o = { r: r === "" || r == null ? null : SL.parseInt(r), w: w === "" || w == null ? null : SL.parseWeight(w) };
           if (x.d || x.done) o.d = true;
+          if (typeof x.t === "number" && x.t > 0) o.t = x.t;   // when the set was checked (ms); the cockpit learns pace from it
           return o;
         });
       } else if (raw.weight != null && raw.weight !== "") {
@@ -204,7 +207,7 @@
       if (m) return +m[1] * 60 + +m[2];
       m = label.match(/(\d+)\s*s\b/);
       if (m) return +m[1];
-      m = label.match(/(\d+)\s*min/);
+      m = label.match(/(\d+)\s*m(?:in)?\b/);   // "2m" (TFM's label) and "2 min"
       if (m) return +m[1] * 60;
       return spec && spec.rest ? spec.rest : 90;
     }
@@ -389,8 +392,9 @@
     root.querySelectorAll(".sl-ok").forEach((b) => (b.onclick = () => {
       const i = parseInt(b.dataset.i, 10), lg = cfg.getLog(), x = lg.sets[i];
       if (!x) return;
-      if (x.d) { delete x.d; cfg.save(); cfg.rerender(); SL.rest.paintAll(); return; }
+      if (x.d) { delete x.d; delete x.t; cfg.save(); cfg.rerender(); SL.rest.paintAll(); return; }
       x.d = true;
+      x.t = Date.now();   // 2026-10-24: a set carries the moment it was checked, so the iPad timeline can learn how long an exercise takes
       if (spec.unit !== "none" && x.r == null && spec.repTop != null) x.r = spec.repTop;
       if (hasW && x.w == null) {
         const prev = lg.sets.slice(0, i).reverse().find((y) => y.w != null);
@@ -412,7 +416,7 @@
       cfg.save(); cfg.rerender();
     };
     const clearBtn = root.querySelector(".sl-clear");
-    if (clearBtn) clearBtn.onclick = () => { cfg.getLog().sets.forEach(x => { x.r = null; x.w = null; delete x.d; }); cfg.save(); cfg.rerender(); };
+    if (clearBtn) clearBtn.onclick = () => { cfg.getLog().sets.forEach(x => { x.r = null; x.w = null; delete x.d; delete x.t; }); cfg.save(); cfg.rerender(); };
     const skip = root.querySelector(".sl-rest-skip");
     if (skip) skip.onclick = () => SL.rest.stop(cfg.restChannel);
     SL.rest.paintAll();

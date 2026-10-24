@@ -363,10 +363,12 @@
 </div>
 
 <script src="../shared/setlog.js"></script>
+<script src="../shared/cockpit.js"></script>
 <script src="../shared/shell.js"></script>
 <script>
-/* Set logging, the coach and sync come from ../shared/setlog.js. */
+/* Set logging, the coach and sync come from ../shared/setlog.js; the iPad board from ../shared/cockpit.js. */
 const SL = window.SetLog;
+const CK = window.Cockpit;
 
 /* ===========================================================================
    PROGRAM DATA — Jason Helmes / Anyman Fitness, 6-Day Push-Pull-Legs
@@ -834,6 +836,7 @@ function buildShell() {
       document.querySelectorAll(".pane").forEach(p => p.classList.remove("active"));
       tab.classList.add("active");
       document.getElementById("pane-" + tab.dataset.pane).classList.add("active");
+      if (CK.active()) CK.scrollIntoView("container-" + tab.dataset.pane);   // the board fills the screen below the tabs
     };
   });
 }
@@ -921,6 +924,7 @@ function loggedRx(spec, log) {
 function revealNow(workout) {
   const el = document.querySelector(`#container-${workout} .hs-now`);
   if (!el || !el.offsetParent) return;
+  if (CK.revealNow(el)) return;   // board: the lane scrolls, not the window
   const bar = document.querySelector(".appbar");
   const top = el.getBoundingClientRect().top - (bar ? bar.getBoundingClientRect().bottom : 0) - 8;
   if (top < 0 || top > window.innerHeight * 0.6) window.scrollBy({ top, behavior: "smooth" });
@@ -930,6 +934,7 @@ function renderWorkout(workout) {
   renderSessionBar(workout);
   const container = document.getElementById("container-" + workout);
   container.innerHTML = "";
+  container.className = "";
 
   const w = WORKOUTS[workout];
   const session = getActiveSession(workout);
@@ -942,7 +947,15 @@ function renderWorkout(workout) {
     `;
     return;
   }
+  if (CK.active()) return CK.render(workout, container);   // iPad: lane + rail (shared/cockpit.js)
+  renderSession(workout, container);
+}
 
+/* The open session as the phone draws it: header, controls, every exercise row. `container` is the pane on
+   the phone and the board's lane on an iPad. */
+function renderSession(workout, container) {
+  const w = WORKOUTS[workout];
+  const session = getActiveSession(workout);
   const total = w.exercises.length;
   const isDoneAt = i => !!session.completed[i];
   const completed = w.exercises.filter((_, i) => isDoneAt(i)).length;
@@ -1014,16 +1027,18 @@ function renderExercise(workout, session, ex, idx, st, total, plan) {
   const el = document.createElement("div");
   el.className = "hs-row hs-" + st;
   el.dataset.idx = idx;
+  el.dataset.key = timerKey;   // SetLog's rest key for this row (the cockpit's rest ring reads it back)
 
   if (st !== "now") {
     // A rest timer still running on a row that folded (Done mid-rest) stays on screen.
     const live = !!activeTimers[timerKey];
     const right = live ? `<button type="button" class="btn btn-timer rest-timer row-timer" data-default="${restText}">${restText}</button>`
       : st === "done" ? escapeHtml(loggedRx(spec, log) || scheme) : "";
+    const ltNext = st === "next" && CK.active() ? lastTimeText(workout, session, idx) : "";
     el.innerHTML = `
       <div class="hs-row-sum" role="button" tabindex="0">
         <span class="hs-mark">${st === "done" ? ICON.check : ""}</span>
-        <span class="hs-sum-t"><b>${exDef.name}</b>${st === "next" ? `<small>${escapeHtml(scheme)}${isSubbed ? " · garage sub" : ""}</small>` : ""}</span>
+        <span class="hs-sum-t"><b>${exDef.name}</b>${st === "next" ? `<small>${escapeHtml(scheme)}${isSubbed ? " · garage sub" : ""}${ltNext ? `<span class="ck-sum-last">Last · ${escapeHtml(ltNext)}</span>` : ""}</small>` : ""}</span>
         ${right ? `<span class="hs-sum-r">${right}</span>` : ""}
       </div>`;
     const sum = el.querySelector(".hs-row-sum");
@@ -1044,7 +1059,8 @@ function renderExercise(workout, session, ex, idx, st, total, plan) {
   const planOffset = plan.offsets[idx];
   const paceHtml = planOffset != null ? ` · start ~${Math.round(planOffset / 60)} min in` : "";
 
-  const lastHtml = lastLoad ? SL.lastHtml(lastLoad, spec, shortDate(lastLoad.date)) : "";
+  // On the board the last session is the prominent block (shared/cockpit.js); the phone keeps its Last line.
+  const lastHtml = !lastLoad ? "" : CK.active() ? CK.lastHtml(lastLoad, spec, CK.when(lastLoad.date)) : SL.lastHtml(lastLoad, spec, shortDate(lastLoad.date));
   const suggHtml = SL.suggestHtml(sugg);
 
   // Garage substitution: chips list the program's lift first, then its subs.
@@ -1398,6 +1414,70 @@ document.getElementById("reset-btn").onclick = () => {
   paint();
   hero.appendChild(btn);
 })();
+
+/* ---------------------------------------------------------------------------
+   iPad BOARD (2026-10-24, rolled out from Full Body Aesthetics). At the board's
+   breakpoint the open session renders as lane + rail: session clock with the
+   planned-time timeline, the rest ring, the workout tracker. The board itself is
+   ../shared/cockpit.js; this adapter hands it the page's own data. Rendering
+   only: state, payloads and the phone layout do not change. A "day" here is the
+   workout key; the session is the active one.
+   --------------------------------------------------------------------------- */
+const TAG_SHORT = { push: "Push", pull: "Pull", legs: "Legs", shldr: "Shldr", arms: "Arms", hinge: "Hinge", calves: "Calves", core: "Core" };
+/* One line for the tracker and the Up next summary: "last wk · 8, 8, 7 @ 185 lb". */
+function lastTimeText(workout, session, idx) {
+  const pid = performedId(session, workout, idx);
+  const hist = priorEntries(workout, idx, session.id, pid);
+  if (!hist.length) return "";
+  return `${CK.when(hist[0].date, true)} · ${SL.lastText(hist[0], specFor(WORKOUTS[workout].exercises[idx], pid))}`;
+}
+CK.init({
+  id: k => k,
+  kind: () => "strength",
+  eyebrow: k => { const s = getActiveSession(k); return `${WORKOUTS[k].day}${s && s.date ? ` · ${shortDate(s.date)}` : ""}`; },
+  title: k => WORKOUTS[k].name,
+  warmupSecs: () => SETUP_ALLOW,
+  slots: k => {
+    const s = getActiveSession(k), plan = workoutPlan(k);
+    return WORKOUTS[k].exercises.map((ex, i) => {
+      const def = EXERCISES[s ? performedId(s, k, i) : ex.id];
+      const end = i + 1 < plan.offsets.length ? plan.offsets[i + 1] : plan.total;
+      return { idx: i, name: def.name, label: TAG_SHORT[def.tag] || tagLabel(def.tag), slotName: tagLabel(def.tag), secs: end - plan.offsets[i], rest: effRestSecs(ex.rest || 60), closer: false, beat: "" };
+    });
+  },
+  nowIndex: k => {
+    const s = getActiveSession(k); if (!s) return -1;
+    const nk = `${k}_${s.id}`, exs = WORKOUTS[k].exercises;
+    return tappedNow[nk] != null && tappedNow[nk] < exs.length ? tappedNow[nk] : exs.findIndex((_, i) => !s.completed[i]);
+  },
+  setStates: (k, i) => {
+    const s = getActiveSession(k), ex = WORKOUTS[k].exercises[i];
+    const spec = specFor(ex, s ? performedId(s, k, i) : ex.id);
+    const log = SL.normLog(s && s.logs[i], spec.sets), done = !!(s && s.completed[i]);
+    return log.sets.slice(0, spec.sets).map(x => done || x.d ? "done" : (x.r != null || x.w != null) ? "part" : "");
+  },
+  lastText: (k, i) => { const s = getActiveSession(k); return s ? lastTimeText(k, s, i) : ""; },
+  restKey: (k, i) => { const s = getActiveSession(k); return `${EXERCISES[s ? performedId(s, k, i) : WORKOUTS[k].exercises[i].id].name}|${k}_${s ? s.id : ""}_${i}`; },
+  clock: k => { const s = getActiveSession(k); return s ? { start: s.clockStart, stop: s.clockStop } : null; },
+  toggleClock: k => {
+    const s = getActiveSession(k); if (!s) return;
+    if (!s.clockStart) { s.clockStart = Date.now(); s.clockStop = null; }
+    else if (!s.clockStop) s.clockStop = Date.now();
+    else { s.clockStart = null; s.clockStop = null; }
+    saveState();
+  },
+  isComplete: k => { const s = getActiveSession(k), exs = WORKOUTS[k].exercises; return !!s && exs.length > 0 && exs.every((_, i) => s.completed[i]); },
+  renderLane: (k, lane) => renderSession(k, lane),
+  jump: (k, target) => { const s = getActiveSession(k); if (s && typeof target === "number") tappedNow[`${k}_${s.id}`] = target; render(k); },
+  /* Every session, rows in order with each set's check timestamp: the timeline learns pace from these. */
+  sessions: () => {
+    const out = [];
+    WORKOUT_ORDER.forEach(k => state.sessions[k].forEach(s => out.push({ start: s.clockStart || null,
+      rows: WORKOUTS[k].exercises.map((ex, i) => ({ name: EXERCISES[performedId(s, k, i)].name, t: SL.normLog(s.logs[i], 0).sets.map(x => x.t).filter(Boolean) })) })));
+    return out;
+  },
+  onModeChange: () => render()
+});
 
 buildShell();
 buildSourceQuote();

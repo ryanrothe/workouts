@@ -81,6 +81,7 @@
 
   /* Workout */
   main { padding: 12px 14px 24px; max-width: 720px; margin: 0 auto; }
+  body.ck-wide main { max-width: 1400px; }   /* the iPad board (../shared/cockpit.js) */
   .day-header {
     display: flex; align-items: baseline; justify-content: space-between;
     margin: 4px 0 10px;
@@ -363,6 +364,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="../shared/setlog.js"></script>
+<script src="../shared/cockpit.js"></script>
 <script src="../shared/shell.js"></script>
 <script>
 /* ============================================================
@@ -372,6 +374,7 @@
    ============================================================ */
 
 const STORAGE_KEY = 'athleticAF.v1';
+const CK = window.Cockpit;   // the iPad board (../shared/cockpit.js)
 let PROGRAM = null;
 let STATE = null;
 
@@ -685,7 +688,7 @@ function renderDayNav() {
     const done = prog >= 1;
     const chip = el('button', {
       class: 'day-chip ' + (idx === STATE.currentDayIdx ? 'active ' : '') + (done ? 'done' : ''),
-      onclick: () => { STATE.currentDayIdx = idx; saveState(); render(); },
+      onclick: () => { STATE.currentDayIdx = idx; saveState(); render(); if (CK.active()) CK.scrollIntoView('container-' + aafSessionId(w, d)); },
     },
       el('span', {class: 'dot'}),
       d.day.slice(0,3)
@@ -751,9 +754,23 @@ function aafLogged(ex, weekId, dayIdx, ei) {
 function hsReveal() {
   const n = document.querySelector('#main .hs-now');
   if (!n || !n.offsetParent) return;
+  if (CK.revealNow(n)) return;   // board: the lane scrolls, not the window
   const bar = document.querySelector('.aaf-topbar');
   const top = n.getBoundingClientRect().top - (bar ? bar.getBoundingClientRect().bottom : 0) - 8;
   if (top < 0 || top > window.innerHeight * 0.6) window.scrollBy({ top, behavior: 'smooth' });
+}
+
+/* The day's rows and where Now is: shared by the phone render and the board adapter. Done is the page's own
+   rule (every set checked, or the checklist ticked); the tapped row lives in hsTapped, in memory only. */
+function aafRowState(w, d, di) {
+  const key = `${w.id}_${di}`;
+  const units = aafUnits(d);
+  const exDone = d.exercises.map((ex, ei) => aafExDone(w.id, di, ex, ei));
+  const rowDone = units.map(u => u.idxs.every(ei => exDone[ei]));
+  const tap = hsTapped[key];
+  if (tap && (tap.u >= units.length || (!tap.wasDone && rowDone[tap.u]))) delete hsTapped[key];
+  const nowU = hsTapped[key] ? hsTapped[key].u : rowDone.indexOf(false);
+  return { key, units, exDone, rowDone, nowU, doneEx: exDone.filter(Boolean).length, complete: units.length > 0 && rowDone.every(Boolean) };
 }
 
 function renderDay() {
@@ -762,19 +779,17 @@ function renderDay() {
   const w = currentWeek();
   const d = currentDay();
   const di = STATE.currentDayIdx;
-  const key = `${w.id}_${di}`;
+  const container = el('div', { id: 'container-' + aafSessionId(w, d) });
+  main.appendChild(container);
+  if (CK.active() && d.exercises.length) return CK.render({ w, d, di }, container);   // iPad: lane + rail (shared/cockpit.js)
+  buildDay(w, d, di, container);
+}
 
+/* The day as the phone draws it: header, controls, notes, every row. `main` is #main's day container on the
+   phone and the board's lane on an iPad. */
+function buildDay(w, d, di, main) {
   currentPlan = dayPlanAAF();
-  const units = aafUnits(d);
-  const exDone = d.exercises.map((ex, ei) => aafExDone(w.id, di, ex, ei));
-  const rowDone = units.map(u => u.idxs.every(ei => exDone[ei]));
-  const doneEx = exDone.filter(Boolean).length;
-  const complete = units.length > 0 && rowDone.every(Boolean);
-
-  // Now: the tapped row (until it finishes), else the first row not done; -1 once the day is done.
-  const tap = hsTapped[key];
-  if (tap && (tap.u >= units.length || (!tap.wasDone && rowDone[tap.u]))) delete hsTapped[key];
-  const nowU = hsTapped[key] ? hsTapped[key].u : rowDone.indexOf(false);
+  const { key, units, rowDone, nowU, doneEx, complete } = aafRowState(w, d, di);
   // "Up next" sits above the first next row after Now (or the first next row, when none follow it).
   const nextUs = units.map((_, i) => i).filter(i => i !== nowU && !rowDone[i]);
   const afterNow = nextUs.find(i => i > nowU);
@@ -833,7 +848,8 @@ function renderDay() {
 function aafRow(w, d, di, u, ui, st, total) {
   const exs = u.idxs.map(ei => d.exercises[ei]);
   const multi = exs.length > 1;
-  const row = el('div', {class: `hs-row hs-${st}${multi ? ' hs-multi' : ''}`});
+  const row = el('div', {class: `hs-row hs-${st}${multi ? ' hs-multi' : ''}`, 'data-idx': String(ui)});
+  const ltNext = st === 'next' && CK.active() ? aafLastText(exs[0]) : '';
   const right = st !== 'done' ? ''
     : multi ? `${exs.reduce((n, ex) => n + (ex.checklist ? 1 : ex.set_count), 0)} sets`
     : aafLogged(exs[0], w.id, di, u.idxs[0]);
@@ -841,7 +857,7 @@ function aafRow(w, d, di, u, ui, st, total) {
     el('span', {class: 'hs-mark', html: st === 'done' ? HS_ICON.check : ''}),
     el('span', {class: 'hs-sum-t'},
       el('b', {}, exs.map(ex => ex.name).join(' + ')),
-      st === 'next' ? el('small', {}, exs.map(aafShortRx).join(' + ')) : null),
+      st === 'next' ? el('small', {}, exs.map(aafShortRx).join(' + '), ltNext ? el('span', {class: 'ck-sum-last'}, 'Last · ' + ltNext) : null) : null),
     right ? el('span', {class: 'hs-sum-r'}, right) : null);
   const pick = () => { hsTapped[`${w.id}_${di}`] = { u: ui, wasDone: st === 'done' }; renderDay(); hsReveal(); };
   sum.addEventListener('click', pick);
@@ -858,7 +874,7 @@ function aafRow(w, d, di, u, ui, st, total) {
    box, History / Plates / Rest (+ a Video search) as the row's tool bar. The
    nodes move with their listeners; nothing is rebuilt. */
 function aafNowCard(card, ex) {
-  const last = card.querySelector('.ex-last'), coach = card.querySelector('.coach');
+  const last = card.querySelector('.ex-last, .ck-last'), coach = card.querySelector('.coach');
   if (last || coach) {
     const box = el('div', {class: 'hs-lastbox'});
     card.insertBefore(box, last || coach);
@@ -953,7 +969,10 @@ function renderExercise(ex, exIdx, weekId) {
     const flag = (target.kind === 'fixed' || target.kind === 'range')
       ? (allSetsHit(lastSess, target.target) ? ' · <span class="ex-hit-flag yes">hit</span>' : ' · <span class="ex-hit-flag no">short</span>') : '';
     const when = lastSess.ts ? new Date(lastSess.ts).toLocaleDateString([], { month: 'numeric', day: 'numeric' }) : '';
-    const lastEl = el('div', {class:'ex-last', html:
+    // On the board the last session is the prominent block (shared/cockpit.js); the phone keeps its Last line.
+    const lastEl = CK.active()
+      ? el('div', {html: CK.lastBlock(lastSess.ts ? CK.when(aafISO(lastSess.ts)) : '', `${reps}${lw ? ` @ ${lw} ${PROGRAM.unit}` : ''}`, flag.replace(/^ · /, ' '))}).firstElementChild
+      : el('div', {class:'ex-last', html:
       `Last${when ? ` (${when})` : ''}: <strong>${reps}${lw ? ` @ ${lw} ${PROGRAM.unit}` : ''}</strong>${flag}`});
     const chipEl = wrap.querySelector('.coach');
     if (chipEl) wrap.insertBefore(lastEl, chipEl); else wrap.appendChild(lastEl);
@@ -983,6 +1002,7 @@ function renderExercise(ex, exIdx, weekId) {
         onclick: () => {
           setData.done = !setData.done;
           if (setData.done) {
+            setData.t = Date.now();   // when the set was checked; the iPad timeline learns pace from it
             const reps = parseFloat(setData.reps) || 0;
             const weight = parseFloat(setData.weight) || 0;
             const wasPR = isPR(ex.name, weight, reps);
@@ -995,6 +1015,7 @@ function renderExercise(ex, exIdx, weekId) {
             const restSec = effRestSecs(parseRestToSeconds(ex.rest));
             if (restSec > 0) startRest(restSec, ex.name);
           } else {
+            delete setData.t;
             for (let j = STATE.sessions.length - 1; j >= 0; j--) {
               const s = STATE.sessions[j];
               if (s.weekId === weekId && s.dayIdx === STATE.currentDayIdx && s.exerciseName === ex.name) {
@@ -1063,11 +1084,14 @@ function render() {
 }
 
 /* ---------------- rest timer ---------------- */
-let restState = { running: false, endTs: 0, interval: null, label: '' };
+let restState = { running: false, endTs: 0, interval: null, label: '', total: 0 };
+let aafRestGo = null;   // { key, until }: the 4 s "Go" after a rest ends, for the board's ring
+function paintRing() { if (window.Cockpit) Cockpit.paintRest(); }
 function startRest(seconds, label='Rest') {
   stopRest(false);
   restState.endTs = Date.now() + seconds * 1000;
   restState.label = label;
+  restState.total = seconds;
   restState.running = true;
   $('#restLabel').textContent = label;
   $('#restTimer').classList.add('visible');
@@ -1078,6 +1102,7 @@ function startRest(seconds, label='Rest') {
 function tickRest() {
   const remaining = (restState.endTs - Date.now()) / 1000;
   $('#restTime').textContent = fmtTime(remaining);
+  paintRing();
   if (remaining <= 0) {
     if (navigator.vibrate) navigator.vibrate([120, 80, 120]);
     stopRest(true);
@@ -1087,6 +1112,9 @@ function stopRest(announce) {
   if (restState.interval) clearInterval(restState.interval);
   restState.interval = null;
   restState.running = false;
+  aafRestGo = announce ? { key: restState.label, until: Date.now() + 4000 } : null;
+  if (announce) setTimeout(paintRing, 4100);
+  paintRing();
   if (announce) {
     toast('Rest complete');
     setTimeout(() => $('#restTimer').classList.remove('visible'), 800);
@@ -1312,7 +1340,7 @@ function syncEntries() {
     const dt = ts ? new Date(ts) : null;
     out.push({ date: dt ? `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}` : null, where: `${w.label} · ${d.day}`, exercise: ex.name,
                rx: ex.details, unit: 'reps', target, target_kind: t.kind, loaded: true, bw: false,
-               sets: log.sets.map(x => ({ r: x.r, w: x.w, done: !!x.d })),
+               sets: log.sets.map(x => ({ r: x.r, w: x.w, done: !!x.d, t: x.t })),
                hit: target != null && filled.length ? filled.every(x => x.r >= target) : null, notes: '' });
   })));
   return out;
@@ -1493,6 +1521,94 @@ function doImport() {
   };
   inp.click();
 }
+
+/* ---------------- iPad board (2026-10-24, rolled out from Full Body Aesthetics) ----------------
+   At the board's breakpoint the day renders as lane + rail: session clock with
+   the planned-time timeline, the rest ring, the workout tracker. The board
+   itself is ../shared/cockpit.js; this adapter hands it the page's own data.
+   Rendering only: STATE, payloads and the phone layout do not change. A "day"
+   here is { w, d, di }; a slot is one hs-row unit (a superset is one slot). The
+   ring reads the page's own rest timer (SetLog's rest is not used here), keyed
+   by the exercise name the timer was started with. */
+function aafISO(ts) { const dt = new Date(ts); return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`; }
+/* One line for the tracker and the Up next summary: "last wk · 8, 8, 8 @ 95 lbs". */
+function aafLastText(ex) {
+  if (!ex || ex.checklist) return '';
+  const L = sessionsFor(ex.name, exSig(ex))[0];
+  if (!L) return '';
+  const lw = topWeight(L);
+  return `${L.ts ? CK.when(aafISO(L.ts), true) + ' · ' : ''}${L.sets.map(s => s.reps || 0).join(', ')}${lw ? ` @ ${lw} ${PROGRAM.unit}` : ''}`;
+}
+CK.init({
+  id: ({ w, d }) => aafSessionId(w, d),
+  kind: () => 'strength',
+  topbar: 'header.appbar, .aaf-topbar',
+  eyebrow: ({ w, d }) => `${w.label} · ${d.day}`,
+  title: ({ d }) => d.focus || d.day,
+  warmupSecs: () => SETUP_ALLOW,
+  slots: ({ d }) => {
+    const units = aafUnits(d), plan = dayPlanAAF(d);
+    return units.map((u, ui) => {
+      const exs = u.idxs.map(ei => d.exercises[ei]), first = exs[0];
+      const secs = u.idxs.reduce((n, ei) => n + ((ei + 1 < plan.offsets.length ? plan.offsets[ei + 1] : plan.total) - plan.offsets[ei]), 0);
+      const rest = effRestSecs(parseRestToSeconds(first.rest));
+      return { idx: ui, name: exs.map(x => x.name).join(' + '), label: u.group ? `SS ${u.group}` : String(first.name).split(/\s+/)[0],
+               slotName: u.group ? `Superset ${u.group}` : first.checklist ? 'Checklist' : '', secs: Math.max(30, secs), rest: rest || null, closer: false, beat: '' };
+    });
+  },
+  nowIndex: ({ w, d, di }) => aafRowState(w, d, di).nowU,
+  setStates: ({ w, d, di }, ui) => {
+    const out = [];
+    aafUnits(d)[ui].idxs.forEach(ei => {
+      const ex = d.exercises[ei], l = STATE.log[w.id]?.[di]?.[ei];
+      if (ex.checklist) { out.push(l && l.checked ? 'done' : ''); return; }
+      for (let i = 0; i < (ex.set_count || 0); i++) { const sd = l && l.sets ? l.sets[i] : null; out.push(sd && sd.done ? 'done' : sd && (sd.reps || sd.weight) ? 'part' : ''); }
+    });
+    return out;
+  },
+  lastText: ({ d }, ui) => aafLastText(d.exercises[aafUnits(d)[ui].idxs[0]]),
+  restKey: ({ d }, ui) => aafUnits(d)[ui].idxs.map(ei => d.exercises[ei].name),
+  rest: () => {
+    if (restState.running) return { key: restState.label, end: restState.endTs, total: restState.total || 90, goUntil: 0 };
+    if (aafRestGo && Date.now() < aafRestGo.until) return { key: aafRestGo.key, end: 0, total: 0, goUntil: aafRestGo.until };
+    return { key: null, end: 0, total: 0, goUntil: 0 };
+  },
+  stopRest: () => stopRest(false),
+  armSet: ({ w, d }, ui, setNo) => {
+    const root = document.getElementById('container-' + aafSessionId(w, d));
+    const row = root && root.querySelector(`.hs-row[data-idx="${ui}"]`);
+    const sr = row && row.querySelectorAll('.set-row')[setNo - 1];
+    const inp = sr && sr.querySelector('input');
+    if (inp) inp.focus();
+  },
+  clock: ({ w, di }) => { const c = STATE.clocks[`${w.id}_${di}`]; return c ? { start: c.start, stop: c.stop } : null; },
+  toggleClock: ({ w, di }) => {
+    const k = `${w.id}_${di}`, c = STATE.clocks[k];
+    if (!c || !c.start) STATE.clocks[k] = { start: Date.now(), stop: null };
+    else if (!c.stop) c.stop = Date.now();
+    else delete STATE.clocks[k];
+    saveState();
+  },
+  isComplete: ({ w, d, di }) => aafRowState(w, d, di).complete,
+  renderLane: ({ w, d, di }, lane) => buildDay(w, d, di, lane),
+  jump: ({ w, d, di }, target) => {
+    if (typeof target === 'number') hsTapped[`${w.id}_${di}`] = { u: target, wasDone: !!aafRowState(w, d, di).rowDone[target] };
+    renderDay();
+  },
+  /* Every logged day, exercises in order with each set's check time (the set records in STATE.sessions carry
+     one for every check ever made): the timeline learns pace from these. */
+  sessions: () => {
+    const out = [];
+    PROGRAM.weeks.forEach(w => w.days.forEach((d, di) => {
+      const recs = (STATE.sessions || []).filter(s => s.weekId === w.id && s.dayIdx === di);
+      if (!recs.length) return;
+      const c = STATE.clocks[`${w.id}_${di}`];
+      out.push({ start: (c && c.start) || null, rows: d.exercises.map(ex => ({ name: ex.name, t: recs.filter(s => s.exerciseName === ex.name).map(s => s.ts) })) });
+    }));
+    return out;
+  },
+  onModeChange: () => { if (PROGRAM) render(); }
+});
 
 /* ---------------- init ---------------- */
 $('#btnPickWeek').addEventListener('click', openWeekPicker);

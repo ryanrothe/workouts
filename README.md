@@ -1,6 +1,6 @@
 # Exercise Library
 
-One PWA that wraps ten workout programs: **Father & Son Strength**, **The Functional Method 1.0**, **The Functional Method 2.0**, **Hyrox Home Engine**, **Achilles Rebuild**, **Athletic AF**, **Hotel Workouts** (Madsen upper/lower split), **KB Shred**, **6-Day PPL**, and **Full Body Aesthetics**.
+One PWA that wraps twelve workout programs: **Father & Son Strength**, **The Functional Method 1.0**, **The Functional Method 2.0**, **Hyrox Home Engine**, **Achilles Rebuild**, **Athletic AF**, **Hotel Workouts** (Madsen upper/lower split), **KB Shred**, **6-Day PPL**, **Full Body Aesthetics**, **Dumbbells Only**, and **Full Body (3 Day Split)**.
 
 Launcher at the root picks a program. Each sub-app keeps its own data, its own features, and its own per-program accent color — but they share one design system, one PWA shell, and one home-screen icon.
 
@@ -18,6 +18,8 @@ Launcher at the root picks a program. Each sub-app keeps its own data, its own f
 | **KB Shred** | 8 weeks | 4×/week | Adam Gooch kettlebell program. Full-body daily with supersets and conditioning circuits. |
 | **6-Day PPL** | Open-ended (3-month block) | 6×/week | Jason Helmes / Anyman Fitness push-pull-legs split. Six dated session logs, per-exercise rest timers, an Up Next stat that rotates the cycle, and **automatic load progression** — log a weight plus whether you hit the rep range, and the next session suggests +5 lb, a hold, or a plateau deload (−10% / +2 reps). |
 | **Full Body Aesthetics** | rolling 4-week cycles | 4 lifts + 2 optional conditioning | Chalk Performance Training (Ryan Fischer). Rebuilt 2026-10-24 on the current Chalk cycles, read from the Chalk web portal by `automation/exercise-library/fba_ingest.py`: rep-max main lift, one accessory per body part, a scored closer, conditioning days with a clock and a meters score. On SetLog (`fba_v2`), carry-forward across cycles, coach, rest bar. |
+| **Dumbbells Only** | 12 weeks, 56 sessions | A/B alternating, 4 to 5 per week | Chalk (Ryan Fischer) dumbbell-only builder, added 2026-10-24 from the Chalk portal via `automation/exercise-library/chalk_plan_ingest.py`. Session-based (no dates): three 4-week blocks, 4010 tempo → supersets → tri-sets as lettered groups with one rest bar, two dumbbell swaps. On SetLog (`dbo_v1`) and the cockpit. Travel-flagged. |
+| **Full Body (3 Day Split)** | 8 weeks, 24 sessions | Day 1 / 2 / 3 | Chalk (Ryan Fischer) gym program (barbell, cable, machine), added 2026-10-24 the same way. Session-based, two blocks (build, then near max effort), straight sets. On SetLog (`fb3_v1`) and the cockpit. Same page code as Dumbbells Only. |
 | **Nutrition** (tracker, not a program) | open-ended | daily | Macros against a bodyweight-derived cut target (Mifflin-St Jeor, 1 g/lb protein, 0.3 g/lb fat, carbs the remainder; or set by hand), a closed meal library logged by weighed grams, off-plan quick adds, weigh-ins with a 7-day average, and a Sunday planner that turns the week's meals into a batch-cook list and a grocery list. Pushes `days` to the `workout-sync` Worker; `pull.py nutrition`. Added 2026-09-25. |
 
 ## Structure
@@ -33,7 +35,8 @@ exercise-library/
 ├── favicon.png             ← Browser-tab favicon (64×64)
 ├── shared/
 │   ├── styles.css          ← Design tokens + shared components (appbar, cards, buttons, day card, exercise rows, set grid)
-│   └── setlog.js           ← Shared set logging, progression coach and sync (window.SetLog)
+│   ├── setlog.js           ← Shared set logging, progression coach and sync (window.SetLog)
+│   └── cockpit.js          ← Shared iPad board: lane + rail with clock, timeline, rest ring, tracker (window.Cockpit)
 ├── father-son/
 │   └── index.html          ← Father & Son Strength — 12-week two-lifter program (self-contained)
 ├── tfm-1/
@@ -80,6 +83,16 @@ Since 2026-09-24 seven programs log the same way: Father & Son, TFM 1.0 and 2.0,
 - **Old logs are folded in at read time, never bulk-rewritten.** `{ weight, hit }` becomes one set at that weight and keeps its hit; free-text loads ("50 lb DBs") parse to the first number and the text moves into Notes the first time that log is edited.
 - **Athletic AF and KB Shred keep their per-set check**, because checking a set is what starts the rest timer (and, in Athletic AF, what records it to history). They gained the fill button, the Last line and sync; KB Shred also gained a reps column and the coach.
 - **Sync.** Every save PUTs `{ program, schema: 2, savedAt, state, entries }` to the `workout-sync` Worker under ONE library-wide device token (`workout_sync_token`, adopted from Father & Son's token on first run). `entries` is a flat list, one row per logged exercise, which is what Karl reads. Each program shows the token and a Sync now / Restore from a token pair on its Notes or About panel. On a test device, `localStorage.workout_sync_off = "1"` turns posting off.
+
+## The iPad cockpit (`shared/cockpit.js`)
+
+Built for Full Body Aesthetics on 2026-10-24 (design register: `full-body-aesthetics/DESIGN-BRIEF-2026-10-24.md`, "iPad layout register") and rolled to the other six single-lifter SetLog programs the same day: PPL, TFM 1.0, TFM 2.0, Hotel, KB Shred, Athletic AF. Father & Son keeps its own two-lifter lanes board; Hyrox, Achilles and nutrition are untouched.
+
+- **Breakpoint.** At `(min-width: 740px) and (min-height: 600px)` a session renders as a board: the page's own phone content in a scrolling lane on the left, a 330 px rail on the right. Below that nothing in the module runs, so phones are unchanged.
+- **Rail, top to bottom.** A dark clock card (session clock, ahead/behind against the plan, a planned-time timeline with one segment per row and a playhead at elapsed; tap a segment to jump), a rest ring (the page's rest drawn as a ring; at zero it focuses the next undone set's reps field), and the workout tracker (every row, one dot per prescribed set, the last-time line, a scored closer pinned at the bottom). iPad portrait folds the rail into a band across the top with a More drawer.
+- **The timeline learns.** SetLog stamps `t` (ms) on a set when it is checked; KB Shred and Athletic AF stamp their own checks. Once an exercise has three or more timed sessions, its segment uses the median of logged durations (a row's time = the gap from the previous row's last check to its own); otherwise the page's static sets × rest model. The segment's tooltip says which.
+- **Adapter, not a fork.** Each page fills in one adapter (`Cockpit.init({...})`: slots in order with planned seconds, the current row, set states, the rest key per row, the clock, how to draw the lane, how to jump) and calls `Cockpit.render(day, container)` while `Cockpit.active()`. State, payloads and the phone layout stay the page's. The full contract is in the header of `cockpit.js`.
+- **Per-program notes.** PPL and Hotel label segments by muscle-group tag; TFM by block tag, with a mobility circuit day as one segment; KB Shred and Athletic AF treat a superset as one row (all its sets as dots), drive the ring from their own rest timers, and keep their bottom rest bar as well. The prominent last-time block and the "Last ·" line on Up next rows show on the board only (FBA shows them on the phone too).
 
 ## localStorage continuity
 

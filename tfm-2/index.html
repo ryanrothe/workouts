@@ -298,10 +298,12 @@
 </div>
 
 <script src="../shared/setlog.js"></script>
+<script src="../shared/cockpit.js"></script>
 <script src="../shared/shell.js"></script>
 <script>
 /* Set logging, the coach and sync come from ../shared/setlog.js. */
 const SL = window.SetLog;
+const CK = window.Cockpit;   // the iPad board (../shared/cockpit.js)
 const { normName, parseWeight, fmtWeight, fmtLoad } = SL;
 
 /* ===========================================================================
@@ -1067,6 +1069,7 @@ function buildShell() {
       document.querySelectorAll(".pane").forEach(p => p.classList.remove("active"));
       tab.classList.add("active");
       document.getElementById("pane-" + tab.dataset.pane).classList.add("active");
+      if (CK.active()) CK.scrollIntoView("container-" + tab.dataset.pane);   // the board fills the screen below the tabs
     };
   });
   buildNotes();
@@ -1127,16 +1130,25 @@ function loggedRx(row, spec, log) {
 function revealNow(d) {
   const el = document.querySelector(`#container-${d} .hs-now`);
   if (!el || !el.offsetParent) return;
+  if (CK.revealNow(el)) return;   // board: the lane scrolls, not the window
   const bar = document.querySelector(".appbar");
   const top = el.getBoundingClientRect().top - (bar ? bar.getBoundingClientRect().bottom : 0) - 8;
   if (top < 0 || top > window.innerHeight * 0.6) window.scrollBy({ top, behavior: "smooth" });
 }
 
 function renderDay(d) {
-  const w = uiWeek;
-  const day = PROGRAM.weeks[w][d];
   const container = document.getElementById("container-" + d);
   container.innerHTML = "";
+  container.className = "";
+  if (CK.active()) return CK.render(d, container);   // iPad: lane + rail (shared/cockpit.js)
+  renderDayInto(d, container);
+}
+
+/* The day as the phone draws it: header, controls, warm-up, every row, cool-down. `container` is the pane
+   on the phone and the board's lane on an iPad. */
+function renderDayInto(d, container) {
+  const w = uiWeek;
+  const day = PROGRAM.weeks[w][d];
   const ds = dayState(w, d, false);
   const rows = mainRows(w, d);
   const k = dayKey(w, d);
@@ -1282,16 +1294,18 @@ function renderRow(w, d, row, idx, plan, st, total) {
   const el = document.createElement("div");
   el.className = "hs-row hs-" + st;
   el.dataset.idx = idx;
+  el.dataset.key = tKey;   // SetLog's rest key for this row (the cockpit's rest ring reads it back)
 
   if (st !== "now") {
     // A timer still running on a row that folded (ticked done mid-rest) stays on screen.
     const live = !!activeTimers[tKey];
     const right = live ? `<button type="button" class="btn btn-timer row-timer" data-default="${timerLabel}">${timerLabel}</button>`
       : st === "done" ? escapeHtml(loggedRx(row, spec, log) || shortRx(row)) : "";
+    const ltNext = st === "next" && CK.active() ? lastTimeText(row, w, d) : "";
     el.innerHTML = `
       <div class="hs-row-sum" role="button" tabindex="0">
         <span class="hs-mark">${st === "done" ? ICON.check : ""}</span>
-        <span class="hs-sum-t"><b>${row.name}</b>${st === "next" ? `<small>${escapeHtml(shortRx(row))}${trimHtml}</small>` : ""}</span>
+        <span class="hs-sum-t"><b>${row.name}</b>${st === "next" ? `<small>${escapeHtml(shortRx(row))}${trimHtml}${ltNext ? `<span class="ck-sum-last">Last · ${escapeHtml(ltNext)}</span>` : ""}</small>` : ""}</span>
         ${right ? `<span class="hs-sum-r">${right}</span>` : ""}
       </div>`;
     const sum = el.querySelector(".hs-row-sum");
@@ -1313,7 +1327,10 @@ function renderRow(w, d, row, idx, plan, st, total) {
     const hist = priorEntries(row.name, w, d);
     if (hist.length) {
       const Lst = hist[0];
-      lastHtml = SL.lastHtml(Lst, spec, `W${Lst.week + 1} ${PROGRAM.dayLabels[Lst.day]}${Lst.date ? " · " + shortDate(Lst.date) : ""}`);
+      // On the board the last outing is the prominent block (shared/cockpit.js); the phone keeps its Last line.
+      lastHtml = CK.active()
+        ? CK.lastHtml(Lst, spec, `W${Lst.week + 1} ${PROGRAM.dayLabels[Lst.day]}${Lst.date ? " · " + CK.when(Lst.date) : ""}`)
+        : SL.lastHtml(Lst, spec, `W${Lst.week + 1} ${PROGRAM.dayLabels[Lst.day]}${Lst.date ? " · " + shortDate(Lst.date) : ""}`);
     }
     sugg = suggestNext(row, w, d, spec);
   }
@@ -1846,6 +1863,82 @@ document.getElementById("reset-btn").onclick = () => {
   paint();
   hero.appendChild(btn);
 })();
+
+/* ---------------------------------------------------------------------------
+   iPad BOARD (2026-10-24, rolled out from Full Body Aesthetics). At the board's
+   breakpoint a day renders as lane + rail: session clock with the planned-time
+   timeline, the rest ring, the workout tracker. The board itself is
+   ../shared/cockpit.js; this adapter hands it the page's own data. Rendering
+   only: state, payloads and the phone layout do not change. A "day" here is the
+   day key of the week on screen (uiWeek), as renderDay reads it.
+   --------------------------------------------------------------------------- */
+const TAG_SHORT = { str: "Str", upper: "Upper", legs: "Legs", cplx: "Cplx", fin: "Fin", core: "Core", mob: "Mob" };
+/* One line for the tracker and the Up next summary: "last wk · 8, 8, 7 @ 185 lb". */
+function lastTimeText(row, w, d) {
+  if (!row.track) return "";
+  const hist = priorEntries(row.name, w, d);
+  if (!hist.length) return "";
+  const L = hist[0];
+  return `${L.date ? CK.when(L.date, true) : `W${L.week + 1} ${PROGRAM.dayLabels[L.day]}`} · ${SL.lastText(L, specOf(row))}`;
+}
+CK.init({
+  id: d => d,
+  kind: () => "strength",
+  eyebrow: d => { const ds = dayState(uiWeek, d, false); return `Week ${uiWeek + 1} · ${DAY_FULL[d] || PROGRAM.dayLabels[d]}${ds && ds.date ? ` · ${shortDate(ds.date)}` : ""}`; },
+  title: d => PROGRAM.weeks[uiWeek][d].title,
+  warmupSecs: d => 60 + prepSecs(PROGRAM.weeks[uiWeek][d].warmup, 50, state.sixty, 0.8),   // the plan's setup buffer + warm-up, as dayPlan counts them
+  /* Planned seconds per row from dayPlan's offsets (between-block rests ride on the row before them);
+     the cool-down is not a segment. A mobility circuit day is one row planned to its listed length. */
+  slots: d => {
+    const w = uiWeek, day = PROGRAM.weeks[w][d], plan = dayPlan(w, d), rows = mainRows(w, d);
+    const end = plan.total - prepSecs(day.cooldown, 75, plan.sixty, 0.5);
+    return rows.map(({ row, idx }, i) => {
+      const next = i + 1 < plan.offsets.length ? plan.offsets[i + 1] : end;
+      const spec = specOf(row, plan, idx);
+      return { idx, name: row.name, label: TAG_SHORT[row.tag] || tagLabel(row.tag), slotName: tagLabel(row.tag), secs: Math.max(60, next - plan.offsets[i]),
+               rest: row.timer ? null : effRest(row.rest, plan.sixty), closer: false, beat: "", sets: row.track ? spec.sets : 1 };
+    });
+  },
+  nowIndex: d => {
+    const w = uiWeek, ds = dayState(w, d, false), rows = mainRows(w, d), k = dayKey(w, d);
+    return tappedNow[k] != null && tappedNow[k] < rows.length ? tappedNow[k] : rows.findIndex(x => !(ds && ds.completed["m" + x.idx]));
+  },
+  setStates: (d, idx) => {
+    const w = uiWeek, ds = dayState(w, d, false), { row } = mainRows(w, d)[idx], plan = dayPlan(w, d);
+    const done = !!(ds && ds.completed["m" + idx]);
+    if (!row.track) return [done ? "done" : ""];
+    const spec = specOf(row, plan, idx), log = SL.normLog(ds && ds.logs[idx], spec.sets);
+    return log.sets.slice(0, spec.sets).map(x => done || x.d ? "done" : (x.r != null || x.w != null) ? "part" : "");
+  },
+  lastText: (d, idx) => lastTimeText(mainRows(uiWeek, d)[idx].row, uiWeek, d),
+  restKey: (d, idx) => `${mainRows(uiWeek, d)[idx].row.name}|${dayKey(uiWeek, d)}_${idx}`,
+  clock: d => { const ds = dayState(uiWeek, d, false); return ds ? { start: ds.clockStart, stop: ds.clockStop } : null; },
+  toggleClock: d => {
+    const cur = dayState(uiWeek, d, true);
+    if (!cur.clockStart) { cur.clockStart = Date.now(); cur.clockStop = null; stampDate(cur); }
+    else if (!cur.clockStop) cur.clockStop = Date.now();
+    else { cur.clockStart = null; cur.clockStop = null; }
+    saveState();
+  },
+  isComplete: d => isDayComplete(uiWeek, d),
+  renderLane: (d, lane) => renderDayInto(d, lane),
+  jump: (d, target) => {
+    const k = dayKey(uiWeek, d);
+    if (target === "wu") prepOpen[`${k}_wu`] = true;
+    else if (typeof target === "number") tappedNow[k] = target;
+    renderDay(d);
+  },
+  /* Every logged day, rows in order with each set's check timestamp: the timeline learns pace from these. */
+  sessions: () => {
+    const out = [];
+    for (let w = 0; w < NWEEKS; w++) PROGRAM.dayOrder.forEach(d => {
+      const ds = dayState(w, d, false); if (!ds) return;
+      out.push({ start: ds.clockStart || null, rows: mainRows(w, d).map(({ row, idx }) => ({ name: row.name, t: SL.normLog(ds.logs[idx], 0).sets.map(x => x.t).filter(Boolean) })) });
+    });
+    return out;
+  },
+  onModeChange: () => render()
+});
 
 buildShell();
 /* Open on the "#s=<id>" deep link when present, else the summary's next

@@ -1,0 +1,4255 @@
+{
+ "name": "Full Body (3 Day Split)",
+ "slug": "full-body-3-day",
+ "coach": "Ryan Fischer",
+ "app": "Chalk Performance Training",
+ "unit": "lb",
+ "schema": 2,
+ "mode": "sessions",
+ "planId": 936627,
+ "description": null,
+ "equipment": null,
+ "generatedBy": "automation/exercise-library/chalk_plan_ingest.py",
+ "blocks": [
+  {
+   "id": "B1",
+   "weeks": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "label": "Weeks 1-4 · build, intensity 7-8",
+   "intro": null
+  },
+  {
+   "id": "B2",
+   "weeks": [
+    5,
+    6,
+    7,
+    8
+   ],
+   "label": "Weeks 5-8 · near max effort, one rep in the tank",
+   "intro": null
+  }
+ ],
+ "sessions": [
+  {
+   "n": 1,
+   "block": "B1",
+   "week": 1,
+   "chalkDay": 0,
+   "workout": "A",
+   "title": "Day 1",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Back Squat",
+       "sets": 3,
+       "reps": "6",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 6 reps",
+       "slot": "legs",
+       "exerciseId": 523104,
+       "videoUrl": "https://stream.mux.com/Wd5ZY6eNKMpTlCvXNmvgLjLucD00fumPTlqja9AfkgmU.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Bench Press",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "chest",
+       "exerciseId": 523081,
+       "videoUrl": "https://stream.mux.com/iZW8pIuhF003RWATFKkUXyVmAr86TaEMbYHFOqtF02wjo.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Lat Pull-down",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "back",
+       "exerciseId": 553912,
+       "videoUrl": "https://stream.mux.com/LgyOJ1TknE01w52RwnWSh6NihEFV67WqMbfYPen1Za02U.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "RDL",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Keep a slight knee bend here and push your butt back so that you feel the tension in your hamstrings and glutes. If your knees are locked it will be all hamstrings and we don't want that. We want the glutes involved also, so keep a slight knee bench and squeeze those glutes hard at the top of each rep.\nIntensity: 7",
+       "intensity": "7",
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "legs",
+       "exerciseId": 523019,
+       "videoUrl": "https://stream.mux.com/7dyuALVwHDZa2iFjBBYz2pA02veaIG2SXFxc8NDqGric.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dips",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "As these get easier with bodyweight add some weight by either holding a dumbbell between your feet or using a belt with some plates chained to it.",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 8-10 reps",
+       "slot": "chest",
+       "exerciseId": 553919,
+       "videoUrl": "https://stream.mux.com/QeHmck901CWYHkUVZMYjOK7hSt7foRGBTU5004UQPuJK8.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Standing Calf Raises",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "legs",
+       "exerciseId": 557030,
+       "videoUrl": "https://stream.mux.com/ormXtq00bVzrckYn4XWZ8ygLaFWpRPQrudVFpt01L006sk.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Supinated Dumbbell Curls",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "biceps",
+       "exerciseId": 553909,
+       "videoUrl": "https://stream.mux.com/Gw3tZgXd8XcelhOWnbd5VAk02WkzdUJN026aW008Pbdl24.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 2,
+   "block": "B1",
+   "week": 1,
+   "chalkDay": 2,
+   "workout": "B",
+   "title": "Day 2",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 180,
+     "exercises": [
+      {
+       "name": "Barbell Deadlift",
+       "sets": 3,
+       "reps": "5",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 180,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 5 reps",
+       "slot": "legs",
+       "exerciseId": 523103,
+       "videoUrl": "https://stream.mux.com/PL0200SsqNPAsKr00GIuHREEKKYiQO02NM02oqMCdCEHksxg.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Seated Barbell Shoulder Press",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "shoulders",
+       "exerciseId": 553833,
+       "videoUrl": "https://stream.mux.com/N00LTCDSL1j5CLnmrcPso4GtUZfeNVNj9rkxhJ46t9yw.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "T-Bar Row",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "back",
+       "alternates": [
+        "Incline Seal Row"
+       ],
+       "exerciseId": 557018,
+       "videoUrl": "https://stream.mux.com/F02asI5CTuUGRC91rfzReuluuRlrk02r7R017orZlaBCy8.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Leg Extension",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "legs",
+       "exerciseId": 554482,
+       "videoUrl": "https://stream.mux.com/KWbrEOR3rGvAQqLr7baFuAU9vTc00svO302V7ld00W3YdE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Cable Fly",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "chest",
+       "exerciseId": 553874,
+       "videoUrl": "https://stream.mux.com/6R00l16d00B6P3PaxT005a1NpyR00KI2fZLy2FGvh5gW3sM.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Cable Crunches",
+       "sets": 3,
+       "reps": "-1",
+       "perSide": false,
+       "instruction": "Complete as many reps here as you can for each set. Use a weight that has you fail around 12-18 rep range.\nIntensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | max reps",
+       "slot": "abs",
+       "exerciseId": 557031,
+       "videoUrl": "https://stream.mux.com/p00WI8mX1xQNnZT9i02pb018KhrPhISkQnDVUfbkWWL7io.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dumbbell Skull Crushers",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "triceps",
+       "exerciseId": 553882,
+       "videoUrl": "https://stream.mux.com/UiaZUB9sZPIXuW3wW5H9ostoQ7MEBZsttLPVqwM4iOk.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 3,
+   "block": "B1",
+   "week": 1,
+   "chalkDay": 4,
+   "workout": "C",
+   "title": "Day 3",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "DB Bulgarian Split Squat",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "legs",
+       "exerciseId": 523030,
+       "videoUrl": "https://stream.mux.com/XUgmtHAgeamTRleRQ01Txm3WbaVZqij9zB35AQdQcfoQ.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dumbbell Incline Bench Press",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "chest",
+       "exerciseId": 523078,
+       "videoUrl": "https://stream.mux.com/AhrFStTXSBu6hkXzV6oukM5F5oM9joyvey96RXqfb018.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Neutral-Grip Lat Pulldown",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "back",
+       "exerciseId": 525613,
+       "videoUrl": "https://stream.mux.com/mBvKr5uiNBnn4UrHHv5zIBlRSzlnyGX00mKzQah00l00hE.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Hip Thrust",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "legs",
+       "exerciseId": 557039,
+       "videoUrl": "https://stream.mux.com/YT4krFtjjAOZslukMkCopi76kZpvnboF1iySssXCrX4.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Seated Dumbbell Lateral Raises",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "shoulders",
+       "exerciseId": 553896,
+       "videoUrl": "https://stream.mux.com/ntRSCIV6AK2qpw6DNMFlv01sfPWD3PXxl68bgbQ7VJ8o.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Seated Face-Pulls",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "shoulders",
+       "exerciseId": 557032,
+       "videoUrl": "https://stream.mux.com/Oub79hf12LrdWqHIlrhOSECpn01NDZTxByGXRz9F02dAE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Seated Hamstring Curl",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "biceps",
+       "alternates": [
+        "Swiss Ball Leg Curls"
+       ],
+       "exerciseId": 554473,
+       "videoUrl": "https://stream.mux.com/I3x2A01NJL22Qw2UzomNzGUTgV02hufpQCDHbr01N02qynQ.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 4,
+   "block": "B1",
+   "week": 2,
+   "chalkDay": 0,
+   "workout": "A",
+   "title": "Day 1",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Back Squat",
+       "sets": 3,
+       "reps": "6",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 6 reps",
+       "slot": "legs",
+       "exerciseId": 523104,
+       "videoUrl": "https://stream.mux.com/Wd5ZY6eNKMpTlCvXNmvgLjLucD00fumPTlqja9AfkgmU.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Bench Press",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "chest",
+       "exerciseId": 523081,
+       "videoUrl": "https://stream.mux.com/iZW8pIuhF003RWATFKkUXyVmAr86TaEMbYHFOqtF02wjo.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Lat Pull-down",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "back",
+       "exerciseId": 553912,
+       "videoUrl": "https://stream.mux.com/LgyOJ1TknE01w52RwnWSh6NihEFV67WqMbfYPen1Za02U.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "RDL",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Keep a slight knee bend here and push your butt back so that you feel the tension in your hamstrings and glutes. If your knees are locked it will be all hamstrings and we don't want that. We want the glutes involved also, so keep a slight knee bench and squeeze those glutes hard at the top of each rep.\nIntensity: 7",
+       "intensity": "7",
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "legs",
+       "exerciseId": 523019,
+       "videoUrl": "https://stream.mux.com/7dyuALVwHDZa2iFjBBYz2pA02veaIG2SXFxc8NDqGric.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dips",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "As these get easier with bodyweight add some weight by either holding a dumbbell between your feet or using a belt with some plates chained to it.",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 8-10 reps",
+       "slot": "chest",
+       "exerciseId": 553919,
+       "videoUrl": "https://stream.mux.com/QeHmck901CWYHkUVZMYjOK7hSt7foRGBTU5004UQPuJK8.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Standing Calf Raises",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "legs",
+       "exerciseId": 557030,
+       "videoUrl": "https://stream.mux.com/ormXtq00bVzrckYn4XWZ8ygLaFWpRPQrudVFpt01L006sk.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Supinated Dumbbell Curls",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "biceps",
+       "exerciseId": 553909,
+       "videoUrl": "https://stream.mux.com/Gw3tZgXd8XcelhOWnbd5VAk02WkzdUJN026aW008Pbdl24.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 5,
+   "block": "B1",
+   "week": 2,
+   "chalkDay": 2,
+   "workout": "B",
+   "title": "Day 2",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 180,
+     "exercises": [
+      {
+       "name": "Barbell Deadlift",
+       "sets": 3,
+       "reps": "5",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 180,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 5 reps",
+       "slot": "legs",
+       "exerciseId": 523103,
+       "videoUrl": "https://stream.mux.com/PL0200SsqNPAsKr00GIuHREEKKYiQO02NM02oqMCdCEHksxg.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Seated Barbell Shoulder Press",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "shoulders",
+       "exerciseId": 553833,
+       "videoUrl": "https://stream.mux.com/N00LTCDSL1j5CLnmrcPso4GtUZfeNVNj9rkxhJ46t9yw.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "T-Bar Row",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "back",
+       "alternates": [
+        "Incline Seal Row"
+       ],
+       "exerciseId": 557018,
+       "videoUrl": "https://stream.mux.com/F02asI5CTuUGRC91rfzReuluuRlrk02r7R017orZlaBCy8.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Leg Extension",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "legs",
+       "exerciseId": 554482,
+       "videoUrl": "https://stream.mux.com/KWbrEOR3rGvAQqLr7baFuAU9vTc00svO302V7ld00W3YdE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Cable Fly",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "chest",
+       "exerciseId": 553874,
+       "videoUrl": "https://stream.mux.com/6R00l16d00B6P3PaxT005a1NpyR00KI2fZLy2FGvh5gW3sM.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Cable Crunches",
+       "sets": 3,
+       "reps": "-1",
+       "perSide": false,
+       "instruction": "Complete as many reps here as you can for each set. Use a weight that has you fail around 12-18 rep range.\nIntensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | max reps",
+       "slot": "abs",
+       "exerciseId": 557031,
+       "videoUrl": "https://stream.mux.com/p00WI8mX1xQNnZT9i02pb018KhrPhISkQnDVUfbkWWL7io.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dumbbell Skull Crushers",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "triceps",
+       "exerciseId": 553882,
+       "videoUrl": "https://stream.mux.com/UiaZUB9sZPIXuW3wW5H9ostoQ7MEBZsttLPVqwM4iOk.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 6,
+   "block": "B1",
+   "week": 2,
+   "chalkDay": 4,
+   "workout": "C",
+   "title": "Day 3",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "DB Bulgarian Split Squat",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "legs",
+       "exerciseId": 523030,
+       "videoUrl": "https://stream.mux.com/XUgmtHAgeamTRleRQ01Txm3WbaVZqij9zB35AQdQcfoQ.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dumbbell Incline Bench Press",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "chest",
+       "exerciseId": 523078,
+       "videoUrl": "https://stream.mux.com/AhrFStTXSBu6hkXzV6oukM5F5oM9joyvey96RXqfb018.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Neutral-Grip Lat Pulldown",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "back",
+       "exerciseId": 525613,
+       "videoUrl": "https://stream.mux.com/mBvKr5uiNBnn4UrHHv5zIBlRSzlnyGX00mKzQah00l00hE.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Hip Thrust",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "legs",
+       "exerciseId": 557039,
+       "videoUrl": "https://stream.mux.com/YT4krFtjjAOZslukMkCopi76kZpvnboF1iySssXCrX4.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Seated Dumbbell Lateral Raises",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "shoulders",
+       "exerciseId": 553896,
+       "videoUrl": "https://stream.mux.com/ntRSCIV6AK2qpw6DNMFlv01sfPWD3PXxl68bgbQ7VJ8o.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Seated Face-Pulls",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "shoulders",
+       "exerciseId": 557032,
+       "videoUrl": "https://stream.mux.com/Oub79hf12LrdWqHIlrhOSECpn01NDZTxByGXRz9F02dAE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Seated Hamstring Curl",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "biceps",
+       "alternates": [
+        "Swiss Ball Leg Curls"
+       ],
+       "exerciseId": 554473,
+       "videoUrl": "https://stream.mux.com/I3x2A01NJL22Qw2UzomNzGUTgV02hufpQCDHbr01N02qynQ.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 7,
+   "block": "B1",
+   "week": 3,
+   "chalkDay": 0,
+   "workout": "A",
+   "title": "Day 1",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Back Squat",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "legs",
+       "exerciseId": 523104,
+       "videoUrl": "https://stream.mux.com/Wd5ZY6eNKMpTlCvXNmvgLjLucD00fumPTlqja9AfkgmU.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Bench Press",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "chest",
+       "exerciseId": 523081,
+       "videoUrl": "https://stream.mux.com/iZW8pIuhF003RWATFKkUXyVmAr86TaEMbYHFOqtF02wjo.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Lat Pull-down",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "back",
+       "exerciseId": 553912,
+       "videoUrl": "https://stream.mux.com/LgyOJ1TknE01w52RwnWSh6NihEFV67WqMbfYPen1Za02U.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "RDL",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Keep a slight knee bend here and push your butt back so that you feel the tension in your hamstrings and glutes. If your knees are locked it will be all hamstrings and we don't want that. We want the glutes involved also, so keep a slight knee bench and squeeze those glutes hard at the top of each rep.\nIntensity: 7",
+       "intensity": "7",
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "legs",
+       "exerciseId": 523019,
+       "videoUrl": "https://stream.mux.com/7dyuALVwHDZa2iFjBBYz2pA02veaIG2SXFxc8NDqGric.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dips",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "As these get easier with bodyweight add some weight by either holding a dumbbell between your feet or using a belt with some plates chained to it.",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 10-12 reps",
+       "slot": "chest",
+       "exerciseId": 553919,
+       "videoUrl": "https://stream.mux.com/QeHmck901CWYHkUVZMYjOK7hSt7foRGBTU5004UQPuJK8.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Standing Calf Raises",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "legs",
+       "exerciseId": 557030,
+       "videoUrl": "https://stream.mux.com/ormXtq00bVzrckYn4XWZ8ygLaFWpRPQrudVFpt01L006sk.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Supinated Dumbbell Curls",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "biceps",
+       "exerciseId": 553909,
+       "videoUrl": "https://stream.mux.com/Gw3tZgXd8XcelhOWnbd5VAk02WkzdUJN026aW008Pbdl24.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 8,
+   "block": "B1",
+   "week": 3,
+   "chalkDay": 2,
+   "workout": "B",
+   "title": "Day 2",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 180,
+     "exercises": [
+      {
+       "name": "Barbell Deadlift",
+       "sets": 3,
+       "reps": "5",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 180,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 5 reps",
+       "slot": "legs",
+       "exerciseId": 523103,
+       "videoUrl": "https://stream.mux.com/PL0200SsqNPAsKr00GIuHREEKKYiQO02NM02oqMCdCEHksxg.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Seated Barbell Shoulder Press",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "shoulders",
+       "exerciseId": 553833,
+       "videoUrl": "https://stream.mux.com/N00LTCDSL1j5CLnmrcPso4GtUZfeNVNj9rkxhJ46t9yw.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "T-Bar Row",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "back",
+       "alternates": [
+        "Incline Seal Row"
+       ],
+       "exerciseId": 557018,
+       "videoUrl": "https://stream.mux.com/F02asI5CTuUGRC91rfzReuluuRlrk02r7R017orZlaBCy8.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Leg Extension",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "slot": "legs",
+       "exerciseId": 554482,
+       "videoUrl": "https://stream.mux.com/KWbrEOR3rGvAQqLr7baFuAU9vTc00svO302V7ld00W3YdE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Cable Fly",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "slot": "chest",
+       "exerciseId": 553874,
+       "videoUrl": "https://stream.mux.com/6R00l16d00B6P3PaxT005a1NpyR00KI2fZLy2FGvh5gW3sM.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Cable Crunches",
+       "sets": 3,
+       "reps": "-1",
+       "perSide": false,
+       "instruction": "Complete as many reps here as you can for each set. Use a weight that has you fail around 12-18 rep range.\nIntensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | max reps",
+       "slot": "abs",
+       "exerciseId": 557031,
+       "videoUrl": "https://stream.mux.com/p00WI8mX1xQNnZT9i02pb018KhrPhISkQnDVUfbkWWL7io.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dumbbell Skull Crushers",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "slot": "triceps",
+       "exerciseId": 553882,
+       "videoUrl": "https://stream.mux.com/UiaZUB9sZPIXuW3wW5H9ostoQ7MEBZsttLPVqwM4iOk.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 9,
+   "block": "B1",
+   "week": 3,
+   "chalkDay": 4,
+   "workout": "C",
+   "title": "Day 3",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "DB Bulgarian Split Squat",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "legs",
+       "exerciseId": 523030,
+       "videoUrl": "https://stream.mux.com/XUgmtHAgeamTRleRQ01Txm3WbaVZqij9zB35AQdQcfoQ.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dumbbell Incline Bench Press",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "chest",
+       "exerciseId": 523078,
+       "videoUrl": "https://stream.mux.com/AhrFStTXSBu6hkXzV6oukM5F5oM9joyvey96RXqfb018.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Neutral-Grip Lat Pulldown",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "back",
+       "exerciseId": 525613,
+       "videoUrl": "https://stream.mux.com/mBvKr5uiNBnn4UrHHv5zIBlRSzlnyGX00mKzQah00l00hE.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Hip Thrust",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "slot": "legs",
+       "exerciseId": 557039,
+       "videoUrl": "https://stream.mux.com/YT4krFtjjAOZslukMkCopi76kZpvnboF1iySssXCrX4.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Seated Dumbbell Lateral Raises",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "shoulders",
+       "exerciseId": 553896,
+       "videoUrl": "https://stream.mux.com/ntRSCIV6AK2qpw6DNMFlv01sfPWD3PXxl68bgbQ7VJ8o.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Seated Face-Pulls",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "slot": "shoulders",
+       "exerciseId": 557032,
+       "videoUrl": "https://stream.mux.com/Oub79hf12LrdWqHIlrhOSECpn01NDZTxByGXRz9F02dAE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Seated Hamstring Curl",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "biceps",
+       "alternates": [
+        "Swiss Ball Leg Curls"
+       ],
+       "exerciseId": 554473,
+       "videoUrl": "https://stream.mux.com/I3x2A01NJL22Qw2UzomNzGUTgV02hufpQCDHbr01N02qynQ.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 10,
+   "block": "B1",
+   "week": 4,
+   "chalkDay": 0,
+   "workout": "A",
+   "title": "Day 1",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Back Squat",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "legs",
+       "exerciseId": 523104,
+       "videoUrl": "https://stream.mux.com/Wd5ZY6eNKMpTlCvXNmvgLjLucD00fumPTlqja9AfkgmU.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Bench Press",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "chest",
+       "exerciseId": 523081,
+       "videoUrl": "https://stream.mux.com/iZW8pIuhF003RWATFKkUXyVmAr86TaEMbYHFOqtF02wjo.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Lat Pull-down",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "back",
+       "exerciseId": 553912,
+       "videoUrl": "https://stream.mux.com/LgyOJ1TknE01w52RwnWSh6NihEFV67WqMbfYPen1Za02U.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "RDL",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Keep a slight knee bend here and push your butt back so that you feel the tension in your hamstrings and glutes. If your knees are locked it will be all hamstrings and we don't want that. We want the glutes involved also, so keep a slight knee bench and squeeze those glutes hard at the top of each rep.\nIntensity: 7",
+       "intensity": "7",
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "legs",
+       "exerciseId": 523019,
+       "videoUrl": "https://stream.mux.com/7dyuALVwHDZa2iFjBBYz2pA02veaIG2SXFxc8NDqGric.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dips",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "As these get easier with bodyweight add some weight by either holding a dumbbell between your feet or using a belt with some plates chained to it.",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 10-12 reps",
+       "slot": "chest",
+       "exerciseId": 553919,
+       "videoUrl": "https://stream.mux.com/QeHmck901CWYHkUVZMYjOK7hSt7foRGBTU5004UQPuJK8.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Standing Calf Raises",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "legs",
+       "exerciseId": 557030,
+       "videoUrl": "https://stream.mux.com/ormXtq00bVzrckYn4XWZ8ygLaFWpRPQrudVFpt01L006sk.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Supinated Dumbbell Curls",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "biceps",
+       "exerciseId": 553909,
+       "videoUrl": "https://stream.mux.com/Gw3tZgXd8XcelhOWnbd5VAk02WkzdUJN026aW008Pbdl24.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 11,
+   "block": "B1",
+   "week": 4,
+   "chalkDay": 2,
+   "workout": "B",
+   "title": "Day 2",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 180,
+     "exercises": [
+      {
+       "name": "Barbell Deadlift",
+       "sets": 3,
+       "reps": "5",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 180,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 5 reps",
+       "slot": "legs",
+       "exerciseId": 523103,
+       "videoUrl": "https://stream.mux.com/PL0200SsqNPAsKr00GIuHREEKKYiQO02NM02oqMCdCEHksxg.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Seated Barbell Shoulder Press",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "shoulders",
+       "exerciseId": 553833,
+       "videoUrl": "https://stream.mux.com/N00LTCDSL1j5CLnmrcPso4GtUZfeNVNj9rkxhJ46t9yw.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "T-Bar Row",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "back",
+       "alternates": [
+        "Incline Seal Row"
+       ],
+       "exerciseId": 557018,
+       "videoUrl": "https://stream.mux.com/F02asI5CTuUGRC91rfzReuluuRlrk02r7R017orZlaBCy8.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Leg Extension",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "slot": "legs",
+       "exerciseId": 554482,
+       "videoUrl": "https://stream.mux.com/KWbrEOR3rGvAQqLr7baFuAU9vTc00svO302V7ld00W3YdE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Cable Fly",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "slot": "chest",
+       "exerciseId": 553874,
+       "videoUrl": "https://stream.mux.com/6R00l16d00B6P3PaxT005a1NpyR00KI2fZLy2FGvh5gW3sM.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Cable Crunches",
+       "sets": 3,
+       "reps": "-1",
+       "perSide": false,
+       "instruction": "Complete as many reps here as you can for each set. Use a weight that has you fail around 12-18 rep range.\nIntensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | max reps",
+       "slot": "abs",
+       "exerciseId": 557031,
+       "videoUrl": "https://stream.mux.com/p00WI8mX1xQNnZT9i02pb018KhrPhISkQnDVUfbkWWL7io.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dumbbell Skull Crushers",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "slot": "triceps",
+       "exerciseId": 553882,
+       "videoUrl": "https://stream.mux.com/UiaZUB9sZPIXuW3wW5H9ostoQ7MEBZsttLPVqwM4iOk.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 12,
+   "block": "B1",
+   "week": 4,
+   "chalkDay": 4,
+   "workout": "C",
+   "title": "Day 3",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "DB Bulgarian Split Squat",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "legs",
+       "exerciseId": 523030,
+       "videoUrl": "https://stream.mux.com/XUgmtHAgeamTRleRQ01Txm3WbaVZqij9zB35AQdQcfoQ.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dumbbell Incline Bench Press",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "chest",
+       "exerciseId": 523078,
+       "videoUrl": "https://stream.mux.com/AhrFStTXSBu6hkXzV6oukM5F5oM9joyvey96RXqfb018.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Neutral-Grip Lat Pulldown",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "back",
+       "exerciseId": 525613,
+       "videoUrl": "https://stream.mux.com/mBvKr5uiNBnn4UrHHv5zIBlRSzlnyGX00mKzQah00l00hE.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Hip Thrust",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "slot": "legs",
+       "exerciseId": 557039,
+       "videoUrl": "https://stream.mux.com/YT4krFtjjAOZslukMkCopi76kZpvnboF1iySssXCrX4.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Seated Dumbbell Lateral Raises",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "shoulders",
+       "exerciseId": 553896,
+       "videoUrl": "https://stream.mux.com/ntRSCIV6AK2qpw6DNMFlv01sfPWD3PXxl68bgbQ7VJ8o.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Seated Face-Pulls",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "slot": "shoulders",
+       "exerciseId": 557032,
+       "videoUrl": "https://stream.mux.com/Oub79hf12LrdWqHIlrhOSECpn01NDZTxByGXRz9F02dAE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Seated Hamstring Curl",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "biceps",
+       "alternates": [
+        "Swiss Ball Leg Curls"
+       ],
+       "exerciseId": 554473,
+       "videoUrl": "https://stream.mux.com/I3x2A01NJL22Qw2UzomNzGUTgV02hufpQCDHbr01N02qynQ.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 13,
+   "block": "B2",
+   "week": 5,
+   "chalkDay": 0,
+   "workout": "A",
+   "title": "Day 1",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Back Squat",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "legs",
+       "exerciseId": 523104,
+       "videoUrl": "https://stream.mux.com/Wd5ZY6eNKMpTlCvXNmvgLjLucD00fumPTlqja9AfkgmU.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dumbbell Shoulder Press (Seated)",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "shoulders",
+       "exerciseId": 523076,
+       "videoUrl": "https://stream.mux.com/VTvP3TtKnvJsHL8aZLUBAj7vup2GGZ35brzLg5fGFKw.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Pull-Up",
+       "sets": 3,
+       "reps": "-1",
+       "perSide": false,
+       "instruction": "Complete 3 sets of close to max effort on each set here. Leave 1 rep in the tank so it's not complete failure. This might be just bodyweight for you. You might have to use assistance. Or you might be strong enough to use additional weight. The goal here is to fail right around 8-10 rep range. So keep that in mind as you complete your sets.",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | max reps",
+       "slot": "back",
+       "exerciseId": 523089,
+       "videoUrl": "https://stream.mux.com/S01ilh7cAtId5WtpDVxk02eCwJ6SodTYe702yoHW8letlE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Hip Thrust",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "legs",
+       "exerciseId": 557039,
+       "videoUrl": "https://stream.mux.com/YT4krFtjjAOZslukMkCopi76kZpvnboF1iySssXCrX4.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Flat Dumbbell Fly",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "slot": "chest",
+       "exerciseId": 553891,
+       "videoUrl": "https://stream.mux.com/loH3LeouQLkQTneENriv8SH4JOmfdq3xl5HAfyachto.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Machine Rear Delts",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "slot": "shoulders",
+       "alternates": [
+        "Chest Support Rear Delts"
+       ],
+       "exerciseId": 553922,
+       "videoUrl": "https://stream.mux.com/vMMCpKvRYvB9GpTfhdt5NlCy2o01nRAQo45CKstHbvws.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Cable Lateral Raise",
+       "sets": 3,
+       "reps": "15",
+       "perSide": true,
+       "instruction": "Intensity: 9\nPerform Each Side",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets (per side) | 15 reps",
+       "slot": "shoulders",
+       "exerciseId": 566885,
+       "videoUrl": "https://stream.mux.com/76RhFsnHNYdAe5zZxCZDSDkF5VUQm1WfLAufePvYrmU.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 14,
+   "block": "B2",
+   "week": 5,
+   "chalkDay": 2,
+   "workout": "B",
+   "title": "Day 2",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 180,
+     "exercises": [
+      {
+       "name": "Barbell Deadlift",
+       "sets": 3,
+       "reps": "3",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 180,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 3 reps",
+       "slot": "legs",
+       "exerciseId": 523103,
+       "videoUrl": "https://stream.mux.com/PL0200SsqNPAsKr00GIuHREEKKYiQO02NM02oqMCdCEHksxg.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Close Grip Bench Press",
+       "sets": 3,
+       "reps": "6",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 6 reps",
+       "slot": "chest",
+       "exerciseId": 553920,
+       "videoUrl": "https://stream.mux.com/BOz3V600POL16Fzji4r4xgTi4rg6b01NqRdbmmAHGExPg.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dumbbell Bent Over Row",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "back",
+       "exerciseId": 566884,
+       "videoUrl": "https://stream.mux.com/CavkGcBGD401do9Aoj4RyGImC93bExU7KBZt8fSqQ8Ko.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Walking DB Lunge",
+       "sets": 3,
+       "reps": "12",
+       "perSide": true,
+       "instruction": "Intensity: 9\nPerform Each Side",
+       "intensity": "9",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets (per side) | 12 reps",
+       "slot": "legs",
+       "exerciseId": 523022,
+       "videoUrl": "https://stream.mux.com/ysxAW1hsiM435p02gafHhCnYjzpF3aIQqgHmtRBiUSyg.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Dips",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "If body weight is easy for you here, then add some weight! \nIntensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "chest",
+       "exerciseId": 553919,
+       "videoUrl": "https://stream.mux.com/QeHmck901CWYHkUVZMYjOK7hSt7foRGBTU5004UQPuJK8.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Dual Cable Bicep Curl",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "biceps",
+       "exerciseId": 553887,
+       "videoUrl": "https://stream.mux.com/qP2R47hKsVlcuOajxYH00h3dA9iuWpJQx8121IZG4LF4.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Decline Sit-Up",
+       "sets": 3,
+       "reps": "-1",
+       "perSide": false,
+       "instruction": "3 sets of max effort reps! If you can get more than 20 reps, then add some weight with a dumbbell or a plate.\nIntensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | max reps",
+       "slot": "abs",
+       "alternates": [
+        "Weighted Sit-Up"
+       ],
+       "exerciseId": 557022,
+       "videoUrl": "https://stream.mux.com/r02CYHhtdZM00y1AFVhckkERzkajAAfUKjABxIiwhNdvI.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 15,
+   "block": "B2",
+   "week": 5,
+   "chalkDay": 4,
+   "workout": "C",
+   "title": "Day 3",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 60,
+     "exercises": [
+      {
+       "name": "Back Squat",
+       "sets": 3,
+       "reps": "5",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 5 reps",
+       "slot": "legs",
+       "exerciseId": 523104,
+       "videoUrl": "https://stream.mux.com/Wd5ZY6eNKMpTlCvXNmvgLjLucD00fumPTlqja9AfkgmU.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Incline Bench Press",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "chest",
+       "exerciseId": 523082,
+       "videoUrl": "https://stream.mux.com/TraB02jsRz008Jm2KXzCXuDPfTKOAfa02zdtv6X1POgs5I.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Neutral-Grip Lat Pulldown",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "back",
+       "exerciseId": 525613,
+       "videoUrl": "https://stream.mux.com/mBvKr5uiNBnn4UrHHv5zIBlRSzlnyGX00mKzQah00l00hE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Lying Hamstring Curl",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "biceps",
+       "exerciseId": 557020,
+       "videoUrl": "https://stream.mux.com/9knxfQ6sROVA6l8CcNtgG0201tAuNZ502EJMz3pGTIo6oc.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Seated Face-Pulls",
+       "sets": 3,
+       "reps": "20",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 20 reps",
+       "slot": "shoulders",
+       "exerciseId": 557032,
+       "videoUrl": "https://stream.mux.com/Oub79hf12LrdWqHIlrhOSECpn01NDZTxByGXRz9F02dAE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Overhead Cable Tricep Extension",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "triceps",
+       "exerciseId": 525612,
+       "videoUrl": "https://stream.mux.com/76i69j1rIfl6iOXgB8O5d5016kI9FTW02bNpu7Yr1D5kE.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Deficit Standing Calf Raises",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "legs",
+       "exerciseId": 557029,
+       "videoUrl": "https://stream.mux.com/VfwLPt35SClgey2D9ZQuduDuyPhau01kAzp00yw502hZsE.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 16,
+   "block": "B2",
+   "week": 6,
+   "chalkDay": 0,
+   "workout": "A",
+   "title": "Day 1",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Back Squat",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "legs",
+       "exerciseId": 523104,
+       "videoUrl": "https://stream.mux.com/Wd5ZY6eNKMpTlCvXNmvgLjLucD00fumPTlqja9AfkgmU.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dumbbell Shoulder Press (Seated)",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "shoulders",
+       "exerciseId": 523076,
+       "videoUrl": "https://stream.mux.com/VTvP3TtKnvJsHL8aZLUBAj7vup2GGZ35brzLg5fGFKw.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Pull-Up",
+       "sets": 3,
+       "reps": "-1",
+       "perSide": false,
+       "instruction": "Complete 3 sets of close to max effort on each set here. Leave 1 rep in the tank so it's not complete failure. This might be just bodyweight for you. You might have to use assistance. Or you might be strong enough to use additional weight. The goal here is to fail right around 8-10 rep range. So keep that in mind as you complete your sets.",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | max reps",
+       "slot": "back",
+       "exerciseId": 523089,
+       "videoUrl": "https://stream.mux.com/S01ilh7cAtId5WtpDVxk02eCwJ6SodTYe702yoHW8letlE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Hip Thrust",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "legs",
+       "exerciseId": 557039,
+       "videoUrl": "https://stream.mux.com/YT4krFtjjAOZslukMkCopi76kZpvnboF1iySssXCrX4.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Flat Dumbbell Fly",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "slot": "chest",
+       "exerciseId": 553891,
+       "videoUrl": "https://stream.mux.com/loH3LeouQLkQTneENriv8SH4JOmfdq3xl5HAfyachto.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Machine Rear Delts",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "slot": "shoulders",
+       "alternates": [
+        "Chest Support Rear Delts"
+       ],
+       "exerciseId": 553922,
+       "videoUrl": "https://stream.mux.com/vMMCpKvRYvB9GpTfhdt5NlCy2o01nRAQo45CKstHbvws.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Cable Lateral Raise",
+       "sets": 3,
+       "reps": "15",
+       "perSide": true,
+       "instruction": "Intensity: 9\nPerform Each Side",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets (per side) | 15 reps",
+       "slot": "shoulders",
+       "exerciseId": 566885,
+       "videoUrl": "https://stream.mux.com/76RhFsnHNYdAe5zZxCZDSDkF5VUQm1WfLAufePvYrmU.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 17,
+   "block": "B2",
+   "week": 6,
+   "chalkDay": 2,
+   "workout": "B",
+   "title": "Day 2",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 180,
+     "exercises": [
+      {
+       "name": "Barbell Deadlift",
+       "sets": 3,
+       "reps": "3",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 180,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 3 reps",
+       "slot": "legs",
+       "exerciseId": 523103,
+       "videoUrl": "https://stream.mux.com/PL0200SsqNPAsKr00GIuHREEKKYiQO02NM02oqMCdCEHksxg.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Close Grip Bench Press",
+       "sets": 3,
+       "reps": "6",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 6 reps",
+       "slot": "chest",
+       "exerciseId": 553920,
+       "videoUrl": "https://stream.mux.com/BOz3V600POL16Fzji4r4xgTi4rg6b01NqRdbmmAHGExPg.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dumbbell Bent Over Row",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "back",
+       "exerciseId": 566884,
+       "videoUrl": "https://stream.mux.com/CavkGcBGD401do9Aoj4RyGImC93bExU7KBZt8fSqQ8Ko.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Walking DB Lunge",
+       "sets": 3,
+       "reps": "12",
+       "perSide": true,
+       "instruction": "Intensity: 9\nPerform Each Side",
+       "intensity": "9",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets (per side) | 12 reps",
+       "slot": "legs",
+       "exerciseId": 523022,
+       "videoUrl": "https://stream.mux.com/ysxAW1hsiM435p02gafHhCnYjzpF3aIQqgHmtRBiUSyg.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Dips",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "If body weight is easy for you here, then add some weight! \nIntensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "chest",
+       "exerciseId": 553919,
+       "videoUrl": "https://stream.mux.com/QeHmck901CWYHkUVZMYjOK7hSt7foRGBTU5004UQPuJK8.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Dual Cable Bicep Curl",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "biceps",
+       "exerciseId": 553887,
+       "videoUrl": "https://stream.mux.com/qP2R47hKsVlcuOajxYH00h3dA9iuWpJQx8121IZG4LF4.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Decline Sit-Up",
+       "sets": 3,
+       "reps": "-1",
+       "perSide": false,
+       "instruction": "3 sets of max effort reps! If you can get more than 20 reps, then add some weight with a dumbbell or a plate.\nIntensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | max reps",
+       "slot": "abs",
+       "alternates": [
+        "Weighted Sit-Up"
+       ],
+       "exerciseId": 557022,
+       "videoUrl": "https://stream.mux.com/r02CYHhtdZM00y1AFVhckkERzkajAAfUKjABxIiwhNdvI.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 18,
+   "block": "B2",
+   "week": 6,
+   "chalkDay": 4,
+   "workout": "C",
+   "title": "Day 3",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 60,
+     "exercises": [
+      {
+       "name": "Back Squat",
+       "sets": 3,
+       "reps": "5",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 5 reps",
+       "slot": "legs",
+       "exerciseId": 523104,
+       "videoUrl": "https://stream.mux.com/Wd5ZY6eNKMpTlCvXNmvgLjLucD00fumPTlqja9AfkgmU.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Incline Bench Press",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "chest",
+       "exerciseId": 523082,
+       "videoUrl": "https://stream.mux.com/TraB02jsRz008Jm2KXzCXuDPfTKOAfa02zdtv6X1POgs5I.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Neutral-Grip Lat Pulldown",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "back",
+       "exerciseId": 525613,
+       "videoUrl": "https://stream.mux.com/mBvKr5uiNBnn4UrHHv5zIBlRSzlnyGX00mKzQah00l00hE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Lying Hamstring Curl",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "biceps",
+       "exerciseId": 557020,
+       "videoUrl": "https://stream.mux.com/9knxfQ6sROVA6l8CcNtgG0201tAuNZ502EJMz3pGTIo6oc.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Seated Face-Pulls",
+       "sets": 3,
+       "reps": "20",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 20 reps",
+       "slot": "shoulders",
+       "exerciseId": 557032,
+       "videoUrl": "https://stream.mux.com/Oub79hf12LrdWqHIlrhOSECpn01NDZTxByGXRz9F02dAE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Overhead Cable Tricep Extension",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "triceps",
+       "exerciseId": 525612,
+       "videoUrl": "https://stream.mux.com/76i69j1rIfl6iOXgB8O5d5016kI9FTW02bNpu7Yr1D5kE.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Deficit Standing Calf Raises",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "legs",
+       "exerciseId": 557029,
+       "videoUrl": "https://stream.mux.com/VfwLPt35SClgey2D9ZQuduDuyPhau01kAzp00yw502hZsE.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 19,
+   "block": "B2",
+   "week": 7,
+   "chalkDay": 0,
+   "workout": "A",
+   "title": "Day 1",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Back Squat",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "legs",
+       "exerciseId": 523104,
+       "videoUrl": "https://stream.mux.com/Wd5ZY6eNKMpTlCvXNmvgLjLucD00fumPTlqja9AfkgmU.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dumbbell Shoulder Press (Seated)",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "shoulders",
+       "exerciseId": 523076,
+       "videoUrl": "https://stream.mux.com/VTvP3TtKnvJsHL8aZLUBAj7vup2GGZ35brzLg5fGFKw.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Pull-Up",
+       "sets": 3,
+       "reps": "-1",
+       "perSide": false,
+       "instruction": "Complete 3 sets of close to max effort on each set here. Leave 1 rep in the tank so it's not complete failure. This might be just bodyweight for you. You might have to use assistance. Or you might be strong enough to use additional weight. The goal here is to fail right around 8-10 rep range. So keep that in mind as you complete your sets.",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | max reps",
+       "slot": "back",
+       "exerciseId": 523089,
+       "videoUrl": "https://stream.mux.com/S01ilh7cAtId5WtpDVxk02eCwJ6SodTYe702yoHW8letlE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Hip Thrust",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "legs",
+       "exerciseId": 557039,
+       "videoUrl": "https://stream.mux.com/YT4krFtjjAOZslukMkCopi76kZpvnboF1iySssXCrX4.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Flat Dumbbell Fly",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "slot": "chest",
+       "exerciseId": 553891,
+       "videoUrl": "https://stream.mux.com/loH3LeouQLkQTneENriv8SH4JOmfdq3xl5HAfyachto.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Machine Rear Delts",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "slot": "shoulders",
+       "alternates": [
+        "Chest Support Rear Delts"
+       ],
+       "exerciseId": 553922,
+       "videoUrl": "https://stream.mux.com/vMMCpKvRYvB9GpTfhdt5NlCy2o01nRAQo45CKstHbvws.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Cable Lateral Raise",
+       "sets": 3,
+       "reps": "15",
+       "perSide": true,
+       "instruction": "Intensity: 9\nPerform Each Side",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets (per side) | 15 reps",
+       "slot": "shoulders",
+       "exerciseId": 566885,
+       "videoUrl": "https://stream.mux.com/76RhFsnHNYdAe5zZxCZDSDkF5VUQm1WfLAufePvYrmU.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 20,
+   "block": "B2",
+   "week": 7,
+   "chalkDay": 2,
+   "workout": "B",
+   "title": "Day 2",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 180,
+     "exercises": [
+      {
+       "name": "Barbell Deadlift",
+       "sets": 3,
+       "reps": "3",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 180,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 3 reps",
+       "slot": "legs",
+       "exerciseId": 523103,
+       "videoUrl": "https://stream.mux.com/PL0200SsqNPAsKr00GIuHREEKKYiQO02NM02oqMCdCEHksxg.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Close Grip Bench Press",
+       "sets": 3,
+       "reps": "6",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 6 reps",
+       "slot": "chest",
+       "exerciseId": 553920,
+       "videoUrl": "https://stream.mux.com/BOz3V600POL16Fzji4r4xgTi4rg6b01NqRdbmmAHGExPg.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dumbbell Bent Over Row",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "back",
+       "exerciseId": 566884,
+       "videoUrl": "https://stream.mux.com/CavkGcBGD401do9Aoj4RyGImC93bExU7KBZt8fSqQ8Ko.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Walking DB Lunge",
+       "sets": 3,
+       "reps": "12",
+       "perSide": true,
+       "instruction": "Intensity: 9\nPerform Each Side",
+       "intensity": "9",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets (per side) | 12 reps",
+       "slot": "legs",
+       "exerciseId": 523022,
+       "videoUrl": "https://stream.mux.com/ysxAW1hsiM435p02gafHhCnYjzpF3aIQqgHmtRBiUSyg.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Dips",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "If body weight is easy for you here, then add some weight! \nIntensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "chest",
+       "exerciseId": 553919,
+       "videoUrl": "https://stream.mux.com/QeHmck901CWYHkUVZMYjOK7hSt7foRGBTU5004UQPuJK8.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Dual Cable Bicep Curl",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "biceps",
+       "exerciseId": 553887,
+       "videoUrl": "https://stream.mux.com/qP2R47hKsVlcuOajxYH00h3dA9iuWpJQx8121IZG4LF4.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Decline Sit-Up",
+       "sets": 3,
+       "reps": "-1",
+       "perSide": false,
+       "instruction": "3 sets of max effort reps! If you can get more than 20 reps, then add some weight with a dumbbell or a plate.\nIntensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | max reps",
+       "slot": "abs",
+       "alternates": [
+        "Weighted Sit-Up"
+       ],
+       "exerciseId": 557022,
+       "videoUrl": "https://stream.mux.com/r02CYHhtdZM00y1AFVhckkERzkajAAfUKjABxIiwhNdvI.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 21,
+   "block": "B2",
+   "week": 7,
+   "chalkDay": 4,
+   "workout": "C",
+   "title": "Day 3",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 60,
+     "exercises": [
+      {
+       "name": "Back Squat",
+       "sets": 3,
+       "reps": "5",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 5 reps",
+       "slot": "legs",
+       "exerciseId": 523104,
+       "videoUrl": "https://stream.mux.com/Wd5ZY6eNKMpTlCvXNmvgLjLucD00fumPTlqja9AfkgmU.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Incline Bench Press",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "chest",
+       "exerciseId": 523082,
+       "videoUrl": "https://stream.mux.com/TraB02jsRz008Jm2KXzCXuDPfTKOAfa02zdtv6X1POgs5I.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Neutral-Grip Lat Pulldown",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "back",
+       "exerciseId": 525613,
+       "videoUrl": "https://stream.mux.com/mBvKr5uiNBnn4UrHHv5zIBlRSzlnyGX00mKzQah00l00hE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Lying Hamstring Curl",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "biceps",
+       "exerciseId": 557020,
+       "videoUrl": "https://stream.mux.com/9knxfQ6sROVA6l8CcNtgG0201tAuNZ502EJMz3pGTIo6oc.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Seated Face-Pulls",
+       "sets": 3,
+       "reps": "20",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 20 reps",
+       "slot": "shoulders",
+       "exerciseId": 557032,
+       "videoUrl": "https://stream.mux.com/Oub79hf12LrdWqHIlrhOSECpn01NDZTxByGXRz9F02dAE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Overhead Cable Tricep Extension",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "triceps",
+       "exerciseId": 525612,
+       "videoUrl": "https://stream.mux.com/76i69j1rIfl6iOXgB8O5d5016kI9FTW02bNpu7Yr1D5kE.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Deficit Standing Calf Raises",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "legs",
+       "exerciseId": 557029,
+       "videoUrl": "https://stream.mux.com/VfwLPt35SClgey2D9ZQuduDuyPhau01kAzp00yw502hZsE.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 22,
+   "block": "B2",
+   "week": 8,
+   "chalkDay": 0,
+   "workout": "A",
+   "title": "Day 1",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Back Squat",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "legs",
+       "exerciseId": 523104,
+       "videoUrl": "https://stream.mux.com/Wd5ZY6eNKMpTlCvXNmvgLjLucD00fumPTlqja9AfkgmU.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dumbbell Shoulder Press (Seated)",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "shoulders",
+       "exerciseId": 523076,
+       "videoUrl": "https://stream.mux.com/VTvP3TtKnvJsHL8aZLUBAj7vup2GGZ35brzLg5fGFKw.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Pull-Up",
+       "sets": 3,
+       "reps": "-1",
+       "perSide": false,
+       "instruction": "Complete 3 sets of close to max effort on each set here. Leave 1 rep in the tank so it's not complete failure. This might be just bodyweight for you. You might have to use assistance. Or you might be strong enough to use additional weight. The goal here is to fail right around 8-10 rep range. So keep that in mind as you complete your sets.",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | max reps",
+       "slot": "back",
+       "exerciseId": 523089,
+       "videoUrl": "https://stream.mux.com/S01ilh7cAtId5WtpDVxk02eCwJ6SodTYe702yoHW8letlE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Hip Thrust",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "legs",
+       "exerciseId": 557039,
+       "videoUrl": "https://stream.mux.com/YT4krFtjjAOZslukMkCopi76kZpvnboF1iySssXCrX4.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Flat Dumbbell Fly",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "slot": "chest",
+       "exerciseId": 553891,
+       "videoUrl": "https://stream.mux.com/loH3LeouQLkQTneENriv8SH4JOmfdq3xl5HAfyachto.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Machine Rear Delts",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "slot": "shoulders",
+       "alternates": [
+        "Chest Support Rear Delts"
+       ],
+       "exerciseId": 553922,
+       "videoUrl": "https://stream.mux.com/vMMCpKvRYvB9GpTfhdt5NlCy2o01nRAQo45CKstHbvws.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Cable Lateral Raise",
+       "sets": 3,
+       "reps": "15",
+       "perSide": true,
+       "instruction": "Intensity: 9\nPerform Each Side",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets (per side) | 15 reps",
+       "slot": "shoulders",
+       "exerciseId": 566885,
+       "videoUrl": "https://stream.mux.com/76RhFsnHNYdAe5zZxCZDSDkF5VUQm1WfLAufePvYrmU.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 23,
+   "block": "B2",
+   "week": 8,
+   "chalkDay": 2,
+   "workout": "B",
+   "title": "Day 2",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 180,
+     "exercises": [
+      {
+       "name": "Barbell Deadlift",
+       "sets": 3,
+       "reps": "3",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 180,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 3 reps",
+       "slot": "legs",
+       "exerciseId": 523103,
+       "videoUrl": "https://stream.mux.com/PL0200SsqNPAsKr00GIuHREEKKYiQO02NM02oqMCdCEHksxg.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Close Grip Bench Press",
+       "sets": 3,
+       "reps": "6",
+       "perSide": false,
+       "instruction": "Intensity: 7",
+       "intensity": "7",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 6 reps",
+       "slot": "chest",
+       "exerciseId": 553920,
+       "videoUrl": "https://stream.mux.com/BOz3V600POL16Fzji4r4xgTi4rg6b01NqRdbmmAHGExPg.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Dumbbell Bent Over Row",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "back",
+       "exerciseId": 566884,
+       "videoUrl": "https://stream.mux.com/CavkGcBGD401do9Aoj4RyGImC93bExU7KBZt8fSqQ8Ko.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Walking DB Lunge",
+       "sets": 3,
+       "reps": "12",
+       "perSide": true,
+       "instruction": "Intensity: 9\nPerform Each Side",
+       "intensity": "9",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets (per side) | 12 reps",
+       "slot": "legs",
+       "exerciseId": 523022,
+       "videoUrl": "https://stream.mux.com/ysxAW1hsiM435p02gafHhCnYjzpF3aIQqgHmtRBiUSyg.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Dips",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "If body weight is easy for you here, then add some weight! \nIntensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "chest",
+       "exerciseId": 553919,
+       "videoUrl": "https://stream.mux.com/QeHmck901CWYHkUVZMYjOK7hSt7foRGBTU5004UQPuJK8.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Dual Cable Bicep Curl",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "biceps",
+       "exerciseId": 553887,
+       "videoUrl": "https://stream.mux.com/qP2R47hKsVlcuOajxYH00h3dA9iuWpJQx8121IZG4LF4.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Decline Sit-Up",
+       "sets": 3,
+       "reps": "-1",
+       "perSide": false,
+       "instruction": "3 sets of max effort reps! If you can get more than 20 reps, then add some weight with a dumbbell or a plate.\nIntensity: 9",
+       "intensity": "9",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | max reps",
+       "slot": "abs",
+       "alternates": [
+        "Weighted Sit-Up"
+       ],
+       "exerciseId": 557022,
+       "videoUrl": "https://stream.mux.com/r02CYHhtdZM00y1AFVhckkERzkajAAfUKjABxIiwhNdvI.m3u8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "n": 24,
+   "block": "B2",
+   "week": 8,
+   "chalkDay": 4,
+   "workout": "C",
+   "title": "Day 3",
+   "groups": [
+    {
+     "type": "straight",
+     "restSec": 60,
+     "exercises": [
+      {
+       "name": "Back Squat",
+       "sets": 3,
+       "reps": "5",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 5 reps",
+       "slot": "legs",
+       "exerciseId": 523104,
+       "videoUrl": "https://stream.mux.com/Wd5ZY6eNKMpTlCvXNmvgLjLucD00fumPTlqja9AfkgmU.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Incline Bench Press",
+       "sets": 3,
+       "reps": "8",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 8 reps",
+       "slot": "chest",
+       "exerciseId": 523082,
+       "videoUrl": "https://stream.mux.com/TraB02jsRz008Jm2KXzCXuDPfTKOAfa02zdtv6X1POgs5I.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Neutral-Grip Lat Pulldown",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "back",
+       "exerciseId": 525613,
+       "videoUrl": "https://stream.mux.com/mBvKr5uiNBnn4UrHHv5zIBlRSzlnyGX00mKzQah00l00hE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Lying Hamstring Curl",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "biceps",
+       "exerciseId": 557020,
+       "videoUrl": "https://stream.mux.com/9knxfQ6sROVA6l8CcNtgG0201tAuNZ502EJMz3pGTIo6oc.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Seated Face-Pulls",
+       "sets": 3,
+       "reps": "20",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 20 reps",
+       "slot": "shoulders",
+       "exerciseId": 557032,
+       "videoUrl": "https://stream.mux.com/Oub79hf12LrdWqHIlrhOSECpn01NDZTxByGXRz9F02dAE.m3u8"
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 90,
+     "exercises": [
+      {
+       "name": "Overhead Cable Tricep Extension",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 9",
+       "intensity": "9",
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "slot": "triceps",
+       "exerciseId": 525612,
+       "videoUrl": "https://stream.mux.com/76i69j1rIfl6iOXgB8O5d5016kI9FTW02bNpu7Yr1D5kE.m3u8",
+       "restSec": 90,
+       "restDefaulted": true
+      }
+     ]
+    },
+    {
+     "type": "straight",
+     "restSec": 120,
+     "exercises": [
+      {
+       "name": "Barbell Deficit Standing Calf Raises",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Intensity: 8",
+       "intensity": "8",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "slot": "legs",
+       "exerciseId": 557029,
+       "videoUrl": "https://stream.mux.com/VfwLPt35SClgey2D9ZQuduDuyPhau01kAzp00yw502hZsE.m3u8"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

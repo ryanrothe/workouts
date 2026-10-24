@@ -1,0 +1,1217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Chalk" id="meta-apptitle" />
+<meta name="theme-color" content="#0f766e" id="meta-theme" />
+<link rel="manifest" href="../manifest.webmanifest" />
+<link rel="apple-touch-icon" href="../icon-180.png" />
+<link rel="icon" type="image/png" href="../favicon.png" />
+<title>Chalk sessions</title>
+<link rel="stylesheet" href="../shared/styles.css" />
+<script>
+/* CONFIG: the one block that differs per program. Everything else reads ./data.json (schema 2,
+   mode "sessions"). This file is byte-identical in dumbbells-only/ and full-body-3-day/: the folder
+   name picks the entry, so a fix lands in both with one copy. */
+window.SESSION_PROGRAMS = {
+  "dumbbells-only":  { storageKey: "dbo_v1", shortName: "DBO", appTitle: "Dumbbells", color: "#0f766e", swaps: true,
+                       equipment: "a few pairs of dumbbells and a bench", exportTag: "dumbbells-only" },
+  "full-body-3-day": { storageKey: "fb3_v1", shortName: "FB3", appTitle: "Full Body 3", color: "#475569", swaps: false,
+                       equipment: "barbell, cables, machines", exportTag: "full-body-3-day" }
+};
+window.PAGE_SLUG = (location.pathname.match(/\/([^\/]+)\/(?:index\.html)?$/) || [])[1];
+if (!window.SESSION_PROGRAMS[window.PAGE_SLUG]) window.PAGE_SLUG = "dumbbells-only";
+(function () {
+  const c = window.SESSION_PROGRAMS[window.PAGE_SLUG];
+  document.getElementById("meta-theme").setAttribute("content", c.color);
+  document.getElementById("meta-apptitle").setAttribute("content", c.appTitle);
+})();
+</script>
+<style>
+  /* Accents for both programs live here (shared/styles.css is not edited for these two). */
+  body[data-program="dumbbells-only"]  { --primary: #0f766e; --primary-soft: #e6f6f3; --primary-line: #9fdcd1; }   /* teal */
+  body[data-program="full-body-3-day"] { --primary: #475569; --primary-soft: #eef1f6; --primary-line: #c8d0dc; }   /* slate */
+
+  /* Page styles. Shared tokens, the appbar, cards, tabs, the SetLog grid and the in-session .hs-*
+     contract and the .ck-* board come from ../shared/styles.css. */
+  .hero { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+  .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .hero-sub { font-size: 13px; color: var(--text-body); margin-top: 4px; font-weight: 600; }
+  .hero-sub2 { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .coach-badge { display: inline-block; background: var(--primary-soft); color: var(--primary); border: 1px solid var(--primary-line); border-radius: 999px; padding: 3px 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+  .hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+  .stat { background: var(--card-2); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 8px 6px; text-align: center; }
+  .stat-num { font-size: 17px; font-weight: 700; color: var(--primary); font-variant-numeric: tabular-nums; }
+  .stat-label { font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+  .reset-link { background: none; border: none; color: var(--muted); font-size: 11px; cursor: pointer; padding: 4px 8px; text-decoration: underline; font-family: inherit; }
+
+  .block-bar, .sess-bar { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 10px; padding: 4px 2px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .block-bar::-webkit-scrollbar, .sess-bar::-webkit-scrollbar { display: none; }
+  .week-pill { flex-shrink: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 0; font-size: 12px; font-weight: 700; color: var(--muted); cursor: pointer; min-width: 46px; text-align: center; font-family: inherit; font-variant-numeric: tabular-nums; position: relative; }
+  .week-pill.active { background: var(--primary); border-color: var(--primary); color: white; }
+  .week-pill.done { border-color: var(--success); background: var(--success-soft); color: var(--success); }
+  .week-pill.done.active { background: var(--success); color: white; }
+  .week-pill.started { border-color: var(--primary-line); }
+  .week-pill small { display: block; font-size: 9.5px; font-weight: 600; opacity: 0.8; letter-spacing: 0; text-transform: none; }
+  .block-bar .week-pill { min-width: 0; padding: 7px 12px; text-transform: none; letter-spacing: 0; }
+  .week-pill .due-dot { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+  .week-pill.active .due-dot { background: white; }
+
+  .rules { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 10px; font-size: 12.5px; color: var(--text-body); line-height: 1.55; }
+  .rules b { color: var(--text); }
+  .rules .rules-k { font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--primary); margin-right: 6px; }
+
+  .tab .due-dot[hidden] { display: none; }
+  .tab .due-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); margin-left: 5px; vertical-align: 1px; }
+  .tab.active .due-dot { background: white; }
+
+  /* Folded coach text (block intro) */
+  .prep { margin: 8px 0; border: 1px solid var(--border-soft); border-radius: var(--radius-sm); background: var(--card-2); overflow: hidden; }
+  .prep-head { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; cursor: pointer; user-select: none; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); min-height: 40px; }
+  .prep-head .caret { font-size: 10px; }
+  .prep.collapsed .prep-body { display: none; }
+  .prep.collapsed .caret { transform: rotate(-90deg); }
+  .prep-body { padding: 2px 12px 10px; }
+  .prep-text { white-space: pre-line; font-size: 12.5px; color: var(--text-body); line-height: 1.55; padding: 2px 0 6px; }
+
+  .ex-instruction { margin: 6px 0 0; font-size: 13px; color: var(--text-body); line-height: 1.5; white-space: pre-line; }
+  .ex-alt { margin-top: 5px; font-size: 12px; color: var(--muted); }
+  .ex-side { color: var(--muted); font-weight: 500; }
+  .ex-sub-note { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .ex-sub-note strong { color: var(--text-body); }
+
+  /* Grouped rows: a superset or tri-set is one card, members stacked, one rest for the group. */
+  .grp-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 2px 0 4px; font-size: 12.5px; color: var(--muted); }
+  .grp-type { font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--primary); }
+  .grp-note { font-size: 12.5px; color: var(--text-body); line-height: 1.5; margin: 4px 0 2px; white-space: pre-line; }
+  .grp-ex { margin-top: 6px; }
+  .grp-ex + .grp-ex { border-top: 1px dashed var(--border); margin-top: 16px; padding-top: 12px; }
+  .grp-tag { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--primary); margin-bottom: 2px; }
+  .grp-ex-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .grp-ex-tools .btn { min-height: 34px; padding: 0 10px; font-size: 12px; gap: 5px; }
+  .grp-ex-tools .btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .hs-row-sum .grp-sum-tags { color: var(--primary); font-weight: 800; font-size: 10.5px; letter-spacing: 0.06em; margin-right: 4px; }
+
+  /* Swaps (Dumbbells Only): the PPL substitution pattern, per session. */
+  .ex-swap { display: none; margin-top: 8px; }
+  .ex-swap.open { display: flex; flex-wrap: wrap; gap: 6px; }
+  .swap-chip { border: 1px solid var(--border); background: var(--card-2); color: var(--text-body); border-radius: 999px; padding: 6px 11px; font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; min-height: 34px; }
+  .swap-chip.on { background: var(--primary); border-color: var(--primary); color: white; }
+  .swap-chip .sc-tag { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; margin-left: 4px; }
+
+  /* Timer buttons (rest countdown, the 6-minute work set) */
+  .btn-timer, .work-timer { font-variant-numeric: tabular-nums; min-width: 78px; justify-content: center; }
+  .btn-timer.running, .work-timer.running { background: var(--primary); color: white; border-color: var(--primary); }
+  .btn-timer.done, .work-timer.done { background: var(--success); color: white; border-color: var(--success); animation: timer-flash 0.6s ease-out; }
+  @keyframes timer-flash { 0% { transform: scale(1); } 30% { transform: scale(1.08); } 100% { transform: scale(1); } }
+
+  .done-card { background: var(--card); border: 2px solid var(--success); border-radius: var(--radius); padding: 14px 16px; margin: 12px 0 6px; }
+  .done-card .eyebrow { color: var(--success); }
+  .done-card p { margin: 6px 0 10px; font-size: 13.5px; color: var(--text-body); line-height: 1.5; }
+  .done-card .btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
+  .empty-card { background: var(--card); border: 1px dashed var(--border); border-radius: var(--radius); padding: 18px; text-align: center; color: var(--muted); font-size: 13.5px; }
+
+  /* In-session pane: fill the gaps the shared .hs-* contract leaves. */
+  .hs-sess-title.long { font-size: 27px; }
+  .hs-sess-clock .hs-clock-t { font-variant-numeric: tabular-nums; }
+  .hs-sess-clock:not(.running):not(.stopped) .hs-clock-t { color: var(--primary); font-size: 18px; }
+  .hs-sess-clock.stopped .hs-clock-t { color: var(--muted); }
+  .hs-sess-progress { flex-wrap: wrap; row-gap: 6px; }
+  .hs-sess-progress .hs-bar { flex: 1 1 90px; }
+  .hs-sess-progress span { white-space: normal; }
+  .hs-sess-ctl { display: flex; align-items: center; gap: 6px; margin: 0 2px 10px; flex-wrap: wrap; }
+  .hs-sess-pace { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); }
+  .hs-mini { min-height: 32px; padding: 0 10px; font-size: 12px; }
+  .hs-row-sum .hs-sum-r { max-width: 50%; overflow: hidden; text-overflow: ellipsis; }
+  .hs-row-sum .row-timer { min-height: 34px; padding: 0 10px; }
+  .hs-row-sum .hs-sum-t small .ex-tag { margin-right: 6px; }
+  .hs-row.hs-now .ex-prescription { margin-top: 2px; font-size: 13px; color: var(--muted); }
+  .hs-row.hs-now .ex-log { margin-top: 12px; }
+  .hs-tools .btn { padding: 0 8px; gap: 5px; }
+  .hs-tools .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .hs-tools .hs-done-btn { margin-left: auto; color: var(--primary); font-weight: 800; }
+  .hs-tools .hs-done-btn.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .btn-danger { color: var(--danger); border-color: #f3c8c4; }
+
+  .notes-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .notes-block h4 { margin: 12px 0 2px; font-size: 13.5px; }
+  .notes-block .prep { margin-top: 4px; }
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px); background: var(--text); color: white; padding: 10px 16px; border-radius: 999px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 50; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* iPad board: shared/cockpit.js + the .ck-* block in ../shared/styles.css. */
+  .ck-rail-clock:not(.running):not(.stopped) .hs-clock-t { color: var(--primary-line); }
+
+  @media (max-width: 420px) {
+    .hero-stats { gap: 6px; }
+    .stat { padding: 6px 4px; }
+    .stat-num { font-size: 15px; }
+    .stat-label { font-size: 8.5px; }
+  }
+</style>
+</head>
+<body>
+<script>document.body.dataset.program = window.PAGE_SLUG;</script>
+
+<header class="appbar">
+  <div class="appbar-inner">
+    <a class="appbar-back" href="../" aria-label="Back to Exercise Library">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="10 3 5 8 10 13"/></svg>
+      Library
+    </a>
+    <div class="appbar-title">
+      <div class="eyebrow">Program</div>
+      <div class="name" id="appbar-name">Loading…</div>
+    </div>
+  </div>
+  <div class="appbar-accent"></div>
+</header>
+
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <span class="coach-badge" id="hero-badge">Chalk</span>
+        <h1 style="margin-top:6px" id="hero-title">Loading…</h1>
+        <div class="hero-sub" id="hero-sub">Loading the plan…</div>
+        <div class="hero-sub2" id="hero-sub2"></div>
+      </div>
+      <button class="reset-link" id="reset-btn" title="Reset all tracking">Reset</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num" id="stat-done">0</div><div class="stat-label">Sessions done</div></div>
+      <div class="stat"><div class="stat-num" id="stat-block">0 / 0</div><div class="stat-label">This block</div></div>
+      <div class="stat"><div class="stat-num" id="stat-next">S1</div><div class="stat-label">Next up</div></div>
+      <div class="stat"><div class="stat-num" id="stat-overall">0%</div><div class="stat-label">Program</div></div>
+    </div>
+  </div>
+
+  <!-- BLOCK PICKER + SESSION STRIP -->
+  <div class="block-bar" id="block-bar"></div>
+  <div class="sess-bar" id="sess-bar"></div>
+
+  <!-- BLOCK LABEL + COLLAPSED INTRO -->
+  <div class="rules" id="rules"></div>
+
+  <!-- TABS -->
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-pane="session">Session<span class="due-dot" hidden></span></button>
+    <button class="tab" data-pane="notes">Notes</button>
+  </div>
+
+  <div id="panes">
+    <div class="pane active" id="pane-session"></div>
+    <div class="pane" id="pane-notes">
+      <div class="card" id="notes-card"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../shared/setlog.js"></script>
+<script src="../shared/cockpit.js"></script>
+<script src="../shared/shell.js"></script>
+<script>
+"use strict";
+const SL = window.SetLog;
+const CK = window.Cockpit;
+const { normName, fmtWeight, fmtLoad } = SL;
+
+/* ===========================================================================
+   CHALK SESSION PROGRAMS (Dumbbells Only, Full Body 3 Day Split; coach Ryan
+   Fischer, Chalk Performance Training). Data-driven from ./data.json, schema 2
+   in "sessions" mode: blocks → sessions → groups → exercises. The program
+   moves by SESSION, not by calendar date: the next session is the first one
+   not finished, finishing one opens the next, and any earlier session can be
+   reopened and re-logged.
+     straight   one exercise, its own SetLog grid and rest
+     superset / triset   one card, members stacked A1 / A2 / A3, each with its
+                own grid and history, one rest bar for the group after the last
+   Storage key and sync slug come from the CONFIG block in <head>.
+   Design briefs: KARL_DATA/outputs/personal/workout-trackers/<slug>/DESIGN-BRIEF-2026-10-24.md
+   =========================================================================== */
+const CFG = window.SESSION_PROGRAMS[window.PAGE_SLUG];
+const PROGRAM = { slug: window.PAGE_SLUG, storageKey: CFG.storageKey, shortName: CFG.shortName };
+const STORAGE_KEY = PROGRAM.storageKey;
+const VIDEO_BASE = "https://www.youtube.com/results?search_query=";
+const v = q => VIDEO_BASE + encodeURIComponent(q + " exercise form");
+const SET_OVERHEAD = 45;   // seconds a set takes beyond its rest, in the planning model
+
+const SLOT = { chest: "Chest", back: "Back", legs: "Legs", shoulders: "Shoulders", biceps: "Biceps", triceps: "Triceps", abs: "Abs", core: "Core", arms: "Arms" };
+const SLOT_SHORT = { chest: "Chest", back: "Back", legs: "Legs", shoulders: "Shldr", biceps: "Bi", triceps: "Tri", abs: "Abs", core: "Core", arms: "Arms" };
+const GROUP_WORD = { superset: "Superset", triset: "Tri-set" };
+const BW_LOADED_RE = /chin.?ups?|pull.?ups?|\bdips?\b/i;
+const BW_RE = /push.?ups?|hanging|leg raises?|knee raises?|plank|hollow|sit.?ups?|v.?ups?|burpee|dead hang|toes? to bar/i;
+const LOWER_RE = /squat|deadlift|hip thrust|leg press|lunge|\brdl\b|romanian|good morning|hack|step.?up|calf raise|leg extension|leg curl|hamstring curl|nordic/i;
+
+/* ---------------------------------------------------------------------------
+   DATA + STATE
+   --------------------------------------------------------------------------- */
+let DATA = null;         // data.json
+let SESSIONS = [];       // DATA.sessions sorted by n
+let BLOCKS = [];         // DATA.blocks
+let state = loadState();
+let uiBlock = null;      // block id on screen
+let uiSession = null;    // session n on screen
+const tappedNow = {};    // n → group idx the user tapped
+const prepOpen = {};     // collapsible keys the user opened
+
+function emptyState() { return { v: 1, sessions: {} }; }
+function normState(p) {
+  const s = emptyState();
+  if (p && typeof p === "object" && p.sessions && typeof p.sessions === "object") s.sessions = p.sessions;
+  return s;
+}
+function loadState() {
+  try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) return normState(JSON.parse(raw)); } catch (e) {}
+  return emptyState();
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  updateStats();
+  SL.sync.schedule();
+  publishSummary();
+}
+/* One record per session, keyed by its number. completed is per GROUP (a superset is done as one);
+   logs and subs are per exercise, keyed "<group>_<exercise>". */
+function sessState(n, create) {
+  const k = String(n);
+  if (!state.sessions[k] && create) state.sessions[k] = { trained: null, finishedAt: null, clockStart: null, clockStop: null, completed: {}, logs: {}, subs: {} };
+  const ss = state.sessions[k] || null;
+  if (ss) { ss.completed = ss.completed || {}; ss.logs = ss.logs || {}; ss.subs = ss.subs || {}; }
+  return ss;
+}
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function shortDate(iso) { if (!iso) return ""; const [, m, d] = iso.split("-"); return `${parseInt(m, 10)}/${parseInt(d, 10)}`; }
+function stampDate(ss) { if (!ss.trained) ss.trained = todayISO(); }
+function escapeHtml(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function fmtClock(s) { s = Math.max(0, Math.round(s)); const m = Math.floor(s / 60), sec = s % 60; return `${m}:${String(sec).padStart(2, "0")}`; }
+function fmtMins(secs) { return `~${Math.round(secs / 60)} min`; }
+
+/* ---------------------------------------------------------------------------
+   PROGRAM SHAPE HELPERS
+   --------------------------------------------------------------------------- */
+const sid = s => "s" + s.n;
+const exKey = (gi, ei) => `${gi}_${ei}`;
+/* Group letters count grouped rows only (the first superset of a session is A, the next B), so a lone
+   superset after four straight sets reads A1 / A2, not E1 / E2. The session is needed to count. */
+let LETTER_SESSION = null;
+function letter(gi) {
+  const s = LETTER_SESSION;
+  if (!s) return String.fromCharCode(65 + gi);
+  let k = 0;
+  for (let i = 0; i < gi; i++) if (isGrouped(s.groups[i])) k++;
+  return String.fromCharCode(65 + k);
+}
+const isGrouped = g => g.exercises.length > 1;
+const groupWord = g => GROUP_WORD[g.type] || (isGrouped(g) ? "Superset" : "");
+function sessionByN(n) { return SESSIONS.find(s => s.n === n) || null; }
+function blockOf(s) { return BLOCKS.find(b => b.id === s.block) || { id: s.block, label: "", weeks: [] }; }
+function blockSessions(id) { return SESSIONS.filter(s => s.block === id); }
+function totalWeeks() { return BLOCKS.reduce((n, b) => n + ((b.weeks || []).length || 0), 0) || Math.max(...SESSIONS.map(s => s.week || 1)); }
+/* "Workout A" → "A", "Day 1" → "D1": the small line on a session pill. */
+function stripSub(s) { const t = String(s.title || s.workout || ""); return t.length <= 2 ? t : t.replace(/^Workout\s+/i, "").replace(/^Day\s+/i, "D"); }
+/* A1 / A2 / A3 inside a group; nothing on a straight set. */
+function tagOf(g, gi, ei) { return isGrouped(g) ? `${letter(gi)}${ei + 1}` : ""; }
+/* The exercise actually performed: the session's sub if one is picked, else the program's. */
+function performedName(ss, gi, ei, ex) { return (ss && ss.subs && ss.subs[exKey(gi, ei)]) || ex.name; }
+function altOf(ex) { return CFG.swaps && Array.isArray(ex.alternates) && ex.alternates.length ? ex.alternates[0] : null; }
+
+/* Chalk writes the low end into reps ("8") and the range into the summary ("3 sets | 8-10 reps"); the
+   summary is the prescription Ryan reads in the app, so the page shows it. "-1" / "max reps" is max. */
+function repText(ex) {
+  const sum = String(ex.summary || "");
+  if (/max reps/i.test(sum) || String(ex.reps) === "-1" || /^max/i.test(String(ex.reps || ""))) return "max";
+  const m = sum.match(/(\d+\s*-\s*\d+|\d+)\s*reps/i);
+  if (m) return m[1].replace(/\s/g, "");
+  return String(ex.reps == null ? "" : ex.reps).trim();
+}
+/* "1 sets | max reps | 6 mins": a timed work set. */
+function workSecs(ex) { const m = String(ex.summary || "").match(/\|\s*(\d+)\s*mins?/i); return m ? parseInt(m[1], 10) * 60 : null; }
+function restOf(ex) { return ex.restSec != null && ex.restSec > 0 ? ex.restSec : 90; }
+function restDefaulted(ex) { return !!ex.restDefaulted || !(ex.restSec > 0); }
+function groupRest(g) { const last = g.exercises[g.exercises.length - 1]; return g.restSec != null && g.restSec > 0 ? g.restSec : restOf(last); }
+/* The ingest copies a defaulted 90 s into the group too, so the flag lives on the last member. */
+function groupRestDefaulted(g) { const last = g.exercises[g.exercises.length - 1]; return restDefaulted(last) && (!(g.restSec > 0) || g.restSec === restOf(last)); }
+function intensityText(ex) { const t = String(ex.intensity || "").trim(); if (!t) return ""; return /^\d+$/.test(t) ? `${t}/10` : t; }
+/* The coach's text without the Tempo / Intensity lines the ingest already lifted into fields. */
+function instructionText(ex) {
+  let t = String(ex.instruction || "");
+  t = t.replace(/^\s*Tempo:\s*\S+\s*$/gim, "").replace(/^\s*Intensity:\s*\d+(\s*\/\s*10)?\.?\s*$/gim, "");
+  return t.replace(/\n{3,}/g, "\n\n").trim();
+}
+
+/* The spec SetLog reads for a row. name = the performed name, so a sub keeps its own history. */
+function specOf(ex, name) {
+  const p = SL.parseReps(repText(ex));
+  const fields = Array.isArray(ex.fields) ? ex.fields : ["reps", "weight"];
+  const nm = name || ex.name;
+  const bwMove = BW_LOADED_RE.test(nm) || BW_RE.test(nm);
+  const loaded = fields.includes("weight");
+  const sets = ex.sets || 3;
+  return { name: nm, sets, minSets: sets, repTop: p.repTop, repRange: p.repRange, isMax: p.isMax, unit: p.unit,
+           loaded, bw: loaded && bwMove, lower: ex.slot === "legs" || LOWER_RE.test(nm), rest: restOf(ex) };
+}
+function restText(secs) { return secs >= 120 || secs % 60 === 0 ? fmtClock(secs) : `${secs}s`; }
+/* "3 × 8-10 · tempo 4010 · rest 2:00 · intensity 9/10"; a group member leaves the rest to the group line. */
+function rxText(ex, spec, withRest, restSecs, defaulted) {
+  const reps = spec.isMax ? "max reps" : repText(ex);
+  const ws = workSecs(ex);
+  const side = ex.perSide ? ` <span class="ex-side">(per side)</span>` : "";
+  const tempo = ex.tempo ? ` · tempo ${escapeHtml(ex.tempo)}` : "";
+  const rest = withRest ? ` · rest ${fmtClock(restSecs)}${defaulted ? " (default)" : ""}` : "";
+  const inten = intensityText(ex) ? ` · intensity ${escapeHtml(intensityText(ex))}` : "";
+  return `${spec.sets} × ${reps}${ws ? ` in ${Math.round(ws / 60)} min` : ""}${side}${tempo}${rest}${inten}`;
+}
+function shortRx(ex, spec) { const ws = workSecs(ex); return `${spec.sets} × ${spec.isMax ? "max" : repText(ex)}${ws ? ` in ${Math.round(ws / 60)} min` : ""}${ex.perSide ? " (per side)" : ""}`; }
+
+/* Planning model: sets × (rest + 45 s) per exercise, summed within a group; a timed work set adds its minutes. */
+function exSecs(ex) { const ws = workSecs(ex) || 0; return (ex.sets || 3) * (restOf(ex) + SET_OVERHEAD) + ws; }
+function groupSecs(g) { return g.exercises.reduce((a, ex) => a + exSecs(ex), 0); }
+function sessionSecs(s) { return s.groups.reduce((a, g) => a + groupSecs(g), 0); }
+function sessionMinutes(s) { return Math.round(sessionSecs(s) / 60); }
+/* Cockpit slot names: a straight row is its exercise; a group is its members joined. */
+function slotNameOf(ss, s, g, gi) { return g.exercises.map((ex, ei) => performedName(ss, gi, ei, ex)).join(" + "); }
+function groupLabel(g, gi) { return isGrouped(g) ? g.exercises.map((_, ei) => `${letter(gi)}${ei + 1}`).join("+") : (SLOT_SHORT[g.exercises[0].slot] || g.exercises[0].slot || ""); }
+function groupSlotWords(g) { return g.exercises.map(ex => SLOT[ex.slot] || ex.slot || "").filter(Boolean).join(" + "); }
+
+/* ---------------------------------------------------------------------------
+   COMPLETION. Next = the first session not finished, in program order.
+   --------------------------------------------------------------------------- */
+function isGroupDone(ss, gi) { return !!(ss && ss.completed[gi]); }
+function isSessionComplete(s) { const ss = sessState(s.n, false); return !!ss && s.groups.length > 0 && s.groups.every((_, gi) => isGroupDone(ss, gi)); }
+function sessionHasActivity(s) {
+  const ss = sessState(s.n, false);
+  if (!ss) return false;
+  if (ss.clockStart || ss.trained) return true;
+  if (Object.keys(ss.completed).some(k => ss.completed[k])) return true;
+  return Object.keys(ss.logs).some(k => SL.hasData(SL.normLog(ss.logs[k], 0)));
+}
+function nextSession() { return SESSIONS.find(s => !isSessionComplete(s)) || null; }
+function nextAfter(n) { return SESSIONS.find(s => s.n > n && !isSessionComplete(s)) || nextSession(); }
+function blockDone(id) { return blockSessions(id).filter(isSessionComplete).length; }
+
+/* ---------------------------------------------------------------------------
+   HISTORY + PROGRESSION COACH. Exercises recur by (performed) name across
+   sessions; earlier sessions in program order are the history, newest first.
+   --------------------------------------------------------------------------- */
+function priorEntries(name, beforeN) {
+  const key = normName(name);
+  const out = [];
+  SESSIONS.forEach(s => {
+    if (s.n >= beforeN) return;
+    const ss = sessState(s.n, false);
+    if (!ss) return;
+    s.groups.forEach((g, gi) => g.exercises.forEach((ex, ei) => {
+      const pn = performedName(ss, gi, ei, ex);
+      if (normName(pn) !== key) return;
+      const spec = specOf(ex, pn);
+      const log = SL.normLog(ss.logs[exKey(gi, ei)], spec.sets);
+      if (!SL.hasSets(log)) return;
+      out.push(SL.entry(log, spec, { date: ss.trained || null, n: s.n, block: s.block, where: `S${s.n} · ${s.block}` }));
+    }));
+  });
+  return out.reverse();
+}
+function suggestNext(name, s, spec) { return SL.suggest(priorEntries(name, s.n), spec); }
+function lastTimeOf(name, s, hist) {
+  hist = hist || priorEntries(name, s.n);
+  if (!hist.length) return null;
+  const L = hist[0];
+  return { entry: L, ctx: `Session ${L.n} · Block ${L.block}`, short: `S${L.n}` };
+}
+/* One line for the tracker row and the Up next summary: "S12 · 10, 10, 9 @ 40 lb". */
+function lastTimeText(name, s, spec) {
+  const lt = lastTimeOf(name, s);
+  return lt ? `${lt.short} · ${SL.lastText(lt.entry, spec)}` : "";
+}
+/* The prominent block in the Now card. A newer stack set still wins, through SL.lastHtml, as everywhere in the library. */
+function lastTimeHtml(name, s, spec, hist) {
+  const lt = lastTimeOf(name, s, hist);
+  if (!lt) return "";
+  if (SL.stackNewer(name, lt.entry.date)) return SL.lastHtml(lt.entry, spec, "");
+  const e = lt.entry;
+  const flag = spec.isMax ? "" : e.hit === true ? ` <span class="ex-hit-flag yes">hit</span>` : e.hit === false ? ` <span class="ex-hit-flag no">short</span>` : "";
+  return CK.lastBlock(`${lt.ctx}${e.date ? ` · ${shortDate(e.date)}` : ""}`, SL.lastText(e, spec), flag);
+}
+
+/* ---------------------------------------------------------------------------
+   SYNC. Transport and the device token live in ../shared/setlog.js. The flat
+   `entries` list is what Karl reads: one row per logged exercise.
+   --------------------------------------------------------------------------- */
+function syncEntries() {
+  const out = [];
+  SESSIONS.forEach(s => {
+    const ss = sessState(s.n, false);
+    if (!ss) return;
+    s.groups.forEach((g, gi) => g.exercises.forEach((ex, ei) => {
+      const pn = performedName(ss, gi, ei, ex);
+      const spec = specOf(ex, pn);
+      const log = SL.normLog(ss.logs[exKey(gi, ei)], spec.sets);
+      if (!SL.hasData(log)) return;
+      LETTER_SESSION = s;
+      const row = { date: ss.trained || null, session: s.n, block: s.block, week: s.week, workout: s.workout, where: `S${s.n} · ${s.block} · ${s.title}`,
+        exercise: pn, slot: ex.slot, group: tagOf(g, gi, ei) || null, groupType: isGrouped(g) ? g.type : null, rx: shortRx(ex, spec), tempo: ex.tempo || null,
+        unit: spec.unit, target: spec.repTop, loaded: spec.loaded, bw: spec.bw, sets: SL.hasSets(log) ? log.sets : [], hit: SL.hit(log, spec), notes: log.notes || "" };
+      if (pn !== ex.name) row.programExercise = ex.name;
+      out.push(row);
+    }));
+  });
+  return out;
+}
+
+/* ---------------------------------------------------------------------------
+   SHELL: hero, block picker, session strip, block label, tabs
+   --------------------------------------------------------------------------- */
+function buildShell() {
+  document.getElementById("appbar-name").textContent = DATA.name;
+  document.getElementById("hero-badge").textContent = `${DATA.app || "Chalk"} · ${DATA.coach || ""}`.replace(/ · $/, "");
+  document.getElementById("hero-title").textContent = DATA.name;
+  buildNotes();
+  wireTabs();
+}
+function wireTabs() {
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".pane").forEach(p => p.classList.remove("active"));
+      tab.classList.add("active");
+      const pane = document.getElementById("pane-" + tab.dataset.pane);
+      if (pane) pane.classList.add("active");
+      if (tab.dataset.pane === "session" && boardMode() && uiSession != null) CK.scrollIntoView("container-s" + uiSession);
+    };
+  });
+}
+function openSessionTab() { const t = document.querySelector('.tab[data-pane="session"]'); if (t) t.click(); }
+function renderHero() {
+  const s = sessionByN(uiSession);
+  if (!s) return;
+  const b = blockOf(s);
+  document.getElementById("hero-sub").textContent = `Session ${s.n} of ${SESSIONS.length} · Block ${s.block} · ${s.title}`;
+  document.getElementById("hero-sub2").textContent = b.label || "";
+}
+function renderBlockBar() {
+  const bar = document.getElementById("block-bar");
+  bar.innerHTML = BLOCKS.map(b => {
+    const all = blockSessions(b.id), done = all.filter(isSessionComplete).length;
+    const wk = b.weeks && b.weeks.length ? `wk ${b.weeks[0]}${b.weeks.length > 1 ? `-${b.weeks[b.weeks.length - 1]}` : ""}` : "";
+    return `<button class="week-pill${b.id === uiBlock ? " active" : ""}${all.length && done === all.length ? " done" : ""}" data-b="${escapeHtml(b.id)}" title="${escapeHtml(b.label)}">${escapeHtml(b.id)}<small>${wk}${wk ? " · " : ""}${done}/${all.length}</small></button>`;
+  }).join("");
+  bar.querySelectorAll(".week-pill").forEach(p => p.onclick = () => {
+    uiBlock = p.dataset.b;
+    const nx = nextSession();
+    const inBlock = blockSessions(uiBlock);
+    const open = nx && nx.block === uiBlock ? nx : (inBlock.find(x => !isSessionComplete(x)) || inBlock[0]);
+    if (open) uiSession = open.n;
+    render(); openSessionTab();
+  });
+}
+function renderStrip() {
+  const bar = document.getElementById("sess-bar");
+  const nx = nextSession();
+  bar.innerHTML = blockSessions(uiBlock).map(s => {
+    const done = isSessionComplete(s);
+    return `<button class="week-pill${s.n === uiSession ? " active" : ""}${done ? " done" : sessionHasActivity(s) ? " started" : ""}" data-n="${s.n}" title="Session ${s.n} · ${escapeHtml(s.title)}">${s.n}<small>${escapeHtml(stripSub(s))}</small>${nx && nx.n === s.n ? '<span class="due-dot"></span>' : ""}</button>`;
+  }).join("");
+  bar.querySelectorAll(".week-pill").forEach(p => p.onclick = () => { openSession(parseInt(p.dataset.n, 10)); });
+  const act = bar.querySelector(".week-pill.active");
+  if (act && stripShown !== uiSession) { stripShown = uiSession; bar.scrollLeft = Math.max(0, act.offsetLeft - bar.clientWidth / 2 + act.offsetWidth / 2); }
+}
+let stripShown = null;
+function renderRules() {
+  const s = sessionByN(uiSession);
+  const rules = document.getElementById("rules");
+  if (!s) { rules.hidden = true; return; }
+  const b = blockOf(s);
+  rules.hidden = false;
+  rules.innerHTML = `<div><span class="rules-k">Block ${escapeHtml(b.id)}</span><b>${escapeHtml(b.label || "")}</b></div>`;
+  if (b.intro) rules.appendChild(collapsible(`About block ${b.id}`, b.intro, `intro_${b.id}`));
+}
+/* Switch the session on screen (strip tap, Done → next, deep link). */
+function openSession(n, scrollTop) {
+  const s = sessionByN(n);
+  if (!s) return;
+  uiSession = s.n; uiBlock = s.block;
+  render(); openSessionTab();
+  if (scrollTop && !boardMode()) window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ---------------------------------------------------------------------------
+   SESSION RENDERING
+   --------------------------------------------------------------------------- */
+const ICON = {
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8"/></svg>`,
+  clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M9.5 2.5h5"/></svg>`,
+  video: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="6" width="12" height="12" rx="2.5"/><path d="M15.5 10.5l5-3v9l-5-3z"/></svg>`,
+  note: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h9l4 4v13H6z"/><path d="M9 12h7"/><path d="M9 16h5"/></svg>`
+};
+function boardMode() { return CK.active(); }
+
+function renderSession(s) {
+  const pane = document.getElementById("pane-session");
+  let container = document.getElementById("container-" + sid(s));
+  if (!container) { pane.innerHTML = `<div id="container-${sid(s)}"></div>`; container = pane.firstElementChild; }
+  if (boardMode()) return CK.render(s, container);   // iPad: lane + rail (shared/cockpit.js)
+  container.innerHTML = "";
+  container.className = "";
+  renderSessionInto(s, container);
+}
+
+function sessHead(s, done, total) {
+  const ss = sessState(s.n, false);
+  const complete = total > 0 && done === total;
+  const trained = ss && ss.trained ? ` · ${shortDate(ss.trained)}` : "";
+  const planned = sessionSecs(s);
+  const progress = complete ? `Session complete · ${done} of ${total}${trained}` : `${done} of ${total} done · planned ${fmtMins(planned)}${trained}`;
+  const head = document.createElement("div");
+  head.className = "hs-sess-head";
+  head.innerHTML = `
+    <div class="hs-sess-eyebrow">${PROGRAM.shortName} · Session ${s.n} of ${SESSIONS.length} · Block ${escapeHtml(s.block)} · Week ${s.week}</div>
+    <div class="hs-sess-top">
+      <h2 class="hs-sess-title${String(s.title).length > 16 ? " long" : ""}">${escapeHtml(s.title)}</h2>
+      <button type="button" class="hs-sess-clock" id="clock-${sid(s)}">${ICON.clock}<span class="hs-clock-t">Start</span></button>
+    </div>
+    <div class="hs-sess-progress"><div class="hs-bar"><i style="width:${total ? Math.round(100 * done / total) : 0}%"></i></div><span>${progress}</span></div>`;
+  return head;
+}
+function sessCtl(s) {
+  const complete = isSessionComplete(s);
+  const ctl = document.createElement("div");
+  ctl.className = "hs-sess-ctl";
+  ctl.innerHTML = `
+    <span class="hs-sess-pace" id="clockstat-${sid(s)}"></span>
+    ${complete ? "" : `<button type="button" class="btn hs-mini" data-action="finish">${ICON.check} Finish session</button>`}
+    <button type="button" class="btn hs-mini btn-danger" data-action="clear">Clear session</button>`;
+  const fin = ctl.querySelector("[data-action=finish]");
+  if (fin) fin.onclick = () => finishSession(s);
+  ctl.querySelector("[data-action=clear]").onclick = () => {
+    if (!sessState(s.n, false)) return;
+    if (confirm(`Clear session ${s.n} (${s.title})? Checks, sets and the clock for this session will be gone.`)) {
+      delete state.sessions[String(s.n)];
+      delete tappedNow[s.n];
+      saveState(); render();
+    }
+  };
+  return ctl;
+}
+/* Finish: every group done, the clock stopped, the next open session opens. */
+function finishSession(s) {
+  if (!sessionHasActivity(s) && !confirm(`Nothing is logged in session ${s.n}. Mark it finished anyway?`)) return;
+  const ss = sessState(s.n, true);
+  s.groups.forEach((_, gi) => { ss.completed[gi] = true; });
+  completeSession(s, ss);
+  saveState();
+  const nx = nextAfter(s.n);
+  if (nx) { toast(`Session ${s.n} finished · next up session ${nx.n}`); openSession(nx.n, true); }
+  else { toast("Program complete"); render(); }
+}
+function completeSession(s, ss) {
+  stampDate(ss);
+  ss.finishedAt = Date.now();
+  if (ss.clockStart && !ss.clockStop) ss.clockStop = Date.now();
+  delete tappedNow[s.n];
+}
+
+function renderSessionInto(s, container) {
+  LETTER_SESSION = s;
+  const ss = sessState(s.n, false);
+  const groups = s.groups;
+  const done = groups.filter((_, gi) => isGroupDone(ss, gi)).length;
+  const nowIdx = nowIndex(s);
+  const nextIdxs = groups.map((_, i) => i).filter(i => i !== nowIdx && !isGroupDone(ss, i));
+  const afterNow = nextIdxs.find(i => i > nowIdx);
+  const upNextAt = afterNow != null ? afterNow : nextIdxs[0];
+
+  const head = sessHead(s, done, groups.length);
+  const ctl = sessCtl(s);
+  container.appendChild(head);
+  container.appendChild(ctl);
+  if (!boardMode()) wireClock(s, head.querySelector(".hs-sess-clock"), ctl.querySelector(".hs-sess-pace"));   // the board wires its rail clock instead
+  if (s.note) container.appendChild(collapsible("Coach's note for this session", s.note, `note_${s.n}`));
+
+  if (isSessionComplete(s)) container.appendChild(doneCard(s));
+
+  groups.forEach((g, gi) => {
+    const st = gi === nowIdx ? "now" : isGroupDone(ss, gi) ? "done" : "next";
+    if (gi === upNextAt) {
+      const lab = document.createElement("div");
+      lab.className = "hs-section-label";
+      lab.textContent = "Up next";
+      container.appendChild(lab);
+    }
+    container.appendChild(renderGroupRow(s, g, gi, st, groups.length));
+  });
+}
+function doneCard(s) {
+  const ss = sessState(s.n, false);
+  const nx = nextAfter(s.n);
+  const el = document.createElement("div");
+  el.className = "done-card";
+  const when = ss && ss.trained ? ` on ${shortDate(ss.trained)}` : "";
+  const took = ss && ss.clockStart && ss.clockStop ? ` in ${fmtClock((ss.clockStop - ss.clockStart) / 1000)}` : "";
+  el.innerHTML = `
+    <div class="eyebrow">Session ${s.n} complete</div>
+    <p>${escapeHtml(s.title)} logged${when}${took}. Tap any row below to reopen and re-log it.</p>
+    ${nx ? `<button type="button" class="btn btn-primary" data-next="${nx.n}">Next up: session ${nx.n} · ${escapeHtml(nx.title)} →</button>` : `<p><strong>Program complete.</strong> ${SESSIONS.length} of ${SESSIONS.length} sessions logged.</p>`}`;
+  const b = el.querySelector("[data-next]");
+  if (b) b.onclick = () => openSession(parseInt(b.dataset.next, 10), true);
+  return el;
+}
+
+/* A folded block of coach text. Collapsed until tapped; the choice is kept per key. */
+function collapsible(title, text, key) {
+  const open = prepOpen[key] === true;
+  const el = document.createElement("div");
+  el.className = "prep" + (open ? "" : " collapsed");
+  el.style.marginTop = "8px";
+  el.innerHTML = `<div class="prep-head" role="button" tabindex="0"><span>${escapeHtml(title)}</span><span class="caret">▼</span></div><div class="prep-body"><div class="prep-text">${escapeHtml(text)}</div></div>`;
+  el.querySelector(".prep-head").onclick = () => { prepOpen[key] = el.classList.contains("collapsed"); el.classList.toggle("collapsed"); };
+  return el;
+}
+
+/* One row = one group. A straight set is a group of one; a superset or tri-set stacks its members
+   (A1 / A2 / A3), each with its own grid and history, with one rest bar for the group after the last. */
+function renderGroupRow(s, g, gi, st, total) {
+  LETTER_SESSION = s;
+  const ss = sessState(s.n, false);
+  const grouped = isGrouped(g);
+  const isDone = isGroupDone(ss, gi);
+  const members = g.exercises.map((ex, ei) => {
+    const name = performedName(ss, gi, ei, ex);
+    const spec = specOf(ex, name);
+    const hist = st === "now" ? priorEntries(name, s.n) : [];
+    return { ex, ei, name, spec, log: SL.normLog(ss && ss.logs[exKey(gi, ei)], spec.sets), hist, sugg: st === "now" ? SL.suggest(hist, spec) : null };
+  });
+  const restSecs = groupRest(g);
+  const restDef = groupRestDefaulted(g);
+  const restLabel = `⏱ ${restText(restSecs)}`;
+  const tKey = `${s.n}_${gi}`;
+  const lastTag = grouped ? tagOf(g, gi, members.length - 1) : "";
+  const slotWords = groupSlotWords(g);
+
+  const el = document.createElement("div");
+  el.className = "hs-row hs-" + st + (grouped ? " hs-grp" : "");
+  el.dataset.idx = gi;
+  el.dataset.key = tKey;
+
+  if (st !== "now") {
+    const live = !!activeTimers[tKey];
+    const names = members.map(m => `${grouped ? `<span class="grp-sum-tags">${tagOf(g, gi, m.ei)}</span>` : ""}${escapeHtml(m.name)}`).join(" + ");
+    const doneTxt = members.map(m => loggedRx(m.ex, m.spec, m.log)).filter(Boolean).join(" · ") || members.map(m => shortRx(m.ex, m.spec)).join(" · ");
+    const rxLine = grouped ? `${members.map(m => shortRx(m.ex, m.spec)).join(" · ")} · rest ${fmtClock(restSecs)} after ${lastTag}` : rxText(members[0].ex, members[0].spec, true, restSecs, restDef);
+    const right = live ? `<button type="button" class="btn btn-timer row-timer" data-default="${restLabel}">${restLabel}</button>` : st === "done" ? escapeHtml(doneTxt) : "";
+    const ltNext = st === "next" ? lastTimeText(members[0].name, s, members[0].spec) : "";
+    el.innerHTML = `
+      <div class="hs-row-sum" role="button" tabindex="0">
+        <span class="hs-mark">${st === "done" ? ICON.check : ""}</span>
+        <span class="hs-sum-t"><b>${names}</b><small><span class="ex-tag">${grouped ? groupWord(g) : escapeHtml(slotWords)}</span>${st === "next" ? rxLine : ""}${ltNext ? `<span class="ck-sum-last">Last${grouped ? ` ${tagOf(g, gi, 0)}` : ""} · ${escapeHtml(ltNext)}</span>` : ""}</small></span>
+        ${right ? `<span class="hs-sum-r">${right}</span>` : ""}
+      </div>`;
+    const sum = el.querySelector(".hs-row-sum");
+    const pick = () => { tappedNow[s.n] = gi; renderSession(s); revealNow(s); };
+    sum.addEventListener("click", e => { if (!e.target.closest(".btn")) pick(); });
+    sum.addEventListener("keydown", e => { if (e.target === sum && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); pick(); } });
+    if (live) { const tb = el.querySelector(".row-timer"); reattachTimer(tKey, tb); tb.onclick = () => tapTimer(tKey, tb, restSecs); }
+    return el;
+  }
+
+  const memberHtml = m => {
+    const { ex, ei, name, spec, log, hist, sugg } = m;
+    const lastHtml = hist.length ? lastTimeHtml(name, s, spec, hist) : "";
+    const suggHtml = SL.suggestHtml(sugg);
+    const hasNotes = !!(log.notes && log.notes.trim());
+    const alt = altOf(ex);
+    const subbed = name !== ex.name;
+    const ws = workSecs(ex);
+    const altText = !alt && Array.isArray(ex.alternates) && ex.alternates.length ? `<div class="ex-alt">Alternate: ${ex.alternates.map(escapeHtml).join(", ")}</div>` : "";
+    const swapBtn = alt ? `<button type="button" class="btn swap-toggle">⇄ Sub</button>` : "";
+    const swapHtml = alt ? `<div class="ex-swap">${[ex.name, alt].map(nm => `<button type="button" class="swap-chip${nm === name ? " on" : ""}" data-ex="${escapeHtml(nm)}">${escapeHtml(nm)}${nm === ex.name ? `<span class="sc-tag">program</span>` : ""}</button>`).join("")}</div>` : "";
+    return `
+      <div class="grp-ex" data-ek="${exKey(gi, ei)}">
+        ${grouped ? `<div class="grp-tag">${tagOf(g, gi, ei)} · ${escapeHtml(SLOT[ex.slot] || ex.slot || "")}</div>` : ""}
+        <div class="ex-name">${escapeHtml(name)}</div>
+        ${subbed ? `<div class="ex-sub-note">Sub for <strong>${escapeHtml(ex.name)}</strong> · this session</div>` : ""}
+        <div class="ex-prescription">${rxText(ex, spec, !grouped, restSecs, restDef)}</div>
+        ${instructionText(ex) ? `<div class="ex-instruction">${escapeHtml(instructionText(ex))}</div>` : ""}
+        ${altText}
+        ${lastHtml || suggHtml ? `<div class="hs-lastbox">${lastHtml}${suggHtml}</div>` : ""}
+        <div class="ex-log open">
+          ${SL.gridHtml(log, spec, sugg)}
+          <textarea class="log-notes" placeholder="Notes: form, tempo, RPE, how it felt..."${hasNotes ? "" : " hidden"}>${escapeHtml(log.notes)}</textarea>
+        </div>
+        <div class="grp-ex-tools">
+          <a class="btn" href="${ex.videoUrl ? escapeHtml(ex.videoUrl) : v(name)}" target="_blank" rel="noopener">${ICON.video}${ex.videoUrl ? "▶ Video" : "Video"}</a>
+          <button type="button" class="btn hs-note-btn">${ICON.note}Note</button>
+          ${swapBtn}
+          ${ws ? `<button type="button" class="btn work-timer" data-default="⏱ ${fmtClock(ws)} work">⏱ ${fmtClock(ws)} work</button>` : ""}
+        </div>
+        ${swapHtml}
+      </div>`;
+  };
+
+  el.innerHTML = `
+    <div class="hs-row-full">
+      <div class="hs-now-eyebrow">Now · ${gi + 1} of ${total} · ${grouped ? `${groupWord(g)} ${groupLabel(g, gi)}` : escapeHtml(slotWords)}</div>
+      ${grouped ? `<div class="grp-head"><span class="grp-type">${groupWord(g)}</span><span>${members.length} moves back to back · rest ${fmtClock(restSecs)}${restDef ? " (default)" : ""} after ${lastTag}</span></div>` : ""}
+      ${g.note ? `<div class="grp-note">${escapeHtml(g.note)}</div>` : ""}
+      ${members.map(memberHtml).join("")}
+      <div class="hs-tools">
+        <button type="button" class="btn btn-timer row-timer" data-default="${restLabel}">${restLabel}</button>
+        <button type="button" class="btn hs-done-btn${isDone ? " on" : ""}" aria-pressed="${isDone}">${ICON.check}Done${grouped ? ` ${groupLabel(g, gi)}` : ""}</button>
+      </div>
+    </div>`;
+
+  el.querySelector(".hs-done-btn").onclick = () => {
+    const cur = sessState(s.n, true);
+    cur.completed[gi] = !isDone;
+    if (!isDone) {
+      stampDate(cur);
+      if (tappedNow[s.n] === gi) delete tappedNow[s.n];
+      if (isSessionComplete(s)) completeSession(s, cur);
+    } else cur.finishedAt = null;
+    saveState(); render();
+    if (!isDone) revealNow(s);
+  };
+
+  members.forEach((m, mi) => {
+    const { ex, ei, name, spec, sugg } = m;
+    const root = el.querySelector(`.grp-ex[data-ek="${exKey(gi, ei)}"]`);
+    const isLast = mi === members.length - 1;
+    const ensureLog = () => {
+      const cur = sessState(s.n, true);
+      cur.logs[exKey(gi, ei)] = SL.normLog(cur.logs[exKey(gi, ei)], spec.sets);
+      stampDate(cur);
+      return cur.logs[exKey(gi, ei)];
+    };
+    // The rest key names the member; the cockpit's restKey hands the ring the whole group's keys. A member
+    // before the last starts no rest: the group rests once, after its last move.
+    SL.wireGrid(root, { spec, sugg, getLog: ensureLog, save: saveState, rerender: () => renderSession(s), restKey: restKeyOf(s, gi, ei, name), noRest: () => !isLast });
+    const notes = root.querySelector(".log-notes");
+    notes.addEventListener("input", e => { ensureLog().notes = e.target.value; saveState(); });
+    root.querySelector(".hs-note-btn").onclick = () => { notes.hidden = !notes.hidden; if (!notes.hidden) notes.focus(); };
+    const swapToggle = root.querySelector(".swap-toggle");
+    if (swapToggle) {
+      swapToggle.onclick = () => root.querySelector(".ex-swap").classList.toggle("open");
+      root.querySelectorAll(".swap-chip").forEach(chip => chip.onclick = () => {
+        const cur = sessState(s.n, true);
+        const chosen = chip.dataset.ex;
+        if (chosen === ex.name) delete cur.subs[exKey(gi, ei)];
+        else cur.subs[exKey(gi, ei)] = chosen;
+        tappedNow[s.n] = gi;   // picking a sub almost always means you're about to log it
+        saveState(); renderSession(s);
+      });
+    }
+    const wt = root.querySelector(".work-timer");
+    if (wt) { const wk = `${tKey}_${ei}_work`; reattachTimer(wk, wt); wt.onclick = () => tapTimer(wk, wt, workSecs(ex)); }
+  });
+
+  const tBtn = el.querySelector(".hs-tools .row-timer");
+  if (tBtn) { reattachTimer(tKey, tBtn); tBtn.onclick = () => tapTimer(tKey, tBtn, restSecs); }
+  return el;
+}
+function restKeyOf(s, gi, ei, name) { return `${name}|${s.n}_${gi}_${ei}`; }
+function tapTimer(key, btn, secs) { if (activeTimers[key]) tapActiveTimer(key); else startCountdown(key, btn, secs); }
+
+/* What was logged, compact: "3 × 12 @ 104 lb" when every set matches, else SetLog's own text. */
+function loggedRx(ex, spec, log) {
+  if (!SL.hasSets(log)) return null;
+  const sets = log.sets.filter(x => x.r != null || x.w != null);
+  const same = sets.length > 1 && sets.every(x => x.r === sets[0].r && x.w === sets[0].w);
+  if (same && sets[0].r != null) return `${sets.length} × ${sets[0].r}${spec.unit === "s" ? " s" : ""}${sets[0].w != null ? " @ " + fmtLoad(sets[0].w, spec.bw) : ""}`;
+  return SL.lastText(SL.entry(log, spec), spec);
+}
+function revealNow(s) {
+  const el = document.querySelector(`#container-${sid(s)} .hs-now`);
+  if (!el || !el.offsetParent) return;
+  if (CK.revealNow(el)) return;   // board: the lane scrolls, not the window
+  const bar = document.querySelector(".appbar");
+  const top = el.getBoundingClientRect().top - (bar ? bar.getBoundingClientRect().bottom : 0) - 8;
+  if (top < 0 || top > window.innerHeight * 0.6) window.scrollBy({ top, behavior: "smooth" });
+}
+
+/* ---------------------------------------------------------------------------
+   iPad BOARD (shared/cockpit.js). A slot is one group: a superset is one
+   timeline segment and one tracker row with every member's sets as dots, and
+   its rest key is the array of the members' keys, so the ring finds it from
+   whichever member's check started the rest.
+   --------------------------------------------------------------------------- */
+/* The row the Now card shows: the tapped group, else the first not marked Done. */
+function nowIndex(s) {
+  const ss = sessState(s.n, false);
+  if (tappedNow[s.n] != null && tappedNow[s.n] < s.groups.length) return tappedNow[s.n];
+  return s.groups.findIndex((_, gi) => !isGroupDone(ss, gi));
+}
+/* One state per prescribed set, members concatenated: done (checked, or the group's Done is on), part (a number typed), "". */
+function setStates(s, gi) {
+  const ss = sessState(s.n, false), g = s.groups[gi];
+  const done = isGroupDone(ss, gi);
+  const out = [];
+  g.exercises.forEach((ex, ei) => {
+    const spec = specOf(ex, performedName(ss, gi, ei, ex));
+    SL.normLog(ss && ss.logs[exKey(gi, ei)], spec.sets).sets.slice(0, spec.sets).forEach(x => out.push(done || x.d ? "done" : (x.r != null || x.w != null) ? "part" : ""));
+  });
+  return out;
+}
+CK.init({
+  id: s => sid(s),
+  kind: () => "strength",
+  eyebrow: s => `Session ${s.n} of ${SESSIONS.length} · Block ${s.block} · Week ${s.week}`,
+  title: s => s.title,
+  warmupSecs: () => 0,
+  condSecs: () => null,
+  slots: s => {
+    LETTER_SESSION = s;
+    const ss = sessState(s.n, false);
+    return s.groups.map((g, gi) => ({
+      idx: gi, name: slotNameOf(ss, s, g, gi), label: groupLabel(g, gi),
+      slotName: isGrouped(g) ? `${groupWord(g)} · ${groupSlotWords(g)}` : (SLOT[g.exercises[0].slot] || g.exercises[0].slot || ""),
+      secs: groupSecs(g), rest: groupRest(g), closer: false, beat: ""
+    }));
+  },
+  nowIndex,
+  setStates,
+  lastText: (s, gi) => { const ss = sessState(s.n, false), g = s.groups[gi], ex = g.exercises[0], nm = performedName(ss, gi, 0, ex); return lastTimeText(nm, s, specOf(ex, nm)); },
+  restKey: (s, gi) => { const ss = sessState(s.n, false); return s.groups[gi].exercises.map((ex, ei) => restKeyOf(s, gi, ei, performedName(ss, gi, ei, ex))); },
+  clock: s => { const ss = sessState(s.n, false); return ss ? { start: ss.clockStart, stop: ss.clockStop } : null; },
+  toggleClock: s => {
+    const cur = sessState(s.n, true);
+    if (!cur.clockStart) { cur.clockStart = Date.now(); cur.clockStop = null; stampDate(cur); }
+    else if (!cur.clockStop) cur.clockStop = Date.now();
+    else { cur.clockStart = null; cur.clockStop = null; }
+    saveState();
+  },
+  isComplete: isSessionComplete,
+  renderLane: (s, lane) => renderSessionInto(s, lane),
+  jump: (s, target) => { if (target != null && target !== "wu") tappedNow[s.n] = target; renderSession(s); },
+  /* The ring's zero: the concatenated set number maps back to its member and local set. */
+  armSet: (s, gi, setNo) => {
+    const ss = sessState(s.n, false), g = s.groups[gi];
+    let left = setNo;
+    for (let ei = 0; ei < g.exercises.length; ei++) {
+      const n = specOf(g.exercises[ei], performedName(ss, gi, ei, g.exercises[ei])).sets;
+      if (left <= n) {
+        const root = document.getElementById("container-" + sid(s));
+        const row = root && root.querySelectorAll(`.grp-ex[data-ek="${exKey(gi, ei)}"] .sl-row`)[left - 1];
+        const inp = row && (row.querySelector(".sl-r") || row.querySelector(".sl-w"));
+        if (inp) inp.focus();
+        return;
+      }
+      left -= n;
+    }
+  },
+  /* Every session with a record, groups in order, each set's check timestamp: the cockpit learns pace from these. */
+  sessions: () => SESSIONS.map(s => {
+    const ss = sessState(s.n, false);
+    if (!ss) return null;
+    return { start: ss.clockStart || null, rows: s.groups.map((g, gi) => ({ name: slotNameOf(ss, s, g, gi),
+      t: g.exercises.flatMap((ex, ei) => SL.normLog(ss.logs[exKey(gi, ei)], 0).sets.map(x => x.t).filter(Boolean)) })) };
+  }).filter(Boolean),
+  onModeChange: () => { if (DATA) { render(); openSessionTab(); } }
+});
+
+/* ---------------------------------------------------------------------------
+   NOTES PANE: how it works, the blocks, equipment, sync, backup
+   --------------------------------------------------------------------------- */
+function buildNotes() {
+  const grouped = SESSIONS.some(s => s.groups.some(isGrouped));
+  const swaps = CFG.swaps && SESSIONS.some(s => s.groups.some(g => g.exercises.some(altOf)));
+  const titles = Array.from(new Set(SESSIONS.map(s => s.title)));
+  const card = document.getElementById("notes-card");
+  card.innerHTML = `
+    <h2>How this tracker works</h2>
+    <p><strong>${escapeHtml(DATA.name)}</strong> is coach ${escapeHtml(DATA.coach || "")}'s plan in the ${escapeHtml(DATA.app || "Chalk")} app: ${SESSIONS.length} sessions over ${totalWeeks()} weeks in ${BLOCKS.length} block${BLOCKS.length === 1 ? "" : "s"}, cycling ${titles.map(escapeHtml).join(" / ")}. The tracker moves by <strong>session, not by date</strong>: the next session is the first one not finished, so a missed day just shifts everything along. Finish a session and the next one opens. Any earlier session can be reopened from the strip and re-logged.</p>
+    <p><strong>Equipment:</strong> ${escapeHtml(CFG.equipment)}.</p>
+    <h3>Blocks</h3>
+    <div class="notes-block" id="notes-blocks"></div>
+    <h3>Logging sets and the coach</h3>
+    <p>Each set takes reps and weight; checking a set starts the rest shown on the row. The <strong>= 3 × 10</strong> button fills the targets; type over what differed. A hit is inferred: every set at or above the top of the range. The chip under a lift says what to do next: green adds weight after a hit (5 lb, 10 on lower-body lifts), grey holds the weight after a miss, amber cuts after three misses at one weight. Max-rep rows say "beat last".</p>
+    <p>The <strong>Last time</strong> block is the newest session where that exercise was logged, by session number, so a reopened session still points back at the right place.</p>
+    ${grouped ? `<p><strong>Supersets and tri-sets</strong> are one card: the moves are stacked A1 / A2 / A3, each with its own grid and history, and the rest comes once, after the last move. Done closes the whole group.</p>` : ""}
+    ${swaps ? `<p><strong>⇄ Sub</strong> appears where the plan names a movement a few dumbbells cannot do (the barbell hip thrust, the incline seal row). The sub applies to that session only and keeps its own history.</p>` : ""}
+    <p>Rest shown as <em>(default)</em> is 1:30 the page filled in where the plan left the rest blank.</p>
+    ${SL.sync.notesHtml()}
+    <h3>Backup</h3>
+    <div class="notes-actions">
+      <button class="btn" id="btn-export">Export backup</button>
+      <button class="btn" id="btn-import">Import backup</button>
+    </div>
+    <div class="note-box" style="margin-top:12px">Source: ${escapeHtml(DATA.app || "Chalk Performance Training")}, coach ${escapeHtml(DATA.coach || "")}, plan ${escapeHtml(String(DATA.planId || ""))}. Ingested by ${escapeHtml(DATA.generatedBy || "the ingest")}.</div>`;
+  const nb = document.getElementById("notes-blocks");
+  BLOCKS.forEach(b => {
+    const h = document.createElement("h4");
+    h.textContent = `${b.id} · ${b.label || ""}`;
+    nb.appendChild(h);
+    if (b.intro) nb.appendChild(collapsible("Coach's intro", b.intro, `notes_intro_${b.id}`));
+    else { const p = document.createElement("p"); p.style.cssText = "margin:2px 0 0;font-size:12.5px;color:var(--muted)"; p.textContent = `${blockSessions(b.id).length} sessions.`; nb.appendChild(p); }
+  });
+  document.getElementById("btn-export").onclick = doExport;
+  document.getElementById("btn-import").onclick = doImport;
+}
+function doExport() {
+  const payload = { app: CFG.exportTag, version: 1, exportedAt: new Date().toISOString(), state };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `${CFG.exportTag}-backup-${todayISO()}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast("Backup downloaded");
+}
+function doImport() {
+  const inp = document.createElement("input");
+  inp.type = "file"; inp.accept = ".json,application/json";
+  inp.onchange = () => {
+    const f = inp.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const obj = JSON.parse(r.result);
+        if (obj && obj.state && obj.state.sessions) {
+          if (!confirm("Replace current data with this backup?")) return;
+          state = normState(obj.state); saveState(); render(); toast("Import complete");
+        } else alert(`Doesn't look like a ${DATA.name} backup.`);
+      } catch (e) { alert("Could not read file: " + e.message); }
+    };
+    r.readAsText(f);
+  };
+  inp.click();
+}
+let toastTimeout = null;
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg; el.classList.add("show");
+  if (toastTimeout) clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => el.classList.remove("show"), 2200);
+}
+
+/* ---------------------------------------------------------------------------
+   STATS + RENDER
+   --------------------------------------------------------------------------- */
+function updateStats() {
+  if (!DATA) return;
+  const done = SESSIONS.filter(isSessionComplete).length;
+  document.getElementById("stat-done").textContent = done;
+  const inBlock = blockSessions(uiBlock);
+  document.getElementById("stat-block").textContent = `${inBlock.filter(isSessionComplete).length} / ${inBlock.length}`;
+  const nx = nextSession();
+  document.getElementById("stat-next").textContent = nx ? `S${nx.n}` : "Done";
+  document.getElementById("stat-overall").textContent = SESSIONS.length ? Math.round(100 * done / SESSIONS.length) + "%" : "0%";
+  const dot = document.querySelector('.tab[data-pane="session"] .due-dot');
+  if (dot) dot.hidden = !nx || nx.n !== uiSession;
+  renderStrip();
+  renderBlockBar();
+}
+function render() {
+  renderHero();
+  renderRules();
+  const s = sessionByN(uiSession);
+  if (s) renderSession(s);
+  updateStats();
+}
+
+/* ---------------------------------------------------------------------------
+   HEALTH-SYSTEM SUMMARY (contract in ../shared/shell.js). Phased by session:
+   week = the next session's program week; next.id = the session number.
+   --------------------------------------------------------------------------- */
+function publishSummary() {
+  try {
+    if (!window.HS || typeof HS.summary !== "function" || !DATA) return;
+    const nx = nextSession();
+    const dates = [];
+    SESSIONS.forEach(s => { const ss = sessState(s.n, false); if (ss && ss.trained && sessionHasActivity(s)) dates.push(ss.trained); });
+    dates.sort();
+    const refWeek = nx ? nx.week : (SESSIONS[SESSIONS.length - 1] || {}).week;
+    const wk = SESSIONS.filter(s => s.week === refWeek);
+    HS.summary(PROGRAM.slug, {
+      kind: "phased", week: refWeek, weeks: totalWeeks(), phase: nx ? blockOf(nx).label : "Complete",
+      next: nx ? { id: String(nx.n), label: `Session ${nx.n} · ${nx.title}`, sub: `Block ${nx.block} · Week ${nx.week}`, date: null, minutes: sessionMinutes(nx), listed: null } : null,
+      today: null,
+      thisWeek: { done: wk.filter(isSessionComplete).length, planned: wk.length },
+      days: null,
+      sessions: dates, lastDate: dates.length ? dates[dates.length - 1] : null
+    });
+  } catch (e) {}
+}
+function sessionFromHash() {
+  const m = (location.hash || "").match(/#s=(\d+)/);
+  return m ? sessionByN(parseInt(m[1], 10)) : null;
+}
+
+/* ---------------------------------------------------------------------------
+   CATALOG (Phase 2 contract in ../shared/shell.js): every session, every row.
+   --------------------------------------------------------------------------- */
+window.HS_CATALOG = function () {
+  const sessions = SESSIONS.map(s => ({
+    id: String(s.n), week: s.week, day: s.workout || s.title, label: `Session ${s.n} · ${s.title}`, minutes: sessionMinutes(s), optional: false,
+    exercises: s.groups.flatMap((g, gi) => g.exercises.map((ex, ei) => {
+      const spec = specOf(ex);
+      return { name: ex.name, scheme: shortRx(ex, spec), sets: spec.sets, reps: repText(ex) || null, restSec: isGrouped(g) && ei < g.exercises.length - 1 ? ex.restSec : groupRest(g),
+               minutes: Math.round(exSecs(ex) / 6) / 10, kind: ex.slot === "abs" ? "core" : "strength", tag: ex.slot || null };
+    }))
+  }));
+  return { slug: PROGRAM.slug, kind: "sessions", sessions };
+};
+
+/* ---------------------------------------------------------------------------
+   SESSION CLOCK (phone): elapsed against the planning model. The board wires its rail clock instead.
+   --------------------------------------------------------------------------- */
+const sessionClocks = {};
+function wireClock(s, btn, stat) {
+  if (!btn) return;
+  const key = sid(s);
+  const txt = btn.querySelector(".hs-clock-t") || btn;
+  const planned = sessionSecs(s);
+  function paint() {
+    const cur = sessState(s.n, false);
+    if (!cur || !cur.clockStart) {
+      txt.textContent = "Start"; btn.classList.remove("running", "stopped");
+      btn.setAttribute("aria-label", "Start the session clock");
+      if (stat) stat.textContent = "";
+      return;
+    }
+    const elapsed = Math.round(((cur.clockStop || Date.now()) - cur.clockStart) / 1000);
+    txt.textContent = fmtClock(elapsed);
+    btn.classList.toggle("running", !cur.clockStop);
+    btn.classList.toggle("stopped", !!cur.clockStop);
+    btn.setAttribute("aria-label", cur.clockStop ? `Session clock stopped at ${fmtClock(elapsed)}, tap to reset` : `Session clock ${fmtClock(elapsed)}, tap to stop`);
+    if (stat) stat.textContent = isSessionComplete(s) ? `done in ${fmtClock(elapsed)}` : cur.clockStop ? "clock stopped" : `${Math.round(elapsed / 60)} of ${fmtMins(planned).replace("~", "")} in`;
+  }
+  function syncInterval() {
+    if (sessionClocks[key]) { clearInterval(sessionClocks[key]); delete sessionClocks[key]; }
+    const cur = sessState(s.n, false);
+    if (cur && cur.clockStart && !cur.clockStop) sessionClocks[key] = setInterval(() => { if (!btn.isConnected) { clearInterval(sessionClocks[key]); delete sessionClocks[key]; return; } paint(); }, 1000);
+  }
+  btn.onclick = () => {
+    const cur = sessState(s.n, true);
+    if (!cur.clockStart) { cur.clockStart = Date.now(); cur.clockStop = null; stampDate(cur); }
+    else if (!cur.clockStop) cur.clockStop = Date.now();
+    else { cur.clockStart = null; cur.clockStop = null; }
+    saveState(); syncInterval(); paint();
+  };
+  syncInterval(); paint();
+}
+
+/* ---------------------------------------------------------------------------
+   TIMERS: the row's rest countdown button and the timed work set.
+   --------------------------------------------------------------------------- */
+const activeTimers = {};
+let audioCtx = null;
+function ensureAudio() {
+  if (audioCtx) return audioCtx;
+  try { const AC = window.AudioContext || window.webkitAudioContext; if (AC) audioCtx = new AC(); } catch (e) {}
+  return audioCtx;
+}
+function tone(offsets, freqs) {
+  const ctx = ensureAudio();
+  if (ctx) {
+    const now = ctx.currentTime;
+    offsets.forEach((off, i) => {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.type = "sine"; osc.frequency.value = freqs[i] || 880;
+      gain.gain.setValueAtTime(0, now + off);
+      gain.gain.linearRampToValueAtTime(0.25, now + off + 0.01);
+      gain.gain.linearRampToValueAtTime(0, now + off + 0.14);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + off); osc.stop(now + off + 0.16);
+    });
+  }
+}
+function beepDone() { tone([0, 0.18, 0.36], [880, 880, 1100]); if (navigator.vibrate) { try { navigator.vibrate([120, 80, 120, 80, 200]); } catch (e) {} } }
+function paintRunning(btn, text) { if (!btn) return; btn.classList.add("running"); btn.classList.remove("done"); btn.textContent = text; }
+function paintDone(btn) {
+  if (!btn || !btn.isConnected) return;
+  btn.classList.remove("running"); btn.classList.add("done");
+  btn.textContent = "Done!";
+  setTimeout(() => { if (btn && btn.isConnected) { btn.classList.remove("done"); btn.textContent = btn.dataset.default || "⏱"; } }, 1800);
+}
+function paintReset(btn) {
+  if (!btn || !btn.isConnected) return;
+  btn.classList.remove("running", "done");
+  btn.textContent = btn.dataset.default || "⏱";
+}
+function startCountdown(key, btn, secs) {
+  ensureAudio(); if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  const endsAt = Date.now() + secs * 1000;
+  paintRunning(btn, fmtClock(secs));
+  const iv = setInterval(() => {
+    const t = activeTimers[key]; if (!t) return;
+    const remaining = Math.round((t.endsAt - Date.now()) / 1000);
+    if (remaining <= 0) { clearInterval(t.iv); const b = t.btn; delete activeTimers[key]; paintDone(b); beepDone(); }
+    else paintRunning(t.btn, fmtClock(remaining));
+  }, 250);
+  activeTimers[key] = { endsAt, iv, btn };
+}
+function tapActiveTimer(key) {
+  const t = activeTimers[key]; if (!t) return;
+  clearInterval(t.iv); delete activeTimers[key]; paintReset(t.btn);
+}
+function reattachTimer(key, btn) {
+  const t = activeTimers[key];
+  if (!btn || !t) return;
+  t.btn = btn;
+  const remaining = Math.round((t.endsAt - Date.now()) / 1000);
+  if (remaining > 0) paintRunning(btn, fmtClock(remaining));
+}
+
+/* ---------------------------------------------------------------------------
+   BOOT: fetch data.json (no-store so a new ingest lands on the next open),
+   pick the session, wire sync.
+   --------------------------------------------------------------------------- */
+document.getElementById("reset-btn").onclick = () => {
+  if (confirm("Reset ALL tracking for this program? Every check, set, sub and clock across every session will be cleared.")) {
+    state = emptyState(); Object.keys(tappedNow).forEach(k => delete tappedNow[k]); saveState(); render();
+  }
+};
+
+async function boot() {
+  const notes = document.getElementById("notes-card");
+  try {
+    const r = await fetch("data.json", { cache: "no-store" });
+    if (!r.ok) throw new Error(`data.json ${r.status}`);
+    DATA = await r.json();
+  } catch (e) {
+    document.getElementById("hero-sub").textContent = "Could not load data.json.";
+    notes.innerHTML = `<h2>Program data did not load</h2><p>${escapeHtml(e.message)}. Pull to refresh on wifi; if it persists, the program file is missing from the deploy.</p>`;
+    document.querySelector('.tab[data-pane="notes"]').click();
+    return;
+  }
+  if (!DATA || DATA.mode !== "sessions" || !Array.isArray(DATA.sessions) || !DATA.sessions.length) {
+    notes.innerHTML = `<h2>No sessions in data.json</h2><p>The tracker expects schema 2 in "sessions" mode with at least one session.</p>`;
+    document.querySelector('.tab[data-pane="notes"]').click();
+    return;
+  }
+  SESSIONS = DATA.sessions.slice().sort((a, b) => a.n - b.n);
+  BLOCKS = Array.isArray(DATA.blocks) && DATA.blocks.length ? DATA.blocks : Array.from(new Set(SESSIONS.map(s => s.block))).map(id => ({ id, label: "", weeks: [], intro: "" }));
+  if (DATA.name) document.title = `${DATA.name} — Chalk`;
+
+  // Open on the deep link, else the next session (the first not finished), else the last.
+  const start = sessionFromHash() || nextSession() || SESSIONS[SESSIONS.length - 1];
+  uiSession = start.n; uiBlock = start.block;
+
+  SL.sync.init({
+    slug: PROGRAM.slug,
+    storageKey: PROGRAM.storageKey,
+    payload: () => ({ state, entries: syncEntries() }),
+    apply: merged => { state = normState(merged); render(); }
+  });
+
+  buildShell();
+  render();
+  SL.sync.wireNotes();
+  openSessionTab();
+  publishSummary();
+}
+boot();
+</script>
+</body>
+</html>

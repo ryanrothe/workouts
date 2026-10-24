@@ -64,6 +64,7 @@
 
 /* Main */
 main { padding: 12px 14px 100px; max-width: 720px; margin: 0 auto; }
+body.ck-wide main { max-width: 1400px; }   /* the iPad board (../shared/cockpit.js) */
 
 /* Hero stats */
 .hero {
@@ -382,6 +383,7 @@ main { padding: 12px 14px 100px; max-width: 720px; margin: 0 auto; }
 <div class="toast" id="toast"></div>
 
 <script src="../shared/setlog.js"></script>
+<script src="../shared/cockpit.js"></script>
 <script src="../shared/shell.js"></script>
 <script>
 /* ============================================================
@@ -391,6 +393,7 @@ main { padding: 12px 14px 100px; max-width: 720px; margin: 0 auto; }
    ============================================================ */
 
 const STORAGE_KEY = 'kb_shred_v1';
+const CK = window.Cockpit;   // the iPad board (../shared/cockpit.js)
 let PROGRAM = null;
 let STATE = null;
 
@@ -597,7 +600,9 @@ function kbLog(exLog, n) {
   const sets = [];
   for (let i = 0; i < n; i++) {
     const r = exLog[`r${i}`], w = exLog[`w${i}`];
-    sets.push({ r: r === '' || r == null ? null : SetLog.parseInt(r), w: w === '' || w == null ? null : SetLog.parseWeight(w), d: !!exLog[`s${i}`] });
+    const o = { r: r === '' || r == null ? null : SetLog.parseInt(r), w: w === '' || w == null ? null : SetLog.parseWeight(w), d: !!exLog[`s${i}`] };
+    if (exLog[`t${i}`]) o.t = exLog[`t${i}`];   // when the set was checked (ms); the cockpit learns pace from it
+    sets.push(o);
   }
   return { sets, notes: exLog.notes || '' };
 }
@@ -644,7 +649,7 @@ function syncEntries() {
       if (!SetLog.hasData(log)) return;
       out.push({ date: lg.date || null, where: `${w.label} · ${d.day}`, exercise: spec.name, rx: `${ex.sets} × ${ex.reps}`,
                  unit: spec.unit, target: spec.repRange || spec.repTop, loaded: true, bw: false,
-                 sets: log.sets.map(x => ({ r: x.r, w: x.w, done: x.d })), hit: SetLog.hit(log, spec), notes: log.notes });
+                 sets: log.sets.map(x => ({ r: x.r, w: x.w, done: x.d, t: x.t })), hit: SetLog.hit(log, spec), notes: log.notes });
     });
   }));
   return out;
@@ -772,7 +777,7 @@ function renderDayNav() {
         STATE.currentDay = d.day;
         saveState();
         render();
-        window.scrollTo(0, 0);
+        if (CK.active()) CK.scrollIntoView('container-' + kbSessionId(w, d)); else window.scrollTo(0, 0);
       }
     },
       el('span', { class: 'dot' }),
@@ -848,40 +853,53 @@ function kbLogged(log, ex, idx) {
 function hsReveal() {
   const n = document.querySelector('#main .hs-now');
   if (!n || !n.offsetParent) return;
+  if (CK.revealNow(n)) return;   // board: the lane scrolls, not the window
   const bar = document.querySelector('.kbs-topbar');
   const top = n.getBoundingClientRect().top - (bar ? bar.getBoundingClientRect().bottom : 0) - 8;
   if (top < 0 || top > window.innerHeight * 0.6) window.scrollBy({ top, behavior: 'smooth' });
 }
 
-function renderDayContent() {
-  const w = currentWeek();
-  const d = currentDay();
-  const main = $('#main');
-  const wrapper = el('div', {});
-  const log = getLog(w.id, d.day);
-  const isDone = !!log.done;
-  const key = logKey(w.id, d.day);
-
-  currentPlanKB = dayPlanKB(d);
+/* The day's rows and where Now is: shared by the phone render and the board adapter. Done is the page's own
+   rule (every set of the row checked); the tapped row lives in hsTapped, in memory only. */
+function kbRowState(w, d) {
+  const log = getLog(w.id, d.day), key = logKey(w.id, d.day);
   const exs = d.exercises || [];
   const units = kbUnits(d);
   const exDone = exs.map((ex, idx) => kbExDone(log, ex, idx));
   const rowDone = units.map(u => u.items.every(it => exDone[it.idx]));
-  const doneEx = exDone.filter(Boolean).length;
-  const complete = units.length > 0 && rowDone.every(Boolean);
-
-  // Now: the tapped row (until it finishes), else the first row not done; -1 once the day is done.
   const tap = hsTapped[key];
   if (tap && (tap.u >= units.length || (!tap.wasDone && rowDone[tap.u]))) delete hsTapped[key];
   const nowU = hsTapped[key] ? hsTapped[key].u : rowDone.indexOf(false);
+  return { log, key, exs, units, exDone, rowDone, nowU, doneEx: exDone.filter(Boolean).length, complete: units.length > 0 && rowDone.every(Boolean) };
+}
+/* "(RPE 8-9)" moves from the title to the eyebrow. */
+function kbTitle(d) { const rpe = /\s*\(([^)]*)\)\s*$/.exec(d.label || ''); return { title: rpe ? d.label.slice(0, rpe.index) : (d.label || d.day), rpe }; }
+
+function renderDayContent() {
+  const w = currentWeek();
+  const d = currentDay();
+  const container = el('div', { id: 'container-' + kbSessionId(w, d) });
+  $('#main').appendChild(container);
+  if (CK.active() && (d.exercises || []).length) return CK.render({ w, d }, container);   // iPad: lane + rail (shared/cockpit.js)
+  buildDayContent(w, d, container);
+}
+
+/* The day as the phone draws it: header, controls, every row, the Mark done button. `into` is #main's day
+   container on the phone and the board's lane on an iPad. */
+function buildDayContent(w, d, into) {
+  const main = into;
+  const wrapper = el('div', {});
+  const { log, key, exs, units, rowDone, nowU, doneEx, complete } = kbRowState(w, d);
+  const isDone = !!log.done;
+
+  currentPlanKB = dayPlanKB(d);
   // "Up next" sits above the first next row after Now (or the first next row, when none follow it).
   const nextUs = units.map((_, i) => i).filter(i => i !== nowU && !rowDone[i]);
   const afterNow = nextUs.find(i => i > nowU);
   const upNextAt = afterNow != null ? afterNow : nextUs[0];
 
-  // Session header: eyebrow, title, clock, progress. "(RPE 8-9)" moves from the title to the eyebrow.
-  const rpe = /\s*\(([^)]*)\)\s*$/.exec(d.label || '');
-  const title = rpe ? d.label.slice(0, rpe.index) : (d.label || d.day);
+  // Session header: eyebrow, title, clock, progress.
+  const { title, rpe } = kbTitle(d);
   const planMin = Math.round(currentPlanKB.total / 60);
   const progress = complete
     ? `Day complete · ${doneEx} of ${exs.length}`
@@ -927,8 +945,9 @@ function renderDayContent() {
    its full card(s); the shared CSS shows one or the other. */
 function kbRow(w, d, log, u, ui, st, total) {
   const multi = u.items.length > 1;
-  const row = el('div', { class: `hs-row hs-${st}${multi ? ' hs-multi' : ''}` });
+  const row = el('div', { class: `hs-row hs-${st}${multi ? ' hs-multi' : ''}`, 'data-idx': String(ui) });
   const names = u.items.map(it => cleanName(it.ex.name));
+  const ltNext = st === 'next' && CK.active() ? kbLastText(w, d, u) : '';
   let name, small, right;
   if (u.kind === 'circuit') {
     const rounds = Math.max(...u.items.map(it => it.ex.sets || 1));
@@ -942,7 +961,7 @@ function kbRow(w, d, log, u, ui, st, total) {
   }
   const sum = el('div', { class: 'hs-row-sum', role: 'button', tabindex: '0' },
     el('span', { class: 'hs-mark', html: st === 'done' ? HS_ICON.check : '' }),
-    el('span', { class: 'hs-sum-t' }, el('b', {}, name), st === 'next' ? el('small', {}, small) : null),
+    el('span', { class: 'hs-sum-t' }, el('b', {}, name), st === 'next' ? el('small', {}, small, ltNext ? el('span', { class: 'ck-sum-last' }, 'Last · ' + ltNext) : null) : null),
     st === 'done' ? el('span', { class: 'hs-sum-r' }, right) : null);
   const pick = () => { hsTapped[logKey(w.id, d.day)] = { u: ui, wasDone: st === 'done' }; render(); hsReveal(); };
   sum.addEventListener('click', pick);
@@ -955,7 +974,7 @@ function kbRow(w, d, log, u, ui, st, total) {
     : buildExCard(w, d, it.idx, it.ex, log, null, false));
   cards.forEach(card => {
     // Last + coach go in the tinted box.
-    const last = card.querySelector('.ex-last'), chip = card.querySelector('.ex-suggest');
+    const last = card.querySelector('.ex-last, .ck-last'), chip = card.querySelector('.ex-suggest');
     if (last || chip) {
       const box = el('div', { class: 'hs-lastbox' });
       card.insertBefore(box, last || chip);
@@ -1005,7 +1024,10 @@ function buildExCard(w, d, exIdx, ex, log, subLabel, isSubCard) {
   const sugg = SetLog.suggest(hist, spec, { bells: true });
   if (hist.length) {
     const L = hist[0];
-    card.appendChild(el('div', { html: SetLog.lastHtml(L, spec, `${L.week} ${L.day}${L.date ? ' · ' + shortDate(L.date) : ''}`) }).firstElementChild);
+    // On the board the last outing is the prominent block (shared/cockpit.js); the phone keeps its Last line.
+    card.appendChild(el('div', { html: CK.active()
+      ? CK.lastHtml(L, spec, `${L.week} ${L.day}${L.date ? ' · ' + CK.when(L.date) : ''}`)
+      : SetLog.lastHtml(L, spec, `${L.week} ${L.day}${L.date ? ' · ' + shortDate(L.date) : ''}`) }).firstElementChild);
   }
   if (sugg) {
     const chip = el('div', { html: SetLog.suggestHtml(sugg) }).firstElementChild;
@@ -1056,8 +1078,10 @@ function buildExCard(w, d, exIdx, ex, log, subLabel, isSubCard) {
       const exL = ensureExLog(w.id, d.day, exIdx);
       exL[`s${i}`] = !exL[`s${i}`];
       if (exL[`s${i}`]) {
+        exL[`t${i}`] = Date.now();   // when the set was checked; the iPad timeline learns pace from it
         startRestTimer(`${w.id}_${d.day}_${exIdx}_${i}`, null, restSecs);
       } else {
+        delete exL[`t${i}`];
         cancelRestTimer(`${w.id}_${d.day}_${exIdx}_${i}`);
       }
       saveState();
@@ -1183,6 +1207,8 @@ function fmtTime(s) {
   const m = Math.floor(s / 60), sec = Math.max(0, Math.floor(s % 60));
   return `${m}:${String(sec).padStart(2, '0')}`;
 }
+let kbRestGo = null;   // { key, until }: the 4 s "Go" after a rest ends, for the board's ring
+function paintRing() { if (window.Cockpit) Cockpit.paintRest(); }
 function startRestTimer(key, btn, secs) {
   const restSecs = secs || 60;
   const origLabel = `${restSecs}s`;
@@ -1191,16 +1217,21 @@ function startRestTimer(key, btn, secs) {
   $('#restBar').classList.add('visible');
   $('#restTime').textContent = fmtTime(restSecs);
   $('#restDesc').textContent = 'Rest';
+  kbRestGo = null;
   const intervalId = setInterval(() => {
     const t = activeTimers[key]; if (!t) return;
     const rem = (t.endsAt - Date.now()) / 1000;
     $('#restTime').textContent = fmtTime(rem);
     if (t.btn && t.btn.isConnected) t.btn.textContent = fmtTime(rem);
+    paintRing();
     if (rem <= 0) {
       clearInterval(t.intervalId);
       const b = t.btn;
       const lbl = t.origLabel;
       delete activeTimers[key];
+      kbRestGo = { key, until: Date.now() + 4000 };
+      setTimeout(paintRing, 4100);
+      paintRing();
       if (b && b.isConnected) {
         b.classList.remove('running'); b.classList.add('done'); b.textContent = 'Done!';
         setTimeout(() => { if (b.isConnected) { b.classList.remove('done'); b.textContent = `⏱ ${lbl}`; } }, 1800);
@@ -1209,7 +1240,8 @@ function startRestTimer(key, btn, secs) {
       setTimeout(() => { if (!Object.keys(activeTimers).length) $('#restBar').classList.remove('visible'); }, 1000);
     }
   }, 250);
-  activeTimers[key] = { endsAt, intervalId, btn, origLabel };
+  activeTimers[key] = { endsAt, intervalId, btn, origLabel, secs: restSecs };
+  paintRing();
 }
 function cancelRestTimer(key) {
   const t = activeTimers[key]; if (!t) return;
@@ -1217,6 +1249,8 @@ function cancelRestTimer(key) {
   const b = t.btn;
   const lbl = t.origLabel;
   delete activeTimers[key];
+  kbRestGo = null;
+  paintRing();
   if (b && b.isConnected) { b.classList.remove('running', 'done'); b.textContent = `⏱ ${lbl}`; }
   if (!Object.keys(activeTimers).length) $('#restBar').classList.remove('visible');
 }
@@ -1344,6 +1378,93 @@ function toast(msg) {
   if (toastTimeout) clearTimeout(toastTimeout);
   toastTimeout = setTimeout(() => t.classList.remove('show'), 2200);
 }
+
+/* ── iPad board (2026-10-24, rolled out from Full Body Aesthetics) ──
+   At the board's breakpoint the day renders as lane + rail: session clock with
+   the planned-time timeline, the rest ring, the workout tracker. The board
+   itself is ../shared/cockpit.js; this adapter hands it the page's own data.
+   Rendering only: STATE, payloads and the phone layout do not change. A "day"
+   here is { w, d }; a slot is one hs-row unit (a superset is one slot). The
+   ring reads the page's own rest timers (SetLog's rest is not used here). */
+function kbLastText(w, d, u) {
+  const ex = u.items[0].ex;
+  const L = kbHistory(ex.name, w.id, d.day)[0];
+  if (!L) return '';
+  return `${L.date ? CK.when(L.date, true) : `${L.week} ${L.day}`} · ${SetLog.lastText(L, kbSpec(ex))}`;
+}
+function kbTimerExKey(key) { return String(key).split('_').slice(0, 3).join('_'); }   // "w1_Day 1_3_0" (set check) and "w1_Day 1_3" (button) → the exercise
+CK.init({
+  id: ({ w, d }) => kbSessionId(w, d),
+  kind: () => 'strength',
+  topbar: 'header.appbar, .kbs-topbar',
+  eyebrow: ({ w, d }) => `${w.label} · ${d.day}`,
+  title: ({ d }) => kbTitle(d).title,
+  warmupSecs: ({ d }) => d.conditioning ? 0 : SETUP_ALLOW,
+  slots: ({ d }) => {
+    const units = kbUnits(d), plan = dayPlanKB(d), exs = d.exercises || [];
+    return units.map((u, ui) => {
+      const first = u.items[0].ex;
+      const secs = plan.cond ? plan.total : u.items.reduce((n, it) => n + ((it.idx + 1 < exs.length ? plan.offsets[it.idx + 1] : plan.total) - plan.offsets[it.idx]), 0);
+      const name = u.kind === 'circuit' ? `${u.items.length}-move circuit` : u.items.map(it => cleanName(it.ex.name)).join(' + ');
+      const label = u.kind === 'circuit' ? 'Circuit' : u.kind === 'superset' ? u.label : cleanName(first.name).split(/\s+/)[0];
+      return { idx: ui, name, label, slotName: u.kind === 'superset' ? `Superset ${u.label}` : u.kind === 'circuit' ? 'Circuit' : '', secs,
+               rest: effRestSecs(parseInt(first.rest) || 60), closer: false, beat: '' };
+    });
+  },
+  nowIndex: ({ w, d }) => kbRowState(w, d).nowU,
+  setStates: ({ w, d }, ui) => {
+    const log = getLog(w.id, d.day), u = kbUnits(d)[ui];
+    const out = [];
+    u.items.forEach(it => { const x = (log.exercises || {})[it.idx] || {}; for (let i = 0; i < (it.ex.sets || 1); i++) out.push(x[`s${i}`] ? 'done' : (x[`r${i}`] != null && x[`r${i}`] !== '') || x[`w${i}`] ? 'part' : ''); });
+    return out;
+  },
+  lastText: ({ w, d }, ui) => kbLastText(w, d, kbUnits(d)[ui]),
+  restKey: ({ w, d }, ui) => kbUnits(d)[ui].items.map(it => `${w.id}_${d.day}_${it.idx}`),
+  rest: () => {
+    const live = Object.entries(activeTimers).sort((a, b) => b[1].endsAt - a[1].endsAt)[0];
+    if (live) return { key: kbTimerExKey(live[0]), end: live[1].endsAt, total: live[1].secs || 60, goUntil: 0 };
+    if (kbRestGo && Date.now() < kbRestGo.until) return { key: kbTimerExKey(kbRestGo.key), end: 0, total: 0, goUntil: kbRestGo.until };
+    return { key: null, end: 0, total: 0, goUntil: 0 };
+  },
+  stopRest: () => { Object.keys(activeTimers).forEach(cancelRestTimer); $('#restBar').classList.remove('visible'); },
+  armSet: ({ w, d }, ui, setNo) => {
+    const root = document.getElementById('container-' + kbSessionId(w, d));
+    const row = root && root.querySelector(`.hs-row[data-idx="${ui}"]`);
+    const sr = row && row.querySelectorAll('.set-row')[setNo - 1];
+    const inp = sr && sr.querySelector('.set-reps');
+    if (inp) inp.focus();
+  },
+  clock: ({ w, d }) => { const c = STATE.clocks[logKey(w.id, d.day)]; return c ? { start: c.start, stop: c.stop } : null; },
+  toggleClock: ({ w, d }) => {
+    const k = logKey(w.id, d.day), c = STATE.clocks[k];
+    if (!c || !c.start) STATE.clocks[k] = { start: Date.now(), stop: null };
+    else if (!c.stop) c.stop = Date.now();
+    else delete STATE.clocks[k];
+    saveState();
+  },
+  isComplete: ({ w, d }) => kbRowState(w, d).complete,
+  renderLane: ({ w, d }, lane) => buildDayContent(w, d, lane),
+  jump: ({ w, d }, target) => {
+    if (typeof target === 'number') hsTapped[logKey(w.id, d.day)] = { u: target, wasDone: !!kbRowState(w, d).rowDone[target] };
+    render();
+  },
+  /* Every logged day, exercises in order with each set's check timestamp: the timeline learns pace from these. */
+  sessions: () => {
+    const out = [];
+    PROGRAM.weeks.forEach(w => w.days.forEach(d => {
+      const lg = STATE.logs[logKey(w.id, d.day)];
+      if (!lg || !lg.exercises) return;
+      const c = STATE.clocks[logKey(w.id, d.day)];
+      out.push({ start: (c && c.start) || null, rows: (d.exercises || []).map((ex, i) => {
+        const x = lg.exercises[i] || {}, t = [];
+        for (let s = 0; s < (ex.sets || 1); s++) if (x[`t${s}`]) t.push(x[`t${s}`]);
+        return { name: cleanName(ex.name), t };
+      }) });
+    }));
+    return out;
+  },
+  onModeChange: () => { if (PROGRAM) render(); }
+});
 
 /* ── init ───────────────────────────────────────────────────── */
 $('#btnPickWeek').addEventListener('click', openWeekPicker);

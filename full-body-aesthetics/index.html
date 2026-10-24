@@ -5,350 +5,144 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-<meta name="apple-mobile-web-app-title" content="FBA Tracker" />
+<meta name="apple-mobile-web-app-title" content="FBA" />
 <meta name="theme-color" content="#7c3aed" />
 <link rel="manifest" href="../manifest.webmanifest" />
 <link rel="apple-touch-icon" href="../icon-180.png" />
 <link rel="icon" type="image/png" href="../favicon.png" />
-<title>Full Body Aesthetics</title>
+<title>Full Body Aesthetics — Chalk</title>
 <link rel="stylesheet" href="../shared/styles.css" />
 <style>
-/* ─── FBA-specific ─────────────────────────────────────────────── */
+  /* FBA-specific styles. Shared design tokens, the appbar, cards, tabs, the SetLog grid and the
+     in-session .hs-* contract come from ../shared/styles.css. */
+  .hero { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+  .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .hero-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .coach-badge { display: inline-block; background: var(--primary-soft); color: var(--primary); border: 1px solid var(--primary-line); border-radius: 999px; padding: 3px 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+  .hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+  .stat { background: var(--card-2); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 8px 6px; text-align: center; }
+  .stat-num { font-size: 17px; font-weight: 700; color: var(--primary); font-variant-numeric: tabular-nums; }
+  .stat-label { font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+  .reset-link { background: none; border: none; color: var(--muted); font-size: 11px; cursor: pointer; padding: 4px 8px; text-decoration: underline; font-family: inherit; }
 
-/* Sticky sub-topbar sits below the shared appbar (appbar = env+55px) */
-.fba-topbar {
-  position: sticky;
-  top: calc(env(safe-area-inset-top) + 55px);
-  z-index: 49;
-  background: rgba(255,255,255,0.94);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid var(--border);
-}
-.fba-topbar-inner {
-  max-width: 720px; margin: 0 auto;
-  display: flex; align-items: center; gap: 8px;
-  padding: 10px 14px;
-}
-.crumbs { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-.crumbs .phase { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
-.crumbs .focus { font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cycle-bar, .week-bar { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 10px; padding: 4px 2px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .cycle-bar::-webkit-scrollbar, .week-bar::-webkit-scrollbar { display: none; }
+  .week-pill { flex-shrink: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 0; font-size: 12px; font-weight: 700; color: var(--muted); cursor: pointer; min-width: 46px; text-align: center; font-family: inherit; font-variant-numeric: tabular-nums; }
+  .week-pill.active { background: var(--primary); border-color: var(--primary); color: white; }
+  .week-pill.done { border-color: var(--success); background: var(--success-soft); color: var(--success); }
+  .week-pill.done.active { background: var(--success); color: white; }
+  .week-pill.empty { opacity: 0.55; border-style: dashed; }
+  .cycle-bar .week-pill { min-width: 0; padding: 7px 12px; }
 
-.pill-btn {
-  appearance: none; border: 1px solid var(--border); background: var(--card);
-  color: var(--text); height: 36px; padding: 0 12px; border-radius: 999px;
-  font-size: 13.5px; font-weight: 600; cursor: pointer; font-family: inherit;
-}
-.pill-btn:active { background: var(--card-2); }
-.icon-btn {
-  width: 36px; height: 36px; border-radius: 50%;
-  border: 1px solid var(--border); background: var(--card);
-  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
-  color: var(--text);
-}
-.icon-btn:active { background: var(--card-2); }
-.icon-btn svg { width: 18px; height: 18px; }
+  .rules { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 10px; font-size: 12.5px; color: var(--text-body); line-height: 1.55; }
+  .rules b { color: var(--text); }
+  .rules .rules-k { font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--primary); margin-right: 6px; }
+  .rules-row { display: flex; flex-wrap: wrap; gap: 4px 14px; }
 
-/* Day chips */
-.day-nav {
-  display: flex; gap: 6px; padding: 4px 14px 12px;
-  max-width: 720px; margin: 0 auto;
-  overflow-x: auto; scrollbar-width: none;
-}
-.day-nav::-webkit-scrollbar { display: none; }
-.day-chip {
-  flex: 0 0 auto; height: 32px; padding: 0 13px;
-  border-radius: 999px; border: 1px solid var(--border);
-  background: var(--card); color: var(--muted);
-  font-size: 12.5px; font-weight: 600; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 5px;
-  white-space: nowrap; font-family: inherit;
-}
-.day-chip.active { background: var(--primary); border-color: var(--primary); color: white; }
-.day-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: #c8cdd6; }
-.day-chip.active .dot { background: white; }
-.day-chip.done .dot { background: var(--success); }
-.day-chip.rest { opacity: 0.45; cursor: default; }
+  .tab .due-dot[hidden] { display: none; }
+  .tab .due-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); margin-left: 5px; vertical-align: 1px; }
+  .tab.active .due-dot { background: white; }
+  .tab .tab-sub { display: block; font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: 0; text-transform: none; line-height: 1; margin-top: 2px; }
 
-/* Main */
-main { padding: 12px 14px 100px; max-width: 720px; margin: 0 auto; }
+  /* Warm-up checklist (collapsed by default) */
+  .prep { margin: 8px 0; border: 1px solid var(--border-soft); border-radius: var(--radius-sm); background: var(--card-2); overflow: hidden; }
+  .prep-head { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; cursor: pointer; user-select: none; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); min-height: 40px; }
+  .prep-head .caret { font-size: 10px; }
+  .prep.collapsed .prep-body { display: none; }
+  .prep.collapsed .caret { transform: rotate(-90deg); }
+  .prep-body { padding: 2px 12px 10px; }
+  .prep-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; font-size: 12.5px; color: var(--text-body); cursor: pointer; }
+  .prep-check { width: 20px; height: 20px; flex-shrink: 0; margin-top: 0; border: 2px solid #c8cdd6; border-radius: 6px; background: white; display: flex; align-items: center; justify-content: center; }
+  .prep-check svg { width: 11px; height: 11px; opacity: 0; }
+  .prep-item.done .prep-check { background: var(--success); border-color: var(--success); }
+  .prep-item.done .prep-check svg { opacity: 1; }
+  .prep-item.done { color: var(--muted); text-decoration: line-through; }
 
-/* Hero */
-.hero {
-  display: grid; grid-template-columns: repeat(4, 1fr);
-  gap: 8px; margin-bottom: 16px;
-}
-.stat {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 10px 6px;
-  text-align: center; box-shadow: var(--shadow);
-}
-.stat-num { font-size: 18px; font-weight: 800; color: var(--primary); font-variant-numeric: tabular-nums; }
-.stat-label { font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-top: 2px; }
+  .block-note { font-size: 12px; color: var(--muted); line-height: 1.55; margin: 4px 0 2px; }
+  .ex-instruction { margin: 6px 0 0; font-size: 13px; color: var(--text-body); line-height: 1.5; white-space: pre-line; }
+  .ex-alt { margin-top: 5px; font-size: 12px; color: var(--muted); }
+  .prep-text { white-space: pre-line; font-size: 12.5px; color: var(--text-body); line-height: 1.55; padding: 2px 0 6px; }
+  .cond-text { white-space: pre-line; font-size: 13.5px; color: var(--text-body); line-height: 1.55; margin: 8px 0 0; }
+  .rest-card p { white-space: pre-line; }
+  .cycle-bar .week-pill { text-transform: none; letter-spacing: 0; }
+  .cycle-bar .week-pill small { display: block; font-size: 10px; font-weight: 600; opacity: 0.8; }
+  .ex-unsure { margin-top: 5px; font-size: 11.5px; color: var(--muted); font-style: italic; }
+  .ex-side { color: var(--muted); font-weight: 500; }
 
-/* Progress bar */
-.week-progress {
-  height: 5px; background: var(--border-soft); border-radius: 99px; overflow: hidden;
-  margin-bottom: 16px;
-}
-.week-progress > div { height: 100%; background: linear-gradient(90deg, var(--primary), #a78bfa); transition: width .25s; }
+  /* Score box: the per-slot result (rep-max load, last minute, meters) */
+  .score-box { margin: 10px 0 4px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--card-2); display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+  .score-box label { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--text); }
+  .score-box input[type=number] { width: 88px; min-height: 40px; border: 1px solid var(--border); border-radius: 8px; padding: 0 8px; font: inherit; font-size: 15px; font-variant-numeric: tabular-nums; background: white; color: var(--text); }
+  .score-box input[type=text] { flex: 1 1 160px; min-height: 40px; border: 1px solid var(--border); border-radius: 8px; padding: 0 8px; font: inherit; font-size: 13px; background: white; color: var(--text); }
+  .score-box input:focus { outline: none; border-color: var(--primary); }
+  .score-box .unit { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .score-hist { width: 100%; font-size: 12px; color: var(--muted); }
+  .score-hist b { color: var(--text-body); font-weight: 700; }
 
-/* Day header */
-.day-header { margin: 0 0 12px; }
-.day-header h2 { font-size: 21px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 2px; }
-.day-header .day-sublabel { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
-.day-header .done-badge {
-  display: inline-flex; align-items: center; gap: 4px;
-  background: var(--success-soft); color: var(--success);
-  border: 1px solid var(--success-line);
-  border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 700;
-  margin-left: 8px; vertical-align: middle;
-}
-.workout-type {
-  display: inline-block; background: var(--primary-soft); color: var(--primary);
-  border: 1px solid var(--primary-line); border-radius: 999px;
-  padding: 2px 9px; font-size: 10.5px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;
-}
+  /* Timer buttons (rest countdown, Death By clock) */
+  .btn-timer { font-variant-numeric: tabular-nums; min-width: 78px; justify-content: center; }
+  .btn-timer.running { background: var(--primary); color: white; border-color: var(--primary); }
+  .btn-timer.paused { background: var(--warning-soft); color: var(--warning); border-color: #edd9a6; }
+  .btn-timer.done { background: var(--success); color: white; border-color: var(--success); animation: timer-flash 0.6s ease-out; }
+  @keyframes timer-flash { 0% { transform: scale(1); } 30% { transform: scale(1.08); } 100% { transform: scale(1); } }
+  .btn-timer-x { color: var(--danger); min-width: 0; }
 
-/* Exercise cards */
-.ex-card {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 14px; margin: 0 0 10px;
-  box-shadow: var(--shadow);
-}
-.ex-card.done-card { opacity: 0.72; }
-.ex-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
-.ex-group-badge {
-  flex: 0 0 auto; height: 22px; padding: 0 8px;
-  border-radius: 999px; border: 1px solid; font-size: 10px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.06em;
-  display: flex; align-items: center;
-}
-.ex-name { flex: 1; font-size: 16px; font-weight: 700; line-height: 1.3; }
-.ex-prescription { font-size: 12.5px; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
+  /* Conditioning clock */
+  .cond-card { background: var(--card); border: 2px solid var(--primary); border-radius: 20px; padding: 14px; margin-bottom: 10px; }
+  .cond-card.finished { border-color: var(--success); }
+  .seg { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
+  .seg button { min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--card-2); font: inherit; font-size: 13px; font-weight: 600; color: var(--text-body); cursor: pointer; }
+  .seg button.on { background: var(--primary); border-color: var(--primary); color: white; }
+  .clock-wrap { text-align: center; padding: 12px 0 4px; }
+  .clock-big { font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 64px; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+  .clock-big.running { color: var(--primary); }
+  .clock-big.zero { color: var(--success); }
+  .clock-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .clock-bar { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; margin: 12px 0; }
+  .clock-bar > i { display: block; height: 100%; background: var(--primary); border-radius: 3px; width: 0; }
+  .clock-ctl { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .clock-ctl .btn-primary { background: var(--primary); color: white; border-color: var(--primary); min-width: 120px; }
+  .cond-instruction { font-size: 13.5px; color: var(--text-body); line-height: 1.55; margin: 6px 0 0; }
+  .cond-hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
 
-/* Set rows */
-.sets { display: flex; flex-direction: column; gap: 6px; }
-.set-row {
-  display: grid; grid-template-columns: 30px 1fr 44px; gap: 8px;
-  align-items: center;
-}
-.set-num {
-  text-align: center; font-size: 11px; font-weight: 700; color: var(--muted);
-  background: var(--card-2); border: 1px solid var(--border-soft); border-radius: 8px;
-  height: 44px; display: flex; align-items: center; justify-content: center;
-}
-.set-weight {
-  width: 100%; height: 44px; padding: 0 10px;
-  background: var(--card-2); border: 1px solid var(--border); border-radius: 10px;
-  color: var(--text); font-size: 16px; font-family: inherit;
-  -webkit-appearance: none; appearance: none;
-}
-.set-weight::placeholder { color: var(--muted); }
-.set-weight:focus { outline: none; border-color: var(--primary); }
-.check-btn {
-  width: 44px; height: 44px; border-radius: 10px;
-  border: 1.5px solid var(--border); background: var(--card-2);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: var(--muted); transition: background .12s, border-color .12s;
-}
-.check-btn svg { width: 18px; height: 18px; stroke-width: 2.5; }
-.check-btn.checked { background: var(--success); border-color: var(--success); color: white; }
-.set-row.done-row .set-weight { opacity: 0.5; }
+  .rest-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .rest-card p { font-size: 14px; line-height: 1.6; color: var(--text-body); margin: 8px 0 0; }
+  .empty-card { background: var(--card); border: 1px dashed var(--border); border-radius: var(--radius); padding: 18px; text-align: center; color: var(--muted); font-size: 13.5px; }
 
-/* Timer button */
-.timer-btn {
-  margin-top: 10px; height: 36px; padding: 0 14px;
-  border-radius: 999px; border: 1px solid var(--border); background: var(--card-2);
-  font-size: 12.5px; font-weight: 600; color: var(--muted); cursor: pointer;
-  font-family: inherit; display: inline-flex; align-items: center; gap: 5px;
-}
-.timer-btn.running { background: var(--primary-soft); border-color: var(--primary-line); color: var(--primary); }
-.timer-btn.done { background: var(--success-soft); border-color: var(--success-line); color: var(--success); }
+  /* In-session day pane: fill the gaps the shared .hs-* contract leaves. */
+  .hs-sess-title.long { font-size: 27px; }
+  .hs-sess-clock .hs-clock-t { font-variant-numeric: tabular-nums; }
+  .hs-sess-clock:not(.running):not(.stopped) .hs-clock-t { color: var(--primary); font-size: 18px; }
+  .hs-sess-clock.stopped .hs-clock-t { color: var(--muted); }
+  .hs-sess-progress { flex-wrap: wrap; row-gap: 6px; }
+  .hs-sess-progress .hs-bar { flex: 1 1 90px; }
+  .hs-sess-progress span { white-space: normal; }
+  .hs-sess-ctl { display: flex; align-items: center; gap: 6px; margin: 0 2px 10px; }
+  .hs-sess-pace { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); }
+  .hs-mini { min-height: 32px; padding: 0 10px; font-size: 12px; }
+  .hs-row-sum .hs-sum-r { max-width: 50%; overflow: hidden; text-overflow: ellipsis; }
+  .hs-row-sum .row-timer { min-height: 34px; padding: 0 10px; }
+  .hs-row-sum .hs-sum-t small .ex-tag { margin-right: 6px; }
+  .hs-row.hs-now .ex-prescription { margin-top: 2px; font-size: 13px; color: var(--muted); }
+  .hs-row.hs-now .ex-log { margin-top: 12px; }
+  .hs-tools .btn { padding: 0 8px; gap: 5px; }
+  .hs-tools .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .hs-tools .btn-timer-x { color: var(--danger); }
+  .hs-tools .hs-done-btn { margin-left: auto; color: var(--primary); font-weight: 800; }
+  .hs-tools .hs-done-btn.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .btn-danger { color: var(--danger); border-color: #f3c8c4; }
 
-/* Notes input on exercise card */
-.ex-notes-input {
-  margin-top: 8px; width: 100%; min-height: 36px; padding: 8px 10px;
-  background: var(--card-2); border: 1px solid var(--border-soft); border-radius: 10px;
-  font-size: 13px; font-family: inherit; color: var(--text);
-  resize: vertical; box-sizing: border-box;
-}
-.ex-notes-input:focus { outline: none; border-color: var(--primary); }
-.ex-notes-input::placeholder { color: var(--muted); }
+  .notes-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px); background: var(--text); color: white; padding: 10px 16px; border-radius: 999px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 50; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* Conditioning day */
-.cond-text {
-  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 14px; margin-bottom: 12px; box-shadow: var(--shadow);
-  white-space: pre-wrap; font-size: 13.5px; color: var(--text-body); line-height: 1.6;
-}
-.cond-notes-wrap { margin-bottom: 12px; }
-.cond-notes-wrap label { font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 6px; }
-.cond-notes {
-  width: 100%; min-height: 80px; padding: 10px 12px;
-  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-  font-size: 14px; font-family: inherit; color: var(--text);
-  resize: vertical; box-sizing: border-box; box-shadow: var(--shadow);
-}
-.cond-notes:focus { outline: none; border-color: var(--primary); }
-.cond-notes::placeholder { color: var(--muted); }
-
-/* Done / mark-done button */
-.mark-done-btn {
-  width: 100%; height: 48px; border-radius: var(--radius);
-  border: 1.5px solid var(--primary); background: var(--primary);
-  color: white; font-size: 15px; font-weight: 700; cursor: pointer;
-  font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px;
-  margin-bottom: 10px;
-}
-.mark-done-btn.undone { background: var(--card); color: var(--primary); }
-.mark-done-btn svg { width: 16px; height: 16px; stroke-width: 2.5; }
-
-/* Rest day */
-.rest-card {
-  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
-  padding: 32px 16px; text-align: center; box-shadow: var(--shadow); margin: 8px 0 16px;
-}
-.rest-card .rest-icon { font-size: 36px; margin-bottom: 8px; }
-.rest-card h3 { font-size: 18px; font-weight: 700; margin: 0 0 4px; }
-.rest-card p { font-size: 13px; color: var(--muted); margin: 0; }
-
-/* Links */
-.links-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.vid-link {
-  display: inline-flex; align-items: center; gap: 5px;
-  background: var(--card-2); border: 1px solid var(--border); border-radius: 999px;
-  padding: 5px 11px; font-size: 12px; font-weight: 600; color: var(--text);
-  text-decoration: none; cursor: pointer;
-}
-.vid-link:active { background: var(--card); }
-.vid-link svg { width: 13px; height: 13px; color: var(--primary); }
-
-/* Bottom rest timer bar */
-.rest-bar {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  border-top: 1px solid var(--border);
-  display: flex; align-items: center; gap: 10px;
-  z-index: 60; transform: translateY(100%); transition: transform .25s;
-}
-.rest-bar.visible { transform: translateY(0); }
-.rest-time { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--primary); min-width: 64px; }
-.rest-desc { flex: 1; font-size: 12px; color: var(--muted); }
-.rest-bar-btn {
-  height: 36px; padding: 0 14px; border-radius: 999px;
-  border: 1px solid var(--border); background: var(--card);
-  font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
-}
-
-/* Modal */
-.modal-backdrop {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.35); z-index: 100;
-  align-items: flex-end;
-}
-.modal-backdrop.visible { display: flex; }
-.modal {
-  background: var(--card); border-radius: 20px 20px 0 0;
-  width: 100%; max-height: 80vh; overflow-y: auto;
-  padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
-  box-shadow: 0 -4px 32px rgba(0,0,0,0.12);
-}
-.modal h3 { font-size: 18px; font-weight: 800; margin: 0 0 14px; }
-.modal-close { float: right; cursor: pointer; color: var(--muted); font-size: 22px; line-height: 1; margin-top: -2px; }
-
-/* Week picker grid */
-.week-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 8px; }
-.wk-chip {
-  aspect-ratio: 1; border-radius: 10px; border: 1px solid var(--border);
-  background: var(--card-2); font-size: 12px; font-weight: 700; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 3px; font-family: inherit; color: var(--text);
-  position: relative; overflow: hidden;
-}
-.wk-chip .wk-fill {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  background: var(--primary-soft); transition: height .2s;
-}
-.wk-chip .wk-num { position: relative; z-index: 1; }
-.wk-chip .wk-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--border); position: relative; z-index: 1; }
-.wk-chip.active { border-color: var(--primary); background: var(--primary-soft); }
-.wk-chip.active .wk-num { color: var(--primary); }
-.wk-chip.all-done { background: var(--success-soft); border-color: var(--success-line); }
-.wk-chip.all-done .wk-dot { background: var(--success); }
-
-/* Cycle separator in week grid */
-.cycle-label {
-  grid-column: 1 / -1;
-  font-size: 10px; font-weight: 700; color: var(--muted);
-  text-transform: uppercase; letter-spacing: 0.08em;
-  padding-top: 8px;
-}
-
-/* Menu list */
-.menu-list { list-style: none; padding: 0; margin: 0; }
-.menu-list li { border-bottom: 1px solid var(--border); }
-.menu-list li:last-child { border-bottom: none; }
-.menu-list button {
-  width: 100%; text-align: left; padding: 14px 2px;
-  background: none; border: none; font-size: 15px; font-family: inherit; cursor: pointer; color: var(--text);
-}
-.menu-list button:active { color: var(--primary); }
-
-/* Toast */
-.toast {
-  position: fixed; bottom: calc(72px + env(safe-area-inset-bottom));
-  left: 50%; transform: translateX(-50%) translateY(16px);
-  background: var(--text); color: white; border-radius: 999px;
-  padding: 8px 18px; font-size: 13.5px; font-weight: 600;
-  opacity: 0; transition: opacity .2s, transform .2s; z-index: 200;
-  white-space: nowrap; pointer-events: none;
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-/* Muscle group badge colors */
-.mg-legs      { color: #16a34a; border-color: #bbf7d0; background: #f0fdf4; }
-.mg-chest     { color: #ea580c; border-color: #fed7aa; background: #fff7ed; }
-.mg-back      { color: #2563eb; border-color: #bfdbfe; background: #eff6ff; }
-.mg-shoulders { color: #d97706; border-color: #fde68a; background: #fffbeb; }
-.mg-biceps    { color: #db2777; border-color: #fbcfe8; background: #fdf2f8; }
-.mg-bicep     { color: #db2777; border-color: #fbcfe8; background: #fdf2f8; }
-.mg-triceps   { color: #0d9488; border-color: #99f6e4; background: #f0fdfa; }
-.mg-tricep    { color: #0d9488; border-color: #99f6e4; background: #f0fdfa; }
-.mg-abs       { color: #6b7280; border-color: #e5e7eb; background: #f9fafb; }
-.mg-core      { color: #6b7280; border-color: #e5e7eb; background: #f9fafb; }
-.mg-glutes    { color: #7c3aed; border-color: #ddd6fe; background: #f5f3ff; }
-.mg-default   { color: #7c3aed; border-color: #ddd6fe; background: #f5f3ff; }
-
-/* In-session day pane. The hs-* classes are styled in ../shared/styles.css
-   ("In-session layout"); these rules fit the page's own cards into them. */
-.hs-sess-title.long { font-size: 27px; }
-.hs-sess-clock .hs-clock-t { font-variant-numeric: tabular-nums; }
-.hs-sess-clock:not(.running):not(.stopped) .hs-clock-t { color: var(--primary); font-size: 18px; }
-.hs-sess-clock.stopped .hs-clock-t { color: var(--muted); }
-.hs-sess-progress { flex-wrap: wrap; row-gap: 6px; }
-.hs-sess-progress .hs-bar { flex: 1 1 90px; }
-.hs-sess-progress span { white-space: normal; }
-.hs-sess-ctl { display: flex; align-items: center; gap: 6px; margin: 0 2px 10px; }
-.hs-sess-pace { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); }
-.hs-mini { min-height: 32px; padding: 0 10px; font-size: 12px; }
-.hs-mini.on { background: var(--warning-soft); color: var(--warning); border-color: #edd9a6; }
-.hs-row-sum .hs-sum-r { max-width: 50%; overflow: hidden; text-overflow: ellipsis; }
-.hs-row .ex-group-badge { display: none; }   /* the section label above the row names the group */
-.hs-row.hs-now .ex-card { background: transparent; border: 0; border-radius: 0; box-shadow: none; padding: 0; margin: 0; opacity: 1; }
-.hs-row.hs-now .ex-head { margin-bottom: 2px; }
-.hs-row.hs-now .cond-text { border: 0; box-shadow: none; padding: 0; margin: 4px 0 12px; background: transparent; }
-.hs-row.hs-now .cond-notes { box-shadow: none; }
-.hs-row.hs-now .cond-notes-wrap { margin-bottom: 0; }
-.hs-tools .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
-.hs-tools .btn, .hs-tools .vid-link { padding: 0 8px; gap: 5px; min-height: 40px; background: transparent; border-color: transparent; color: var(--muted); font-size: 13.5px; }
-.hs-tools .vid-link svg { width: 14px; height: 14px; }
-.hs-tools .timer-btn { margin-top: 0; height: 40px; }
-.hs-tools .timer-btn.running { background: var(--primary); border-color: var(--primary); color: #fff; }
-.hs-tools .timer-btn.done { background: var(--success-soft); border-color: var(--success-line); color: var(--success); }
+  @media (max-width: 420px) {
+    .hero-stats { gap: 6px; }
+    .stat { padding: 6px 4px; }
+    .stat-num { font-size: 15px; }
+    .stat-label { font-size: 8.5px; }
+    .clock-big { font-size: 56px; }
+  }
 </style>
 </head>
 <body data-program="full-body-aesthetics">
@@ -361,39 +155,51 @@ main { padding: 12px 14px 100px; max-width: 720px; margin: 0 auto; }
     </a>
     <div class="appbar-title">
       <div class="eyebrow">Program</div>
-      <div class="name">Full Body Aesthetics</div>
+      <div class="name" id="appbar-name">Full Body Aesthetics</div>
     </div>
   </div>
   <div class="appbar-accent"></div>
 </header>
 
-<div class="fba-topbar">
-  <div class="fba-topbar-inner">
-    <button class="icon-btn" id="btnPickWeek" aria-label="Pick week">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
-    </button>
-    <div class="crumbs">
-      <div class="phase" id="weekLabel">—</div>
-      <div class="focus" id="dayLabel">—</div>
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <span class="coach-badge" id="hero-badge">Chalk · Ryan Fischer</span>
+        <h1 style="margin-top:6px" id="hero-title">Full Body Aesthetics</h1>
+        <div class="hero-sub" id="hero-sub">Loading the current cycle…</div>
+      </div>
+      <button class="reset-link" id="reset-btn" title="Reset all tracking">Reset</button>
     </div>
-    <button class="icon-btn" id="btnMenu" aria-label="Menu">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>
-    </button>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num" id="stat-week">W1</div><div class="stat-label">Week</div></div>
+      <div class="stat"><div class="stat-num" id="stat-days">0</div><div class="stat-label">Lifts Done</div></div>
+      <div class="stat"><div class="stat-num" id="stat-thisweek">0 / 0</div><div class="stat-label">This Week</div></div>
+      <div class="stat"><div class="stat-num" id="stat-overall">0%</div><div class="stat-label">Cycle</div></div>
+    </div>
   </div>
-  <div class="day-nav" id="dayNav"></div>
-</div>
 
-<main id="main"></main>
+  <!-- CYCLE + WEEK PILLS -->
+  <div class="cycle-bar" id="cycle-bar" hidden></div>
+  <div class="week-bar" id="week-bar"></div>
 
-<div class="rest-bar" id="restBar">
-  <div class="rest-time" id="restTime">1:00</div>
-  <div class="rest-desc" id="restDesc">Rest</div>
-  <button class="rest-bar-btn" id="restAdd">+30s</button>
-  <button class="rest-bar-btn" id="restStop">Stop</button>
-</div>
+  <!-- BLOCK RULES FOR THE WEEK -->
+  <div class="rules" id="rules"></div>
 
-<div class="modal-backdrop" id="modalBackdrop">
-  <div class="modal" id="modal"></div>
+  <!-- TABS: day tabs are injected before the Notes tab -->
+  <div class="tabs" id="tabs">
+    <button class="tab" data-pane="notes">Notes</button>
+  </div>
+
+  <!-- PANES: day panes are injected before the Notes pane -->
+  <div id="panes">
+    <div class="pane" id="pane-notes">
+      <div class="card" id="notes-card"></div>
+    </div>
+  </div>
+
 </div>
 
 <div class="toast" id="toast"></div>
@@ -401,984 +207,1226 @@ main { padding: 12px 14px 100px; max-width: 720px; margin: 0 auto; }
 <script src="../shared/setlog.js"></script>
 <script src="../shared/shell.js"></script>
 <script>
-/* ============================================================
-   Full Body Aesthetics Tracker — Ryan Fischer program
-   Static PWA, data from data.json, state in localStorage.
-   Key: fba_v1
-   ============================================================ */
+"use strict";
+const SL = window.SetLog;
+const { normName, fmtWeight, fmtLoad } = SL;
 
-const STORAGE_KEY = 'fba_v1';
-let PROGRAM = null;
-let STATE = null;
+/* ===========================================================================
+   FULL BODY AESTHETICS (Chalk Performance Training, coach Ryan Fischer).
+   Data-driven from ./data.json (schema 2): cycle → week → day. Day types:
+     strength      one SetLog set grid per exercise (reps + lb per set, inferred
+                   hits, the progression coach), slots main / body part / closer
+                   with a per-slot score (rep-max load, Death By minute, free)
+     conditioning  a modality chooser, warm-up, a countdown of work.durationSec
+                   and a distance score in meters
+     rest          the coach's note
+   `lastLoadLb` on an exercise is the load Chalk showed beside it (Ryan's last
+   logged load there). It seeds SetLog's history so the coach can suggest from
+   day one. It is never shown as a prescription.
+   Storage key fba_v2; sync slug full-body-aesthetics (shared/setlog.js).
+   Design brief: KARL_DATA/outputs/personal/workout-trackers/full-body-aesthetics/DESIGN-BRIEF-2026-10-24.md
+   =========================================================================== */
+const PROGRAM = {
+  slug: "full-body-aesthetics",
+  storageKey: "fba_v2",
+  appbarName: "Full Body Aesthetics",
+  shortName: "FBA"
+};
+const STORAGE_KEY = PROGRAM.storageKey;
+const VIDEO_BASE = "https://www.youtube.com/results?search_query=";
+const v = q => VIDEO_BASE + encodeURIComponent(q + " exercise form");
 
-/* ── storage ───────────────────────────────────────────────── */
+const DOW_FULL = { Sun: "Sunday", Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday", Fri: "Friday", Sat: "Saturday" };
+const SLOT = { main: "Main lift", chest: "Chest", back: "Back", legs: "Legs", shoulders: "Shoulders", biceps: "Biceps", triceps: "Triceps", abs: "Abs", closer: "Closer" };
+/* Score types the ingest writes. fromGrid: the day's heaviest logged set is the score unless typed.
+   kind "text" takes a free string (a time like 4:32). prefix shapes the Last line and the done summary. */
+const SCORE = {
+  "repmax-load":    { label: "Rep max today", unit: "lb", kind: "number", fromGrid: true },
+  "load":           { label: "Top load today", unit: "lb", kind: "number", fromGrid: true, prefix: "top " },
+  "deathby-minute": { label: "Minutes completed", unit: "min", kind: "number", prefix: "minute " },
+  "ladder-reps":    { label: "Total reps", unit: "reps", kind: "number", gridOnly: true },
+  "for-time":       { label: "Time", unit: "", kind: "text", placeholder: "m:ss" },
+  "amrap-reps":     { label: "Total reps", unit: "reps", kind: "number", gridOnly: true },
+  "closer-unknown": { label: "Score", unit: "", kind: "number" },
+  "distance":       { label: "Distance", unit: "m", kind: "number" },
+  "calories":       { label: "Calories", unit: "cal", kind: "number" },
+  "time":           { label: "Time", unit: "", kind: "text", placeholder: "m:ss" },
+  "unknown":        { label: "Score", unit: "", kind: "number" }
+};
+const scoreDef = t => SCORE[t] || { label: "Score", unit: "", kind: "number" };
+const isGridScore = ex => !!ex.score && !!scoreDef(ex.score.type).fromGrid;
+/* Every row logs on the SetLog grid. A closer's total reps and load ARE its grid row (1 × max); the score
+   box adds only what the grid cannot hold: the Death By minute, the for-time clock, an unknown format. */
+const hasScoreBox = ex => !!ex.score && !scoreDef(ex.score.type).gridOnly;
+/* "-1" and "max reps" both mean max; everything else is passed to SetLog.parseReps as written ("5-6", "12"). */
+function repsStr(ex) { const r = String(ex.reps == null ? "" : ex.reps).trim(); return r === "-1" || /^max/i.test(r) ? "max" : r; }
+/* The coach's text, without the "Intensity: 9/10" line the ingest already lifted into ex.intensity. */
+function instructionText(ex) {
+  let t = String(ex.instruction || "");
+  if (ex.intensity) t = t.replace(/\n?\s*Intensity:\s*\d+\s*\/\s*10\.?\s*/gi, "\n");
+  return t.replace(/\n{3,}/g, "\n\n").trim();
+}
+function monthLabel(iso) { return new Date(iso + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }); }
+
+/* Loaded / bodyweight / lower-body rules for the spec SetLog reads. */
+const BW_LOADED_RE = /chin.?ups?|pull.?ups?|\bdips?\b/i;                             // bodyweight, added weight tracked
+const BW_RE = /push.?ups?|hanging|leg raises?|knee raises?|plank|hollow|sit.?ups?|v.?ups?|burpee|dead hang|toes? to bar/i;
+const LOWER_RE = /squat|deadlift|hip thrust|leg press|lunge|\brdl\b|romanian|good morning|hack|step.?up|calf raise|leg extension|leg curl|nordic/i;
+
+/* ---------------------------------------------------------------------------
+   DATA + STATE
+   --------------------------------------------------------------------------- */
+let DATA = null;          // data.json
+let CYC = null;           // the cycle on screen
+let ALL = [];             // every day of every cycle, ascending by date, each with .cycle
+let state = loadState();
+let uiCycle = 0;
+let uiWeek = 1;
+
+function emptyState() { return { v: 2, days: {} }; }
+function normState(p) {
+  const s = emptyState();
+  if (p && typeof p === "object" && p.days && typeof p.days === "object") s.days = p.days;
+  return s;
+}
 function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const p = JSON.parse(raw);
-      if (p.sixty === undefined) p.sixty = false;
-      if (!p.clocks) p.clocks = {};
-      return p;
-    }
-  } catch(e) {}
-  return { currentWeek: 'w1', currentDay: 'Monday', logs: {}, sixty: false, clocks: {} };
+  try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) return normState(JSON.parse(raw)); } catch (e) {}
+  return emptyState();
 }
 function saveState() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); } catch(e) {}
-  if (PROGRAM) SetLog.sync.schedule();
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  updateStats();
+  SL.sync.schedule();
   publishSummary();
 }
-
-/* ── helpers ───────────────────────────────────────────────── */
-const $ = (sel, root=document) => root.querySelector(sel);
-const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-function el(tag, attrs={}, ...children) {
-  const e = document.createElement(tag);
-  for (const k in attrs) {
-    if (k === 'class') e.className = attrs[k];
-    else if (k === 'html') e.innerHTML = attrs[k];
-    else if (k.startsWith('on')) e[k] = attrs[k];
-    else e.setAttribute(k, attrs[k]);
+/* One record per calendar day of the program, keyed by the day's date in data.json. */
+function dayState(date, create) {
+  if (!state.days[date] && create) {
+    state.days[date] = { trained: null, clockStart: null, clockStop: null, completed: {}, logs: {}, scores: {}, wu: {}, cond: {} };
   }
-  children.forEach(c => { if (c != null) { if (typeof c === 'string') e.appendChild(document.createTextNode(c)); else e.appendChild(c); } });
-  return e;
+  const ds = state.days[date] || null;
+  if (ds) { ds.completed = ds.completed || {}; ds.logs = ds.logs || {}; ds.scores = ds.scores || {}; ds.wu = ds.wu || {}; ds.cond = ds.cond || {}; }
+  return ds;
+}
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function shortDate(iso) { if (!iso) return "—"; const [, m, d] = iso.split("-"); return `${parseInt(m, 10)}/${parseInt(d, 10)}`; }
+function stampDate(ds) { if (!ds.trained) ds.trained = todayISO(); }
+function escapeHtml(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function fmtClock(s) { s = Math.max(0, Math.round(s)); const m = Math.floor(s / 60), sec = s % 60; return `${m}:${String(sec).padStart(2, "0")}`; }
+function fmtMins(secs) { return `~${Math.round(secs / 60)} min`; }
+function fmtNum(n) { return n == null || n === "" ? "" : Number(n).toLocaleString("en-US"); }
+
+/* ---------------------------------------------------------------------------
+   PROGRAM SHAPE HELPERS
+   --------------------------------------------------------------------------- */
+/* A day's week: the ingest writes it; a rest day before the first lift derives it from the cycle start. */
+function dayWeek(day) {
+  if (day.week) return day.week;
+  const c = day.cycle || CYC;
+  const diff = Math.floor((Date.parse(day.date + "T12:00:00") - Date.parse(c.startDate + "T12:00:00")) / 864e5);
+  return Math.max(1, Math.floor(diff / 7) + 1);
+}
+function weekDays(w, cyc) { return (cyc || CYC).days.filter(d => dayWeek(d) === w); }
+function dayById(id) { return ALL.find(d => d.date === id) || null; }
+function whereOf(day) { return `W${dayWeek(day)} ${day.dow}`; }
+function isRequired(day) { return day.type !== "rest" && !day.optional; }
+function rulesFor(cyc, w) {
+  const st = cyc.structure || {};
+  const rm = Array.isArray(st.mainLiftRepMaxByWeek) ? st.mainLiftRepMaxByWeek[w - 1] : null;
+  const acc = Array.isArray(st.accessoryRepsByWeek) ? st.accessoryRepsByWeek[w - 1] : null;
+  return { rm: rm || null, acc: acc || null, closer: st.closer || null };
 }
 
-function currentWeek() { return PROGRAM.weeks.find(w => w.id === STATE.currentWeek) || PROGRAM.weeks[0]; }
-function currentDay() {
-  const w = currentWeek();
-  const d = w.days.find(d => d.day === STATE.currentDay);
-  return d || w.days.find(d => !d.rest) || w.days[0];
+/* The spec SetLog reads for a strength row. */
+function specOf(ex) {
+  const p = SL.parseReps(repsStr(ex));
+  const hasFields = Array.isArray(ex.fields) && ex.fields.length > 0;
+  const bwMove = BW_LOADED_RE.test(ex.name) || BW_RE.test(ex.name);
+  const addWeight = /add (some )?weight|weighted|add load/i.test(ex.instruction || "");
+  let loaded = hasFields ? ex.fields.includes("weight") : !BW_RE.test(ex.name);
+  if (!loaded && bwMove && addWeight) loaded = true;          // "over 10 reps add weight": give the row an added-lb column
+  const bw = !loaded || (loaded && bwMove);                      // the weight, if any, is ADDED to bodyweight
+  const sets = ex.sets || 3;
+  const rest = ex.restSec != null && ex.restSec > 0 ? ex.restSec : null;   // 0 or null = no rest bar
+  return { name: ex.name, sets, minSets: sets, repTop: p.repTop, repRange: p.repRange, isMax: p.isMax, unit: p.unit,
+           loaded, bw: loaded && bw, lower: ex.slot === "legs" || LOWER_RE.test(ex.name), rest };
 }
-function logKey(weekId, dayName) { return `${weekId}_${dayName}`; }
-function getLog(weekId, dayName) { return STATE.logs[logKey(weekId, dayName)] || {}; }
-function setLog(weekId, dayName, data) {
-  STATE.logs[logKey(weekId, dayName)] = data;
-  saveState();
+/* Closers log a score, not a set grid: a Death By is a last minute, an unknown closer a free number. */
+function rxText(ex, spec) {
+  const reps = spec.isMax ? "max" : repsStr(ex);
+  const side = ex.perSide ? ` <span class="ex-side">(per side)</span>` : "";
+  const restTxt = spec.rest ? ` · rest ${fmtClock(spec.rest)}` : "";
+  const inten = ex.intensity ? ` · intensity ${escapeHtml(ex.intensity)}` : "";
+  return `${spec.sets} × ${reps}${side}${restTxt}${inten}`;
+}
+function shortRx(ex, spec) { return `${spec.sets} × ${spec.isMax ? "max" : repsStr(ex)}${ex.perSide ? " (per side)" : ""}`; }
+
+/* Planning model for the session clock and the catalog: seconds per row. */
+function rowSecs(ex, spec) {
+  if (ex.closer) return 8 * 60;
+  const per = spec.unit === "s" ? (spec.repTop || 30) : (spec.repTop || 12) * 3;
+  const ramp = ex.slot === "main" ? 150 : 0;
+  return ramp + spec.sets * per + (spec.sets - 1) * (spec.rest || 60) + 45;
+}
+function daySecs(day) {
+  if (day.type === "strength") return 6 * 60 + day.exercises.reduce((a, ex) => a + rowSecs(ex, specOf(ex)), 0);
+  if (day.type === "conditioning") return day.work && day.work.durationSec ? 6 * 60 + day.work.durationSec : null;
+  return null;
+}
+function dayMinutes(day) { const s = daySecs(day); return s == null ? null : Math.round(s / 60); }
+
+/* ---------------------------------------------------------------------------
+   COMPLETION
+   --------------------------------------------------------------------------- */
+function isDayComplete(day) {
+  const ds = dayState(day.date, false);
+  if (!ds || day.type === "rest") return false;
+  if (day.type === "conditioning") return !!ds.completed.cond;
+  return day.exercises.length > 0 && day.exercises.every((_, i) => ds.completed["m" + i]);
+}
+function isWeekComplete(w, cyc) {
+  const req = weekDays(w, cyc).filter(isRequired);
+  return req.length > 0 && req.every(isDayComplete);
+}
+function dayHasActivity(day) {
+  const ds = dayState(day.date, false);
+  if (!ds) return false;
+  if (ds.clockStart || ds.trained) return true;
+  if (Object.keys(ds.completed).some(k => ds.completed[k])) return true;
+  if (Object.keys(ds.scores).some(i => ds.scores[i] && (ds.scores[i].val != null && ds.scores[i].val !== ""))) return true;
+  if (ds.cond && (ds.cond.score != null && ds.cond.score !== "")) return true;
+  return Object.keys(ds.logs).some(i => SL.hasData(SL.normLog(ds.logs[i], 0)));
+}
+/* Next = the first required day not yet complete, in program order (phased programs move by completion). */
+function currentCycleIndex() {
+  const td = todayISO();
+  let idx = DATA.cycles.findIndex(c => c.days.some(d => d.date === td));
+  if (idx < 0) for (let i = DATA.cycles.length - 1; i >= 0; i--) if (DATA.cycles[i].startDate <= td) { idx = i; break; }
+  return idx < 0 ? 0 : idx;
+}
+/* Next = the first required day from today on, in the current cycle, not yet complete; then the following
+   cycle's first open day. Earlier cycles were logged in Chalk, not here, so they never count as "next". */
+function nextDay() {
+  const td = todayISO();
+  const ci = currentCycleIndex();
+  for (let i = ci; i < DATA.cycles.length; i++) {
+    const d = DATA.cycles[i].days.find(x => isRequired(x) && !isDayComplete(x) && (i > ci || x.date >= td));
+    if (d) return d;
+  }
+  return null;
+}
+/* The week the hero and the summary call "this week": today's week in the current cycle, else the next day's. */
+function currentWeekRef() {
+  const td = todayISO();
+  const cyc = DATA.cycles[currentCycleIndex()];
+  const today = cyc.days.find(d => d.date === td);
+  if (today) return { cyc, w: dayWeek(today) };
+  const nx = nextDay();
+  if (nx) return { cyc: nx.cycle, w: dayWeek(nx) };
+  return { cyc, w: cyc.weeks };
+}
+function dueDayInWeek(w) {
+  const days = weekDays(w);
+  const nx = nextDay();
+  if (nx && days.includes(nx)) return nx;
+  return days.find(d => isRequired(d) && !isDayComplete(d)) || days.find(d => d.type !== "rest" && !isDayComplete(d)) || days[0] || null;
 }
 
-function dayDone(weekId, day) {
-  if (day.rest) return false;
-  const log = getLog(weekId, day.day);
-  return !!log.done;
-}
-
-function weekProgress(week) {
-  const trainingDays = week.days.filter(d => !d.rest);
-  if (!trainingDays.length) return 0;
-  const done = trainingDays.filter(d => dayDone(week.id, d)).length;
-  return done / trainingDays.length;
-}
-
-function totalDone() {
-  return PROGRAM.weeks.reduce((acc, w) => {
-    return acc + w.days.filter(d => !d.rest && dayDone(w.id, d)).length;
-  }, 0);
-}
-function totalTraining() {
-  return PROGRAM.weeks.reduce((acc, w) => acc + w.days.filter(d => !d.rest).length, 0);
-}
-
-/* ── group badge CSS class ─────────────────────────────────── */
-function groupClass(group) {
-  const key = (group || '').toLowerCase().replace(/\s+/g, '');
-  const known = ['legs','chest','back','shoulders','biceps','bicep','triceps','tricep','abs','core','glutes'];
-  return known.includes(key) ? `mg-${key}` : 'mg-default';
-}
-
-/* ── render ────────────────────────────────────────────────── */
-function render() {
-  renderTopbar();
-  renderHero();
-  renderDayContent();
-}
-
-function renderTopbar() {
-  const w = currentWeek();
-  const d = currentDay();
-  $('#weekLabel').textContent = w.label;
-  const typeText = d.rest ? 'Rest Day' : (d.type || 'Metcon');
-  $('#dayLabel').textContent = `${d.day} · ${typeText}`;
-  renderDayNav();
-}
-
-function renderDayNav() {
-  const w = currentWeek();
-  const nav = $('#dayNav');
-  nav.innerHTML = '';
-  w.days.forEach(d => {
-    const done = dayDone(w.id, d);
-    const isActive = d.day === STATE.currentDay;
-    const chip = el('button', {
-      class: `day-chip${isActive ? ' active' : ''}${done ? ' done' : ''}${d.rest ? ' rest' : ''}`,
-      onclick: () => {
-        if (d.rest) return;
-        STATE.currentDay = d.day;
-        saveState();
-        render();
-        $('#main').scrollTo ? $('#main').scrollTo(0,0) : (window.scrollY = 0);
-        window.scrollTo(0,0);
-      }
-    },
-      el('span', {class:'dot'}),
-      d.day.slice(0,3)
-    );
-    nav.appendChild(chip);
+/* ---------------------------------------------------------------------------
+   HISTORY + PROGRESSION COACH
+   Exercises recur by name across days and cycles. Real logs come first,
+   newest first; the Chalk-shown load (lastLoadLb) is the oldest entry, so it
+   only speaks when nothing has been logged here yet.
+   --------------------------------------------------------------------------- */
+function priorEntries(name, beforeDate, ex) {
+  const key = normName(name);
+  const out = [];
+  ALL.forEach(day => {
+    if (day.type !== "strength" || day.date >= beforeDate) return;
+    const ds = dayState(day.date, false);
+    if (!ds) return;
+    day.exercises.forEach((x, i) => {
+      if (normName(x.name) !== key) return;
+      const spec = specOf(x);
+      const log = SL.normLog(ds.logs[i], spec.sets);
+      if (!SL.hasSets(log)) return;
+      out.push(SL.entry(log, spec, { date: ds.trained || day.date, where: whereOf(day), day }));
+    });
   });
+  out.reverse();
+  if (ex && ex.lastLoadLb != null) {
+    const spec = specOf(ex);
+    out.push({ sets: [{ r: null, w: ex.lastLoadLb }], weight: ex.lastLoadLb, hit: null, unit: spec.unit, target: null, seed: true, where: "from Chalk" });
+  }
+  return out;
 }
-
-function renderHero() {
-  const w = currentWeek();
-  const prog = weekProgress(w);
-  const trainingThisWeek = w.days.filter(d => !d.rest).length;
-  const doneThisWeek = w.days.filter(d => !d.rest && dayDone(w.id, d)).length;
-  const allDone = totalDone();
-  const allTraining = totalTraining();
-  const pct = allTraining ? Math.round(allDone / allTraining * 100) : 0;
-
-  const main = $('#main');
-  main.innerHTML = '';
-
-  const hero = el('div', {class:'hero'},
-    el('div', {class:'stat'}, el('div', {class:'stat-num'}, String(w.week)), el('div', {class:'stat-label'}, 'Week')),
-    el('div', {class:'stat'}, el('div', {class:'stat-num'}, `${doneThisWeek}/${trainingThisWeek}`), el('div', {class:'stat-label'}, 'This Wk')),
-    el('div', {class:'stat'}, el('div', {class:'stat-num'}, String(allDone)), el('div', {class:'stat-label'}, 'Days Done')),
-    el('div', {class:'stat'}, el('div', {class:'stat-num'}, `${pct}%`), el('div', {class:'stat-label'}, 'Overall'))
-  );
-  main.appendChild(hero);
-
-  const progressBar = el('div', {class:'week-progress'}, el('div', {style:`width:${Math.round(prog*100)}%`}));
-  main.appendChild(progressBar);
+function suggestNext(ex, day, spec) {
+  return SL.suggest(priorEntries(ex.name, day.date, ex), spec || specOf(ex));
 }
-
-/* ── time budget + 60-min mode + session clock (backported 2026-08-30) ──
-   FBA rests are a fixed 60s; 60-min mode runs them at 45s. The plan parses
-   rep targets out of each prescription string. `full` (the catalog) plans
-   with 60-min mode off without reading or touching STATE. */
-const SETUP_ALLOW = 300;
-function effRestSecs(full) { return !full && STATE.sixty ? 45 : REST_SECONDS; }
-function restBtnLabel() { return `⏱ ${effRestSecs()}s`; }
-function exWorkSecs(ex) {
-  const p = String(ex.prescription || '');
-  const m = p.match(/x\s*(\d+)(?:\s*-\s*(\d+))?/i);
-  let work = m ? Math.min(90, Math.max(25, parseInt(m[2] || m[1], 10) * 4)) : 40;
-  if (/ea\.|each/i.test(p)) work = Math.round(work * 1.8);
-  return work;
-}
-function dayPlanFBA(d, full) {
-  if (d.rest) return { total: 0, offsets: [], cond: true };
-  if (d.conditioning || !d.exercises || d.exercises.length < 2) return { total: 1500, offsets: [], cond: true };
-  let t = SETUP_ALLOW;
-  const offsets = [];
-  d.exercises.forEach(ex => {
-    offsets.push(t);
-    t += (ex.sets || 3) * (exWorkSecs(ex) + effRestSecs(full));
+/* Prior scores for a slot (rep-max loads, Death By minutes), newest first. */
+function priorScores(name, beforeDate) {
+  const key = normName(name);
+  const out = [];
+  ALL.forEach(day => {
+    if (day.type !== "strength" || day.date >= beforeDate) return;
+    const ds = dayState(day.date, false);
+    if (!ds) return;
+    day.exercises.forEach((x, i) => {
+      if (normName(x.name) !== key || !x.score) return;
+      const sc = scoreOf(ds, i, x);
+      if (sc.val == null || sc.val === "") return;
+      out.push({ date: ds.trained || day.date, where: whereOf(day), type: x.score.type, val: sc.val, note: sc.note || "", rm: repsStr(x) });
+    });
   });
-  return { total: t, offsets, cond: false };
+  return out.reverse();
 }
-let currentPlanFBA = null;
+/* Every rep-max score logged for a main lift so far: "10RM 185 · 8RM 205". */
+function repMaxLine(name, beforeDate) {
+  const xs = priorScores(name, beforeDate).filter(s => scoreDef(s.type).fromGrid).reverse();
+  if (!xs.length) return "";
+  return xs.map(s => `${s.type === "repmax-load" ? s.rm + "RM" : "top"} <b>${fmtWeight(s.val)} lb</b> <span style="opacity:.7">(${s.where})</span>`).join(" · ");
+}
+function priorCond(title, beforeDate) {
+  const key = normName(title);
+  const out = [];
+  ALL.forEach(day => {
+    if (day.type !== "conditioning" || day.date >= beforeDate || normName(day.title) !== key) return;
+    const ds = dayState(day.date, false);
+    if (!ds || ds.cond.score == null || ds.cond.score === "") return;
+    out.push({ date: ds.trained || day.date, where: whereOf(day), val: ds.cond.score, modality: ds.cond.modality || "", note: ds.cond.note || "" });
+  });
+  return out.reverse();
+}
+/* The score of a row: typed, else (rep-max) the heaviest weight in the grid. */
+function scoreOf(ds, idx, ex) {
+  const raw = (ds && ds.scores && ds.scores[idx]) || {};
+  const typed = raw.val != null && raw.val !== "";
+  const out = { val: typed ? raw.val : null, note: raw.note || "", typed, reps: null };
+  if (out.val == null && isGridScore(ex) && ds) {
+    const spec = specOf(ex);
+    const log = SL.normLog(ds.logs[idx], 0);
+    // The rep max of the day: the heaviest set that reached the target reps (any set when no target).
+    const ok = log.sets.filter(x => x.w != null && (spec.repTop == null || (x.r != null && x.r >= spec.repTop)));
+    if (ok.length) { const best = ok.reduce((a, b) => (b.w > a.w ? b : a)); out.val = best.w; out.reps = best.r; }
+  }
+  return out;
+}
+function scoreText(ex, sc) {
+  if (!ex.score || sc.val == null || sc.val === "") return "";
+  const d = scoreDef(ex.score.type);
+  if (d.fromGrid) return ex.score.type === "repmax-load" ? `${repsStr(ex)}RM ${fmtWeight(sc.val)} lb` : `top ${fmtWeight(sc.val)} lb`;
+  const unit = d.unit && d.unit !== "lb" ? ` ${d.unit}` : "";
+  return `${d.prefix || ""}${escapeHtml(sc.val)}${unit}`;
+}
+/* Week-over-week on a countdown cycle: this week's target beside last time's top set at its own target. */
+function weekOverHtml(L, spec, day) {
+  if (!L || spec.repTop == null) return "";
+  if (L.seed) return `<div class="ex-last">This week: <strong>${spec.sets} × ${spec.repTop}</strong> · Chalk showed ${fmtLoad(L.weight, spec.bw)} the last time you logged it there</div>`;
+  if (L.target == null || L.target === spec.repTop) return "";
+  const top = L.weight != null ? ` @ ${fmtLoad(L.weight, spec.bw)}` : "";
+  return `<div class="ex-last">This week: <strong>${spec.sets} × ${spec.repTop}</strong> · last time <strong>${L.target} reps${top}</strong> (${L.where})</div>`;
+}
 
-const sessionClockIvs = {};
-function wireDayClock(clockKey, d, plan, btn, stat) {
-  const txt = btn.querySelector('.hs-clock-t') || btn;   // the session header's clock keeps its icon
-  function paint() {
-    const c = STATE.clocks[clockKey];
-    const planTxt = `plan ~${Math.round(plan.total / 60)} min`;
-    if (!c || !c.start) {
-      txt.textContent = 'Start';
-      btn.classList.remove('running', 'stopped');
-      btn.setAttribute('aria-label', 'Start the session clock');
-      stat.textContent = '';   // the header already shows the plan
-      return;
-    }
-    const elapsed = Math.round(((c.stop || Date.now()) - c.start) / 1000);
-    txt.textContent = fmtTime(elapsed);
-    btn.classList.toggle('running', !c.stop);
-    btn.classList.toggle('stopped', !!c.stop);
-    btn.setAttribute('aria-label', c.stop ? `Session clock stopped at ${fmtTime(elapsed)}, tap to reset` : `Session clock ${fmtTime(elapsed)}, tap to stop`);
-    let msg = planTxt;
-    if (!plan.cond && d.exercises) {
-      const log = getLog(STATE.currentWeek, d.day);
-      let nextIdx = d.exercises.findIndex((ex, ei) => {
-        const exLog = (log.exercises || {})[ei] || {};
-        for (let i = 0; i < ex.sets; i++) if (!exLog[`s${i}`]) return true;
-        return false;
+/* ---------------------------------------------------------------------------
+   SYNC. Transport and the device token live in ../shared/setlog.js. The flat
+   `entries` list is what Karl reads: one row per logged exercise or score.
+   --------------------------------------------------------------------------- */
+function syncEntries() {
+  const out = [];
+  ALL.forEach(day => {
+    const ds = dayState(day.date, false);
+    if (!ds) return;
+    const base = { date: ds.trained || day.date, planned: day.date, where: whereOf(day), week: dayWeek(day), day: day.dow, cycle: day.cycle.id };
+    if (day.type === "strength") {
+      day.exercises.forEach((ex, i) => {
+        const spec = specOf(ex);
+        const log = SL.normLog(ds.logs[i], spec.sets);
+        const sc = scoreOf(ds, i, ex);
+        if (!SL.hasData(log) && sc.val == null && !sc.note) return;
+        const row = Object.assign({}, base, { exercise: ex.name, slot: ex.slot, rx: shortRx(ex, spec), unit: spec.unit, target: spec.repTop,
+          loaded: spec.loaded, bw: spec.bw, sets: SL.hasSets(log) ? log.sets : [], hit: SL.hit(log, spec), notes: log.notes || "" });
+        if (ex.score) row.score = { type: ex.score.type, val: sc.val, note: sc.note || "", unit: scoreDef(ex.score.type).unit };
+        out.push(row);
       });
-      if (nextIdx > 0) {
-        const planned = plan.offsets[nextIdx] != null ? plan.offsets[nextIdx] : plan.total;
-        const delta = Math.round((planned - elapsed) / 60);
-        msg = (delta >= 1 ? `${delta} min ahead` : delta <= -1 ? `${-delta} min behind` : 'on pace') + ` · ${planTxt}`;
-      } else if (nextIdx === -1) {
-        msg = `done in ${fmtTime(elapsed)}`;
-      }
+    } else if (day.type === "conditioning") {
+      const c = ds.cond || {};
+      if ((c.score == null || c.score === "") && !c.note && !ds.completed.cond) return;
+      const dur = day.work && day.work.durationSec;
+      const sdef = scoreDef((day.score || {}).type);
+      out.push(Object.assign({}, base, { exercise: day.title, slot: "conditioning", modality: c.modality || "", rx: dur ? `${fmtClock(dur)} nonstop` : "see text",
+        unit: (day.score && day.score.unit) || sdef.unit, target: null, sets: [], hit: null, notes: c.note || "",
+        score: { type: (day.score || {}).type || "unknown", val: c.score != null && c.score !== "" ? c.score : null, note: c.note || "", unit: (day.score && day.score.unit) || sdef.unit }, durationSec: dur || null }));
     }
-    stat.textContent = msg;
-  }
-  function syncInterval() {
-    if (sessionClockIvs[clockKey]) { clearInterval(sessionClockIvs[clockKey]); delete sessionClockIvs[clockKey]; }
-    const c = STATE.clocks[clockKey];
-    if (c && c.start && !c.stop) sessionClockIvs[clockKey] = setInterval(paint, 1000);
-  }
-  btn.onclick = () => {
-    const c = STATE.clocks[clockKey];
-    if (!c || !c.start) { STATE.clocks[clockKey] = { start: Date.now(), stop: null }; }
-    else if (!c.stop) { c.stop = Date.now(); }
-    else { delete STATE.clocks[clockKey]; }
-    saveState(); syncInterval(); paint();
-  };
-  syncInterval();
-  paint();
+  });
+  return out;
 }
 
-/* ── in-session layout (../shared/styles.css, "In-session layout") ──
-   A training day is a column of rows: done rows fold to one line, one Now row
-   shows the full card, the rest are "Up next" one-liners, each under its
-   muscle-group label. A written (prose) day is one row. Done is the page's own
-   rule: every set of an exercise checked; on a written day, the day marked
-   done. Now is the tapped row, else the first row not done; it lives in
-   memory only, never in STATE. Rest days keep their plain card. */
-const HS_ICON = {
-  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8"/></svg>',
-  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M9.5 2.5h5"/></svg>'
+/* ---------------------------------------------------------------------------
+   SHELL: hero, cycle + week pills, rules, tabs
+   --------------------------------------------------------------------------- */
+function buildShell() {
+  document.getElementById("appbar-name").textContent = PROGRAM.appbarName;
+  document.getElementById("hero-badge").textContent = `${DATA.app || "Chalk"} · ${DATA.coach || ""}`.replace(/ · $/, "");
+  document.getElementById("hero-title").textContent = DATA.name || PROGRAM.appbarName;
+  renderCycleBar();
+  buildNotes();
+  wireTabs();
+}
+function wireTabs() {
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".pane").forEach(p => p.classList.remove("active"));
+      tab.classList.add("active");
+      const pane = document.getElementById("pane-" + tab.dataset.pane);
+      if (pane) pane.classList.add("active");
+    };
+  });
+}
+function renderCycleBar() {
+  document.getElementById("hero-sub").textContent = `${CYC.label} · starts ${shortDate(CYC.startDate)} · lift ${(CYC.schedule.lift || []).join(" ")}${CYC.schedule.optionalConditioning && CYC.schedule.optionalConditioning.length ? ` · optional conditioning ${CYC.schedule.optionalConditioning.join(" ")}` : ""}`;
+  const bar = document.getElementById("cycle-bar");
+  if (DATA.cycles.length < 2) { bar.hidden = true; return; }
+  bar.hidden = false;
+  // Newest first; the pill carries the start month, the title the full label.
+  const order = DATA.cycles.map((c, i) => i).reverse();
+  bar.innerHTML = order.map(i => { const c = DATA.cycles[i]; return `<button class="week-pill${i === uiCycle ? " active" : ""}" data-c="${i}" title="${escapeHtml(c.label)}">${monthLabel(c.startDate)}<small>${c.startDate.slice(0, 4)} · ${c.days.length} day${c.days.length === 1 ? "" : "s"}</small></button>`; }).join("");
+  bar.querySelectorAll(".week-pill").forEach(b => b.onclick = () => {
+    uiCycle = +b.dataset.c; CYC = DATA.cycles[uiCycle];
+    const nx = nextDay();
+    let w = nx && nx.cycle === CYC ? dayWeek(nx) : 1;
+    while (w < CYC.weeks && !weekDays(w, CYC).some(d => d.type !== "rest")) w++;   // a tail-only cycle opens on its first ingested training week
+    uiWeek = w;
+    buildNotes(); render(); openTab(dueDayInWeek(uiWeek));
+  });
+}
+function renderWeekBar() {
+  const bar = document.getElementById("week-bar");
+  bar.innerHTML = "";
+  for (let w = 1; w <= CYC.weeks; w++) {
+    const b = document.createElement("button");
+    const has = weekDays(w).length > 0;
+    b.className = "week-pill" + (w === uiWeek ? " active" : "") + (isWeekComplete(w) ? " done" : "") + (has ? "" : " empty");
+    b.textContent = "W" + w;
+    b.title = has ? `Week ${w}` : `Week ${w}: not ingested yet`;
+    b.onclick = () => { uiWeek = w; render(); openTab(dueDayInWeek(uiWeek)); };
+    bar.appendChild(b);
+  }
+  const r = rulesFor(CYC, uiWeek);
+  const rules = document.getElementById("rules");
+  rules.innerHTML = `
+    <div class="rules-row">
+      <span><span class="rules-k">Week ${uiWeek} of ${CYC.weeks}</span>${r.rm ? `Main lift: build to a <b>${r.rm}-rep max</b>` : `<b>${escapeHtml(CYC.label)}</b>`}</span>
+      ${r.acc ? `<span>Accessories: <b>3 × ${r.acc}</b></span>` : ""}
+      ${r.closer ? `<span>Closer: <b>${escapeHtml(r.closer)}</b></span>` : ""}
+    </div>`;
+  if (CYC.intro) rules.appendChild(collapsible("About this block", CYC.intro, `intro_${CYC.id}`));
+}
+/* Day tabs and panes for the week on screen. The Notes tab stays. */
+function buildWeek() {
+  const tabsEl = document.getElementById("tabs");
+  const panesEl = document.getElementById("panes");
+  tabsEl.querySelectorAll(".tab[data-day]").forEach(t => t.remove());
+  panesEl.querySelectorAll(".pane[data-day]").forEach(p => p.remove());
+  const days = weekDays(uiWeek);
+  const notesTab = tabsEl.querySelector('.tab[data-pane="notes"]');
+  const notesPane = document.getElementById("pane-notes");
+  if (!days.length) {
+    const pane = document.createElement("div");
+    pane.className = "pane"; pane.id = "pane-empty"; pane.dataset.day = "empty";
+    pane.innerHTML = `<div class="empty-card">Week ${uiWeek} of this cycle is not in the tracker yet. Karl ingests it from the Chalk portal as it is published.</div>`;
+    panesEl.insertBefore(pane, notesPane);
+    const tab = document.createElement("button");
+    tab.className = "tab"; tab.dataset.pane = "empty"; tab.dataset.day = "empty"; tab.textContent = `Week ${uiWeek}`;
+    tabsEl.insertBefore(tab, notesTab);
+  }
+  days.forEach(day => {
+    const tab = document.createElement("button");
+    tab.className = "tab"; tab.dataset.pane = day.date; tab.dataset.day = day.date;
+    tab.innerHTML = `${day.dow}<span class="due-dot" hidden></span>`;
+    tabsEl.insertBefore(tab, notesTab);
+    const pane = document.createElement("div");
+    pane.className = "pane"; pane.id = "pane-" + day.date; pane.dataset.day = day.date;
+    pane.innerHTML = `<div id="container-${day.date}"></div>`;
+    panesEl.insertBefore(pane, notesPane);
+    renderDay(day);
+  });
+  wireTabs();
+}
+function openTab(day) {
+  const id = day ? day.date : "empty";
+  const tab = document.querySelector(`.tab[data-pane="${id}"]`) || document.querySelector(".tab[data-day]");
+  if (tab) tab.click();
+}
+
+/* ---------------------------------------------------------------------------
+   DAY RENDERING
+   --------------------------------------------------------------------------- */
+const tappedNow = {};   // date → row idx the user tapped
+const prepOpen = {};    // `${date}_wu` → open, once the user toggles the warm-up
+const ICON = {
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8"/></svg>`,
+  clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M9.5 2.5h5"/></svg>`,
+  video: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="6" width="12" height="12" rx="2.5"/><path d="M15.5 10.5l5-3v9l-5-3z"/></svg>`,
+  note: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h9l4 4v13H6z"/><path d="M9 12h7"/><path d="M9 16h5"/></svg>`
 };
-const hsTapped = {};    // logKey → { u, wasDone }: the tapped row, in memory only
-let hsLastNow = null;   // { key, u } from the previous render, to bring a Now that moved into view
 
-function fbaExDone(log, ex, idx) {
-  const exLog = (log.exercises || {})[idx] || {};
-  return ex.sets > 0 && Array.from({length: ex.sets}, (_, i) => !!exLog[`s${i}`]).every(Boolean);
+function renderDay(day) {
+  const container = document.getElementById("container-" + day.date);
+  if (!container) return;
+  container.innerHTML = "";
+  if (day.type === "rest") return renderRest(day, container);
+  if (day.type === "conditioning") return renderConditioning(day, container);
+  renderStrength(day, container);
 }
-/* The session title. Nearly every day's type is the generic "Metcon (No
-   Measure)", so the title comes from the day's label ("DAY 8 (CYCLE 2) -
-   FULL BODY") or its muscle groups: four or more read as "Full Body". */
-const FBA_GROUP_LINE = /^(legs|chest|back|shoulders|biceps?|triceps?|abs|core|calves|glutes)\s*:/i;
-function fbaGroupName(g) {
-  const s = String(g || '').trim().toLowerCase();
-  const n = s === 'bicep' ? 'biceps' : s === 'tricep' ? 'triceps' : s;
-  return n.charAt(0).toUpperCase() + n.slice(1);
+
+function sessHead(day, title, done, total, extra) {
+  const ds = dayState(day.date, false);
+  const w = dayWeek(day);
+  const complete = total > 0 && done === total;
+  const trained = ds && ds.trained && ds.trained !== day.date ? ` · trained ${shortDate(ds.trained)}` : "";
+  const planned = daySecs(day);
+  const progress = complete ? `Day complete · ${done} of ${total}${trained}` : `${done} of ${total} done${planned != null ? ` · planned ${fmtMins(planned)}` : ""}${trained}`;
+  const head = document.createElement("div");
+  head.className = "hs-sess-head";
+  head.innerHTML = `
+    <div class="hs-sess-eyebrow">${PROGRAM.shortName} · Week ${w} · ${DOW_FULL[day.dow] || day.dow} · ${shortDate(day.date)}${day.optional ? " · Optional" : ""}${extra || ""}</div>
+    <div class="hs-sess-top">
+      <h2 class="hs-sess-title${title.length > 16 ? " long" : ""}">${escapeHtml(title)}</h2>
+      <button type="button" class="hs-sess-clock" id="clock-${day.date}">${ICON.clock}<span class="hs-clock-t">Start</span></button>
+    </div>
+    <div class="hs-sess-progress"><div class="hs-bar"><i style="width:${total ? Math.round(100 * done / total) : 0}%"></i></div><span>${progress}</span></div>`;
+  return head;
 }
-function fbaTitle(d) {
-  if (d.type && !/^metcon\b/i.test(d.type)) return d.type;
-  const m = /-\s*([A-Za-z][A-Za-z ]*[A-Za-z])\s*$/.exec(d.dayLabel || '');
-  if (m) return m[1].toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase());
-  let groups = (d.exercises || []).map(ex => ex.group);
-  if (!groups.length) groups = String(d.notes || '').split('\n').map(l => (FBA_GROUP_LINE.exec(l.trim()) || [])[1]);
-  groups = [...new Set(groups.filter(Boolean).map(fbaGroupName))];
-  if (groups.length >= 4) return 'Full Body';
-  if (groups.length) return groups.join(' + ');
-  return d.type || 'Workout';
+function sessCtl(day) {
+  const ctl = document.createElement("div");
+  ctl.className = "hs-sess-ctl";
+  ctl.innerHTML = `
+    <span class="hs-sess-pace" id="clockstat-${day.date}"></span>
+    <button type="button" class="btn hs-mini btn-danger" data-action="clear">Clear day</button>`;
+  ctl.querySelector("[data-action=clear]").onclick = () => {
+    if (!dayState(day.date, false)) return;
+    if (confirm(`Clear ${DOW_FULL[day.dow]} ${shortDate(day.date)}? Checks, sets and scores for this day will be gone.`)) {
+      delete state.days[day.date];
+      delete tappedNow[day.date];
+      saveState(); render();
+    }
+  };
+  return ctl;
 }
-/* One-line scheme for an Up next row: the prescription's parenthetical ("3x10 on ea. leg"). */
-function fbaShortRx(ex) {
-  const p = String(ex.prescription || '').trim(), n = String(ex.name || '').trim();
-  const rest = p.startsWith(n) ? p.slice(n.length).trim().replace(/^\((.*?)\)/, '$1').trim() : '';
-  return rest ? fbaCut(rest, 64) : `${ex.sets} sets`;
+
+function renderRest(day, container) {
+  const w = dayWeek(day);
+  container.innerHTML = `
+    <div class="hs-sess-head">
+      <div class="hs-sess-eyebrow">${PROGRAM.shortName} · Week ${w} · ${DOW_FULL[day.dow] || day.dow} · ${shortDate(day.date)}</div>
+      <div class="hs-sess-top"><h2 class="hs-sess-title">Rest</h2></div>
+    </div>
+    <div class="rest-card"><div class="eyebrow">Coach's note</div><p>${escapeHtml(day.note || "Rest day.")}</p></div>`;
 }
-/* What was logged: "3 sets @ 25 lb", else "3 sets · 20, 25, 25 lb". */
-function fbaLogged(log, ex, idx) {
-  const exLog = (log.exercises || {})[idx] || {};
-  const ws = Array.from({length: ex.sets}, (_, i) => parseFloat(exLog[`w${i}`])).filter(x => !isNaN(x));
-  const n = `${ex.sets} set${ex.sets === 1 ? '' : 's'}`;
-  if (!ws.length) return n;
-  return ws.every(x => x === ws[0]) ? `${n} @ ${ws[0]} lb` : `${n} · ${ws.join(', ')} lb`;
-}
-function hsReveal() {
-  const n = document.querySelector('#main .hs-now');
-  if (!n || !n.offsetParent) return;
-  const bar = document.querySelector('.fba-topbar');
-  const top = n.getBoundingClientRect().top - (bar ? bar.getBoundingClientRect().bottom : 0) - 8;
-  if (top < 0 || top > window.innerHeight * 0.6) window.scrollBy({ top, behavior: 'smooth' });
-}
-/* The row shell: summary + full, both always built; the shared CSS shows one.
-   st is "done" | "now" | "next". */
-function hsRowShell(w, d, ui, st, total, name, small, right) {
-  const row = el('div', {class: `hs-row hs-${st}`});
-  const sum = el('div', {class: 'hs-row-sum', role: 'button', tabindex: '0'},
-    el('span', {class: 'hs-mark', html: st === 'done' ? HS_ICON.check : ''}),
-    el('span', {class: 'hs-sum-t'}, el('b', {}, name), st === 'next' && small ? el('small', {}, small) : null),
-    st === 'done' && right ? el('span', {class: 'hs-sum-r'}, right) : null);
-  const pick = () => { hsTapped[logKey(w.id, d.day)] = { u: ui, wasDone: st === 'done' }; render(); hsReveal(); };
-  sum.addEventListener('click', pick);
-  sum.addEventListener('keydown', e => { if (e.target === sum && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); pick(); } });
-  const full = el('div', {class: 'hs-row-full'}, el('div', {class: 'hs-now-eyebrow'}, `Now · ${ui + 1} of ${total}`));
-  row.appendChild(sum);
-  row.appendChild(full);
-  return { row, full };
-}
-function videoLinks(d) {
-  return (d.links || []).map((url, li) => {
-    const a = el('a', {class:'vid-link', href:url, target:'_blank', rel:'noopener',
-      html:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21"/></svg>'});
-    a.appendChild(document.createTextNode(` Video ${d.links.length > 1 ? li+1 : ''}`));
-    return a;
+
+function renderStrength(day, container) {
+  const ds = dayState(day.date, false);
+  const rows = day.exercises;
+  const k = day.date;
+  const isDoneAt = i => !!(ds && ds.completed["m" + i]);
+  const done = rows.filter((_, i) => isDoneAt(i)).length;
+  const main = rows.find(x => x.slot === "main");
+  const title = day.title || (main ? main.name : "Lift");
+  const r = rulesFor(CYC, dayWeek(day));
+
+  const nowIdx = tappedNow[k] != null && tappedNow[k] < rows.length ? tappedNow[k] : rows.findIndex((_, i) => !isDoneAt(i));
+  const nextIdxs = rows.map((_, i) => i).filter(i => i !== nowIdx && !isDoneAt(i));
+  const afterNow = nextIdxs.find(i => i > nowIdx);
+  const upNextAt = afterNow != null ? afterNow : nextIdxs[0];
+
+  container.appendChild(sessHead(day, title, done, rows.length));
+  container.appendChild(sessCtl(day));
+  wireClock(day);
+
+  if (day.note) container.appendChild(collapsible("Coach's note for today", day.note, `note_${day.date}`));
+  const wu = (Array.isArray(day.warmup) && day.warmup.length ? day.warmup : day.cycle.warmup) || [];
+  if (wu.length) container.appendChild(renderPrep(day, "Warm-up", "wu", wu));
+
+  let seenAcc = false;
+  rows.forEach((ex, idx) => {
+    const st = idx === nowIdx ? "now" : isDoneAt(idx) ? "done" : "next";
+    let label = "";
+    if (ex.slot === "main") label = r.rm ? `Main · build to a ${r.rm}-rep max` : isGridScore(ex) && ex.score.type === "repmax-load" ? `Main · build to a ${repsStr(ex)}-rep max` : "Main lift";
+    else if (ex.closer) label = "Closer · scored";
+    else if (!seenAcc) { seenAcc = true; label = r.acc ? `Accessories · 3 × ${r.acc}` : "Accessories"; }
+    if (idx === upNextAt) label = label ? `Up next · ${label}` : "Up next";
+    if (label) {
+      const lab = document.createElement("div");
+      lab.className = "hs-section-label";
+      lab.textContent = label;
+      container.appendChild(lab);
+    }
+    container.appendChild(renderRow(day, ex, idx, st, rows.length));
   });
 }
 
-function renderDayContent() {
-  const w = currentWeek();
-  const d = currentDay();
-  const main = $('#main');
-
-  const wrapper = el('div', {});
-  const log = getLog(w.id, d.day);
-  const isDone = !!log.done;
-  currentPlanFBA = dayPlanFBA(d);
-
-  if (d.rest) {
-    wrapper.appendChild(el('div', {class:'day-header'}, el('h2', {}, d.day)));
-    wrapper.appendChild(el('div', {class:'rest-card'},
-      el('div', {class:'rest-icon'}, '💤'),
-      el('h3', {}, 'Rest Day'),
-      el('p', {}, 'Recover, hydrate, and get ready for tomorrow.')
-    ));
-    main.appendChild(wrapper);
-    return;
-  }
-
-  const key = logKey(w.id, d.day);
-  const structured = !d.conditioning && d.exercises && d.exercises.length >= 2;
-  const rowDone = structured ? d.exercises.map((ex, idx) => fbaExDone(log, ex, idx)) : [isDone];
-  const doneN = rowDone.filter(Boolean).length;
-  const complete = rowDone.every(Boolean);
-
-  // Now: the tapped row (until it finishes), else the first row not done; -1 once the day is done.
-  const tap = hsTapped[key];
-  if (tap && (tap.u >= rowDone.length || (!tap.wasDone && rowDone[tap.u]))) delete hsTapped[key];
-  const nowU = hsTapped[key] ? hsTapped[key].u : rowDone.indexOf(false);
-  // "Up next" sits above the first next row after Now (or the first next row, when none follow it).
-  const nextUs = rowDone.map((_, i) => i).filter(i => i !== nowU && !rowDone[i]);
-  const afterNow = nextUs.find(i => i > nowU);
-  const upNextAt = afterNow != null ? afterNow : nextUs[0];
-
-  // Session header: eyebrow, title, clock, progress
-  const title = fbaTitle(d);
-  const planMin = Math.round(currentPlanFBA.total / 60);
-  const progress = complete
-    ? `Day complete · ${doneN} of ${rowDone.length}`
-    : structured
-      ? `${isDone ? 'Marked done · ' : ''}${doneN} of ${rowDone.length} done · planned ~${planMin} min${STATE.sixty ? ' · 60-min mode' : ''}`
-      : `Written workout · planned ~${planMin} min`;
-  const clockBtn = el('button', {type:'button', class:'hs-sess-clock', html:`${HS_ICON.clock}<span class="hs-clock-t">Start</span>`});
-  wrapper.appendChild(el('div', {class:'hs-sess-head'},
-    el('div', {class:'hs-sess-eyebrow'}, `FBA · ${w.label} · ${d.day}`),
-    el('div', {class:'hs-sess-top'},
-      el('h2', {class:'hs-sess-title' + (title.length > 16 ? ' long' : '')}, title),
-      clockBtn),
-    el('div', {class:'hs-sess-progress'},
-      el('div', {class:'hs-bar'}, el('i', {style:`width:${Math.round(100 * doneN / rowDone.length)}%`})),
-      el('span', {}, progress))
-  ));
-
-  // Pace vs plan + 60-min mode toggle
-  const clockStat = el('span', {class:'hs-sess-pace'}, '');
-  const sixtyBtn = el('button', {
-    type: 'button', class: 'btn hs-mini' + (STATE.sixty ? ' on' : ''),
-    onclick: () => { STATE.sixty = !STATE.sixty; saveState(); render(); }
-  }, STATE.sixty ? '60-min on' : '60-min off');
-  wrapper.appendChild(el('div', {class:'hs-sess-ctl'}, clockStat, sixtyBtn));
-  wireDayClock(`${w.id}_${d.day}`, d, currentPlanFBA, clockBtn, clockStat);
-
-  if (d.type) wrapper.appendChild(el('div', {class:'workout-type'}, d.type));
-
-  const ctx = { rowDone, nowU, upNextAt };
-  if (structured) renderStructured(w, d, wrapper, log, ctx);
-  else renderConditioning(w, d, wrapper, log, ctx);
-
-  appendMarkDoneBtn(w, d, wrapper, log);
-  main.appendChild(wrapper);
-
-  // A Now that moved on its own (its row just finished) comes into view.
-  const moved = hsLastNow && hsLastNow.key === key && hsLastNow.u !== nowU && nowU >= 0 && rowDone[hsLastNow.u];
-  hsLastNow = { key, u: nowU };
-  if (moved) hsReveal();
-}
-
-/* ── structured day: one row per exercise, under its muscle-group label ── */
-function renderStructured(w, d, wrapper, log, ctx) {
-  const total = d.exercises.length;
-  d.exercises.forEach((ex, exIdx) => {
-    const st = exIdx === ctx.nowU ? 'now' : ctx.rowDone[exIdx] ? 'done' : 'next';
-    let label = ex.group && (exIdx === 0 || d.exercises[exIdx - 1].group !== ex.group) ? ex.group : '';
-    if (exIdx === ctx.upNextAt) label = label ? `Up next · ${label}` : 'Up next';
-    if (label) wrapper.appendChild(el('div', {class:'hs-section-label'}, label));
-
-    const { row, full } = hsRowShell(w, d, exIdx, st, total, ex.name, fbaShortRx(ex), fbaLogged(log, ex, exIdx));
-    const card = buildExCard(w, d, exIdx, ex, log);
-    full.appendChild(card);
-    // Tool bar: the day's videos and the rest timer, moved out of the card with their listeners.
-    const tools = el('div', {class:'hs-tools'});
-    card.querySelectorAll('.links-row .vid-link').forEach(a => tools.appendChild(a));
-    const lr = card.querySelector('.links-row');
-    if (lr) lr.remove();
-    const tb = card.querySelector('.timer-btn');
-    if (tb) { tb.classList.add('btn'); tools.appendChild(tb); }
-    if (tools.children.length) full.appendChild(tools);
-    wrapper.appendChild(row);
-  });
-}
-
-/* The page's exercise card, unchanged: badge, name, prescription, set rows
-   (each check starts the rest bar), notes, rest timer, video links. */
-function buildExCard(w, d, exIdx, ex, log) {
-  const exLog = (log.exercises || {})[exIdx] || {};
-  const allChecked = Array.from({length: ex.sets}, (_, i) => !!(exLog[`s${i}`]));
-  const exDone = ex.sets > 0 && allChecked.every(Boolean);
-
-  const card = el('div', {class:`ex-card${exDone ? ' done-card' : ''}`});
-
-  // Head: badge + name
-  const badge = el('span', {class:`ex-group-badge ${groupClass(ex.group)}`}, ex.group);
-  const nameEl = el('div', {class:'ex-name'}, ex.name);
-  card.appendChild(el('div', {class:'ex-head'}, badge, nameEl));
-
-  let prescText = ex.prescription || '';
-  if (currentPlanFBA && !currentPlanFBA.cond && currentPlanFBA.offsets[exIdx] != null) {
-    prescText += (prescText ? ' · ' : '') + `start ~${Math.round(currentPlanFBA.offsets[exIdx] / 60)} min in`;
-  }
-  if (prescText) card.appendChild(el('div', {class:'ex-prescription'}, prescText));
-
-  // Set rows
-  const setsEl = el('div', {class:'sets'});
-  for (let i = 0; i < ex.sets; i++) {
-    const checked = !!exLog[`s${i}`];
-    const weight = exLog[`w${i}`] || '';
-
-    const weightInput = el('input', {
-      type:'text', inputmode:'decimal', placeholder:'lb', class:'set-weight',
-      value: weight
-    });
-    weightInput.addEventListener('input', e => {
-      ensureExLog(w.id, d.day, exIdx)[`w${i}`] = e.target.value;
-      saveState();
-    });
-
-    const checkBtn = el('button', {class:`check-btn${checked ? ' checked' : ''}`, 'aria-label':'Mark set done'});
-    checkBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l5 5 9-12"/></svg>';
-    checkBtn.addEventListener('click', () => {
-      const exL = ensureExLog(w.id, d.day, exIdx);
-      exL[`s${i}`] = !exL[`s${i}`];
-      if (exL[`s${i}`]) {
-        startRestTimer(`${w.id}_${d.day}_${exIdx}_${i}`, null);
-      } else {
-        cancelRestTimer(`${w.id}_${d.day}_${exIdx}_${i}`);
-      }
-      saveState();
-      render();
-    });
-
-    const row = el('div', {class:`set-row${checked ? ' done-row' : ''}`},
-      el('div', {class:'set-num'}, String(i+1)),
-      weightInput,
-      checkBtn
-    );
-    setsEl.appendChild(row);
-  }
-  card.appendChild(setsEl);
-
-  // Notes
-  const notesInput = el('textarea', {class:'ex-notes-input', placeholder:'Notes…', rows:'1'});
-  notesInput.value = exLog.notes || '';
-  notesInput.addEventListener('input', e => {
-    ensureExLog(w.id, d.day, exIdx).notes = e.target.value;
+function renderPrep(day, title, prefix, items) {
+  if (typeof items === "string") items = items.split(/\n{2,}/);
+  if (!Array.isArray(items)) items = [];
+  const ds = dayState(day.date, false);
+  const openKey = `${day.date}_${prefix}`;
+  const checks = (ds && ds[prefix]) || {};
+  const doneN = items.filter((_, i) => checks[i]).length;
+  const open = prepOpen[openKey] === true;   // collapsed by default (Ryan knows the warm-up)
+  const el = document.createElement("div");
+  el.className = "prep" + (open ? "" : " collapsed");
+  el.innerHTML = `
+    <div class="prep-head" role="button" tabindex="0"><span>${title} · ${doneN}/${items.length}</span><span class="caret">▼</span></div>
+    <div class="prep-body">${items.map((t, i) => `
+      <div class="prep-item${checks[i] ? " done" : ""}" data-i="${i}">
+        <span class="prep-check"><svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8 7 12 13 4"/></svg></span>
+        <span>${escapeHtml(t)}</span>
+      </div>`).join("")}</div>`;
+  el.querySelector(".prep-head").onclick = () => { prepOpen[openKey] = el.classList.contains("collapsed"); el.classList.toggle("collapsed"); };
+  el.querySelectorAll(".prep-item").forEach(it => it.onclick = () => {
+    const d = dayState(day.date, true);
+    d[prefix] = d[prefix] || {};
+    const i = it.dataset.i;
+    d[prefix][i] = !d[prefix][i];
+    if (d[prefix][i]) stampDate(d);
     saveState();
+    prepOpen[openKey] = true;
+    renderDay(day);
   });
-  card.appendChild(notesInput);
+  return el;
+}
 
-  // Timer
-  const timerKey = `${w.id}_${d.day}_${exIdx}`;
-  const timerBtn = el('button', {class:'timer-btn', 'data-timer':timerKey}, restBtnLabel());
-  timerBtn.addEventListener('click', () => {
-    ensureAudio();
-    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-    if (activeTimers[timerKey]) {
-      cancelRestTimer(timerKey);
-    } else {
-      startRestTimer(timerKey, timerBtn);
-    }
-  });
-  reattachTimer(timerKey, timerBtn);
-  card.appendChild(timerBtn);
+/* A folded block of coach text (a day note, the cycle intro). Collapsed until tapped; the choice is kept per key. */
+function collapsible(title, text, key) {
+  const open = prepOpen[key] === true;
+  const el = document.createElement("div");
+  el.className = "prep" + (open ? "" : " collapsed");
+  el.style.marginTop = "8px";
+  el.innerHTML = `<div class="prep-head" role="button" tabindex="0"><span>${escapeHtml(title)}</span><span class="caret">▼</span></div><div class="prep-body"><div class="prep-text">${escapeHtml(text)}</div></div>`;
+  el.querySelector(".prep-head").onclick = () => { prepOpen[key] = el.classList.contains("collapsed"); el.classList.toggle("collapsed"); };
+  return el;
+}
 
-  // Video links
-  if (d.links && d.links.length) {
-    const linksRow = el('div', {class:'links-row'});
-    videoLinks(d).forEach(a => linksRow.appendChild(a));
-    card.appendChild(linksRow);
+function scoreBoxHtml(ex, sc, day) {
+  if (!hasScoreBox(ex)) return "";
+  const t = ex.score.type, def = scoreDef(t);
+  const side = ex.perSide && def.fromGrid ? " (each side)" : "";
+  const hist = def.fromGrid ? repMaxLine(ex.name, day.date) : "";
+  const prior = def.fromGrid ? [] : priorScores(ex.name, day.date);
+  const last = prior.length ? prior[0] : null;
+  const derived = def.fromGrid && !sc.typed && sc.val != null;
+  const placeholder = derived ? fmtWeight(sc.val) : last ? String(last.val) : (def.placeholder || "");
+  const input = def.kind === "text"
+    ? `<input type="text" class="score-val" inputmode="numeric" placeholder="${escapeHtml(placeholder)}" value="${sc.typed ? escapeHtml(sc.val) : ""}" style="flex:0 1 110px">`
+    : `<input type="number" class="score-val" inputmode="decimal" min="0" step="${def.fromGrid ? "0.5" : "1"}" placeholder="${escapeHtml(placeholder)}" value="${sc.typed ? escapeHtml(sc.val) : ""}">`;
+  return `
+    <div class="score-box">
+      <label>${def.label}${side} ${input}${def.unit ? ` <span class="unit">${def.unit}</span>` : ""}</label>
+      ${derived ? `<div class="score-hist">Heaviest set that hit the target: <b>${fmtWeight(sc.val)} lb${sc.reps != null ? ` × ${sc.reps}` : ""}</b>. Type a load only to override it.</div>` : def.fromGrid ? `<div class="score-hist">Fills itself from the heaviest set at or above ${repsStr(ex)} reps.</div>` : ""}
+      ${def.fromGrid ? "" : `<input type="text" class="score-note" placeholder="${t === "deathby-minute" ? "Reps in the last minute, how it went" : "How it went"}" value="${escapeHtml(sc.note)}">`}
+      ${hist ? `<div class="score-hist">Logged so far: ${hist}</div>` : ""}
+      ${last ? `<div class="score-hist">Last (${last.where}${last.date ? " · " + shortDate(last.date) : ""}): <b>${def.prefix || ""}${escapeHtml(last.val)}${def.unit && def.unit !== "lb" ? " " + def.unit : ""}</b>${last.note ? ` · ${escapeHtml(last.note)}` : ""} · beat it</div>` : ""}
+    </div>`;
+}
+
+function renderRow(day, ex, idx, st, total) {
+  const ds = dayState(day.date, false);
+  const k = day.date;
+  const ck = "m" + idx;
+  const isDone = !!(ds && ds.completed[ck]);
+  const spec = specOf(ex);
+  const scoreOnly = false;   // every row logs on the grid
+  const log = SL.normLog(ds && ds.logs[idx], scoreOnly ? 0 : spec.sets);
+  const sc = scoreOf(ds, idx, ex);
+  const slotName = SLOT[ex.slot] || ex.slot || "";
+
+  // Timer button: a rest countdown on lifts, a running clock with a beep every minute on a Death By.
+  const tKey = `${k}_${idx}`;
+  const deathBy = ex.score && ex.score.type === "deathby-minute";
+  const hasTimer = deathBy || !!spec.rest;
+  const timerLabel = deathBy ? "⏱ Clock" : !spec.rest ? "" : spec.rest >= 120 ? `⏱ ${fmtClock(spec.rest)}` : `⏱ ${spec.rest}s`;
+  function tapTimer(btn) {
+    if (activeTimers[tKey]) tapActiveTimer(tKey);
+    else if (deathBy) startWatch(tKey, btn, 60);
+    else startCountdown(tKey, btn, spec.rest);
   }
 
-  return card;
-}
+  const el = document.createElement("div");
+  el.className = "hs-row hs-" + st;
+  el.dataset.idx = idx;
+  el.dataset.key = tKey;
 
-/* ── written (prose) day: one row holding the text, the videos and the notes ── */
-function renderConditioning(w, d, wrapper, log, ctx) {
-  const st = ctx.nowU === 0 ? 'now' : ctx.rowDone[0] ? 'done' : 'next';
-  const firstLine = String(d.notes || '').split('\n').map(s => s.trim()).find(Boolean) || '';
-  const { row, full } = hsRowShell(w, d, 0, st, 1, 'Written workout', fbaCut(firstLine, 70), 'Marked done');
-
-  // Workout text
-  const raw = d.notes || '';
-  if (raw) {
-    const textBlock = el('div', {class:'cond-text'});
-    textBlock.textContent = raw;
-    full.appendChild(textBlock);
+  if (st !== "now") {
+    const live = !!activeTimers[tKey];
+    const doneTxt = [isGridScore(ex) ? scoreText(ex, sc) : [scoreText(ex, sc), loggedRx(ex, spec, log)].filter(Boolean).join(" · ")].filter(Boolean)[0] || loggedRx(ex, spec, log) || shortRx(ex, spec);
+    const right = live ? `<button type="button" class="btn btn-timer row-timer" data-default="${timerLabel}">${timerLabel}</button>`
+      : st === "done" ? escapeHtml(doneTxt) : "";
+    el.innerHTML = `
+      <div class="hs-row-sum" role="button" tabindex="0">
+        <span class="hs-mark">${st === "done" ? ICON.check : ""}</span>
+        <span class="hs-sum-t"><b>${escapeHtml(ex.name)}</b><small><span class="ex-tag">${slotName}</span>${st === "next" ? escapeHtml(shortRx(ex, spec)) : ""}</small></span>
+        ${right ? `<span class="hs-sum-r">${right}</span>` : ""}
+      </div>`;
+    const sum = el.querySelector(".hs-row-sum");
+    const pick = () => { tappedNow[k] = idx; renderDay(day); revealNow(day); };
+    sum.addEventListener("click", e => { if (!e.target.closest(".btn")) pick(); });
+    sum.addEventListener("keydown", e => { if (e.target === sum && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); pick(); } });
+    if (live) { const tb = el.querySelector(".row-timer"); reattachTimer(tKey, tb); tb.onclick = () => tapTimer(tb); }
+    return el;
   }
 
-  // Notes
-  const notesWrap = el('div', {class:'cond-notes-wrap'},
-    el('label', {}, 'Notes / weights used')
-  );
-  const notesTA = el('textarea', {class:'cond-notes', placeholder:'e.g. used 35 lb DBs, finished in 22 min…', rows:'3'});
-  notesTA.value = log.notes || '';
-  notesTA.addEventListener('input', e => {
-    const l = getLog(w.id, d.day);
-    l.notes = e.target.value;
-    setLog(w.id, d.day, l);
-  });
-  notesWrap.appendChild(notesTA);
-  full.appendChild(notesWrap);
+  // Last line (real history first, else the Chalk-shown load) and the coach
+  let lastHtml = "", weekHtml = "", sugg = null;
+  if (!scoreOnly) {
+    const hist = priorEntries(ex.name, day.date, ex);
+    if (hist.length) {
+      const L = hist[0];
+      lastHtml = SL.lastHtml(L, spec, L.seed ? "from Chalk, not logged here" : `${L.where}${L.date ? " · " + shortDate(L.date) : ""}`);
+      weekHtml = weekOverHtml(L, spec, day);
+    }
+    sugg = suggestNext(ex, day, spec);
+  }
+  const suggHtml = SL.suggestHtml(sugg);
+  const hasNotes = !!(log.notes && log.notes.trim());
+  const unsureHtml = ex.unsure ? `<div class="ex-unsure">${ex.instruction ? "Not fully captured" : "Instruction not captured"} · ${escapeHtml(ex.unsure)}</div>` : "";
 
-  // Video links, as the row's tool bar
-  if (d.links && d.links.length) {
-    const tools = el('div', {class:'hs-tools'});
-    videoLinks(d).forEach(a => tools.appendChild(a));
-    full.appendChild(tools);
+  el.innerHTML = `
+    <div class="hs-row-full">
+      <div class="hs-now-eyebrow">Now · ${idx + 1} of ${total} · ${slotName}</div>
+      <div class="ex-name">${escapeHtml(ex.name)}</div>
+      <div class="ex-prescription">${rxText(ex, spec)}</div>
+      ${instructionText(ex) ? `<div class="ex-instruction">${escapeHtml(instructionText(ex))}</div>` : ""}
+      ${Array.isArray(ex.alternates) && ex.alternates.length ? `<div class="ex-alt">Alternate: ${ex.alternates.map(escapeHtml).join(", ")}</div>` : ""}
+      ${unsureHtml}
+      ${lastHtml || suggHtml ? `<div class="hs-lastbox">${lastHtml}${weekHtml}${suggHtml}</div>` : ""}
+      ${scoreOnly ? "" : `
+      <div class="ex-log open">
+        ${SL.gridHtml(log, spec, sugg)}
+        <textarea class="log-notes" placeholder="Notes: form, tempo, RPE, how it felt..."${hasNotes ? "" : " hidden"}>${escapeHtml(log.notes)}</textarea>
+      </div>`}
+      ${scoreBoxHtml(ex, sc, day)}
+      <div class="hs-tools">
+        <a class="btn" href="${ex.videoUrl ? escapeHtml(ex.videoUrl) : v(ex.name)}" target="_blank" rel="noopener">${ICON.video}${ex.videoUrl ? "▶ Video" : "Video"}</a>
+        ${scoreOnly ? "" : `<button type="button" class="btn hs-note-btn">${ICON.note}Note</button>`}
+        ${hasTimer ? `<button type="button" class="btn btn-timer row-timer" data-default="${timerLabel}">${timerLabel}</button>` : ""}
+        <button type="button" class="btn hs-done-btn${isDone ? " on" : ""}" aria-pressed="${isDone}">${ICON.check}Done</button>
+      </div>
+    </div>`;
+
+  el.querySelector(".hs-done-btn").onclick = () => {
+    const d = dayState(day.date, true);
+    d.completed[ck] = !isDone;
+    if (!isDone) { stampDate(d); if (tappedNow[k] === idx) delete tappedNow[k]; }
+    saveState(); renderDay(day); renderWeekBar();
+    if (!isDone) revealNow(day);
+  };
+
+  function ensureLog() {
+    const d = dayState(day.date, true);
+    d.logs[idx] = SL.normLog(d.logs[idx], spec.sets);
+    stampDate(d);
+    return d.logs[idx];
+  }
+  function ensureScore() {
+    const d = dayState(day.date, true);
+    d.scores[idx] = d.scores[idx] || {};
+    stampDate(d);
+    return d.scores[idx];
   }
 
-  wrapper.appendChild(row);
+  if (!scoreOnly) {
+    // A Death By runs on its own clock and a row with no restSec gets no rest bar (SetLog would default to 90 s).
+    SL.wireGrid(el, { spec, sugg, getLog: ensureLog, save: saveState, rerender: () => renderDay(day), noRest: () => deathBy || !spec.rest });
+    const notes = el.querySelector(".log-notes");
+    notes.addEventListener("input", e => { ensureLog().notes = e.target.value; saveState(); });
+    el.querySelector(".hs-note-btn").onclick = () => { notes.hidden = !notes.hidden; if (!notes.hidden) notes.focus(); };
+  }
+  const sv = el.querySelector(".score-val");
+  if (sv) sv.addEventListener("input", e => { const raw = e.target.value.trim(); ensureScore().val = raw === "" ? null : sv.type === "text" ? raw : parseFloat(raw); saveState(); });
+  const sn = el.querySelector(".score-note");
+  if (sn) sn.addEventListener("input", e => { ensureScore().note = e.target.value; saveState(); });
+
+  const tBtn = el.querySelector(".row-timer");
+  if (tBtn) { reattachTimer(tKey, tBtn); tBtn.onclick = () => tapTimer(tBtn); }
+  return el;
 }
 
-/* ── shared mark-done button ───────────────────────────────── */
-function appendMarkDoneBtn(w, d, wrapper, log) {
-  const isDone = !!log.done;
-  const btn = el('button', {class:`mark-done-btn${isDone ? ' undone' : ''}`,
-    html: isDone
-      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5 9-12"/></svg> Mark as Not Done'
-      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5 9-12"/></svg> Mark as Done'
-  });
-  btn.addEventListener('click', () => {
-    const l = getLog(w.id, d.day);
-    l.done = !l.done;
-    if (!l.date) l.date = (d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)(new Date());   // local date, not UTC (2026-09-25: evening sessions landed on tomorrow)
-    setLog(w.id, d.day, l);
-    toast(l.done ? 'Day complete! 🎉' : 'Unmarked');
-    render();
-  });
-  wrapper.appendChild(btn);
+/* What was logged, compact: "3 × 12 @ 104 lb" when every set matches, else SetLog's own text. */
+function loggedRx(ex, spec, log) {
+  if (!SL.hasSets(log)) return null;
+  const sets = log.sets.filter(x => x.r != null || x.w != null);
+  const same = sets.length > 1 && sets.every(x => x.r === sets[0].r && x.w === sets[0].w);
+  if (same && sets[0].r != null) return `${sets.length} × ${sets[0].r}${spec.unit === "s" ? " s" : ""}${sets[0].w != null ? " @ " + fmtLoad(sets[0].w, spec.bw) : ""}`;
+  return SL.lastText(SL.entry(log, spec), spec);
+}
+function revealNow(day) {
+  const el = document.querySelector(`#container-${day.date} .hs-now`);
+  if (!el || !el.offsetParent) return;
+  const bar = document.querySelector(".appbar");
+  const top = el.getBoundingClientRect().top - (bar ? bar.getBoundingClientRect().bottom : 0) - 8;
+  if (top < 0 || top > window.innerHeight * 0.6) window.scrollBy({ top, behavior: "smooth" });
 }
 
-/* ── exercise log helpers ──────────────────────────────────── */
-function ensureExLog(weekId, dayName, exIdx) {
-  const key = logKey(weekId, dayName);
-  if (!STATE.logs[key]) STATE.logs[key] = {};
-  const log = STATE.logs[key];
-  if (!log.exercises) log.exercises = {};
-  if (!log.exercises[exIdx]) log.exercises[exIdx] = {};
-  return log.exercises[exIdx];
-}
+/* ---------------------------------------------------------------------------
+   CONDITIONING DAY: modality, warm-up, the countdown, a distance score.
+   The clock's truth is in state (endsAt while running, left while paused), so
+   a reload or a re-render keeps counting.
+   --------------------------------------------------------------------------- */
+const condIvs = {};
+function renderConditioning(day, container) {
+  const ds = dayState(day.date, false);
+  const c = (ds && ds.cond) || {};
+  const done = ds && ds.completed.cond ? 1 : 0;
+  const dur = (day.work && day.work.durationSec) || 0;
+  container.appendChild(sessHead(day, day.title || "Conditioning", done, 1));
+  container.appendChild(sessCtl(day));
+  wireClock(day);
+  if (day.warmup && day.warmup.length) container.appendChild(renderPrep(day, "Warm-up", "wu", day.warmup));
 
-/* ── rest timer ────────────────────────────────────────────── */
-const REST_SECONDS = 60;
-const activeTimers = {};
-let audioCtx = null;
+  if (day.note) container.appendChild(collapsible("Coach's note for today", day.note, `note_${day.date}`));
+  const prior = priorCond(day.title, day.date);
+  const last = prior.length ? prior[0] : null;
+  const sdef = scoreDef((day.score || {}).type);
+  const unit = (day.score && day.score.unit) || sdef.unit || "";
+  const hasClock = dur > 0;
+  const card = document.createElement("div");
+  card.className = "cond-card" + (c.finished ? " finished" : "");
+  card.innerHTML = `
+    <div class="hs-now-eyebrow">Work${hasClock ? ` · ${fmtClock(dur)} nonstop` : ""}</div>
+    <div class="ex-name" style="font-size:20px;font-weight:700">${escapeHtml(day.title || "Conditioning")}</div>
+    ${day.text ? `<div class="cond-text">${escapeHtml(day.text)}</div>` : ""}
+    ${day.work && day.work.instruction ? `<div class="cond-instruction">${escapeHtml(day.work.instruction)}</div>` : ""}
+    ${day.modalities && day.modalities.length ? `<div class="hs-section-label" style="margin:12px 0 2px">Modality</div>
+    <div class="seg">${day.modalities.map(m => `<button type="button" data-m="${escapeHtml(m)}" class="${c.modality === m ? "on" : ""}">${escapeHtml(m)}</button>`).join("")}</div>` : ""}
+    ${hasClock ? `
+    <div class="clock-wrap">
+      <div class="clock-big" id="cond-clock-${day.date}">${fmtClock(dur)}</div>
+      <div class="clock-sub" id="cond-sub-${day.date}">Tap Start when the warm-up is done</div>
+    </div>
+    <div class="clock-bar"><i id="cond-bar-${day.date}"></i></div>
+    <div class="clock-ctl">
+      <button type="button" class="btn btn-primary" data-act="toggle">Start</button>
+      <button type="button" class="btn" data-act="reset">Reset</button>
+    </div>` : ""}
+    <div class="score-box" style="margin-top:14px">
+      <label>${sdef.label} ${sdef.kind === "text"
+        ? `<input type="text" class="score-val" inputmode="numeric" placeholder="${last ? escapeHtml(last.val) : escapeHtml(sdef.placeholder || "")}" value="${c.score != null ? escapeHtml(c.score) : ""}" style="flex:0 1 110px">`
+        : `<input type="number" class="score-val" inputmode="numeric" min="0" step="1" placeholder="${last ? escapeHtml(last.val) : escapeHtml(unit || "score")}" value="${c.score != null ? escapeHtml(c.score) : ""}">`}${unit ? ` <span class="unit">${escapeHtml(unit)}</span>` : ""}</label>
+      <input type="text" class="score-note" placeholder="Pace, how it felt" value="${escapeHtml(c.note || "")}">
+      ${last ? `<div class="score-hist">Last (${last.where}${last.date ? " · " + shortDate(last.date) : ""}${last.modality ? " · " + escapeHtml(last.modality) : ""}): <b>${typeof last.val === "number" ? fmtNum(last.val) : escapeHtml(last.val)}${unit ? " " + escapeHtml(unit) : ""}</b> · beat it</div>` : ""}
+      ${day.score && day.score.note ? `<div class="cond-hint">${escapeHtml(day.score.note)}</div>` : ""}
+    </div>
+    <div class="hs-tools">
+      <button type="button" class="btn hs-done-btn${done ? " on" : ""}" aria-pressed="${!!done}">${ICON.check}Done</button>
+    </div>`;
+  container.appendChild(card);
 
-function ensureAudio() {
-  if (audioCtx) return audioCtx;
-  try {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (AC) audioCtx = new AC();
-  } catch(e) {}
-  return audioCtx;
-}
-function beep() {
-  const ctx = ensureAudio(); if (!ctx) return;
-  const now = ctx.currentTime;
-  [0, 0.18, 0.36].forEach((offset, i) => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = i === 2 ? 1100 : 880;
-    gain.gain.setValueAtTime(0, now + offset);
-    gain.gain.linearRampToValueAtTime(0.25, now + offset + 0.01);
-    gain.gain.linearRampToValueAtTime(0, now + offset + 0.14);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start(now + offset); osc.stop(now + offset + 0.16);
-  });
-  try { if (navigator.vibrate) navigator.vibrate([120, 80, 120, 80, 200]); } catch(e) {}
-}
-function fmtTime(s) {
-  const m = Math.floor(s / 60), sec = Math.max(0, Math.floor(s % 60));
-  return `${m}:${String(sec).padStart(2,'0')}`;
-}
-function startRestTimer(key, btn) {
-  const restSecs = effRestSecs();
-  const endsAt = Date.now() + restSecs * 1000;
-  if (btn) { btn.classList.add('running'); btn.textContent = fmtTime(restSecs); }
-  $('#restBar').classList.add('visible');
-  $('#restTime').textContent = fmtTime(restSecs);
-  $('#restDesc').textContent = 'Rest';
-  const intervalId = setInterval(() => {
-    const t = activeTimers[key]; if (!t) return;
-    const rem = (t.endsAt - Date.now()) / 1000;
-    $('#restTime').textContent = fmtTime(rem);
-    if (t.btn && t.btn.isConnected) t.btn.textContent = fmtTime(rem);
-    if (rem <= 0) {
-      clearInterval(t.intervalId);
-      const b = t.btn;
-      delete activeTimers[key];
-      if (b && b.isConnected) { b.classList.remove('running'); b.classList.add('done'); b.textContent = 'Done!'; setTimeout(() => { if (b.isConnected) { b.classList.remove('done'); b.textContent = restBtnLabel(); } }, 1800); }
-      beep();
-      setTimeout(() => { if (!Object.keys(activeTimers).length) $('#restBar').classList.remove('visible'); }, 1000);
+  const ensure = () => { const d = dayState(day.date, true); d.cond = d.cond || {}; stampDate(d); return d.cond; };
+  card.querySelectorAll(".seg button").forEach(b => b.onclick = () => { const cc = ensure(); cc.modality = cc.modality === b.dataset.m ? null : b.dataset.m; saveState(); renderDay(day); });
+  const scoreInp = card.querySelector(".score-val");
+  scoreInp.addEventListener("input", e => { const raw = e.target.value.trim(); ensure().score = raw === "" ? null : scoreInp.type === "text" ? raw : parseInt(raw, 10); saveState(); });
+  card.querySelector(".score-note").addEventListener("input", e => { ensure().note = e.target.value; saveState(); });
+  card.querySelector(".hs-done-btn").onclick = () => {
+    const d = dayState(day.date, true);
+    d.completed.cond = !done;
+    if (!done) stampDate(d);
+    saveState(); renderDay(day); renderWeekBar();
+  };
+
+  // The countdown (only when the piece has a fixed length)
+  if (!hasClock) return;
+  const big = card.querySelector(`#cond-clock-${day.date}`);
+  const sub = card.querySelector(`#cond-sub-${day.date}`);
+  const bar = card.querySelector(`#cond-bar-${day.date}`);
+  const toggle = card.querySelector("[data-act=toggle]");
+  const resetBtn = card.querySelector("[data-act=reset]");
+  function left() {
+    const cc = (dayState(day.date, false) || {}).cond || {};
+    if (cc.endsAt) return Math.max(0, Math.round((cc.endsAt - Date.now()) / 1000));
+    if (cc.left != null) return cc.left;
+    return dur;
+  }
+  function paint() {
+    const cc = (dayState(day.date, false) || {}).cond || {};
+    const l = left();
+    const running = !!cc.endsAt && l > 0;
+    big.textContent = fmtClock(l);
+    big.classList.toggle("running", running);
+    big.classList.toggle("zero", l === 0 && (!!cc.finished || !!cc.endsAt));
+    bar.style.width = dur ? `${Math.min(100, (1 - l / dur) * 100).toFixed(1)}%` : "0%";
+    toggle.textContent = running ? "Pause" : cc.left != null && cc.left > 0 && cc.left < dur ? "Resume" : l === 0 ? "Done" : "Start";
+    sub.textContent = running ? `${fmtClock(dur - l)} in · hold the pace` : cc.finished || (cc.endsAt && l === 0) ? "Time. Log the distance." : cc.left != null && cc.left < dur ? "Paused" : "Tap Start when the warm-up is done";
+    if (cc.endsAt && l === 0 && !cc.finished) {
+      const d = dayState(day.date, true); d.cond.finished = true; d.cond.endsAt = null; d.cond.left = 0; saveState();
+      beepDone(); card.classList.add("finished");
     }
-  }, 250);
-  activeTimers[key] = { endsAt, intervalId, btn };
-}
-function cancelRestTimer(key) {
-  const t = activeTimers[key]; if (!t) return;
-  clearInterval(t.intervalId);
-  const b = t.btn;
-  delete activeTimers[key];
-  if (b && b.isConnected) { b.classList.remove('running','done'); b.textContent = restBtnLabel(); }
-  if (!Object.keys(activeTimers).length) $('#restBar').classList.remove('visible');
-}
-function reattachTimer(key, btn) {
-  const t = activeTimers[key];
-  if (!t) return;
-  t.btn = btn;
-  if (btn) btn.classList.add('running');
-}
-
-$('#restAdd').addEventListener('click', () => {
-  Object.values(activeTimers).forEach(t => { t.endsAt += 30000; });
-});
-$('#restStop').addEventListener('click', () => {
-  Object.keys(activeTimers).forEach(cancelRestTimer);
-  $('#restBar').classList.remove('visible');
-});
-
-/* ── modals ────────────────────────────────────────────────── */
-function openModal(content) {
-  const m = $('#modal');
-  m.innerHTML = '';
-  m.appendChild(content);
-  $('#modalBackdrop').classList.add('visible');
-}
-function closeModal() { $('#modalBackdrop').classList.remove('visible'); }
-$('#modalBackdrop').addEventListener('click', e => { if (e.target.id === 'modalBackdrop') closeModal(); });
-
-function openWeekPicker() {
-  const wrap = el('div', {});
-  wrap.appendChild(el('span', {class:'modal-close', onclick: closeModal}, '×'));
-  wrap.appendChild(el('h3', {}, 'Jump to Week'));
-
-  const grid = el('div', {class:'week-grid'});
-  let lastCycle = null;
-
-  PROGRAM.weeks.forEach(w => {
-    // Extract cycle from first day with a dayLabel
-    let cycle = null;
-    for (const d of w.days) {
-      if (d.dayLabel) {
-        const cm = d.dayLabel.match(/CYCLE\s*(\d+)/i);
-        if (cm) { cycle = parseInt(cm[1]); break; }
-      }
-    }
-    if (cycle && cycle !== lastCycle) {
-      lastCycle = cycle;
-      grid.appendChild(el('div', {class:'cycle-label'}, `Cycle ${cycle}`));
-    }
-
-    const prog = weekProgress(w);
-    const allDone = prog >= 1;
-    const chip = el('button', {
-      class: `wk-chip${w.id === STATE.currentWeek ? ' active' : ''}${allDone ? ' all-done' : ''}`,
-      onclick: () => {
-        STATE.currentWeek = w.id;
-        // Pick first non-rest day
-        const firstTraining = w.days.find(d => !d.rest);
-        if (firstTraining) STATE.currentDay = firstTraining.day;
-        saveState(); render(); closeModal();
-        window.scrollTo(0, 0);
-      }
-    });
-    const fillH = Math.round(prog * 100);
-    chip.appendChild(el('div', {class:'wk-fill', style:`height:${fillH}%`}));
-    chip.appendChild(el('div', {class:'wk-num'}, String(w.week)));
-    chip.appendChild(el('div', {class:'wk-dot'}));
-    grid.appendChild(chip);
-  });
-
-  wrap.appendChild(grid);
-  openModal(wrap);
+  }
+  function syncIv() {
+    if (condIvs[day.date]) { clearInterval(condIvs[day.date]); delete condIvs[day.date]; }
+    const cc = (dayState(day.date, false) || {}).cond || {};
+    if (cc.endsAt) condIvs[day.date] = setInterval(paint, 250);
+  }
+  toggle.onclick = () => {
+    ensureAudio(); if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    const cc = ensure();
+    if (cc.endsAt) { cc.left = left(); cc.endsAt = null; }            // pause
+    else if (left() > 0) { cc.endsAt = Date.now() + left() * 1000; cc.finished = false; if (!cc.startedAt) cc.startedAt = Date.now(); }   // start / resume
+    saveState(); syncIv(); paint();
+  };
+  resetBtn.onclick = () => {
+    const cc = ensure();
+    if ((cc.endsAt || (cc.left != null && cc.left < dur)) && !confirm("Reset the clock?")) return;
+    cc.endsAt = null; cc.left = null; cc.finished = false; cc.startedAt = null;
+    saveState(); syncIv(); paint(); card.classList.remove("finished");
+  };
+  syncIv(); paint();
 }
 
-function openMenu() {
-  const wrap = el('div', {});
-  wrap.appendChild(el('span', {class:'modal-close', onclick: closeModal}, '×'));
-  wrap.appendChild(el('h3', {}, 'Menu'));
-  const ul = el('ul', {class:'menu-list'});
-  const items = [
-    ['About this program', openAbout],
-    ['Export backup', doExport],
-    ['Import backup', doImport],
-    ['Reset all data', doReset],
-  ];
-  items.forEach(([label, fn]) => {
-    const btn = el('button', {onclick: () => { closeModal(); fn(); }}, label);
-    ul.appendChild(el('li', {}, btn));
-  });
-  wrap.appendChild(ul);
-  openModal(wrap);
+/* ---------------------------------------------------------------------------
+   NOTES PANE: how it works, the block rules, sync, backup
+   --------------------------------------------------------------------------- */
+function buildNotes() {
+  const st = CYC.structure || {};
+  document.getElementById("notes-card").innerHTML = `
+    <h2>How this tracker works</h2>
+    <p><strong>${escapeHtml(DATA.name)}</strong> is coach ${escapeHtml(DATA.coach || "")}'s program in the ${escapeHtml(DATA.app || "Chalk")} app. Karl ingests each cycle from the Chalk portal into this tracker; pick the week with the pills and the day with the tabs.</p>
+    <h3>This cycle: ${escapeHtml(CYC.label)}</h3>
+    ${CYC.intro ? `<p style="white-space:pre-line">${escapeHtml(CYC.intro)}</p>` : ""}
+    <ul>
+      ${Array.isArray(st.mainLiftRepMaxByWeek) ? `<li><strong>Main lift:</strong> build to a rep max for the day, by week ${st.mainLiftRepMaxByWeek.map((n, i) => `W${i + 1} ${n}RM`).join(" · ")}. Log every working set in the grid; the heaviest set is the day's score unless you type a different load.</li>` : `<li><strong>Main lift:</strong> the first row of each lift day; log every working set and the heaviest is the day's score.</li>`}
+      ${Array.isArray(st.accessoryRepsByWeek) ? `<li><strong>Accessories:</strong> one per body part, 3 sets of ${st.accessoryRepsByWeek.map((n, i) => `${n} (W${i + 1})`).join(", ")}. Most run one set every 60 seconds.</li>` : `<li><strong>Accessories:</strong> one per body part, as prescribed on the row.</li>`}
+      <li><strong>Closer:</strong> ${escapeHtml(st.closer || "scored every session")}. A Death By logs the last minute you finished (the clock button beeps every minute); a ladder logs the rung; for-time closers log the time.</li>
+      ${CYC.schedule.optionalConditioning && CYC.schedule.optionalConditioning.length ? `<li><strong>Conditioning</strong> (${CYC.schedule.optionalConditioning.join(" and ")}, optional): pick the modality, run the clock when the piece has a fixed length, log the score and beat it next time.</li>` : ""}
+    </ul>
+    <h3>Logging sets and the coach</h3>
+    <p>Each set takes reps and weight. The <strong>= 3 × 12</strong> button fills the targets; type over what differed. A hit is inferred: every set at or above the target. The chip under a lift says what to do next: green adds weight after a hit (5 lb, 10 on lower-body lifts), grey holds the weight after a miss, amber cuts after three misses at one weight. Max-rep rows say "beat last".</p>
+    <p>A <strong>Last (Chalk log)</strong> line is the load Chalk showed beside that exercise from your earlier logging there. It seeds the coach; it is not a prescription.</p>
+    <p>Where the ingest could not read an instruction, the row says <em>Instruction not captured</em> rather than guessing.</p>
+    ${SL.sync.notesHtml()}
+    <h3>Backup</h3>
+    <div class="notes-actions">
+      <button class="btn" id="btn-export">Export backup</button>
+      <button class="btn" id="btn-import">Import backup</button>
+    </div>
+    <div class="note-box" style="margin-top:12px">Source: ${escapeHtml(DATA.app || "Chalk Performance Training")}, coach ${escapeHtml(DATA.coach || "")}. ${DATA.cycles.length} cycle${DATA.cycles.length === 1 ? "" : "s"} ingested by ${escapeHtml(DATA.generatedBy || "the ingest")}; the cycle on screen is ${escapeHtml(CYC.id)}. Anything the ingest could not read is marked on the row.</div>`;
+  document.getElementById("btn-export").onclick = doExport;
+  document.getElementById("btn-import").onclick = doImport;
 }
-
-function openAbout() {
-  openModal(el('div', {},
-    el('span', {class:'modal-close', onclick: closeModal}, '×'),
-    el('h3', {}, 'About'),
-    el('div', {style:'font-size:14px;line-height:1.6;color:var(--text-body)',
-      html: `<p><strong>Full Body Aesthetics</strong> by Ryan Fischer (RyFischer.com)</p><p>64-week DB-based full body program. 5–6 training days per week, cycling through strength, hypertrophy, and conditioning blocks.</p><p>Your logs are saved in this browser's local storage. Use Export from the menu to save a backup.</p>` + SetLog.sync.notesHtml()
-    })
-  ));
-  SetLog.sync.wireNotes();
-}
-
-/* ── export / import / reset ───────────────────────────────── */
 function doExport() {
-  const payload = { app:'fba', version:1, exportedAt:new Date().toISOString(), state:STATE };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const payload = { app: "fba", version: 2, exportedAt: new Date().toISOString(), state };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `fba-backup-${new Date().toISOString().slice(0,10)}.json`;
+  const a = document.createElement("a");
+  a.href = url; a.download = `fba-backup-${todayISO()}.json`;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  toast('Backup downloaded');
+  toast("Backup downloaded");
 }
 function doImport() {
-  const inp = document.createElement('input');
-  inp.type = 'file'; inp.accept = '.json,application/json';
+  const inp = document.createElement("input");
+  inp.type = "file"; inp.accept = ".json,application/json";
   inp.onchange = () => {
     const f = inp.files[0]; if (!f) return;
     const r = new FileReader();
     r.onload = () => {
       try {
         const obj = JSON.parse(r.result);
-        if (obj && obj.state) {
-          if (!confirm('Replace current data with this backup?')) return;
-          STATE = obj.state; saveState(); render(); toast('Import complete');
-        } else { alert("Doesn't look like a valid backup."); }
-      } catch(e) { alert('Could not read file: ' + e.message); }
+        if (obj && obj.state && obj.state.days) {
+          if (!confirm("Replace current data with this backup?")) return;
+          state = normState(obj.state); saveState(); render(); toast("Import complete");
+        } else alert("Doesn't look like a Full Body Aesthetics v2 backup.");
+      } catch (e) { alert("Could not read file: " + e.message); }
     };
     r.readAsText(f);
   };
   inp.click();
 }
-function doReset() {
-  if (!confirm('Delete all your logged data? This cannot be undone.')) return;
-  STATE = { currentWeek:'w1', currentDay:'Monday', logs:{}, sixty: false, clocks: {} };
-  saveState(); render(); toast('Data cleared');
-}
-
-/* ── toast ─────────────────────────────────────────────────── */
 let toastTimeout = null;
 function toast(msg) {
-  const el = $('#toast');
-  el.textContent = msg;
-  el.classList.add('show');
+  const el = document.getElementById("toast");
+  el.textContent = msg; el.classList.add("show");
   if (toastTimeout) clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => el.classList.remove('show'), 2200);
+  toastTimeout = setTimeout(() => el.classList.remove("show"), 2200);
 }
 
-/* ── sync to Karl + health-system summary ──────────────────────
-   Transport and the device token live in ../shared/setlog.js; this page hands
-   it { state, entries }. HS.summary('full-body-aesthetics', …) runs after load
-   and after every save (../shared/shell.js). Current week = the week of the
-   most recently logged session (latest date, then latest program position;
-   Week 1 if none). Next = that week's first training day not marked done
-   (what the hero's "This Wk" counts), else the first training day of the
-   following week; null when no training day is left. */
-function fbaExLogged(x) {
-  return !!x && Object.keys(x).some(k =>
-    k === 'notes' ? !!String(x[k] || '').trim() : /^s\d+$/.test(k) ? !!x[k] : /^w\d+$/.test(k) && x[k] != null && x[k] !== '');
+/* ---------------------------------------------------------------------------
+   STATS + HERO
+   --------------------------------------------------------------------------- */
+function updateStats() {
+  if (!CYC) return;
+  const ref = currentWeekRef();
+  document.getElementById("stat-week").textContent = "W" + ref.w;
+  const lifts = ALL.filter(d => d.type === "strength" && isDayComplete(d)).length;
+  document.getElementById("stat-days").textContent = lifts;
+  const wk = weekDays(ref.w, ref.cyc).filter(d => d.type === "strength");
+  document.getElementById("stat-thisweek").textContent = `${wk.filter(isDayComplete).length} / ${wk.length}`;
+  const req = CYC.days.filter(isRequired);
+  document.getElementById("stat-overall").textContent = req.length ? Math.round(100 * req.filter(isDayComplete).length / req.length) + "%" : "0%";
+  const nx = nextDay();
+  document.querySelectorAll(".tab").forEach(tab => {
+    const dot = tab.querySelector(".due-dot");
+    if (dot) dot.hidden = !nx || tab.dataset.pane !== nx.date;
+  });
 }
-function fbaHasWork(lg) {
-  if (!lg) return false;
-  if (lg.done || (lg.notes && String(lg.notes).trim())) return true;
-  return Object.values(lg.exercises || {}).some(fbaExLogged);
+function render() {
+  renderCycleBar();
+  renderWeekBar();
+  buildWeek();
+  updateStats();
 }
-function fbaPosition() {
-  let best = null, pos = 0;
-  PROGRAM.weeks.forEach((w, wi) => w.days.forEach(d => {
-    pos++;
-    const lg = d.rest ? null : STATE.logs[logKey(w.id, d.day)];
-    if (!fbaHasWork(lg)) return;
-    const key = `${lg.date || ''}|${String(pos).padStart(5, '0')}`;
-    if (!best || key > best.key) best = { key, wi };
-  }));
-  const wi = best ? best.wi : 0;
-  const week = PROGRAM.weeks[wi];
-  let nextWeek = week, nextDay = week.days.find(d => !d.rest && !dayDone(week.id, d));
-  for (let i = wi + 1; !nextDay && i < PROGRAM.weeks.length; i++) {
-    nextWeek = PROGRAM.weeks[i]; nextDay = nextWeek.days.find(d => !d.rest);
-  }
-  return { week, wi, nextWeek: nextDay ? nextWeek : null, nextDay: nextDay || null };
-}
-/* Same cycle grouping as the week picker: a week sits in the last cycle named on or before it. */
-function fbaCycle(wi) {
-  let cycle = null;
-  for (let i = 0; i <= wi; i++) {
-    const hit = PROGRAM.weeks[i].days.map(d => d.dayLabel && d.dayLabel.match(/CYCLE\s*(\d+)/i)).find(Boolean);
-    if (hit) cycle = parseInt(hit[1], 10);
-  }
-  return cycle ? `Cycle ${cycle}` : null;
-}
-/* The flat list Karl reads: one row per logged exercise per date. Card days give a
-   row per exercise (sets as logged; as prescribed when the day was only marked
-   done); text/conditioning days give one row carrying the notes. */
-function buildEntries() {
-  const out = [];
-  PROGRAM.weeks.forEach(w => w.days.forEach(d => {
-    if (d.rest) return;
-    const lg = STATE.logs[logKey(w.id, d.day)];
-    if (!fbaHasWork(lg)) return;
-    const where = `W${w.week} ${d.day.slice(0, 3)}`, date = lg.date || null;
-    if (!d.conditioning && d.exercises && d.exercises.length >= 2) {
-      d.exercises.forEach((ex, i) => {
-        const x = (lg.exercises || {})[i];
-        const logged = fbaExLogged(x);
-        if (!logged && !lg.done) return;
-        const sets = [];
-        for (let s = 0; s < (ex.sets || 0); s++) {
-          sets.push(logged ? { r: null, w: SetLog.parseWeight(x[`w${s}`]), done: !!x[`s${s}`] } : { r: null, w: null, done: true });
-        }
-        out.push({ date, where, exercise: ex.name, group: ex.group || '', target: ex.prescription || '', sets,
-                   source: logged ? 'logged' : 'prescribed', done: !!lg.done || (sets.length > 0 && sets.every(s => s.done)),
-                   notes: (x && x.notes) || '' });
-      });
-    } else {
-      out.push({ date, where, exercise: d.type || 'Metcon', target: String(d.notes || '').split('\n')[0].slice(0, 160), sets: [],
-                 source: 'text', done: !!lg.done, notes: lg.notes || '' });
-    }
-  }));
-  return out;
+
+/* ---------------------------------------------------------------------------
+   HEALTH-SYSTEM SUMMARY (contract in ../shared/shell.js). Set-day program:
+   every session has a calendar date. today = the program day dated today;
+   next = the first required day not yet complete, in program order.
+   --------------------------------------------------------------------------- */
+function sessionLabel(day) {
+  if (day.type === "conditioning") return day.title || "Conditioning";
+  if (day.title) return day.title;
+  const main = day.exercises.find(x => x.slot === "main");
+  return main ? main.name : "Lift";
 }
 function publishSummary() {
   try {
-    if (!PROGRAM || !STATE || !window.HS) return;
-    const { week, wi, nextWeek, nextDay } = fbaPosition();
-    const train = week.days.filter(d => !d.rest);
+    if (!window.HS || typeof HS.summary !== "function" || !CYC) return;
+    const td = todayISO();
+    const nx = nextDay();
+    const todayDay = ALL.find(d => d.date === td && d.type !== "rest") || null;
     const sessions = [];
-    for (const k in STATE.logs) { const lg = STATE.logs[k]; if (lg && lg.date && fbaHasWork(lg)) sessions.push(lg.date); }
-    HS.summary('full-body-aesthetics', {
-      kind: 'phased', week: week.week, weeks: PROGRAM.weeks.length, phase: fbaCycle(wi),
-      next: nextDay ? { id: fbaSessionId(nextWeek, nextDay), label: nextDay.type || 'Metcon', sub: `${nextWeek.label} · ${nextDay.day}`, date: null,
-                        minutes: Math.round(dayPlanFBA(nextDay).total / 60), listed: null } : null,
-      today: null,
-      thisWeek: { done: train.filter(d => dayDone(week.id, d)).length, planned: train.length },
-      days: null,
-      sessions
+    ALL.forEach(d => { if (dayHasActivity(d)) { const ds = dayState(d.date, false); sessions.push(ds.trained || d.date); } });
+    sessions.sort();
+    const ref = currentWeekRef();
+    const planned = weekDays(ref.w, ref.cyc).filter(isRequired);
+    HS.summary(PROGRAM.slug, {
+      kind: "setdays", week: ref.w, weeks: ref.cyc.weeks, phase: ref.cyc.label,
+      next: nx ? { id: nx.date, label: sessionLabel(nx), sub: `Week ${dayWeek(nx)} · ${nx.dow}${nx.cycle !== ref.cyc ? " · next block" : ""}`, date: nx.date, minutes: dayMinutes(nx), listed: null } : null,
+      today: todayDay ? { label: sessionLabel(todayDay), minutes: dayMinutes(todayDay), done: isDayComplete(todayDay) } : null,
+      thisWeek: { done: planned.filter(isDayComplete).length, planned: planned.length },
+      days: ref.cyc.schedule.lift || null,
+      sessions, lastDate: sessions.length ? sessions[sessions.length - 1] : null
     });
-  } catch (e) { console.warn('full-body-aesthetics summary failed', e); }
+  } catch (e) {}
+}
+function sessionFromHash() {
+  const m = (location.hash || "").match(/#s=([0-9-]+)/);
+  return m ? dayById(m[1]) : null;
 }
 
-/* ── catalog (../shared/shell.js, Phase 2) ───────────────────────
-   HS_CATALOG() lists every training day in program order (rest days skipped),
-   id "w12-mon" (week id + first three letters of the day). Minutes come from
-   dayPlanFBA with 60-min mode off; label matches summary.next.label. Card days
-   give one row per exercise, as the page renders them: kind "note" for the
-   instruction lines the data stores as exercises ("High Band Fly Demo:",
-   "Immediately into;", "1min. of Rest", "Set 1) 5 reps @ 65% of 1RM"), "test"
-   for a 1-rep-max build-up, "core" for Abs rows and plank/sit-up-type names,
-   else "strength"; tag is the group badge; scheme is the prescription minus the
-   name. Text days give one "conditioning" row whose scheme is the opening of
-   the workout text. Null fields are omitted to keep ~290 sessions small.
-   Returns null until data.json has loaded. Pure: no DOM, no saves. */
-function fbaSessionId(w, d) { return `${w.id}-${d.day.slice(0, 3).toLowerCase()}`; }
-function fbaFindSession(id) {
-  if (!PROGRAM || !id) return null;
-  for (const w of PROGRAM.weeks) for (const d of w.days) if (!d.rest && fbaSessionId(w, d) === id) return { w, d };
-  return null;
-}
-const FBA_NOTE_RE = /[:;]\s*$|^immediately\b|^\d+\s*(sec|min)\.?\s*(of\s+)?rest\.?$|^\d+\s*min\.?\s*to finish\b|^set \d+\)|^(give yourself|as far as|be sure|no matter what|if you|similar to|do a few|get warmed|last week|after all|between sets|as soon as|recommended scale)\b/i;
-const FBA_CORE_RE = /\bplank\b(?!\s+(db\s+|dumbbell\s+)?rows?)|sit-?ups?\b|crunch|knee (raise|tuck)s?|russian twist|flutter kick|wood ?chop|roll ?outs?|toe taps?|knee taps?|uppercuts?|\bv-?ups?\b|leg raises?|hollow/i;
-function fbaCut(s, n) { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s; }
-function fbaRow(ex, secs) {
-  const name = String(ex.name || '').trim(), p = String(ex.prescription || '').trim();
-  const at = name ? p.indexOf(name) : -1;
-  let scheme = (at >= 0 ? p.slice(0, at) + ' ' + p.slice(at + name.length) : p).replace(/\s+/g, ' ').trim();
-  scheme = scheme.replace(/^\(([^)]*)\)/, '$1').replace(/^[\s.,;:]+/, '');
-  const rm = p.match(/(?<!\d)[1-9]\s*x\s*(\d+(?:\s*-\s*\d+)?|max|failure)(?![\dx])/i) || p.match(/^(\d+(?:\s*-\s*\d+)?)\s+(?!sec|min|set|rounds?\b)/i);
-  const kind = FBA_NOTE_RE.test(name) ? 'note'
-    : /building up to a 1 rep max|1 ?rep max test/i.test(name) ? 'test'
-    : /^(abs|core)$/i.test(ex.group || '') || FBA_CORE_RE.test(name) ? 'core' : 'strength';
-  const row = { name, sets: parseInt(ex.sets, 10) || 1, restSec: effRestSecs(true), minutes: Math.round(secs / 6) / 10, kind };
-  if (scheme) row.scheme = fbaCut(scheme, 90);
-  if (rm) row.reps = rm[1].replace(/\s+/g, '');
-  if (ex.group) row.tag = ex.group;
-  return row;
-}
+/* ---------------------------------------------------------------------------
+   CATALOG (Phase 2 contract in ../shared/shell.js): every non-rest day of
+   every cycle, each row with its slot as the tag so Gaps can pattern-tag it.
+   --------------------------------------------------------------------------- */
 window.HS_CATALOG = function () {
-  if (!PROGRAM) return null;
   const sessions = [];
-  PROGRAM.weeks.forEach(w => w.days.forEach(d => {
-    if (d.rest) return;
-    const plan = dayPlanFBA(d, true);
-    const s = { id: fbaSessionId(w, d), week: w.week, day: d.day.slice(0, 3), label: d.type || 'Metcon', minutes: Math.round(plan.total / 60) };
-    if (!plan.cond) {
-      const exs = d.exercises;
-      s.exercises = exs.map((ex, i) => fbaRow(ex, (i + 1 < exs.length ? plan.offsets[i + 1] : plan.total) - plan.offsets[i]));
+  ALL.forEach(day => {
+    if (day.type === "rest") return;
+    const exercises = [];
+    const wu = day.type === "strength" ? ((day.warmup && day.warmup.length ? day.warmup : day.cycle.warmup) || []) : (day.warmup || []);
+    wu.forEach(t => exercises.push({ name: t, scheme: null, sets: 1, reps: null, restSec: null, minutes: 2, kind: "warmup", tag: "warmup" }));
+    if (day.type === "strength") {
+      day.exercises.forEach(ex => {
+        const spec = specOf(ex);
+        exercises.push({ name: ex.name, scheme: shortRx(ex, spec), sets: spec.sets, reps: repsStr(ex) || null, restSec: spec.rest,
+                         minutes: Math.round(rowSecs(ex, spec) / 6) / 10, kind: ex.slot === "abs" ? "core" : ex.closer ? "conditioning" : "strength", tag: ex.slot || null });
+      });
     } else {
-      const row = { name: d.type || 'Metcon', sets: 1, minutes: s.minutes, kind: 'conditioning' };
-      const text = String(d.notes || '').split('\n').map(x => x.trim()).filter(Boolean).join(' / ');
-      if (text) row.scheme = fbaCut(text, 160);
-      s.exercises = [row];
+      const dur = day.work && day.work.durationSec;
+      exercises.push({ name: day.title, scheme: dur ? `${fmtClock(dur)} nonstop` : (day.score && day.score.type ? `for ${day.score.type}` : null), sets: 1, reps: null, restSec: null,
+                       minutes: dur ? Math.round(dur / 60) : null, kind: "conditioning", tag: "conditioning" });
     }
-    sessions.push(s);
-  }));
-  return { slug: 'full-body-aesthetics', kind: 'phased', sessions };
+    sessions.push({ id: day.date, week: dayWeek(day), day: day.dow, label: sessionLabel(day), minutes: dayMinutes(day), optional: !!day.optional, exercises });
+  });
+  return { slug: PROGRAM.slug, kind: "setdays", sessions };
 };
 
-/* ── init ──────────────────────────────────────────────────── */
-$('#btnPickWeek').addEventListener('click', openWeekPicker);
-$('#btnMenu').addEventListener('click', openMenu);
+/* ---------------------------------------------------------------------------
+   SESSION CLOCK: elapsed against the planning model.
+   --------------------------------------------------------------------------- */
+const sessionClocks = {};
+function wireClock(day) {
+  const btn = document.getElementById("clock-" + day.date);
+  const stat = document.getElementById("clockstat-" + day.date);
+  if (!btn) return;
+  const txt = btn.querySelector(".hs-clock-t") || btn;
+  const planned = daySecs(day);
+  function paint() {
+    const cur = dayState(day.date, false);
+    if (!cur || !cur.clockStart) {
+      txt.textContent = "Start"; btn.classList.remove("running", "stopped");
+      btn.setAttribute("aria-label", "Start the session clock");
+      if (stat) stat.textContent = "";
+      return;
+    }
+    const elapsed = Math.round(((cur.clockStop || Date.now()) - cur.clockStart) / 1000);
+    txt.textContent = fmtClock(elapsed);
+    btn.classList.toggle("running", !cur.clockStop);
+    btn.classList.toggle("stopped", !!cur.clockStop);
+    btn.setAttribute("aria-label", cur.clockStop ? `Session clock stopped at ${fmtClock(elapsed)}, tap to reset` : `Session clock ${fmtClock(elapsed)}, tap to stop`);
+    if (stat) stat.textContent = isDayComplete(day) ? `done in ${fmtClock(elapsed)}` : cur.clockStop ? "clock stopped" : planned != null ? `${Math.round(elapsed / 60)} of ${fmtMins(planned).replace("~", "")} in` : "";
+  }
+  function syncInterval() {
+    if (sessionClocks[day.date]) { clearInterval(sessionClocks[day.date]); delete sessionClocks[day.date]; }
+    const cur = dayState(day.date, false);
+    if (cur && cur.clockStart && !cur.clockStop) sessionClocks[day.date] = setInterval(paint, 1000);
+  }
+  btn.onclick = () => {
+    const cur = dayState(day.date, true);
+    if (!cur.clockStart) { cur.clockStart = Date.now(); cur.clockStop = null; stampDate(cur); }
+    else if (!cur.clockStop) cur.clockStop = Date.now();
+    else { cur.clockStart = null; cur.clockStop = null; }
+    saveState(); syncInterval(); paint();
+  };
+  syncInterval(); paint();
+}
 
-async function init() {
-  STATE = loadState();
+/* ---------------------------------------------------------------------------
+   TIMERS: rest countdown and the Death By clock (a stopwatch that beeps each minute).
+   --------------------------------------------------------------------------- */
+const activeTimers = {};
+let audioCtx = null;
+function ensureAudio() {
+  if (audioCtx) return audioCtx;
+  try { const AC = window.AudioContext || window.webkitAudioContext; if (AC) audioCtx = new AC(); } catch (e) {}
+  return audioCtx;
+}
+function tone(offsets, freqs) {
+  const ctx = ensureAudio();
+  if (ctx) {
+    const now = ctx.currentTime;
+    offsets.forEach((off, i) => {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.type = "sine"; osc.frequency.value = freqs[i] || 880;
+      gain.gain.setValueAtTime(0, now + off);
+      gain.gain.linearRampToValueAtTime(0.25, now + off + 0.01);
+      gain.gain.linearRampToValueAtTime(0, now + off + 0.14);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + off); osc.stop(now + off + 0.16);
+    });
+  }
+  if (navigator.vibrate) { try { navigator.vibrate(120); } catch (e) {} }
+}
+function beepDone() { tone([0, 0.18, 0.36], [880, 880, 1100]); if (navigator.vibrate) { try { navigator.vibrate([120, 80, 120, 80, 200]); } catch (e) {} } }
+function beepPhase() { tone([0], [990]); }
+
+function paintRunning(btn, text) { if (!btn) return; btn.classList.add("running"); btn.classList.remove("done", "paused"); btn.textContent = text; }
+function paintPaused(btn, text) { if (!btn) return; btn.classList.remove("running", "done"); btn.classList.add("paused"); btn.textContent = text; }
+function paintDone(btn) {
+  if (!btn || !btn.isConnected) return;
+  btn.classList.remove("running", "paused"); btn.classList.add("done");
+  btn.textContent = "Done!";
+  setTimeout(() => { if (btn && btn.isConnected) { btn.classList.remove("done"); btn.textContent = btn.dataset.default || "⏱"; } }, 1800);
+}
+function paintReset(btn) {
+  if (!btn || !btn.isConnected) return;
+  btn.classList.remove("running", "done", "paused");
+  btn.textContent = btn.dataset.default || "⏱";
+}
+function startCountdown(key, btn, secs) {
+  ensureAudio(); if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  const endsAt = Date.now() + secs * 1000;
+  paintRunning(btn, fmtClock(secs));
+  const iv = setInterval(() => {
+    const t = activeTimers[key]; if (!t) return;
+    const remaining = Math.round((t.endsAt - Date.now()) / 1000);
+    if (remaining <= 0) { clearInterval(t.iv); const b = t.btn; delete activeTimers[key]; paintDone(b); beepDone(); }
+    else paintRunning(t.btn, fmtClock(remaining));
+  }, 250);
+  activeTimers[key] = { mode: "down", endsAt, iv, btn };
+}
+/* Stopwatch with a beep every `every` seconds (a Death By needs the minute marks). */
+function startWatch(key, btn, every) {
+  ensureAudio(); if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  const t = { mode: "watch", startedAt: Date.now(), stopped: null, btn, every: every || 60, lastMark: 0 };
+  paintRunning(btn, "0:00");
+  t.iv = setInterval(() => {
+    const cur = activeTimers[key]; if (!cur || cur.stopped != null) return;
+    const el = Math.floor((Date.now() - cur.startedAt) / 1000);
+    const mark = Math.floor(el / cur.every);
+    if (mark > cur.lastMark) { cur.lastMark = mark; beepPhase(); }
+    paintRunning(cur.btn, `${fmtClock(el)} · min ${mark + 1}`);
+  }, 250);
+  activeTimers[key] = t;
+}
+function tapActiveTimer(key) {
+  const t = activeTimers[key]; if (!t) return;
+  if (t.mode === "down") { clearInterval(t.iv); delete activeTimers[key]; paintReset(t.btn); return; }
+  if (t.mode === "watch") {
+    if (t.stopped == null) { t.stopped = Date.now(); paintPaused(t.btn, "■ " + fmtClock(Math.round((t.stopped - t.startedAt) / 1000))); }
+    else { clearInterval(t.iv); delete activeTimers[key]; paintReset(t.btn); }
+  }
+}
+function reattachTimer(key, btn) {
+  const t = activeTimers[key];
+  if (!btn || !t) return;
+  t.btn = btn;
+  if (t.mode === "down") { const remaining = Math.round((t.endsAt - Date.now()) / 1000); if (remaining > 0) paintRunning(btn, fmtClock(remaining)); }
+  else if (t.mode === "watch") {
+    if (t.stopped == null) { const el = Math.floor((Date.now() - t.startedAt) / 1000); paintRunning(btn, `${fmtClock(el)} · min ${Math.floor(el / t.every) + 1}`); }
+    else paintPaused(btn, "■ " + fmtClock(Math.round((t.stopped - t.startedAt) / 1000)));
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   BOOT: fetch data.json (no-store so a new ingest lands on the next open),
+   pick the day, wire sync.
+   --------------------------------------------------------------------------- */
+document.getElementById("reset-btn").onclick = () => {
+  if (confirm("Reset ALL tracking for this program? Every check, set, score and clock across every cycle will be cleared.")) {
+    state = emptyState(); saveState(); render();
+  }
+};
+
+async function boot() {
+  const notes = document.getElementById("notes-card");
   try {
-    const res = await fetch('data.json', { cache: 'no-store' });
-    PROGRAM = await res.json();
-  } catch(e) {
-    document.body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text)">Could not load program data. Make sure data.json is next to index.html.</div>';
+    const r = await fetch("data.json", { cache: "no-store" });
+    if (!r.ok) throw new Error(`data.json ${r.status}`);
+    DATA = await r.json();
+  } catch (e) {
+    document.getElementById("hero-sub").textContent = "Could not load data.json.";
+    notes.innerHTML = `<h2>Program data did not load</h2><p>${escapeHtml(e.message)}. Pull to refresh on wifi; if it persists, the program file is missing from the deploy.</p>`;
+    document.querySelector('.tab[data-pane="notes"]').click();
     return;
   }
-  // Open on the next session (the summary's `next`); a finished program keeps the last view.
-  // A "#s=<catalog id>" deep link opens that session instead; the hash is left as is.
-  const nx = fbaPosition();
-  let linkId = null;
-  try { const hm = /^#s=(.+)$/.exec(location.hash); if (hm) linkId = decodeURIComponent(hm[1]); } catch (e) {}
-  const linked = fbaFindSession(linkId);
-  if (linked) { STATE.currentWeek = linked.w.id; STATE.currentDay = linked.d.day; }
-  else if (nx.nextDay) { STATE.currentWeek = nx.nextWeek.id; STATE.currentDay = nx.nextDay.day; }
-  // Validate state
-  if (!PROGRAM.weeks.find(w => w.id === STATE.currentWeek)) {
-    STATE.currentWeek = PROGRAM.weeks[0].id;
+  if (!DATA || !Array.isArray(DATA.cycles) || !DATA.cycles.length) {
+    notes.innerHTML = `<h2>No cycles in data.json</h2><p>The tracker expects schema 2 with at least one cycle.</p>`;
+    document.querySelector('.tab[data-pane="notes"]').click();
+    return;
   }
-  const w = currentWeek();
-  const validDay = w.days.find(d => d.day === STATE.currentDay && !d.rest);
-  if (!validDay) {
-    const first = w.days.find(d => !d.rest);
-    if (first) STATE.currentDay = first.day;
-  }
-  SetLog.sync.init({
-    slug: 'full-body-aesthetics',
-    storageKey: STORAGE_KEY,
-    payload: () => ({ state: STATE, entries: buildEntries() }),
-    hasData: () => Object.values(STATE.logs || {}).some(fbaHasWork)
+  DATA.cycles.forEach(c => { c.days = (c.days || []).slice().sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0); c.days.forEach(d => { d.cycle = c; }); });
+  ALL = DATA.cycles.flatMap(c => c.days).sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+
+  // Open on the deep link, else today's program day, else the first incomplete day, else the last cycle's first day.
+  const td = todayISO();
+  const lastCyc = DATA.cycles[DATA.cycles.length - 1];
+  const start = sessionFromHash() || ALL.find(d => d.date === td) || nextDay() || lastCyc.days.find(d => d.type !== "rest") || lastCyc.days[0];
+  uiCycle = Math.max(0, DATA.cycles.indexOf(start.cycle));
+  CYC = DATA.cycles[uiCycle];
+  uiWeek = dayWeek(start);
+
+  SL.sync.init({
+    slug: PROGRAM.slug,
+    storageKey: PROGRAM.storageKey,
+    payload: () => ({ state, entries: syncEntries() }),
+    hasData: () => Object.keys(state.days).length > 0,
+    apply: merged => { const open = currentOpenDay(); state = normState(merged); render(); openTab(open); }
   });
-  saveState();
+
+  buildShell();
   render();
+  SL.sync.wireNotes();
+  openTab(start);
   publishSummary();
 }
-init();
+function currentOpenDay() {
+  const t = document.querySelector(".tab.active[data-day]");
+  return t ? dayById(t.dataset.day) : dueDayInWeek(uiWeek);
+}
+boot();
 </script>
 </body>
 </html>

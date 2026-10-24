@@ -17,7 +17,7 @@ Launcher at the root picks a program. Each sub-app keeps its own data, its own f
 | **Hotel Workouts** | Upper / Lower | — | Madsen split. DB + bodyweight, travel-ready. |
 | **KB Shred** | 8 weeks | 4×/week | Adam Gooch kettlebell program. Full-body daily with supersets and conditioning circuits. |
 | **6-Day PPL** | Open-ended (3-month block) | 6×/week | Jason Helmes / Anyman Fitness push-pull-legs split. Six dated session logs, per-exercise rest timers, an Up Next stat that rotates the cycle, and **automatic load progression** — log a weight plus whether you hit the rep range, and the next session suggests +5 lb, a hold, or a plateau deload (−10% / +2 reps). |
-| **Full Body Aesthetics** | 64 weeks | 6×/week | Ryan Fischer DB program. Full body daily, cycling strength and hypertrophy. |
+| **Full Body Aesthetics** | rolling 4-week cycles | 4 lifts + 2 optional conditioning | Chalk Performance Training (Ryan Fischer). Rebuilt 2026-10-24 on the current Chalk cycles, read from the Chalk web portal by `automation/exercise-library/fba_ingest.py`: rep-max main lift, one accessory per body part, a scored closer, conditioning days with a clock and a meters score. On SetLog (`fba_v2`), carry-forward across cycles, coach, rest bar. |
 | **Nutrition** (tracker, not a program) | open-ended | daily | Macros against a bodyweight-derived cut target (Mifflin-St Jeor, 1 g/lb protein, 0.3 g/lb fat, carbs the remainder; or set by hand), a closed meal library logged by weighed grams, off-plan quick adds, weigh-ins with a 7-day average, and a Sunday planner that turns the week's meals into a batch-cook list and a grocery list. Pushes `days` to the `workout-sync` Worker; `pull.py nutrition`. Added 2026-09-25. |
 
 ## Structure
@@ -55,7 +55,7 @@ exercise-library/
 ├── ppl/
 │   └── index.html          ← 6-Day PPL — push/pull/legs split (self-contained)
 └── full-body-aesthetics/
-    ├── index.html          ← Full Body Aesthetics — 64-week DB program
+    ├── index.html          ← Full Body Aesthetics — Chalk 4-week cycles, data-driven (schema 2)
     └── data.json           ← Program data
 ```
 
@@ -72,7 +72,7 @@ exercise-library/
 
 ## Set logging, the coach and sync (`shared/setlog.js`)
 
-Since 2026-09-24 seven programs log the same way: Father & Son, TFM 1.0 and 2.0, 6-Day PPL, Athletic AF, KB Shred and Hotel. Hyrox, Achilles and Full Body Aesthetics do not load it.
+Since 2026-09-24 seven programs log the same way: Father & Son, TFM 1.0 and 2.0, 6-Day PPL, Athletic AF, KB Shred and Hotel; Full Body Aesthetics joined on 2026-10-24. Hyrox and Achilles do not load it.
 
 - **Every set is integers.** A log is `{ sets: [{ r, w }], notes }`: `r` is reps (seconds on timed rows), `w` the weight (added weight on bodyweight rows: blank = untracked, 0 = strict bodyweight). An `= 3 × 8` button fills the targets; type over what differed.
 - **A hit is inferred**, never tapped: every required set at or above the target (PPL counts anywhere inside the range; the rest need the top). The old ✓ Hit / ✗ Missed toggles are gone.

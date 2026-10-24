@@ -56,6 +56,8 @@
   // Ratified by Ryan 2026-09-25 (the 8 unsure FBA rows). [] = deliberately uncounted: a finisher tied
   // to the exercise before it.
   const OVERRIDES = {
+    "chestsupportreardelts": ["pull"],   // Chest Support Rear Delts (FBA 2026-08 block; rear delts are pull)
+    "araises": ["pull"],   // A Raises (FBA; rear-delt / scap raise, pull)
     "banded30swithpalmup": ["arms"],   // Banded 30's with palm up
     "dbwristrotations": ["arms"],   // DB Wrist Rotations
     "bulletproofshouldercomplexesrest90secaftereachsetrepeatfor3totalsets": ["pull"],   // Bulletproof Shoulder Complexes

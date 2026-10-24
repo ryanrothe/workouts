@@ -136,6 +136,105 @@
   .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px); background: var(--text); color: white; padding: 10px 16px; border-radius: 999px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 50; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+  /* Last-time reference in the Now card (every layout): the most useful prior session of the exercise. */
+  .fba-last { display: flex; flex-direction: column; gap: 1px; }
+  .fba-last .k { font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--primary); }
+  .fba-last .v { font-size: 16px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.3; }
+  .fba-last.seed .k { color: var(--muted); }
+  .fba-last.seed .v { font-size: 13.5px; font-weight: 600; color: var(--text-body); }
+  .hs-row-sum .hs-sum-t small .fba-sum-last { display: block; color: var(--text-body); font-variant-numeric: tabular-nums; }
+
+  /* ---------------------------------------------------------------------------
+     iPad board (2026-10-24; DESIGN-BRIEF-2026-10-24.md, "iPad layout register"). The
+     classes below are applied only while LANE_MQ matches, so the phone is untouched.
+     Lane left (the page as the phone draws it, in its own scroller), a 330 px rail right:
+     clock card with the planned-time timeline, the rest ring, the workout tracker. Portrait
+     folds the rail into a band across the top. Patterns copied from Father & Son's lanes.
+     --------------------------------------------------------------------------- */
+  body.fba-wide .container { max-width: 1400px; }
+  .fba-wide-board { height: calc(100dvh - var(--fba-top, 60px)); display: flex; flex-direction: column; padding-top: 10px; box-sizing: border-box; }
+  .fba-cols { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 14px; }
+  .fba-lane { min-height: 0; min-width: 0; display: flex; flex-direction: column; }
+  .fba-lane-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 0 2px 28px; }
+  .fba-board .hs-sess-head .hs-sess-clock, .fba-board .hs-sess-pace { display: none; }
+  .fba-rail { min-height: 0; min-width: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 10px; padding-bottom: 12px; }
+  .fba-rail-main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+  .fba-clock-card { flex: none; background: var(--text); color: #fff; border-radius: 16px; padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .fba-rail-top { align-self: flex-start; background: none; border: 0; padding: 0; min-height: 24px; color: #a9abb3; font: inherit; font-size: 11px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; cursor: pointer; }
+  .fba-clock-title { font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 16px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fba-rail-clock { display: inline-flex; align-items: center; align-self: flex-start; background: none; border: 0; padding: 0; color: #fff; font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 44px; line-height: 1; min-height: 48px; font-variant-numeric: tabular-nums; cursor: pointer; }
+  .fba-rail-clock:not(.running):not(.stopped) .hs-clock-t { color: #d9c7fb; }
+  .fba-rail-clock.stopped .hs-clock-t { color: #a9abb3; }
+  .fba-rail-pace { font-size: 12.5px; color: #c9cad1; min-height: 18px; }
+  .fba-tl { position: relative; display: flex; gap: 2px; height: 40px; margin-top: 8px; }
+  .fba-seg { flex: 1 1 0; min-width: 0; border: 1px solid #3a3c44; border-radius: 8px; background: #2a2b33; color: #c9cad1; padding: 3px 4px; font: inherit; font-size: 10.5px; line-height: 1.2; text-align: left; overflow: hidden; white-space: nowrap; cursor: pointer; display: flex; flex-direction: column; justify-content: center; }
+  .fba-seg b { display: block; color: #fff; font-family: var(--disp); font-stretch: 70%; font-size: 11.5px; overflow: hidden; }
+  .fba-seg.tight span { display: none; }   /* a short segment shows its label only; the minutes are in the title */
+  .fba-seg.now { background: var(--primary); border-color: var(--primary); color: #f1e8ff; }
+  .fba-seg.done { border-color: #4a4c55; color: #8a8c95; } .fba-seg.done b { color: #a9abb3; }
+  .fba-seg.wu { text-align: center; padding: 3px 2px; }
+  .fba-head { position: absolute; top: -6px; bottom: -6px; left: 0; width: 3px; margin-left: -1px; background: #fff; border-radius: 2px; box-shadow: 0 0 0 1px var(--text); pointer-events: none; transition: left 1s linear; }
+  .fba-head[hidden] { display: none; }
+  .fba-axis { display: flex; justify-content: space-between; font-size: 10.5px; color: #a9abb3; margin-top: 7px; font-variant-numeric: tabular-nums; }
+  .fba-rest-card { flex: none; display: flex; gap: 12px; align-items: center; text-align: left; font: inherit; color: var(--text); background: var(--card); border: 2px solid var(--primary-line); border-radius: 14px; padding: 10px 14px; cursor: pointer; min-width: 0; }
+  .fba-rest-card.resting { border-color: var(--primary); }
+  .fba-rest-card.go { border-color: var(--success); }
+  .fba-ring { width: 60px; height: 60px; flex-shrink: 0; }
+  .fba-ring .bg { stroke: var(--border); }
+  .fba-ring .fg { stroke: var(--primary); transition: stroke-dashoffset 0.25s linear; }
+  .fba-rest-card.go .fba-ring .fg { stroke: var(--success); }
+  .fba-rc-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .fba-rc-k { font-size: 11px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
+  .fba-rc-t { font-family: var(--disp); font-stretch: 75%; font-weight: 800; font-size: 30px; line-height: 1; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .fba-rest-card.resting .fba-rc-t { color: var(--text); }
+  .fba-rest-card.go .fba-rc-t { color: var(--success); }
+  .fba-rc-n { font-size: 12.5px; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fba-track { flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px 8px; overflow: hidden; }
+  .fba-track-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .fba-track-head .fba-rc-k { color: var(--primary); }
+  .fba-track-head span:last-child { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .fba-track-rows { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; }
+  .fba-trow { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto; column-gap: 8px; align-items: center; width: 100%; border: 0; border-bottom: 1px solid var(--border-soft); border-radius: 8px; background: none; padding: 5px 6px; text-align: left; font: inherit; color: var(--text); cursor: pointer; flex: none; }
+  .fba-trow.now { background: var(--primary-soft); }
+  .fba-trow .n { font-size: 13px; font-weight: 700; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fba-trow.done .n { color: var(--muted); }
+  .fba-trow .l { grid-column: 1 / -1; font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; line-height: 1.3; }
+  .fba-trow .l b { color: var(--text-body); font-weight: 600; }
+  .fba-dots { display: inline-flex; gap: 5px; align-items: center; vertical-align: middle; }
+  .fba-dot { width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--border); box-sizing: border-box; background: transparent; display: inline-block; }
+  .fba-dot.part { border-color: var(--primary); background: linear-gradient(90deg, var(--primary) 50%, transparent 50%); }
+  .fba-dot.done { border-color: var(--primary); background: var(--primary); }
+  .fba-trow-closer { margin-top: auto; border-top: 1px solid var(--border); border-bottom: 0; border-radius: 0 0 8px 8px; padding-top: 7px; }
+  .fba-beat { font-size: 11.5px; font-weight: 800; color: var(--primary); white-space: nowrap; }
+  .fba-strip, .fba-more-btn, .fba-rail-more { display: none; }
+  .fba-rail .cond-card { margin: 0; flex: none; }
+  .fba-rail .clock-big { font-size: 52px; }
+
+  /* iPad portrait: the rail becomes a band across the top; the tracker folds to a strip with a drawer. */
+  @media (max-width: 999px) {
+    .fba-cols { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+    .fba-rail { grid-row: 1; overflow: visible; padding: 0; }
+    .fba-rail-main { flex: none; display: grid; grid-template-columns: minmax(0, 1fr) 220px; grid-template-rows: auto auto; gap: 8px 10px; }
+    .fba-clock-card { grid-row: 1; grid-column: 1; }
+    .fba-rail.fba-cond .fba-clock-card { grid-column: 1 / -1; }
+    .fba-rest-card { grid-row: 1; grid-column: 2; align-self: stretch; }
+    .fba-rail-main > .fba-track { display: none; }
+    .fba-rail-main > .cond-card { grid-row: 2; grid-column: 1 / -1; }
+    .fba-strip { grid-row: 2; grid-column: 1 / -1; display: flex; gap: 6px; min-width: 0; }
+    .fba-sseg { flex: 1 1 0; min-width: 0; min-height: 46px; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 6px 7px; border-radius: 10px; background: var(--card); border: 1px solid var(--border); text-align: left; font: inherit; cursor: pointer; }
+    .fba-sseg b { font-size: 11.5px; font-weight: 700; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fba-sseg.now { border: 2px solid var(--primary); padding: 5px 6px; } .fba-sseg.now b { color: var(--primary); }
+    .fba-sseg.done b { color: var(--success); }
+    .fba-sseg .fba-dots { gap: 3px; } .fba-sseg .fba-dot { width: 9px; height: 9px; border-width: 1.5px; }
+    .fba-more-btn { display: block; flex: 0 0 auto; border: 1px solid var(--border); background: var(--card); border-radius: 10px; font: inherit; font-size: 12.5px; font-weight: 700; color: var(--primary); min-height: 46px; padding: 0 12px; cursor: pointer; }
+    .fba-rail.more-open .fba-rail-more { display: block; max-height: 42vh; overflow-y: auto; }
+    .fba-rail-more .fba-track { flex: none; overflow: visible; }
+    .fba-rail-more .fba-track-rows { overflow: visible; }
+    .fba-rail-clock { font-size: 40px; min-height: 44px; }
+    .fba-rc-t { font-size: 26px; }
+    .fba-tl { height: 42px; }
+  }
+
   @media (max-width: 420px) {
     .hero-stats { gap: 6px; }
     .stat { padding: 6px 4px; }
@@ -583,6 +682,7 @@ function wireTabs() {
       tab.classList.add("active");
       const pane = document.getElementById("pane-" + tab.dataset.pane);
       if (pane) pane.classList.add("active");
+      if (boardMode() && tab.dataset.day && tab.dataset.day !== "empty") scrollBoardIntoView(tab.dataset.day);   // the board fills the screen below the tabs
     };
   });
 }
@@ -677,7 +777,9 @@ const ICON = {
 function renderDay(day) {
   const container = document.getElementById("container-" + day.date);
   if (!container) return;
+  if (boardMode() && day.type !== "rest") return renderBoard(day, container);   // iPad: lane + rail
   container.innerHTML = "";
+  container.className = "";
   if (day.type === "rest") return renderRest(day, container);
   if (day.type === "conditioning") return renderConditioning(day, container);
   renderStrength(day, container);
@@ -738,14 +840,16 @@ function renderStrength(day, container) {
   const title = day.title || (main ? main.name : "Lift");
   const r = rulesFor(CYC, dayWeek(day));
 
-  const nowIdx = tappedNow[k] != null && tappedNow[k] < rows.length ? tappedNow[k] : rows.findIndex((_, i) => !isDoneAt(i));
+  const nowIdx = nowIndex(day);
   const nextIdxs = rows.map((_, i) => i).filter(i => i !== nowIdx && !isDoneAt(i));
   const afterNow = nextIdxs.find(i => i > nowIdx);
   const upNextAt = afterNow != null ? afterNow : nextIdxs[0];
 
-  container.appendChild(sessHead(day, title, done, rows.length));
-  container.appendChild(sessCtl(day));
-  wireClock(day);
+  const head = sessHead(day, title, done, rows.length);
+  const ctl = sessCtl(day);
+  container.appendChild(head);
+  container.appendChild(ctl);
+  if (!boardMode()) wireClock(day, head.querySelector(".hs-sess-clock"), ctl.querySelector(".hs-sess-pace"));   // the board wires its rail clock instead
 
   if (day.note) container.appendChild(collapsible("Coach's note for today", day.note, `note_${day.date}`));
   const wu = (Array.isArray(day.warmup) && day.warmup.length ? day.warmup : day.cycle.warmup) || [];
@@ -865,10 +969,11 @@ function renderRow(day, ex, idx, st, total) {
     const doneTxt = [isGridScore(ex) ? scoreText(ex, sc) : [scoreText(ex, sc), loggedRx(ex, spec, log)].filter(Boolean).join(" · ")].filter(Boolean)[0] || loggedRx(ex, spec, log) || shortRx(ex, spec);
     const right = live ? `<button type="button" class="btn btn-timer row-timer" data-default="${timerLabel}">${timerLabel}</button>`
       : st === "done" ? escapeHtml(doneTxt) : "";
+    const ltNext = st === "next" ? lastTimeText(ex, day, spec) : "";
     el.innerHTML = `
       <div class="hs-row-sum" role="button" tabindex="0">
         <span class="hs-mark">${st === "done" ? ICON.check : ""}</span>
-        <span class="hs-sum-t"><b>${escapeHtml(ex.name)}</b><small><span class="ex-tag">${slotName}</span>${st === "next" ? escapeHtml(shortRx(ex, spec)) : ""}</small></span>
+        <span class="hs-sum-t"><b>${escapeHtml(ex.name)}</b><small><span class="ex-tag">${slotName}</span>${st === "next" ? escapeHtml(shortRx(ex, spec)) : ""}${ltNext ? `<span class="fba-sum-last">Last · ${escapeHtml(ltNext)}</span>` : ""}</small></span>
         ${right ? `<span class="hs-sum-r">${right}</span>` : ""}
       </div>`;
     const sum = el.querySelector(".hs-row-sum");
@@ -885,8 +990,8 @@ function renderRow(day, ex, idx, st, total) {
     const hist = priorEntries(ex.name, day.date, ex);
     if (hist.length) {
       const L = hist[0];
-      lastHtml = SL.lastHtml(L, spec, L.seed ? "from Chalk, not logged here" : `${L.where}${L.date ? " · " + shortDate(L.date) : ""}`);
-      weekHtml = weekOverHtml(L, spec, day);
+      lastHtml = lastTimeHtml(ex, day, spec, hist);
+      weekHtml = L.seed ? "" : weekOverHtml(L, spec, day);   // the seed line already says it came from Chalk
     }
     sugg = suggestNext(ex, day, spec);
   }
@@ -966,6 +1071,12 @@ function loggedRx(ex, spec, log) {
 function revealNow(day) {
   const el = document.querySelector(`#container-${day.date} .hs-now`);
   if (!el || !el.offsetParent) return;
+  const sc = el.closest(".fba-lane-scroll");
+  if (sc) {   // board: the lane scrolls, not the window
+    const y = el.getBoundingClientRect().top - sc.getBoundingClientRect().top;
+    if (y < 0 || y > sc.clientHeight * 0.6) sc.scrollTo({ top: Math.max(0, sc.scrollTop + y - 6), behavior: "smooth" });
+    return;
+  }
   const bar = document.querySelector(".appbar");
   const top = el.getBoundingClientRect().top - (bar ? bar.getBoundingClientRect().bottom : 0) - 8;
   if (top < 0 || top > window.innerHeight * 0.6) window.scrollBy({ top, behavior: "smooth" });
@@ -977,14 +1088,17 @@ function revealNow(day) {
    a reload or a re-render keeps counting.
    --------------------------------------------------------------------------- */
 const condIvs = {};
-function renderConditioning(day, container) {
+/* cardSlot: where the countdown card goes; the board passes its rail, the phone leaves it in the pane. */
+function renderConditioning(day, container, cardSlot) {
   const ds = dayState(day.date, false);
   const c = (ds && ds.cond) || {};
   const done = ds && ds.completed.cond ? 1 : 0;
   const dur = (day.work && day.work.durationSec) || 0;
-  container.appendChild(sessHead(day, day.title || "Conditioning", done, 1));
-  container.appendChild(sessCtl(day));
-  wireClock(day);
+  const head = sessHead(day, day.title || "Conditioning", done, 1);
+  const ctl = sessCtl(day);
+  container.appendChild(head);
+  container.appendChild(ctl);
+  if (!boardMode()) wireClock(day, head.querySelector(".hs-sess-clock"), ctl.querySelector(".hs-sess-pace"));
   if (day.warmup && day.warmup.length) container.appendChild(renderPrep(day, "Warm-up", "wu", day.warmup));
 
   if (day.note) container.appendChild(collapsible("Coach's note for today", day.note, `note_${day.date}`));
@@ -995,10 +1109,13 @@ function renderConditioning(day, container) {
   const hasClock = dur > 0;
   const card = document.createElement("div");
   card.className = "cond-card" + (c.finished ? " finished" : "");
+  // On the board the coach's text reads in the lane; the rail card keeps the chooser, the clock and the score.
+  const textHtml = day.text ? `<div class="cond-text">${escapeHtml(day.text)}</div>` : "";
+  if (cardSlot && textHtml) { const tx = document.createElement("div"); tx.className = "rest-card"; tx.innerHTML = `<div class="eyebrow">The workout</div>${textHtml}`; container.appendChild(tx); }
   card.innerHTML = `
     <div class="hs-now-eyebrow">Work${hasClock ? ` · ${fmtClock(dur)} nonstop` : ""}</div>
     <div class="ex-name" style="font-size:20px;font-weight:700">${escapeHtml(day.title || "Conditioning")}</div>
-    ${day.text ? `<div class="cond-text">${escapeHtml(day.text)}</div>` : ""}
+    ${cardSlot ? "" : textHtml}
     ${day.work && day.work.instruction ? `<div class="cond-instruction">${escapeHtml(day.work.instruction)}</div>` : ""}
     ${day.modalities && day.modalities.length ? `<div class="hs-section-label" style="margin:12px 0 2px">Modality</div>
     <div class="seg">${day.modalities.map(m => `<button type="button" data-m="${escapeHtml(m)}" class="${c.modality === m ? "on" : ""}">${escapeHtml(m)}</button>`).join("")}</div>` : ""}
@@ -1023,7 +1140,7 @@ function renderConditioning(day, container) {
     <div class="hs-tools">
       <button type="button" class="btn hs-done-btn${done ? " on" : ""}" aria-pressed="${!!done}">${ICON.check}Done</button>
     </div>`;
-  container.appendChild(card);
+  (cardSlot || container).appendChild(card);
 
   const ensure = () => { const d = dayState(day.date, true); d.cond = d.cond || {}; stampDate(d); return d.cond; };
   card.querySelectorAll(".seg button").forEach(b => b.onclick = () => { const cc = ensure(); cc.modality = cc.modality === b.dataset.m ? null : b.dataset.m; saveState(); renderDay(day); });
@@ -1085,6 +1202,352 @@ function renderConditioning(day, container) {
   };
   syncIv(); paint();
 }
+
+/* ---------------------------------------------------------------------------
+   LAST-TIME REFERENCE (2026-10-24, Ryan's addition to the iPad register). The
+   most useful prior session of an exercise, matched by SL.normName across
+   every cycle: the most recent logged session before this day. It reads
+   "last week" when that session was within the past 7 days (so last week's
+   session wins whenever it exists), else "W2 · Aug 3 cycle". The Chalk seed
+   (lastLoadLb) shows only when nothing is logged here, labelled as such.
+   priorEntries() already orders real logs newest first with the seed last, so
+   the coach's fill (sugg.weight) prefills from the same session.
+   --------------------------------------------------------------------------- */
+function lastTimeOf(ex, day, hist) {
+  hist = hist || priorEntries(ex.name, day.date, ex);
+  if (!hist.length) return null;
+  const L = hist[0];
+  if (L.seed) return { seed: true, weight: L.weight, entry: L };
+  const diff = Math.round((Date.parse(day.date + "T12:00:00") - Date.parse(L.date + "T12:00:00")) / 864e5);
+  const lastWeek = diff >= 0 && diff <= 7;
+  const ctx = lastWeek ? "last week" : `W${dayWeek(L.day)} · ${monthLabel(L.day.cycle.startDate)} cycle`;
+  return { seed: false, entry: L, date: L.date, lastWeek, ctx };
+}
+/* One line for the tracker row and the Up next summary: "last wk · 12, 12, 12 @ 104 lb". */
+function lastTimeText(ex, day, spec) {
+  const lt = lastTimeOf(ex, day);
+  if (!lt) return "";
+  if (lt.seed) return `Chalk ${fmtLoad(lt.weight, spec.bw)} · not logged here`;
+  return `${lt.lastWeek ? "last wk" : lt.ctx.replace(" cycle", "")} · ${SL.lastText(lt.entry, spec)}`;
+}
+/* The prominent block in the Now card. A newer stack set still wins, through SL.lastHtml, as everywhere in the library. */
+function lastTimeHtml(ex, day, spec, hist) {
+  const lt = lastTimeOf(ex, day, hist);
+  if (!lt) return "";
+  if (SL.stackNewer(ex.name, lt.seed ? null : lt.date)) return SL.lastHtml(lt.entry, spec, "");
+  if (lt.seed) return `<div class="fba-last seed"><span class="k">Last · from Chalk, not logged here</span><span class="v">Chalk showed ${fmtLoad(lt.weight, spec.bw)} the last time you logged it there</span></div>`;
+  const e = lt.entry;
+  const flag = spec.isMax ? "" : e.hit === true ? ` <span class="ex-hit-flag yes">hit</span>` : e.hit === false ? ` <span class="ex-hit-flag no">short</span>` : "";
+  return `<div class="fba-last"><span class="k">Last time · ${escapeHtml(lt.ctx)} · ${monthLabel(e.date)}</span><span class="v">${escapeHtml(SL.lastText(e, spec))}${flag}</span></div>`;
+}
+
+/* ---------------------------------------------------------------------------
+   iPad BOARD (2026-10-24). At Father & Son's breakpoint a strength or
+   conditioning day renders as a board: the lane on the left is the page as
+   the phone draws it, in its own scroller; the rail on the right stacks the
+   session clock with the planned-time timeline, the rest ring and the
+   workout tracker (the countdown card on a conditioning day). Rendering only:
+   state, payloads and the phone layout do not change. Register:
+   KARL_DATA/outputs/personal/workout-trackers/full-body-aesthetics/DESIGN-BRIEF-2026-10-24.md
+   --------------------------------------------------------------------------- */
+const LANE_MQ = window.matchMedia("(min-width: 740px) and (min-height: 600px)");
+function boardMode() { return LANE_MQ.matches; }
+const laneScroll = {};      // date → the lane's scrollTop, kept across re-renders
+let jumpIdx = null;         // set by a tap on the timeline or tracker: the next render scrolls the lane there
+let railMoreOpen = false;   // portrait: the tracker drawer
+const SLOT_SHORT = { main: "Main", chest: "Chest", back: "Back", legs: "Legs", shoulders: "Shldr", biceps: "Bi", triceps: "Tri", abs: "Abs", closer: "Closer" };
+const SCORE_TITLE = { "deathby-minute": "Death By", "amrap-reps": "Max reps", "ladder-reps": "Ladder", "for-time": "For time", "load": "Top load", "repmax-load": "Rep max" };
+
+function setBoardTop() {
+  const bar = document.querySelector(".appbar");
+  document.documentElement.style.setProperty("--fba-top", `${bar ? bar.getBoundingClientRect().height : 60}px`);
+}
+function scrollBoardIntoView(date) {
+  if (!boardMode()) return;
+  const el = document.getElementById("container-" + date);
+  if (!el || !el.offsetParent || !el.classList.contains("fba-wide-board")) return;
+  setBoardTop();
+  const bar = document.querySelector(".appbar");
+  const top = el.getBoundingClientRect().top + window.scrollY - (bar ? bar.getBoundingClientRect().height : 0);
+  window.scrollTo({ top: Math.max(0, top), behavior: "auto" });
+}
+/* The row the Now card shows: the tapped one, else the first not marked Done (same rule as the phone). */
+function nowIndex(day) {
+  if (day.type !== "strength") return -1;
+  const ds = dayState(day.date, false), k = day.date, rows = day.exercises;
+  return tappedNow[k] != null && tappedNow[k] < rows.length ? tappedNow[k] : rows.findIndex((_, i) => !(ds && ds.completed["m" + i]));
+}
+/* One state per prescribed set: done (checked, or the row's Done button is on), part (a number typed), "" (empty). */
+function setStates(ds, idx, spec) {
+  const done = !!(ds && ds.completed["m" + idx]);
+  const log = SL.normLog(ds && ds.logs[idx], spec.sets);
+  return log.sets.slice(0, spec.sets).map(x => done || x.d ? "done" : (x.r != null || x.w != null) ? "part" : "");
+}
+function rowFinished(ds, idx, spec) { const st = setStates(ds, idx, spec); return st.length > 0 && st.every(s => s === "done"); }
+function dotsHtml(states) { return `<span class="fba-dots">${states.map(s => `<i class="fba-dot ${s}"></i>`).join("")}</span>`; }
+
+/* Planned seconds from the page's own model (rowSecs: ramp + sets × set time + rests + 45 s; closer 8 min;
+   warm-up 6 min), as the catalog and the session header already use it. Sets carry no timestamps yet, so
+   the estimate does not learn from logged data; see the build report. */
+function dayPlan(day) {
+  const segs = [{ kind: "wu", label: "WU", name: "Warm-up", secs: 6 * 60 }];
+  let at = 6 * 60;
+  const offsets = [];
+  if (day.type === "strength") {
+    day.exercises.forEach((ex, i) => {
+      const s = rowSecs(ex, specOf(ex));
+      offsets[i] = at;
+      segs.push({ kind: "ex", idx: i, label: ex.closer ? "Closer" : SLOT_SHORT[ex.slot] || ex.slot || "", name: ex.name, secs: s });
+      at += s;
+    });
+    return { segs, offsets, total: at };
+  }
+  const d = (day.work && day.work.durationSec) || 0;
+  segs.push({ kind: "cond", label: day.title || "Work", name: day.title || "Conditioning", secs: d || 20 * 60 });
+  return { segs, offsets, total: d ? at + d : null };
+}
+/* Ahead or behind: elapsed against the planned offset of the first unfinished row, plus the share of its sets done. */
+function paceText(day, elapsed, cur) {
+  if (isDayComplete(day)) return `done in ${fmtClock(elapsed)}`;
+  if (cur.clockStop) return "clock stopped";
+  const plan = dayPlan(day);
+  if (plan.total == null) return "";
+  const target = `planned ${fmtMins(plan.total).replace("~", "")}`;
+  if (day.type !== "strength") return `${Math.round(elapsed / 60)} of ${fmtMins(plan.total).replace("~", "")} in`;
+  const ds = dayState(day.date, false);
+  const rows = day.exercises;
+  const next = rows.findIndex((ex, i) => !rowFinished(ds, i, specOf(ex)));
+  if (next < 0) return target;
+  const spec = specOf(rows[next]);
+  const st = setStates(ds, next, spec);
+  const frac = st.length ? st.filter(s => s === "done").length / st.length : 0;
+  if (next === 0 && frac === 0) return target;
+  const delta = Math.round((plan.offsets[next] + frac * rowSecs(rows[next], spec) - elapsed) / 60);
+  return `${delta >= 1 ? `${delta} min ahead` : delta <= -1 ? `${-delta} min behind` : "on pace"} · ${target}`;
+}
+
+function renderBoard(day, container) {
+  const was = container.querySelector(".fba-lane-scroll");
+  if (was) laneScroll[day.date] = was.scrollTop;
+  container.innerHTML = "";
+  container.className = "fba-board fba-wide-board";
+  setBoardTop();
+  const cols = document.createElement("div"); cols.className = "fba-cols";
+  const lane = document.createElement("section"); lane.className = "fba-lane";
+  const sc = document.createElement("div"); sc.className = "fba-lane-scroll";
+  lane.appendChild(sc);
+  const rail = document.createElement("aside");
+  rail.className = "fba-rail" + (railMoreOpen ? " more-open" : "") + (day.type === "conditioning" ? " fba-cond" : "");
+  const main = document.createElement("div"); main.className = "fba-rail-main";
+  const more = document.createElement("div"); more.className = "fba-rail-more";
+  rail.appendChild(main); rail.appendChild(more);
+  cols.appendChild(lane); cols.appendChild(rail);
+  container.appendChild(cols);
+
+  main.appendChild(renderClockCard(day));
+  if (day.type === "strength") {
+    renderStrength(day, sc);
+    main.appendChild(renderRestCard(day));
+    main.appendChild(renderTracker(day));
+    main.appendChild(renderStrip(day));
+    if (railMoreOpen) more.appendChild(renderTracker(day));
+  } else {
+    renderConditioning(day, sc, main);   // the countdown and modality chooser take the tracker's place
+  }
+  wireClock(day, main.querySelector(".fba-rail-clock"), main.querySelector(".fba-rail-pace"), () => paintTimeline(day));
+
+  // Scroll: a timeline or tracker tap wins, else where the lane was.
+  const prev = laneScroll[day.date];
+  if (prev != null) sc.scrollTop = prev;
+  if (jumpIdx != null) {
+    const target = jumpIdx === "wu" ? sc.querySelector(".prep") : sc.querySelector(`.hs-row[data-idx="${jumpIdx}"]`);
+    if (target) sc.scrollTop = Math.max(0, target.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop - 6);
+    jumpIdx = null;
+  }
+  laneScroll[day.date] = sc.scrollTop;
+  paintTimeline(day);
+  paintRestRing();
+}
+
+/* The dark clock card: session clock, planned total and pace, the timeline (one segment per slot, sized by
+   planned minutes, playhead at elapsed, tap to jump). */
+function renderClockCard(day) {
+  const plan = dayPlan(day);
+  const el = document.createElement("div");
+  el.className = "fba-clock-card";
+  const title = day.type === "conditioning" ? (day.title || "Conditioning") : (day.title || (day.exercises.find(x => x.slot === "main") || {}).name || "Lift");
+  el.innerHTML = `
+    <button type="button" class="fba-rail-top" aria-label="Show the week and tabs">Week ${dayWeek(day)} · ${DOW_FULL[day.dow] || day.dow} · ${shortDate(day.date)} ↑</button>
+    <div class="fba-clock-title">${escapeHtml(title)}</div>
+    <button type="button" class="fba-rail-clock" data-ck="rail"><span class="hs-clock-t">Start</span></button>
+    <span class="fba-rail-pace"></span>
+    <div class="fba-tl" role="group" aria-label="Planned session timeline">
+      ${plan.segs.map(s => `<button type="button" class="fba-seg${s.kind === "wu" ? " wu" : ""}${plan.total && s.secs / plan.total < 0.14 ? " tight" : ""}" data-seg="${s.kind === "ex" ? s.idx : s.kind}" style="flex-grow:${s.secs}" title="${escapeHtml(s.name)} · ${Math.round(s.secs / 60)} min"><b>${escapeHtml(s.label)}</b>${s.kind === "wu" ? "" : `<span>${Math.round(s.secs / 60)} min</span>`}</button>`).join("")}
+      <i class="fba-head" hidden></i>
+    </div>
+    <div class="fba-axis"><span>0:00</span><span class="fba-axis-mid"></span><span>${plan.total != null ? fmtClock(plan.total) : "open"}</span></div>`;
+  el.querySelector(".fba-rail-top").onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+  el.querySelectorAll(".fba-seg").forEach(b => b.onclick = () => jumpTo(day, b.dataset.seg));
+  return el;
+}
+function paintTimeline(day) {
+  const root = document.getElementById("container-" + day.date);
+  const tl = root && root.querySelector(".fba-tl");
+  if (!tl) return;
+  const ds = dayState(day.date, false);
+  const plan = dayPlan(day);
+  const elapsed = ds && ds.clockStart ? Math.round(((ds.clockStop || Date.now()) - ds.clockStart) / 1000) : null;
+  const head = tl.querySelector(".fba-head");
+  if (elapsed == null || plan.total == null) head.hidden = true;
+  else { head.hidden = false; head.style.left = `${Math.min(100, 100 * elapsed / plan.total).toFixed(2)}%`; }
+  const mid = root.querySelector(".fba-axis-mid");
+  if (mid) mid.textContent = elapsed == null ? "" : `${fmtClock(elapsed)} now`;
+  if (day.type !== "strength") return;
+  const nowIdx = nowIndex(day);
+  tl.querySelectorAll(".fba-seg[data-seg]").forEach(b => {
+    const i = parseInt(b.dataset.seg, 10);
+    if (isNaN(i)) return;
+    b.classList.toggle("done", rowFinished(ds, i, specOf(day.exercises[i])));
+    b.classList.toggle("now", i === nowIdx);
+  });
+}
+function jumpTo(day, seg) {
+  if (seg === "wu") { prepOpen[`${day.date}_wu`] = true; jumpIdx = "wu"; renderDay(day); return; }
+  const idx = parseInt(seg, 10);
+  if (isNaN(idx)) return;
+  tappedNow[day.date] = idx; jumpIdx = idx;
+  renderDay(day);
+}
+
+/* The rest ring: SetLog's rest (started by a set check) drawn as a ring. At zero it focuses the next
+   undone set's reps input in the resting exercise's grid and does nothing else; the module beeps. */
+function renderRestCard(day) {
+  const el = document.createElement("button");
+  el.type = "button"; el.className = "fba-rest-card"; el.dataset.date = day.date;
+  el.setAttribute("aria-label", "Rest: tap to skip");
+  const C = (2 * Math.PI * 26).toFixed(1);
+  el.innerHTML = `
+    <svg class="fba-ring" viewBox="0 0 60 60" aria-hidden="true"><circle class="bg" cx="30" cy="30" r="26" fill="none" stroke-width="6"/><circle class="fg" cx="30" cy="30" r="26" fill="none" stroke-width="6" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}" transform="rotate(-90 30 30)"/></svg>
+    <span class="fba-rc-body"><span class="fba-rc-k">Rest</span><span class="fba-rc-t">Ready</span><span class="fba-rc-n"></span></span>`;
+  el.onclick = () => SL.rest.stop();
+  return el;
+}
+/* The resting row and its next undone set, from the rest key SetLog builds: "<name>|<date>_<idx>". */
+function restTarget(day, key) {
+  if (!key || day.type !== "strength") return null;
+  const m = String(key).match(/\|(\d{4}-\d{2}-\d{2})_(\d+)$/);
+  if (!m || m[1] !== day.date) return null;
+  const idx = +m[2], ex = day.exercises[idx];
+  if (!ex) return null;
+  const spec = specOf(ex);
+  const ds = dayState(day.date, false);
+  const log = SL.normLog(ds && ds.logs[idx], spec.sets);
+  const s = log.sets.findIndex(x => !x.d);
+  return { idx, name: ex.name, set: s >= 0 && s < spec.sets ? s + 1 : null };
+}
+let ringArmed = null;   // the rest key whose zero already armed a set
+function armNextSet(day, key) {
+  const info = restTarget(day, key);
+  if (!info || info.set == null) return;
+  const grid = document.querySelector(`#container-${day.date} .sl-grid[data-sl-key="${CSS.escape(key)}"]`);
+  const row = grid && grid.querySelectorAll(".sl-row")[info.set - 1];
+  const inp = row && (row.querySelector(".sl-r") || row.querySelector(".sl-w"));
+  if (inp) inp.focus();
+}
+function paintRestRing() {
+  document.querySelectorAll(".fba-rest-card").forEach(el => {
+    const day = dayById(el.dataset.date);
+    if (!day) return;
+    const c = SL.rest.chan();
+    const fg = el.querySelector(".fg"), t = el.querySelector(".fba-rc-t"), n = el.querySelector(".fba-rc-n");
+    const C = parseFloat(fg.getAttribute("stroke-dasharray"));
+    const resting = !!(c.key && c.end);
+    const go = !resting && !!c.key && !!c.goUntil;
+    el.classList.toggle("resting", resting);
+    el.classList.toggle("go", go);
+    const info = restTarget(day, c.key);
+    if (resting) {
+      ringArmed = null;
+      const left = SL.rest.left(c);
+      t.textContent = SL.rest.fmt(left);
+      fg.setAttribute("stroke-dashoffset", (C * (1 - left / c.total)).toFixed(1));
+      n.textContent = info ? (info.set != null ? `set ${info.set} arms at zero · ${info.name}` : `${info.name} · all sets checked`) : "tap to skip";
+    } else if (go) {
+      t.textContent = "Go";
+      fg.setAttribute("stroke-dashoffset", "0");
+      n.textContent = info && info.set != null ? `set ${info.set} · ${info.name}` : "Rest done";
+      if (info && ringArmed !== c.key) { ringArmed = c.key; armNextSet(day, c.key); }   // only the card of the day the rest belongs to arms
+    } else {
+      ringArmed = null;
+      t.textContent = "Ready";
+      fg.setAttribute("stroke-dashoffset", C.toFixed(1));
+      const ex = day.type === "strength" ? day.exercises[nowIndex(day)] : null;
+      const spec = ex ? specOf(ex) : null;
+      n.textContent = ex ? (spec.rest ? `${fmtClock(spec.rest)} after each set · ${ex.name}` : ex.name) : "";
+    }
+  });
+}
+SL.rest.onPaint(paintRestRing);
+
+/* The workout tracker: every slot in order, a dot per prescribed set, the Last-time line, the closer pinned
+   at the bottom with its score to beat. Tap a row to bring it into the lane. */
+function scoreBeatText(s) {
+  const def = scoreDef(s.type);
+  if (s.type === "deathby-minute") return `${s.val} min`;
+  if (def.fromGrid) return `${fmtWeight(s.val)} lb`;
+  return `${s.val}${def.unit ? " " + def.unit : ""}`;
+}
+function renderTracker(day) {
+  const ds = dayState(day.date, false);
+  const nowIdx = nowIndex(day);
+  const rows = day.exercises;
+  let totalSets = 0, doneSets = 0, finished = 0;
+  const items = rows.map((ex, i) => {
+    const spec = specOf(ex);
+    const st = setStates(ds, i, spec);
+    totalSets += st.length; doneSets += st.filter(s => s === "done").length;
+    const fin = st.length > 0 && st.every(s => s === "done");
+    if (fin) finished++;
+    const lt = lastTimeText(ex, day, spec);
+    let beat = "";
+    if (ex.closer && ex.score) {
+      const prior = priorScores(ex.name, day.date);
+      const ttl = SCORE_TITLE[ex.score.type] || "Closer";
+      beat = prior.length ? `${ttl} · beat ${scoreBeatText(prior[0])}` : `${ttl} · first score`;
+    }
+    return `<button type="button" class="fba-trow${i === nowIdx ? " now" : ""}${fin ? " done" : ""}${ex.closer ? " fba-trow-closer" : ""}" data-idx="${i}">
+      <span class="n">${escapeHtml(ex.name)}</span>${beat ? `<span class="fba-beat">${escapeHtml(beat)}</span>` : dotsHtml(st)}
+      <span class="l">${escapeHtml(SLOT[ex.slot] || ex.slot || "")}${ex.closer ? ` · ${dotsHtml(st)}` : ""}${lt ? ` · <b>${escapeHtml(lt)}</b>` : ""}</span>
+    </button>`;
+  });
+  const el = document.createElement("div");
+  el.className = "fba-track";
+  el.innerHTML = `<div class="fba-track-head"><span class="fba-rc-k">Workout</span><span>${finished} of ${rows.length} · ${doneSets} of ${totalSets} sets</span></div><div class="fba-track-rows">${items.join("")}</div>`;
+  el.querySelectorAll(".fba-trow").forEach(b => b.onclick = () => jumpTo(day, b.dataset.idx));
+  return el;
+}
+/* Portrait: the tracker as a strip of segments with a More drawer. Hidden in landscape by CSS. */
+function renderStrip(day) {
+  const ds = dayState(day.date, false);
+  const nowIdx = nowIndex(day);
+  const el = document.createElement("div");
+  el.className = "fba-strip";
+  el.innerHTML = day.exercises.map((ex, i) => {
+    const st = setStates(ds, i, specOf(ex));
+    const fin = st.length > 0 && st.every(s => s === "done");
+    return `<button type="button" class="fba-sseg${i === nowIdx ? " now" : ""}${fin ? " done" : ""}" data-idx="${i}" title="${escapeHtml(ex.name)}"><b>${escapeHtml(ex.closer ? "Closer" : SLOT_SHORT[ex.slot] || ex.name)}</b>${dotsHtml(st)}</button>`;
+  }).join("") + `<button type="button" class="fba-more-btn">${railMoreOpen ? "Hide" : "More"}</button>`;
+  el.querySelectorAll(".fba-sseg").forEach(b => b.onclick = () => jumpTo(day, b.dataset.idx));
+  el.querySelector(".fba-more-btn").onclick = () => { railMoreOpen = !railMoreOpen; renderDay(day); };
+  return el;
+}
+LANE_MQ.addEventListener("change", () => {
+  if (!DATA) return;
+  const open = currentOpenDay();
+  render();
+  openTab(open);
+});
+window.addEventListener("resize", () => { if (boardMode()) setBoardTop(); });
 
 /* ---------------------------------------------------------------------------
    NOTES PANE: how it works, the block rules, sync, backup
@@ -1173,6 +1636,7 @@ function updateStats() {
   });
 }
 function render() {
+  document.body.classList.toggle("fba-wide", boardMode());
   renderCycleBar();
   renderWeekBar();
   buildWeek();
@@ -1247,10 +1711,12 @@ window.HS_CATALOG = function () {
    SESSION CLOCK: elapsed against the planning model.
    --------------------------------------------------------------------------- */
 const sessionClocks = {};
-function wireClock(day) {
-  const btn = document.getElementById("clock-" + day.date);
-  const stat = document.getElementById("clockstat-" + day.date);
+/* btn: the clock button (its .hs-clock-t carries the time); stat: the pace line under it.
+   onPaint: the board's extra painter (timeline playhead, ahead/behind line); when set, the pace
+   line reads ahead/behind against the planned offsets instead of "12 of 46 min in". */
+function wireClock(day, btn, stat, onPaint) {
   if (!btn) return;
+  const key = `${day.date}|${btn.dataset.ck || "head"}`;
   const txt = btn.querySelector(".hs-clock-t") || btn;
   const planned = daySecs(day);
   function paint() {
@@ -1258,7 +1724,8 @@ function wireClock(day) {
     if (!cur || !cur.clockStart) {
       txt.textContent = "Start"; btn.classList.remove("running", "stopped");
       btn.setAttribute("aria-label", "Start the session clock");
-      if (stat) stat.textContent = "";
+      if (stat) stat.textContent = onPaint && planned != null ? `planned ${fmtMins(planned).replace("~", "")} · tap the clock to start` : "";
+      if (onPaint) onPaint(null);
       return;
     }
     const elapsed = Math.round(((cur.clockStop || Date.now()) - cur.clockStart) / 1000);
@@ -1266,12 +1733,13 @@ function wireClock(day) {
     btn.classList.toggle("running", !cur.clockStop);
     btn.classList.toggle("stopped", !!cur.clockStop);
     btn.setAttribute("aria-label", cur.clockStop ? `Session clock stopped at ${fmtClock(elapsed)}, tap to reset` : `Session clock ${fmtClock(elapsed)}, tap to stop`);
-    if (stat) stat.textContent = isDayComplete(day) ? `done in ${fmtClock(elapsed)}` : cur.clockStop ? "clock stopped" : planned != null ? `${Math.round(elapsed / 60)} of ${fmtMins(planned).replace("~", "")} in` : "";
+    if (stat) stat.textContent = onPaint ? paceText(day, elapsed, cur) : isDayComplete(day) ? `done in ${fmtClock(elapsed)}` : cur.clockStop ? "clock stopped" : planned != null ? `${Math.round(elapsed / 60)} of ${fmtMins(planned).replace("~", "")} in` : "";
+    if (onPaint) onPaint(elapsed);
   }
   function syncInterval() {
-    if (sessionClocks[day.date]) { clearInterval(sessionClocks[day.date]); delete sessionClocks[day.date]; }
+    if (sessionClocks[key]) { clearInterval(sessionClocks[key]); delete sessionClocks[key]; }
     const cur = dayState(day.date, false);
-    if (cur && cur.clockStart && !cur.clockStop) sessionClocks[day.date] = setInterval(paint, 1000);
+    if (cur && cur.clockStart && !cur.clockStop) sessionClocks[key] = setInterval(paint, 1000);
   }
   btn.onclick = () => {
     const cur = dayState(day.date, true);

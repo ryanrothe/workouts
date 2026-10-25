@@ -1,0 +1,1699 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="PowerJacked" />
+<meta name="theme-color" content="#65a30d" />
+<link rel="manifest" href="../manifest.webmanifest" />
+<link rel="apple-touch-icon" href="../icon-180.png" />
+<link rel="icon" type="image/png" href="../favicon.png" />
+<title>POWERJACKED — Chalk</title>
+<link rel="stylesheet" href="../shared/styles.css" />
+<style>
+  /* Accent lives here, like the two newest Chalk programs (shared/styles.css is not edited). Lime: speed + power. */
+  body[data-program="powerjacked"] { --primary: #65a30d; --primary-soft: #f1f9e4; --primary-line: #c3e59a; }
+
+  /* Page styles. Shared tokens, the appbar, cards, tabs, the SetLog grid, the in-session .hs-*
+     contract and the .ck-* board come from ../shared/styles.css. */
+  .hero { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+  .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .hero-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .coach-badge { display: inline-block; background: var(--primary-soft); color: var(--primary); border: 1px solid var(--primary-line); border-radius: 999px; padding: 3px 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+  .hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+  .stat { background: var(--card-2); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 8px 6px; text-align: center; }
+  .stat-num { font-size: 17px; font-weight: 700; color: var(--primary); font-variant-numeric: tabular-nums; }
+  .stat-label { font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+  .reset-link { background: none; border: none; color: var(--muted); font-size: 11px; cursor: pointer; padding: 4px 8px; text-decoration: underline; font-family: inherit; }
+  .hero .prep { margin: 10px 0 0; }
+
+  .cycle-bar, .week-bar { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 10px; padding: 4px 2px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .cycle-bar::-webkit-scrollbar, .week-bar::-webkit-scrollbar { display: none; }
+  .week-pill { flex-shrink: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 0; font-size: 12px; font-weight: 700; color: var(--muted); cursor: pointer; min-width: 46px; text-align: center; font-family: inherit; font-variant-numeric: tabular-nums; }
+  .week-pill.active { background: var(--primary); border-color: var(--primary); color: white; }
+  .week-pill.done { border-color: var(--success); background: var(--success-soft); color: var(--success); }
+  .week-pill.done.active { background: var(--success); color: white; }
+  .week-pill.empty { opacity: 0.55; border-style: dashed; }
+  .cycle-bar .week-pill { min-width: 0; padding: 7px 12px; text-transform: none; letter-spacing: 0; }
+  .cycle-bar .week-pill small { display: block; font-size: 10px; font-weight: 600; opacity: 0.8; }
+
+  .rules { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 10px; font-size: 12.5px; color: var(--text-body); line-height: 1.55; }
+  .rules b { color: var(--text); }
+  .rules .rules-k { font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--primary); margin-right: 6px; }
+  .rules-row { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+
+  .tab .due-dot[hidden] { display: none; }
+  .tab .due-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); margin-left: 5px; vertical-align: 1px; }
+  .tab.active .due-dot { background: white; }
+  .tab .tab-sub { display: block; font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: 0; text-transform: none; line-height: 1; margin-top: 3px; }
+  .tab.active .tab-sub { color: var(--text-body); }
+
+  /* Flat chips: Deload on a day, Optional on a sprint block. Text only, no fill (Ryan reads pills as noise). */
+  .pj-chip { display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--warning); vertical-align: middle; margin-left: 8px; }
+  .pj-chip.deload { color: var(--primary); }
+  .hs-sess-title .pj-chip { font-family: var(--font, inherit); font-stretch: normal; font-size: 11px; position: relative; top: -4px; }
+
+  /* Warm-up prep group (collapsed by default): rounds, each movement with a check, a lb field where Chalk asks for one. */
+  .prep { margin: 8px 0; border: 1px solid var(--border-soft); border-radius: var(--radius-sm); background: var(--card-2); overflow: hidden; }
+  .prep-head { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; cursor: pointer; user-select: none; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); min-height: 40px; }
+  .prep-head .caret { font-size: 10px; }
+  .prep.collapsed .prep-body { display: none; }
+  .prep.collapsed .caret { transform: rotate(-90deg); }
+  .prep-body { padding: 2px 12px 10px; }
+  .prep-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 12.5px; color: var(--text-body); cursor: pointer; }
+  .prep-item .prep-t { flex: 1; min-width: 0; }
+  .prep-item .prep-t small { display: block; font-size: 11px; color: var(--muted); }
+  .prep-item input.prep-w { width: 64px; min-height: 36px; text-align: center; font: inherit; font-size: 14px; font-variant-numeric: tabular-nums; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); padding: 0 4px; }
+  .prep-item input.prep-w:focus { outline: none; border-color: var(--primary); }
+  .prep-check { width: 22px; height: 22px; flex-shrink: 0; border: 2px solid #c8cdd6; border-radius: 7px; background: white; display: flex; align-items: center; justify-content: center; }
+  .prep-check svg { width: 12px; height: 12px; opacity: 0; }
+  .prep-item.done .prep-check { background: var(--success); border-color: var(--success); }
+  .prep-item.done .prep-check svg { opacity: 1; }
+  .prep-item.done .prep-t { color: var(--muted); text-decoration: line-through; }
+  .prep-note { white-space: pre-line; font-size: 12px; color: var(--muted); line-height: 1.5; padding: 2px 0 6px; }
+  .prep-text { white-space: pre-line; font-size: 12.5px; color: var(--text-body); line-height: 1.55; padding: 2px 0 6px; }
+  .prep-last { font-size: 11px; color: var(--muted); }
+  .hs-row.hs-wu .prep { margin: 0 0 8px; }
+  .hs-row.hs-wu.hs-open .prep { border-color: var(--primary-line); }
+
+  .ex-instruction { margin: 6px 0 0; font-size: 13px; color: var(--text-body); line-height: 1.5; white-space: pre-line; }
+  .ex-alt { margin-top: 5px; font-size: 12px; color: var(--muted); }
+  .ex-side { color: var(--muted); font-weight: 500; }
+  .rest-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .rest-card p { font-size: 14px; line-height: 1.6; color: var(--text-body); margin: 8px 0 0; white-space: pre-line; }
+  .empty-card { background: var(--card); border: 1px dashed var(--border); border-radius: var(--radius); padding: 18px; text-align: center; color: var(--muted); font-size: 13.5px; }
+
+  /* Grouped rows (Dumbbells Only pattern): a superset is one card, members stacked A1 / A2, one rest for the group.
+     A sprint block is the same card with its own work / rest watch. */
+  .grp-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 2px 0 4px; font-size: 12.5px; color: var(--muted); }
+  .grp-type { font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--primary); }
+  .grp-note { font-size: 12.5px; color: var(--text-body); line-height: 1.5; margin: 4px 0 2px; white-space: pre-line; }
+  .grp-ex { margin-top: 6px; }
+  .grp-ex + .grp-ex { border-top: 1px dashed var(--border); margin-top: 16px; padding-top: 12px; }
+  .grp-tag { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--primary); margin-bottom: 2px; }
+  .grp-ex-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .grp-ex-tools .btn { min-height: 34px; padding: 0 10px; font-size: 12px; gap: 5px; }
+  .grp-ex-tools .btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .hs-row-sum .grp-sum-tags { color: var(--primary); font-weight: 800; font-size: 10.5px; letter-spacing: 0.06em; margin-right: 4px; }
+  .hs-row.hs-sprint.hs-now { border-color: var(--warning); }
+  .hs-row.hs-sprint .hs-now-eyebrow, .hs-row.hs-sprint .grp-type, .hs-row.hs-sprint .grp-tag { color: var(--warning); }
+
+  /* The distance grid (sprints, bounds, carries): yards per set, reps and lb when Chalk asks, same classes as SetLog's. */
+  .sl-grid.sl-k.sl-c3 .sl-head, .sl-grid.sl-k.sl-c3 .sl-row { grid-template-columns: 34px 1fr 1fr 1fr 44px; }
+  .pj-plan { font-size: 12px; color: var(--muted); margin: 2px 0 6px; }
+
+  /* Work / rest watch: the plain sprint stopwatch. A button on the card; on a pure sprint day the same watch is the rail card. */
+  .pj-watch { font-variant-numeric: tabular-nums; min-width: 110px; justify-content: center; }
+  .pj-watch.work, .hs-tools .pj-watch.work { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .pj-watch.rest, .hs-tools .pj-watch.rest { background: var(--warning-soft); color: var(--warning); border-color: #edd9a6; }
+  .hs-tools .pj-watch { border-color: var(--border); color: var(--text-body); }
+  .pj-watch-x { color: var(--danger); min-width: 0; }
+  .pj-laps { margin: 8px 0 0; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.6; }
+  .pj-laps b { color: var(--text-body); font-weight: 700; }
+  .cond-card { background: var(--card); border: 2px solid var(--warning); border-radius: 20px; padding: 14px; margin-bottom: 10px; }
+  .cond-card.work { border-color: var(--primary); }
+  .clock-wrap { text-align: center; padding: 10px 0 2px; }
+  .clock-big { font-family: var(--disp); font-stretch: 80%; font-weight: 800; font-size: 58px; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+  .clock-big.work { color: var(--primary); }
+  .clock-big.rest { color: var(--warning); }
+  .clock-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .clock-ctl { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+  .clock-ctl .btn-primary { background: var(--primary); color: white; border-color: var(--primary); min-width: 130px; }
+  .clock-ctl .btn-rest { background: var(--warning); color: white; border-color: var(--warning); min-width: 130px; }
+
+  /* Timer buttons (rest countdown) */
+  .btn-timer { font-variant-numeric: tabular-nums; min-width: 78px; justify-content: center; }
+  .btn-timer.running { background: var(--primary); color: white; border-color: var(--primary); }
+  .btn-timer.done { background: var(--success); color: white; border-color: var(--success); animation: timer-flash 0.6s ease-out; }
+  @keyframes timer-flash { 0% { transform: scale(1); } 30% { transform: scale(1.08); } 100% { transform: scale(1); } }
+
+  /* In-session day pane: fill the gaps the shared .hs-* contract leaves. */
+  .hs-sess-title.long { font-size: 27px; }
+  .hs-sess-clock .hs-clock-t { font-variant-numeric: tabular-nums; }
+  .hs-sess-clock:not(.running):not(.stopped) .hs-clock-t { color: var(--primary); font-size: 18px; }
+  .hs-sess-clock.stopped .hs-clock-t { color: var(--muted); }
+  .hs-sess-progress { flex-wrap: wrap; row-gap: 6px; }
+  .hs-sess-progress .hs-bar { flex: 1 1 90px; }
+  .hs-sess-progress span { white-space: normal; }
+  .hs-sess-ctl { display: flex; align-items: center; gap: 6px; margin: 0 2px 10px; }
+  .hs-sess-pace { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); }
+  .hs-mini { min-height: 32px; padding: 0 10px; font-size: 12px; }
+  .hs-row-sum .hs-sum-r { max-width: 50%; overflow: hidden; text-overflow: ellipsis; }
+  .hs-row-sum .row-timer { min-height: 34px; padding: 0 10px; }
+  .hs-row-sum .hs-sum-t small .ex-tag { margin-right: 6px; }
+  .hs-row.hs-now .ex-prescription { margin-top: 2px; font-size: 13px; color: var(--muted); }
+  .hs-row.hs-now .ex-log { margin-top: 12px; }
+  .hs-tools .btn { padding: 0 8px; gap: 5px; }
+  .hs-tools .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .hs-tools .hs-done-btn { margin-left: auto; color: var(--primary); font-weight: 800; }
+  .hs-tools .hs-done-btn.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .btn-danger { color: var(--danger); border-color: #f3c8c4; }
+
+  .notes-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .notes-block h4 { margin: 12px 0 2px; font-size: 13.5px; }
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px); background: var(--text); color: white; padding: 10px 16px; border-radius: 999px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 50; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* iPad board: shared/cockpit.js + the .ck-* block in ../shared/styles.css. Page-only touches below. */
+  .ck-rail-clock:not(.running):not(.stopped) .hs-clock-t { color: var(--primary-line); }
+  .ck-rail .cond-card { margin: 0; flex: none; }
+  .ck-rail .clock-big { font-size: 48px; }
+
+  @media (max-width: 420px) {
+    .hero-stats { gap: 6px; }
+    .stat { padding: 6px 4px; }
+    .stat-num { font-size: 15px; }
+    .stat-label { font-size: 8.5px; }
+    .clock-big { font-size: 50px; }
+  }
+</style>
+</head>
+<body data-program="powerjacked">
+
+<header class="appbar">
+  <div class="appbar-inner">
+    <a class="appbar-back" href="../" aria-label="Back to Exercise Library">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="10 3 5 8 10 13"/></svg>
+      Library
+    </a>
+    <div class="appbar-title">
+      <div class="eyebrow">Program</div>
+      <div class="name" id="appbar-name">POWERJACKED</div>
+    </div>
+  </div>
+  <div class="appbar-accent"></div>
+</header>
+
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <span class="coach-badge" id="hero-badge">Chalk · Ryan Fischer</span>
+        <h1 style="margin-top:6px" id="hero-title">POWERJACKED</h1>
+        <div class="hero-sub" id="hero-sub">Loading the current block…</div>
+      </div>
+      <button class="reset-link" id="reset-btn" title="Reset all tracking">Reset</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num" id="stat-week">W1</div><div class="stat-label">Week</div></div>
+      <div class="stat"><div class="stat-num" id="stat-days">0</div><div class="stat-label">Sessions</div></div>
+      <div class="stat"><div class="stat-num" id="stat-thisweek">0 / 0</div><div class="stat-label">This Week</div></div>
+      <div class="stat"><div class="stat-num" id="stat-overall">0%</div><div class="stat-label">Block</div></div>
+    </div>
+    <div id="hero-about"></div>
+  </div>
+
+  <!-- BLOCK + WEEK PILLS -->
+  <div class="cycle-bar" id="cycle-bar" hidden></div>
+  <div class="week-bar" id="week-bar"></div>
+
+  <!-- THE WEEK'S SHAPE -->
+  <div class="rules" id="rules"></div>
+
+  <!-- TABS: day tabs are injected before the Notes tab -->
+  <div class="tabs" id="tabs">
+    <button class="tab" data-pane="notes">Notes</button>
+  </div>
+
+  <!-- PANES: day panes are injected before the Notes pane -->
+  <div id="panes">
+    <div class="pane" id="pane-notes">
+      <div class="card" id="notes-card"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../shared/setlog.js"></script>
+<script src="../shared/cockpit.js"></script>
+<script src="../shared/shell.js"></script>
+<script>
+"use strict";
+const SL = window.SetLog;
+const CK = window.Cockpit;
+const { normName, fmtWeight, fmtLoad } = SL;
+
+/* ===========================================================================
+   POWERJACKED (Chalk Performance Training, coach Ryan Fischer). Data-driven
+   from ./data.json (schema 2, mode "calendar-groups"): block → week → dated
+   day → groups → exercises. Day types:
+     strength   groups in order (warm-up prep, straight rows, lettered supersets)
+     mixed      a sprint block beside the lifts (Sprint & Pull); Chalk sometimes
+                posts the two as separate workouts on one date, which this page
+                folds into one day so a date is one tab
+     sprint     only the sprint block; on the iPad the watch takes the rail
+     rest       the coach's note
+   Group types on the shared grid:
+     warmup     a collapsed prep card: rounds, a check per movement, lb only
+                where Chalk asks for it, no rest bar
+     straight   the normal SetLog row with its own rest
+     superset   one card, members A1 / A2 (letters count supersets in the day),
+                one rest bar after the last member, the group note above
+     sprint     one card per block: distance rows log yards (+ reps) per set,
+                time rows seconds, reps-only rows reps, an empty prescription
+                is a check row; a plain work / rest watch on the card
+   No Chalk loads seed history (none were captured). Storage key pj_v1; sync
+   slug powerjacked (shared/setlog.js).
+   Design brief: KARL_DATA/outputs/personal/workout-trackers/powerjacked/DESIGN-BRIEF-2026-10-24.md
+   =========================================================================== */
+const PROGRAM = { slug: "powerjacked", storageKey: "pj_v1", appbarName: "POWERJACKED", shortName: "PJ" };
+const STORAGE_KEY = PROGRAM.storageKey;
+const VIDEO_BASE = "https://www.youtube.com/results?search_query=";
+const v = q => VIDEO_BASE + encodeURIComponent(q + " exercise form");
+const SET_OVERHEAD = 45;        // seconds a set takes beyond its rest, in the planning model
+const WU_SECS = 6 * 60;         // a warm-up group's planned time
+const SPRINT_SECS = 12 * 60;    // a sprint block's planned time
+
+const DOW_FULL = { Sun: "Sunday", Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday", Fri: "Friday", Sat: "Saturday" };
+const DOW_ORDER = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const SLOT = { chest: "Chest", back: "Back", legs: "Legs", shoulders: "Shoulders", biceps: "Biceps", triceps: "Triceps", abs: "Abs", power: "Power", mobility: "Mobility", engine: "Engine", sprint: "Sprint" };
+const SLOT_SHORT = { chest: "Chest", back: "Back", legs: "Legs", shoulders: "Shldr", biceps: "Bi", triceps: "Tri", abs: "Abs", power: "Power", mobility: "Mob", engine: "Engine", sprint: "Sprint" };
+const BW_LOADED_RE = /chin.?ups?|pull.?ups?|\bdips?\b/i;
+const BW_RE = /push.?ups?|hanging|leg raises?|knee raises?|plank|hollow|sit.?ups?|v.?ups?|burpee|dead hang|toes? to bar/i;
+const LOWER_RE = /squat|deadlift|hip thrust|leg press|lunge|\brdl\b|romanian|good morning|hack|step.?up|calf raise|leg extension|leg curl|hamstring curl|nordic/i;
+
+/* ---------------------------------------------------------------------------
+   DATA + STATE
+   --------------------------------------------------------------------------- */
+let DATA = null;          // data.json
+let CYC = null;           // the block on screen
+let ALL = [];             // every day of every block, ascending by date, each with .cycle
+let state = loadState();
+let uiCycle = 0;
+let uiWeek = 1;
+
+function emptyState() { return { v: 1, days: {} }; }
+function normState(p) {
+  const s = emptyState();
+  if (p && typeof p === "object" && p.days && typeof p.days === "object") s.days = p.days;
+  return s;
+}
+function loadState() {
+  try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) return normState(JSON.parse(raw)); } catch (e) {}
+  return emptyState();
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  updateStats();
+  SL.sync.schedule();
+  publishSummary();
+}
+/* One record per calendar day, keyed by date. completed: "g<gi>" per group, "<gi>_<ei>" per warm-up movement;
+   logs: "<gi>_<ei>" per exercise; sprint: "<gi>" the work / rest watch (phase, since, laps). */
+function dayState(date, create) {
+  if (!state.days[date] && create) state.days[date] = { trained: null, clockStart: null, clockStop: null, completed: {}, logs: {}, sprint: {} };
+  const ds = state.days[date] || null;
+  if (ds) { ds.completed = ds.completed || {}; ds.logs = ds.logs || {}; ds.sprint = ds.sprint || {}; }
+  return ds;
+}
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function shortDate(iso) { if (!iso) return "—"; const [, m, d] = iso.split("-"); return `${parseInt(m, 10)}/${parseInt(d, 10)}`; }
+function monthLabel(iso) { return new Date(iso + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }); }
+function stampDate(ds) { if (!ds.trained) ds.trained = todayISO(); }
+function escapeHtml(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function fmtClock(s) { s = Math.max(0, Math.round(s)); const m = Math.floor(s / 60), sec = s % 60; return `${m}:${String(sec).padStart(2, "0")}`; }
+function fmtMins(secs) { return `~${Math.round(secs / 60)} min`; }
+function fmtSecs1(s) { return `${(Math.round(s * 10) / 10).toFixed(1)} s`; }
+
+/* ---------------------------------------------------------------------------
+   DAY SHAPE. The ingest writes one entry per Chalk workout; October's Wednesday
+   posts PULL and Sprints as two workouts on one date. One date = one day here.
+   --------------------------------------------------------------------------- */
+/* "PULL" → "Pull"; "Upper: DELOAD" → "Upper" (the flag carries it); "Sprints: OPTIONAL" → "Sprints". */
+function cleanTitle(t) {
+  let s = String(t || "").replace(/[:\s]*\(?\b(deload|optional)\b\)?/gi, "").replace(/\s+/g, " ").trim();
+  if (s.length > 2 && s === s.toUpperCase()) s = s.charAt(0) + s.slice(1).toLowerCase();
+  return s || "Session";
+}
+function makeDay(parts, cyc) {
+  const live = parts.filter(p => p.type !== "rest");
+  if (!live.length) { const r = parts[0]; return { date: r.date, dow: r.dow, week: r.week, type: "rest", title: "Rest", note: r.note || "", groups: [], cycle: cyc }; }
+  const groups = [];
+  live.forEach(p => (p.groups || []).forEach(g => {
+    const gg = Object.assign({}, g);
+    gg.exercises = (g.exercises || []).slice();
+    if (g.type === "sprint" && (p.optional || /optional/i.test(g.name || "") || /optional/i.test(p.title || ""))) gg.optional = true;
+    groups.push(gg);
+  }));
+  const hasSprint = groups.some(g => g.type === "sprint"), hasLift = groups.some(g => g.type !== "sprint" && g.type !== "warmup" && g.type !== "note");
+  const type = hasSprint && !hasLift ? "sprint" : hasSprint && hasLift ? "mixed" : "strength";
+  const titles = []; live.forEach(p => { const t = cleanTitle(p.title); if (!titles.includes(t)) titles.push(t); });
+  return { date: live[0].date, dow: live[0].dow, week: live[0].week || parts[0].week, type, title: titles.join(" + "), rawTitle: live.map(p => p.title).join(" + "),
+           deload: live.some(p => p.deload), optional: live.every(p => p.optional), note: live.map(p => p.note).filter(Boolean).join("\n\n"), groups, cycle: cyc };
+}
+function dayWeek(day) {
+  if (day.week) return day.week;
+  const c = day.cycle || CYC;
+  const diff = Math.floor((Date.parse(day.date + "T12:00:00") - Date.parse(c.startDate + "T12:00:00")) / 864e5);
+  return Math.max(1, Math.floor(diff / 7) + 1);
+}
+function weekDays(w, cyc) { return (cyc || CYC).days.filter(d => dayWeek(d) === w); }
+function dayById(id) { return ALL.find(d => d.date === id) || null; }
+function whereOf(day) { return `W${dayWeek(day)} ${day.dow}`; }
+function isRequired(day) { return day.type !== "rest" && !day.optional; }
+function scheduleLine(cyc) {
+  const sch = cyc.schedule || {};
+  return DOW_ORDER.filter(d => sch[d]).map(d => `${d} ${cleanTitle(sch[d])}`).join(" · ");
+}
+function liftDays(cyc) { const sch = cyc.schedule || {}; return DOW_ORDER.filter(d => sch[d]); }
+
+/* ---------------------------------------------------------------------------
+   ROWS. Four shapes on the grid, from Chalk's `fields`:
+     sets      reps (+ lb when Chalk asks): SetLog's grid, coach and history
+     time      seconds per set: SetLog's grid with unit "s"
+     check     no prescription, no load (a dynamic warm-up): a check per set
+     distance  yards per set (+ reps, + lb when Chalk asks): this page's grid
+   Chalk stores a sprint distance in feet behind a "yards" label (15 yards
+   arrives as 45): yardsOf() reads the coach's own yard figures to tell.
+   --------------------------------------------------------------------------- */
+function repsStr(ex) { const r = String(ex.reps == null ? "" : ex.reps).trim(); return r === "-1" || /^max/i.test(r) ? "max" : r; }
+function fieldsOf(ex) { return Array.isArray(ex.fields) ? ex.fields : ["reps", "weight"]; }
+function rowKind(ex) {
+  const f = fieldsOf(ex);
+  if (f.includes("distance")) return "distance";
+  if (ex.kind === "time" || (f.includes("time") && !f.includes("reps"))) return "time";
+  if (!repsStr(ex) && !f.includes("weight")) return "check";
+  return "sets";
+}
+function timeSecs(ex) { const n = parseInt(String(ex.time || "").match(/\d+/) || "", 10); return isNaN(n) ? null : n; }
+/* Yards per set. Chalk's figures are feet when the instruction's yard numbers match them ÷ 3 (every sprint row so far). */
+function yardsOf(ex) {
+  const raw = String(ex.distance == null ? "" : ex.distance).split(/[,\s]+/).map(Number).filter(n => isFinite(n) && n > 0);
+  if (!raw.length) return [];
+  const said = new Set(Array.from(String(ex.instruction || "").matchAll(/(\d+)\s*(?:-\s*\d+\s*)?(?:yards?|yds?)\b/gi), m => parseInt(m[1], 10)));
+  const feet = raw.every(n => n % 3 === 0) && (said.size ? raw.some(n => said.has(n / 3)) : raw.every(n => n >= 30));
+  const yds = raw.map(n => feet ? n / 3 : n);
+  const sets = ex.sets || yds.length;
+  while (yds.length < sets) yds.push(yds[yds.length - 1]);
+  return yds.slice(0, sets);
+}
+/* "3 × 15 yd, 3 × 20 yd, 2 × 30 yd" */
+function distPlanText(yds) {
+  if (!yds.length) return "";
+  const runs = [];
+  yds.forEach(y => { const l = runs[runs.length - 1]; if (l && l.y === y) l.n++; else runs.push({ y, n: 1 }); });
+  return runs.map(r => `${r.n} × ${r.y} yd`).join(", ");
+}
+/* The spec SetLog reads (and this page's extra fields: kind, yards, hasReps). */
+function specOf(ex) {
+  const kind = rowKind(ex);
+  const f = fieldsOf(ex);
+  const bwMove = BW_LOADED_RE.test(ex.name) || BW_RE.test(ex.name);
+  const sets = ex.sets || 1;
+  const rest = ex.restSec != null && ex.restSec > 0 ? ex.restSec : null;   // null = no rest bar
+  const base = { name: ex.name, sets, minSets: sets, repTop: null, repRange: null, isMax: false, unit: "reps", loaded: f.includes("weight"), bw: false,
+                 lower: ex.slot === "legs" || LOWER_RE.test(ex.name), rest, kind };
+  if (kind === "sets") {
+    const p = SL.parseReps(repsStr(ex));
+    Object.assign(base, { repTop: p.repTop, repRange: p.repRange, isMax: p.isMax, unit: p.unit });
+  } else if (kind === "time") {
+    const p = SL.parseReps(repsStr(ex));
+    Object.assign(base, { unit: "s", repTop: p.unit === "s" ? p.repTop : (timeSecs(ex) || p.repTop) });
+  } else if (kind === "check") {
+    Object.assign(base, { unit: "none", loaded: false });
+  } else {
+    const yds = yardsOf(ex);
+    const p = SL.parseReps(repsStr(ex));
+    Object.assign(base, { unit: "yd", yards: yds, hasReps: f.includes("reps"), repTop: f.includes("reps") ? (p.repTop || 1) : null, isMax: false });
+  }
+  base.bw = base.loaded && bwMove;
+  return base;
+}
+const isDist = spec => spec.kind === "distance";
+/* The coach's text, without the "Intensity: 7/10" line the ingest already lifted into ex.intensity. */
+function instructionText(ex) {
+  let t = String(ex.instruction || "");
+  if (ex.intensity) t = t.replace(/\n?\s*Intensity:\s*\d+\s*\/\s*10\.?\s*/gi, "\n");
+  return t.replace(/\n{3,}/g, "\n\n").trim();
+}
+function restText(secs) { return secs >= 120 || secs % 60 === 0 ? fmtClock(secs) : `${secs}s`; }
+function rxCore(ex, spec) {
+  if (isDist(spec)) return `${distPlanText(spec.yards) || `${spec.sets} × distance`}${spec.hasReps && spec.repTop > 1 ? ` · ${spec.repTop} reps each` : ""}`;
+  if (spec.kind === "time") return `${spec.sets} × ${spec.repTop != null ? spec.repTop + " s" : "hold"}`;
+  if (spec.kind === "check") return `${spec.sets} × through`;
+  return `${spec.sets} × ${spec.isMax ? "max" : repsStr(ex)}`;
+}
+/* "4 × 3 (per side) · rest 3:00 · intensity 7/10"; a group member leaves the rest to the group line. */
+function rxText(ex, spec, withRest, restSecs) {
+  const side = ex.perSide ? ` <span class="ex-side">(per side)</span>` : "";
+  const rest = withRest && restSecs ? ` · rest ${fmtClock(restSecs)}` : "";
+  const inten = ex.intensity ? ` · intensity ${escapeHtml(ex.intensity)}` : "";
+  const tm = spec.kind === "sets" && timeSecs(ex) && fieldsOf(ex).includes("time") ? ` · ${timeSecs(ex)} s each` : "";
+  return `${rxCore(ex, spec)}${side}${tm}${rest}${inten}`;
+}
+function shortRx(ex, spec) { return `${rxCore(ex, spec)}${ex.perSide ? " (per side)" : ""}`; }
+
+/* ---------------------------------------------------------------------------
+   LOGS. SetLog's shape for sets / time / check rows; the distance log adds y
+   (yards) per set, which SL.normLog would drop, so it has its own normalizer.
+   --------------------------------------------------------------------------- */
+function normDistLog(raw, nSets) {
+  const out = { sets: [], notes: "" };
+  if (raw && typeof raw === "object") {
+    out.notes = typeof raw.notes === "string" ? raw.notes : "";
+    if (Array.isArray(raw.sets)) out.sets = raw.sets.map(x => {
+      x = x || {};
+      const o = { y: x.y == null || x.y === "" ? null : SL.parseWeight(x.y), r: x.r == null || x.r === "" ? null : SL.parseInt(x.r), w: x.w == null || x.w === "" ? null : SL.parseWeight(x.w) };
+      if (x.d) o.d = true;
+      if (typeof x.t === "number" && x.t > 0) o.t = x.t;
+      return o;
+    });
+  }
+  while (out.sets.length < (nSets || 0)) out.sets.push({ y: null, r: null, w: null });
+  return out;
+}
+function logOf(raw, spec) { return isDist(spec) ? normDistLog(raw, spec.sets) : SL.normLog(raw, spec.sets); }
+function hasSets(log, spec) { return isDist(spec) ? log.sets.some(x => x.y != null || x.r != null || x.w != null) : SL.hasSets(log); }
+function hasData(log, spec) { return hasSets(log, spec) || !!(log.notes && log.notes.trim()); }
+function anyData(raw) { const l = normDistLog(raw, 0); return l.sets.some(x => x.y != null || x.r != null || x.w != null) || !!(l.notes && l.notes.trim()); }
+/* A history entry. Distance rows carry their yards; everything else is SetLog's. */
+function entryOf(log, spec, meta) {
+  if (!isDist(spec)) return SL.entry(log, spec, meta);
+  return Object.assign({ sets: log.sets, weight: SL.topWeight(log.sets), hit: null, unit: "yd", target: null, dist: true }, meta || {});
+}
+/* "15, 15, 15, 20 yd" (reps listed only when some set had more than one), "+ @ 95 lb" on loaded carries. */
+function distText(e) {
+  const sets = e.sets.filter(x => x.y != null || x.r != null || x.w != null);
+  if (!sets.length) return "";
+  const yds = sets.map(x => x.y);
+  const runs = [];
+  yds.forEach(y => { const l = runs[runs.length - 1]; if (l && l.y === y) l.n++; else runs.push({ y, n: 1 }); });
+  const d = yds.every(y => y != null) ? runs.map(r => `${r.n} × ${r.y} yd`).join(", ") : sets.map(x => x.y == null ? "–" : x.y).join(", ") + " yd";
+  const reps = sets.some(x => x.r != null && x.r !== 1) ? ` · ${sets.map(x => x.r == null ? "–" : x.r).join(", ")} reps` : "";
+  const load = e.weight != null ? ` @ ${fmtWeight(e.weight)} lb` : "";
+  return `${d}${reps}${load}`;
+}
+function entryText(e, spec) { return e.dist ? distText(e) : SL.lastText(e, spec); }
+/* What was logged, compact: "3 × 12 @ 104 lb" when every set matches, else the entry text. */
+function loggedRx(ex, spec, log) {
+  if (!hasSets(log, spec)) return null;
+  if (isDist(spec)) return distText(entryOf(log, spec));
+  const sets = log.sets.filter(x => x.r != null || x.w != null);
+  const same = sets.length > 1 && sets.every(x => x.r === sets[0].r && x.w === sets[0].w);
+  if (same && sets[0].r != null) return `${sets.length} × ${sets[0].r}${spec.unit === "s" ? " s" : ""}${sets[0].w != null ? " @ " + fmtLoad(sets[0].w, spec.bw) : ""}`;
+  return SL.lastText(SL.entry(log, spec), spec);
+}
+
+/* ---------------------------------------------------------------------------
+   GROUPS
+   --------------------------------------------------------------------------- */
+const exKey = (gi, ei) => `${gi}_${ei}`;
+const isWU = g => g.type === "warmup";
+const isSprint = g => g.type === "sprint";
+const isSuper = g => g.type === "superset" || (g.type === "straight" && g.exercises.length > 1);
+/* Letters count supersets in the day: the first superset is A, the next B, whatever sits between them. */
+function letter(day, gi) { let k = 0; for (let i = 0; i < gi; i++) if (isSuper(day.groups[i])) k++; return String.fromCharCode(65 + k); }
+function tagOf(day, g, gi, ei) { return isSuper(g) ? `${letter(day, gi)}${ei + 1}` : ""; }
+function groupRest(g) {
+  if (g.restSec != null && g.restSec > 0) return g.restSec;
+  const last = g.exercises[g.exercises.length - 1];
+  return last && last.restSec > 0 ? last.restSec : null;
+}
+function groupName(day, g, gi) {
+  if (isWU(g)) return g.name ? cleanTitle(g.name) : "Warm-up";
+  if (isSprint(g)) return cleanTitle(g.name || "Sprints");
+  return g.exercises.map(ex => ex.name).join(" + ");
+}
+function groupLabel(day, g, gi) {
+  if (isWU(g)) return "WU";
+  if (isSprint(g)) return "Sprints";
+  if (isSuper(g)) return g.exercises.map((_, ei) => `${letter(day, gi)}${ei + 1}`).join("+");
+  const ex = g.exercises[0];
+  return SLOT_SHORT[ex.slot] || ex.slot || "";
+}
+function groupSlotWords(g) { return g.exercises.map(ex => SLOT[ex.slot] || ex.slot || "").filter(Boolean).join(" + "); }
+function groupSlotName(day, g, gi) {
+  if (isWU(g)) return `Warm-up · ${g.rounds ? g.rounds + " rounds" : groupSlotWords(g)}`;
+  if (isSprint(g)) return `Sprint block${g.optional ? " · optional" : ""}`;
+  if (isSuper(g)) return `${g.name ? cleanTitle(g.name) : "Superset"} · ${groupSlotWords(g)}`;
+  return groupSlotWords(g);
+}
+/* Planning model: Σ sets × (rest + 45 s) per member; a warm-up 6 min; a sprint block 12 min. */
+function exSecs(ex, g) {
+  const spec = specOf(ex);
+  const rest = spec.rest || groupRest(g) || 60;
+  return spec.sets * (rest + SET_OVERHEAD);
+}
+function groupSecs(g) {
+  if (isWU(g)) return WU_SECS;
+  if (isSprint(g)) return SPRINT_SECS;
+  return g.exercises.reduce((a, ex) => a + exSecs(ex, g), 0);
+}
+function daySecs(day) { return day.type === "rest" ? null : day.groups.reduce((a, g) => a + groupSecs(g), 0); }
+function dayMinutes(day) { const s = daySecs(day); return s == null ? null : Math.round(s / 60); }
+
+/* ---------------------------------------------------------------------------
+   COMPLETION
+   --------------------------------------------------------------------------- */
+function isGroupDone(ds, g, gi) {
+  if (!ds) return false;
+  if (isWU(g)) return g.exercises.length > 0 && g.exercises.every((_, ei) => ds.completed[exKey(gi, ei)]);
+  return !!ds.completed["g" + gi];
+}
+function isDayComplete(day) {
+  const ds = dayState(day.date, false);
+  if (!ds || day.type === "rest" || !day.groups.length) return false;
+  const req = day.groups.filter(g => !g.optional && !isWU(g));
+  const must = req.length ? req : day.groups.filter(g => !isWU(g));
+  return must.length > 0 && must.every(g => isGroupDone(ds, g, day.groups.indexOf(g)));
+}
+function isWeekComplete(w, cyc) {
+  const req = weekDays(w, cyc).filter(isRequired);
+  return req.length > 0 && req.every(isDayComplete);
+}
+function dayHasActivity(day) {
+  const ds = dayState(day.date, false);
+  if (!ds) return false;
+  if (ds.clockStart || ds.trained) return true;
+  if (Object.keys(ds.completed).some(k => ds.completed[k])) return true;
+  if (Object.keys(ds.sprint).some(k => ds.sprint[k] && ds.sprint[k].laps && ds.sprint[k].laps.length)) return true;
+  return Object.keys(ds.logs).some(k => anyData(ds.logs[k]));
+}
+function currentCycleIndex() {
+  const td = todayISO();
+  let idx = DATA.cycles.findIndex(c => c.days.some(d => d.date === td));
+  if (idx < 0) for (let i = DATA.cycles.length - 1; i >= 0; i--) if (DATA.cycles[i].startDate <= td) { idx = i; break; }
+  return idx < 0 ? 0 : idx;
+}
+/* Next = the first required day from today on, in the current block, not yet complete; then the following block's
+   first open day. Earlier blocks were logged in Chalk, not here, so they never count as "next". */
+function nextDay() {
+  const td = todayISO();
+  const ci = currentCycleIndex();
+  for (let i = ci; i < DATA.cycles.length; i++) {
+    const d = DATA.cycles[i].days.find(x => isRequired(x) && !isDayComplete(x) && (i > ci || x.date >= td));
+    if (d) return d;
+  }
+  return null;
+}
+function currentWeekRef() {
+  const td = todayISO();
+  const cyc = DATA.cycles[currentCycleIndex()];
+  const today = cyc.days.find(d => d.date === td);
+  if (today) return { cyc, w: dayWeek(today) };
+  const nx = nextDay();
+  if (nx) return { cyc: nx.cycle, w: dayWeek(nx) };
+  return { cyc, w: cyc.weeks };
+}
+function dueDayInWeek(w) {
+  const days = weekDays(w);
+  const nx = nextDay();
+  if (nx && days.includes(nx)) return nx;
+  return days.find(d => isRequired(d) && !isDayComplete(d)) || days.find(d => d.type !== "rest" && !isDayComplete(d)) || days[0] || null;
+}
+
+/* ---------------------------------------------------------------------------
+   HISTORY + PROGRESSION COACH. Exercises recur by name across days and blocks
+   (SL.normName). Newest first. No Chalk seed: nothing was captured there.
+   --------------------------------------------------------------------------- */
+function priorEntries(name, beforeDate) {
+  const key = normName(name);
+  const out = [];
+  ALL.forEach(day => {
+    if (day.type === "rest" || day.date >= beforeDate) return;
+    const ds = dayState(day.date, false);
+    if (!ds) return;
+    day.groups.forEach((g, gi) => g.exercises.forEach((x, ei) => {
+      if (normName(x.name) !== key) return;
+      const spec = specOf(x);
+      const log = logOf(ds.logs[exKey(gi, ei)], spec);
+      if (!hasSets(log, spec)) return;
+      out.push(entryOf(log, spec, { date: ds.trained || day.date, where: whereOf(day), day }));
+    }));
+  });
+  return out.reverse();
+}
+function suggestNext(ex, day, spec, hist) {
+  if (isDist(spec) || spec.kind === "check") return null;
+  return SL.suggest(hist || priorEntries(ex.name, day.date), spec);
+}
+/* The most recent logged session of an exercise before this day: "last week" within 7 days, else "W3 · Jul 27 block". */
+function lastTimeOf(ex, day, hist) {
+  hist = hist || priorEntries(ex.name, day.date);
+  if (!hist.length) return null;
+  const L = hist[0];
+  const diff = Math.round((Date.parse(day.date + "T12:00:00") - Date.parse(L.date + "T12:00:00")) / 864e5);
+  const lastWeek = diff >= 0 && diff <= 7;
+  return { entry: L, date: L.date, lastWeek, ctx: lastWeek ? "last week" : `W${dayWeek(L.day)} · ${monthLabel(L.day.cycle.startDate)} block` };
+}
+/* One line for the tracker row and the Up next summary: "last wk · 7, 7, 7 @ 185 lb". */
+function lastTimeText(ex, day, spec) {
+  const lt = lastTimeOf(ex, day);
+  if (!lt) return "";
+  return `${lt.lastWeek ? "last wk" : lt.ctx.replace(" block", "")} · ${entryText(lt.entry, spec)}`;
+}
+/* The prominent block in the Now card. A newer stack set still wins, through SL.lastHtml, as everywhere in the library. */
+function lastTimeHtml(ex, day, spec, hist) {
+  const lt = lastTimeOf(ex, day, hist);
+  if (!lt) return "";
+  if (!isDist(spec) && SL.stackNewer(ex.name, lt.date)) return SL.lastHtml(lt.entry, spec, "");
+  const e = lt.entry;
+  const flag = spec.isMax || e.dist ? "" : e.hit === true ? ` <span class="ex-hit-flag yes">hit</span>` : e.hit === false ? ` <span class="ex-hit-flag no">short</span>` : "";
+  return CK.lastBlock(`${lt.ctx} · ${monthLabel(e.date)}`, entryText(e, spec), flag);
+}
+/* Week over week on a rep-target row: this week's target beside last time's at its own target. */
+function weekOverHtml(L, spec) {
+  if (!L || L.dist || spec.repTop == null || L.target == null || L.target === spec.repTop) return "";
+  const top = L.weight != null ? ` @ ${fmtLoad(L.weight, spec.bw)}` : "";
+  return `<div class="ex-last">This week: <strong>${spec.sets} × ${spec.repTop}</strong> · last time <strong>${L.target} reps${top}</strong> (${L.where})</div>`;
+}
+
+/* ---------------------------------------------------------------------------
+   SYNC. Transport and the device token live in ../shared/setlog.js. The flat
+   `entries` list is what Karl reads: one row per logged exercise; sprint laps
+   ride on the block's first row.
+   --------------------------------------------------------------------------- */
+function syncEntries() {
+  const out = [];
+  ALL.forEach(day => {
+    const ds = dayState(day.date, false);
+    if (!ds || day.type === "rest") return;
+    const base = { date: ds.trained || day.date, planned: day.date, where: whereOf(day), week: dayWeek(day), day: day.dow, cycle: day.cycle.id, session: day.title };
+    day.groups.forEach((g, gi) => g.exercises.forEach((ex, ei) => {
+      const spec = specOf(ex);
+      const log = logOf(ds.logs[exKey(gi, ei)], spec);
+      const checked = isWU(g) && !!ds.completed[exKey(gi, ei)];
+      const watch = isSprint(g) && ei === 0 ? watchOf(ds, gi) : null;
+      if (!hasData(log, spec) && !checked && !(watch && watch.laps.length)) return;
+      const row = Object.assign({}, base, { exercise: ex.name, slot: ex.slot, group: tagOf(day, g, gi, ei) || null, groupType: g.type, kind: spec.kind,
+        rx: shortRx(ex, spec), unit: spec.unit, target: spec.repTop, loaded: spec.loaded, bw: spec.bw, sets: hasSets(log, spec) ? log.sets : [],
+        hit: isDist(spec) || spec.kind === "check" ? null : SL.hit(log, spec), notes: log.notes || "" });
+      if (isDist(spec)) row.distanceUnit = "yd";
+      if (checked) row.checked = true;
+      if (watch && watch.laps.length) row.laps = watch.laps;
+      out.push(row);
+    }));
+  });
+  return out;
+}
+
+/* ---------------------------------------------------------------------------
+   SHELL: hero, block + week pills, the week's shape, tabs
+   --------------------------------------------------------------------------- */
+function buildShell() {
+  document.getElementById("appbar-name").textContent = PROGRAM.appbarName;
+  document.getElementById("hero-badge").textContent = `${DATA.app || "Chalk"} · ${DATA.coach || ""}`.replace(/ · $/, "");
+  document.getElementById("hero-title").textContent = DATA.name || PROGRAM.appbarName;
+  const about = document.getElementById("hero-about");
+  about.innerHTML = "";
+  if (DATA.programDetails) about.appendChild(collapsible("About POWERJACKED", DATA.programDetails, "about"));
+  renderCycleBar();
+  buildNotes();
+  wireTabs();
+}
+function wireTabs() {
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".pane").forEach(p => p.classList.remove("active"));
+      tab.classList.add("active");
+      const pane = document.getElementById("pane-" + tab.dataset.pane);
+      if (pane) pane.classList.add("active");
+      if (boardMode() && tab.dataset.day && tab.dataset.day !== "empty") CK.scrollIntoView("container-" + tab.dataset.day);
+    };
+  });
+}
+function renderCycleBar() {
+  document.getElementById("hero-sub").textContent = `${CYC.label} · from ${shortDate(CYC.startDate)} · ${scheduleLine(CYC)}`;
+  const bar = document.getElementById("cycle-bar");
+  if (DATA.cycles.length < 2) { bar.hidden = true; return; }
+  bar.hidden = false;
+  // Newest first; the pill carries the start date, the small line the length, the title the full label.
+  const order = DATA.cycles.map((c, i) => i).reverse();
+  bar.innerHTML = order.map(i => { const c = DATA.cycles[i]; const n = c.days.filter(d => d.type !== "rest").length; return `<button class="week-pill${i === uiCycle ? " active" : ""}" data-c="${i}" title="${escapeHtml(c.label)}">${monthLabel(c.startDate)}<small>${c.weeks} wk · ${n} session${n === 1 ? "" : "s"}</small></button>`; }).join("");
+  bar.querySelectorAll(".week-pill").forEach(b => b.onclick = () => {
+    uiCycle = +b.dataset.c; CYC = DATA.cycles[uiCycle];
+    const nx = nextDay();
+    let w = nx && nx.cycle === CYC ? dayWeek(nx) : 1;
+    while (w < CYC.weeks && !weekDays(w, CYC).some(d => d.type !== "rest")) w++;   // a tail-only block opens on its first ingested training week
+    uiWeek = w;
+    buildNotes(); render(); openTab(dueDayInWeek(uiWeek));
+  });
+}
+function renderWeekBar() {
+  const bar = document.getElementById("week-bar");
+  bar.innerHTML = "";
+  for (let w = 1; w <= CYC.weeks; w++) {
+    const b = document.createElement("button");
+    const has = weekDays(w).length > 0;
+    b.className = "week-pill" + (w === uiWeek ? " active" : "") + (isWeekComplete(w) ? " done" : "") + (has ? "" : " empty");
+    b.textContent = "W" + w;
+    b.title = has ? `Week ${w}` : `Week ${w}: not ingested yet`;
+    b.onclick = () => { uiWeek = w; render(); openTab(dueDayInWeek(uiWeek)); };
+    bar.appendChild(b);
+  }
+  const days = weekDays(uiWeek);
+  const deload = days.some(d => d.deload);
+  const sprint = days.some(d => d.groups.some(isSprint));
+  const rules = document.getElementById("rules");
+  rules.innerHTML = `
+    <div class="rules-row">
+      <span><span class="rules-k">Week ${uiWeek} of ${CYC.weeks}</span><b>${escapeHtml(CYC.label)}</b>${deload ? ` · <b>deload</b>` : ""}</span>
+      <span>${escapeHtml(scheduleLine(CYC))}</span>
+      ${sprint ? `<span>Sprints: ${days.some(d => d.groups.some(g => isSprint(g) && g.optional)) ? "optional" : "programmed"}, yards and reps per set</span>` : ""}
+    </div>`;
+}
+/* Day tabs and panes for the week on screen. The Notes tab stays. */
+function buildWeek() {
+  const tabsEl = document.getElementById("tabs");
+  const panesEl = document.getElementById("panes");
+  tabsEl.querySelectorAll(".tab[data-day]").forEach(t => t.remove());
+  panesEl.querySelectorAll(".pane[data-day]").forEach(p => p.remove());
+  const days = weekDays(uiWeek);
+  const notesTab = tabsEl.querySelector('.tab[data-pane="notes"]');
+  const notesPane = document.getElementById("pane-notes");
+  if (!days.length) {
+    const pane = document.createElement("div");
+    pane.className = "pane"; pane.id = "pane-empty"; pane.dataset.day = "empty";
+    pane.innerHTML = `<div class="empty-card">Week ${uiWeek} of this block is not in the tracker yet. Karl ingests it from the Chalk portal as it is posted.</div>`;
+    panesEl.insertBefore(pane, notesPane);
+    const tab = document.createElement("button");
+    tab.className = "tab"; tab.dataset.pane = "empty"; tab.dataset.day = "empty"; tab.textContent = `Week ${uiWeek}`;
+    tabsEl.insertBefore(tab, notesTab);
+  }
+  days.forEach(day => {
+    const tab = document.createElement("button");
+    tab.className = "tab"; tab.dataset.pane = day.date; tab.dataset.day = day.date;
+    const sub = day.type === "rest" ? "Rest" : day.title.split(" + ")[0].split(" & ")[0].slice(0, 8) + (day.groups.some(isSprint) ? " ·S" : "");
+    tab.innerHTML = `${day.dow}<span class="due-dot" hidden></span><span class="tab-sub">${escapeHtml(sub)}</span>`;
+    tabsEl.insertBefore(tab, notesTab);
+    const pane = document.createElement("div");
+    pane.className = "pane"; pane.id = "pane-" + day.date; pane.dataset.day = day.date;
+    pane.innerHTML = `<div id="container-${day.date}"></div>`;
+    panesEl.insertBefore(pane, notesPane);
+    renderDay(day);
+  });
+  wireTabs();
+}
+function openTab(day) {
+  const id = day ? day.date : "empty";
+  const tab = document.querySelector(`.tab[data-pane="${id}"]`) || document.querySelector(".tab[data-day]");
+  if (tab) tab.click();
+}
+
+/* ---------------------------------------------------------------------------
+   DAY RENDERING
+   --------------------------------------------------------------------------- */
+const tappedNow = {};   // date → group idx the user tapped
+const prepOpen = {};    // collapsible keys the user opened
+const ICON = {
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8"/></svg>`,
+  clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M9.5 2.5h5"/></svg>`,
+  video: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="6" width="12" height="12" rx="2.5"/><path d="M15.5 10.5l5-3v9l-5-3z"/></svg>`,
+  note: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h9l4 4v13H6z"/><path d="M9 12h7"/><path d="M9 16h5"/></svg>`,
+  ok: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 8"/></svg>`
+};
+function boardMode() { return CK.active(); }
+
+function renderDay(day) {
+  const container = document.getElementById("container-" + day.date);
+  if (!container) return;
+  if (boardMode() && day.type !== "rest") return CK.render(day, container);   // iPad: lane + rail (shared/cockpit.js)
+  container.innerHTML = "";
+  container.className = "";
+  if (day.type === "rest") return renderRest(day, container);
+  renderDayInto(day, container);
+}
+function chipsHtml(day) {
+  return `${day.deload ? `<span class="pj-chip deload">Deload</span>` : ""}${day.optional ? `<span class="pj-chip">Optional</span>` : ""}`;
+}
+function sessHead(day, title, done, total) {
+  const ds = dayState(day.date, false);
+  const w = dayWeek(day);
+  const complete = isDayComplete(day);
+  const trained = ds && ds.trained && ds.trained !== day.date ? ` · trained ${shortDate(ds.trained)}` : "";
+  const planned = daySecs(day);
+  const progress = complete ? `Day complete · ${done} of ${total}${trained}` : `${done} of ${total} done${planned != null ? ` · planned ${fmtMins(planned)}` : ""}${trained}`;
+  const head = document.createElement("div");
+  head.className = "hs-sess-head";
+  head.innerHTML = `
+    <div class="hs-sess-eyebrow">${PROGRAM.shortName} · Week ${w} · ${DOW_FULL[day.dow] || day.dow} · ${shortDate(day.date)}${day.type === "mixed" ? " · Sprint & lift" : day.type === "sprint" ? " · Sprint day" : ""}</div>
+    <div class="hs-sess-top">
+      <h2 class="hs-sess-title${title.length > 16 ? " long" : ""}">${escapeHtml(title)}${chipsHtml(day)}</h2>
+      <button type="button" class="hs-sess-clock" id="clock-${day.date}">${ICON.clock}<span class="hs-clock-t">Start</span></button>
+    </div>
+    <div class="hs-sess-progress"><div class="hs-bar"><i style="width:${total ? Math.round(100 * done / total) : 0}%"></i></div><span>${progress}</span></div>`;
+  return head;
+}
+function sessCtl(day) {
+  const ctl = document.createElement("div");
+  ctl.className = "hs-sess-ctl";
+  ctl.innerHTML = `
+    <span class="hs-sess-pace" id="clockstat-${day.date}"></span>
+    <button type="button" class="btn hs-mini btn-danger" data-action="clear">Clear day</button>`;
+  ctl.querySelector("[data-action=clear]").onclick = () => {
+    if (!dayState(day.date, false)) return;
+    if (confirm(`Clear ${DOW_FULL[day.dow]} ${shortDate(day.date)}? Checks, sets, sprint laps and the clock for this day will be gone.`)) {
+      delete state.days[day.date];
+      delete tappedNow[day.date];
+      saveState(); render();
+    }
+  };
+  return ctl;
+}
+function renderRest(day, container) {
+  container.innerHTML = `
+    <div class="hs-sess-head">
+      <div class="hs-sess-eyebrow">${PROGRAM.shortName} · Week ${dayWeek(day)} · ${DOW_FULL[day.dow] || day.dow} · ${shortDate(day.date)}</div>
+      <div class="hs-sess-top"><h2 class="hs-sess-title">Rest</h2></div>
+    </div>
+    <div class="rest-card"><div class="eyebrow">Coach's note</div><p>${escapeHtml(day.note || "Rest day. Walk, eat, sleep; the next lift is " + nextLiftWord(day) + ".")}</p></div>`;
+}
+function nextLiftWord(day) {
+  const nx = ALL.find(d => d.date > day.date && d.type !== "rest");
+  return nx ? `${DOW_FULL[nx.dow] || nx.dow} (${nx.title})` : "not posted yet";
+}
+
+/* The phone content of a training day into any element (the pane, or the board's lane). */
+function renderDayInto(day, container) {
+  const ds = dayState(day.date, false);
+  const groups = day.groups;
+  const counted = groups.map((g, gi) => gi).filter(gi => !isWU(groups[gi]));
+  const done = counted.filter(gi => isGroupDone(ds, groups[gi], gi)).length;
+  const nowIdx = nowIndex(day);
+  const nextIdxs = counted.filter(i => i !== nowIdx && !isGroupDone(ds, groups[i], i));
+  const afterNow = nextIdxs.find(i => i > nowIdx);
+  const upNextAt = afterNow != null ? afterNow : nextIdxs[0];
+
+  const head = sessHead(day, day.title, done, counted.length);
+  const ctl = sessCtl(day);
+  container.appendChild(head);
+  container.appendChild(ctl);
+  if (!boardMode()) wireClock(day, head.querySelector(".hs-sess-clock"), ctl.querySelector(".hs-sess-pace"));   // the board wires its rail clock instead
+  if (day.note) container.appendChild(collapsible("Coach's note for today", day.note, `note_${day.date}`));
+
+  let labelled = false;
+  groups.forEach((g, gi) => {
+    if (isWU(g)) { container.appendChild(renderPrepGroup(day, g, gi)); return; }
+    if (g.type === "note") { container.appendChild(collapsible(g.name || "Coach's note", g.text || g.note || "", `gnote_${day.date}_${gi}`)); return; }
+    const st = gi === nowIdx ? "now" : isGroupDone(ds, g, gi) ? "done" : "next";
+    let label = "";
+    if (isSprint(g)) label = `Sprint block${g.optional ? " · optional" : ""}`;
+    else if (!labelled) { labelled = true; label = day.deload ? "Lifts · deload, 2 to 3 reps in the tank" : "Lifts"; }
+    if (gi === upNextAt) label = label ? `Up next · ${label}` : "Up next";
+    if (label) { const lab = document.createElement("div"); lab.className = "hs-section-label"; lab.textContent = label; container.appendChild(lab); }
+    container.appendChild(renderGroupRow(day, g, gi, st, counted.length, counted.indexOf(gi) + 1));
+  });
+}
+
+/* ---------------------------------------------------------------------------
+   WARM-UP PREP GROUP: collapsed by default (Ryan knows the warm-up). Rounds in
+   the head, a check per movement, a lb field where Chalk tracks a weight.
+   --------------------------------------------------------------------------- */
+function renderPrepGroup(day, g, gi) {
+  const ds = dayState(day.date, false);
+  const openKey = `${day.date}_wu${gi}`;
+  const items = g.exercises;
+  const doneN = items.filter((_, ei) => ds && ds.completed[exKey(gi, ei)]).length;
+  const open = prepOpen[openKey] === true;
+  const wrap = document.createElement("div");
+  wrap.className = "hs-row hs-wu" + (open ? " hs-open" : "");
+  wrap.dataset.idx = gi;
+  const el = document.createElement("div");
+  el.className = "prep" + (open ? "" : " collapsed");
+  el.innerHTML = `
+    <div class="prep-head" role="button" tabindex="0"><span>${escapeHtml(groupName(day, g, gi))}${g.rounds ? ` · ${g.rounds} round${g.rounds === 1 ? "" : "s"}` : ""} · ${doneN}/${items.length}</span><span class="caret">▼</span></div>
+    <div class="prep-body">
+      ${g.note ? `<div class="prep-note">${escapeHtml(g.note)}</div>` : ""}
+      ${items.map((ex, ei) => {
+        const spec = specOf(ex);
+        const checked = !!(ds && ds.completed[exKey(gi, ei)]);
+        const log = logOf(ds && ds.logs[exKey(gi, ei)], spec);
+        const w = spec.loaded ? (log.sets[0] && log.sets[0].w) : null;
+        const lt = spec.loaded ? lastTimeOf(ex, day) : null;
+        const rx = spec.kind === "time" ? `${spec.repTop || timeSecs(ex) || ""} s hold` : spec.kind === "check" ? "" : rxCore(ex, spec).replace(/^\d+ × /, `${g.rounds || spec.sets} × `);
+        return `
+        <div class="prep-item${checked ? " done" : ""}" data-i="${ei}">
+          <span class="prep-check">${ICON.ok.replace('stroke="currentColor"', 'stroke="white"')}</span>
+          <span class="prep-t">${escapeHtml(ex.name)}${rx ? ` <span class="ex-side">· ${escapeHtml(rx)}${ex.perSide ? " per side" : ""}</span>` : ""}${instructionText(ex) ? `<small>${escapeHtml(instructionText(ex).split("\n")[0].replace(/^-\s*/, ""))}</small>` : ""}${lt && lt.entry.weight != null ? `<small class="prep-last">last ${fmtWeight(lt.entry.weight)} lb · ${lt.lastWeek ? "last wk" : lt.ctx.replace(" block", "")}</small>` : ""}</span>
+          ${spec.loaded ? `<input type="number" class="prep-w" inputmode="decimal" min="0" step="0.5" placeholder="${lt && lt.entry.weight != null ? fmtWeight(lt.entry.weight) : "lb"}" value="${w == null ? "" : w}" aria-label="${escapeHtml(ex.name)} weight">` : ""}
+        </div>`;
+      }).join("")}
+    </div>`;
+  wrap.appendChild(el);
+  el.querySelector(".prep-head").onclick = () => { prepOpen[openKey] = el.classList.contains("collapsed"); el.classList.toggle("collapsed"); wrap.classList.toggle("hs-open", !el.classList.contains("collapsed")); };
+  el.querySelectorAll(".prep-item").forEach(it => {
+    it.addEventListener("click", e => {
+      if (e.target.closest("input")) return;
+      const d = dayState(day.date, true);
+      const k = exKey(gi, it.dataset.i);
+      d.completed[k] = !d.completed[k];
+      if (d.completed[k]) { stampDate(d); const lg = d.logs[k] = SL.normLog(d.logs[k], 1); lg.sets[0].d = true; lg.sets[0].t = Date.now(); }
+      else if (d.logs[k]) { const lg = SL.normLog(d.logs[k], 1); delete lg.sets[0].d; delete lg.sets[0].t; d.logs[k] = lg; }
+      saveState(); prepOpen[openKey] = true; renderDay(day);
+    });
+    const inp = it.querySelector(".prep-w");
+    if (inp) inp.addEventListener("input", e => {
+      const d = dayState(day.date, true);
+      const k = exKey(gi, it.dataset.i);
+      const lg = d.logs[k] = SL.normLog(d.logs[k], 1);
+      const raw = e.target.value.trim();
+      lg.sets[0].w = raw === "" ? null : parseFloat(raw);
+      stampDate(d); saveState();
+    });
+  });
+  return wrap;
+}
+
+/* A folded block of coach text (a day note, the program details). Collapsed until tapped; the choice is kept per key. */
+function collapsible(title, text, key) {
+  const open = prepOpen[key] === true;
+  const el = document.createElement("div");
+  el.className = "prep" + (open ? "" : " collapsed");
+  el.style.marginTop = "8px";
+  el.innerHTML = `<div class="prep-head" role="button" tabindex="0"><span>${escapeHtml(title)}</span><span class="caret">▼</span></div><div class="prep-body"><div class="prep-text">${escapeHtml(text)}</div></div>`;
+  el.querySelector(".prep-head").onclick = () => { prepOpen[key] = el.classList.contains("collapsed"); el.classList.toggle("collapsed"); };
+  return el;
+}
+
+/* ---------------------------------------------------------------------------
+   THE DISTANCE GRID: yards per set, reps and lb when Chalk asks. Same classes as
+   SetLog's grid (so the board's ring and the shared CSS treat it as one), own
+   wiring. A check fills the plan's yards and starts the row's rest.
+   --------------------------------------------------------------------------- */
+function distGridHtml(log, spec) {
+  const cols = 1 + (spec.hasReps ? 1 : 0) + (spec.loaded ? 1 : 0);
+  const head = `<div class="sl-head"><span>Set</span><span>yards</span>${spec.hasReps ? `<span>reps${spec.repTop != null ? ` · target ${spec.repTop}` : ""}</span>` : ""}${spec.loaded ? `<span>lb</span>` : ""}<span></span></div>`;
+  const rows = log.sets.map((x, i) => `
+    <div class="sl-row${x.d ? " sl-done" : ""}">
+      <span class="sl-n">${i + 1}</span>
+      <input type="number" class="sl-r pj-y" inputmode="decimal" min="0" step="1" data-i="${i}" placeholder="${spec.yards[i] != null ? spec.yards[i] : "yd"}" value="${x.y == null ? "" : x.y}" aria-label="Set ${i + 1} yards">
+      ${spec.hasReps ? `<input type="number" class="pj-rp" inputmode="numeric" pattern="[0-9]*" min="0" step="1" data-i="${i}" placeholder="${spec.repTop != null ? spec.repTop : "–"}" value="${x.r == null ? "" : x.r}" aria-label="Set ${i + 1} reps">` : ""}
+      ${spec.loaded ? `<input type="number" class="sl-w" inputmode="decimal" min="0" step="0.5" data-i="${i}" placeholder="lb" value="${x.w == null ? "" : x.w}" aria-label="Set ${i + 1} weight">` : ""}
+      <button type="button" class="sl-ok${x.d ? " on" : ""}" data-i="${i}" aria-pressed="${x.d ? "true" : "false"}" aria-label="Set ${i + 1} done">${ICON.ok}</button>
+    </div>`).join("");
+  const rest = `<div class="sl-rest" hidden role="timer" aria-live="off"><span class="sl-rest-l">Rest</span><b class="sl-rest-t">0:00</b><span class="sl-rest-bar"><i></i></span><button type="button" class="sl-rest-skip">Skip</button></div>`;
+  return `
+    <div class="sl-grid sl-k sl-c${cols}">
+      ${head}${rows}${rest}
+      <div class="sl-tools">
+        ${spec.yards.length ? `<button type="button" class="btn sl-fill">= plan${spec.hasReps && spec.repTop != null ? ` · ${spec.repTop} rep${spec.repTop === 1 ? "" : "s"}` : ""}</button>` : ""}
+        <button type="button" class="btn sl-clear">Clear</button>
+      </div>
+    </div>`;
+}
+/* cfg: { spec, getLog, save, rerender, restKey, restSecs (null = no rest bar) } */
+function wireDistGrid(root, cfg) {
+  const spec = cfg.spec;
+  const gridEl = root.querySelector(".sl-grid") || root;
+  gridEl.dataset.slKey = cfg.restKey;
+  const fill = root.querySelector(".sl-fill");
+  if (fill) fill.onclick = () => {
+    const lg = cfg.getLog();
+    lg.sets.forEach((x, i) => { if (x.y == null && spec.yards[i] != null) x.y = spec.yards[i]; if (spec.hasReps && x.r == null && spec.repTop != null) x.r = spec.repTop; });
+    cfg.save(); cfg.rerender();
+  };
+  root.querySelectorAll(".sl-ok").forEach(b => b.onclick = () => {
+    const i = parseInt(b.dataset.i, 10), lg = cfg.getLog(), x = lg.sets[i];
+    if (!x) return;
+    if (x.d) { delete x.d; delete x.t; cfg.save(); cfg.rerender(); SL.rest.paintAll(); return; }
+    x.d = true; x.t = Date.now();
+    if (x.y == null && spec.yards[i] != null) x.y = spec.yards[i];
+    if (spec.hasReps && x.r == null && spec.repTop != null) x.r = spec.repTop;
+    if (spec.loaded && x.w == null) { const prev = lg.sets.slice(0, i).reverse().find(y => y.w != null); if (prev) x.w = prev.w; }
+    SL.rest.unlock();
+    cfg.save(); cfg.rerender();
+    if (cfg.restSecs > 0) SL.rest.start(cfg.restKey, cfg.restSecs);
+  });
+  const clear = root.querySelector(".sl-clear");
+  if (clear) clear.onclick = () => { cfg.getLog().sets.forEach(x => { x.y = null; x.r = null; x.w = null; delete x.d; delete x.t; }); cfg.save(); cfg.rerender(); };
+  const skip = root.querySelector(".sl-rest-skip");
+  if (skip) skip.onclick = () => SL.rest.stop();
+  SL.rest.paintAll();
+  const bind = (sel, field, parse) => root.querySelectorAll(sel).forEach(inp => inp.addEventListener("input", e => {
+    const i = parseInt(e.target.dataset.i, 10), raw = e.target.value.trim();
+    cfg.getLog().sets[i][field] = raw === "" ? null : parse(raw); cfg.save();
+  }));
+  bind(".pj-y", "y", parseFloat); bind(".pj-rp", "r", x => parseInt(x, 10)); bind(".sl-w", "w", parseFloat);
+}
+
+/* ---------------------------------------------------------------------------
+   ONE ROW = ONE GROUP. A straight set is a group of one; a superset stacks its
+   members A1 / A2 with one rest bar after the last; a sprint block stacks its
+   rows with the work / rest watch in its tools.
+   --------------------------------------------------------------------------- */
+function restKeyOf(day, gi, ei, name) { return `${name}|${day.date}_${gi}_${ei}`; }
+function renderGroupRow(day, g, gi, st, total, nth) {
+  const ds = dayState(day.date, false);
+  const grouped = isSuper(g), sprint = isSprint(g);
+  const isDone = isGroupDone(ds, g, gi);
+  const members = g.exercises.map((ex, ei) => {
+    const spec = specOf(ex);
+    const hist = st === "now" ? priorEntries(ex.name, day.date) : [];
+    return { ex, ei, spec, log: logOf(ds && ds.logs[exKey(gi, ei)], spec), hist, sugg: st === "now" ? suggestNext(ex, day, spec, hist) : null };
+  });
+  const restSecs = sprint ? null : groupRest(g);          // a sprint row rests on its own rest; the block has the watch
+  const restLabel = restSecs ? `⏱ ${restText(restSecs)}` : "";
+  const tKey = `${day.date}_${gi}`;
+  const lastTag = grouped ? tagOf(day, g, gi, members.length - 1) : "";
+  const slotWords = groupSlotWords(g);
+  const title = sprint ? groupName(day, g, gi) : null;
+
+  const el = document.createElement("div");
+  el.className = "hs-row hs-" + st + (grouped ? " hs-grp" : "") + (sprint ? " hs-sprint" : "");
+  el.dataset.idx = gi;
+  el.dataset.key = tKey;
+
+  if (st !== "now") {
+    const live = !!activeTimers[tKey];
+    const names = sprint ? escapeHtml(title) : members.map(m => `${grouped ? `<span class="grp-sum-tags">${tagOf(day, g, gi, m.ei)}</span>` : ""}${escapeHtml(m.ex.name)}`).join(" + ");
+    const doneTxt = members.map(m => loggedRx(m.ex, m.spec, m.log)).filter(Boolean).join(" · ") || members.map(m => shortRx(m.ex, m.spec)).join(" · ");
+    const rxLine = sprint ? members.map(m => `${m.ex.name} ${shortRx(m.ex, m.spec)}`).join(" · ")
+      : grouped ? `${members.map(m => shortRx(m.ex, m.spec)).join(" · ")}${restSecs ? ` · rest ${fmtClock(restSecs)} after ${lastTag}` : ""}` : rxText(members[0].ex, members[0].spec, true, restSecs);
+    const right = live ? `<button type="button" class="btn btn-timer row-timer" data-default="${restLabel}">${restLabel}</button>` : st === "done" ? escapeHtml(doneTxt) : "";
+    const ltNext = st === "next" ? lastTimeText(members[0].ex, day, members[0].spec) : "";
+    el.innerHTML = `
+      <div class="hs-row-sum" role="button" tabindex="0">
+        <span class="hs-mark">${st === "done" ? ICON.check : ""}</span>
+        <span class="hs-sum-t"><b>${names}${sprint && g.optional ? `<span class="pj-chip">Optional</span>` : ""}</b><small><span class="ex-tag">${sprint ? "Sprint block" : grouped ? (g.name ? escapeHtml(cleanTitle(g.name)) : "Superset") : escapeHtml(slotWords)}</span>${st === "next" ? rxLine : ""}${ltNext ? `<span class="ck-sum-last">Last${grouped ? ` ${tagOf(day, g, gi, 0)}` : sprint ? ` · ${escapeHtml(members[0].ex.name)}` : ""} · ${escapeHtml(ltNext)}</span>` : ""}</small></span>
+        ${right ? `<span class="hs-sum-r">${right}</span>` : ""}
+      </div>`;
+    const sum = el.querySelector(".hs-row-sum");
+    const pick = () => { tappedNow[day.date] = gi; renderDay(day); revealNow(day); };
+    sum.addEventListener("click", e => { if (!e.target.closest(".btn")) pick(); });
+    sum.addEventListener("keydown", e => { if (e.target === sum && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); pick(); } });
+    if (live) { const tb = el.querySelector(".row-timer"); reattachTimer(tKey, tb); tb.onclick = () => tapTimer(tKey, tb, restSecs); }
+    return el;
+  }
+
+  const memberHtml = m => {
+    const { ex, ei, spec, log, hist, sugg } = m;
+    const lastHtml = hist.length ? lastTimeHtml(ex, day, spec, hist) : "";
+    const weekHtml = hist.length ? weekOverHtml(hist[0], spec) : "";
+    const suggHtml = SL.suggestHtml(sugg);
+    const hasNotes = !!(log.notes && log.notes.trim());
+    const ownRest = sprint && spec.rest ? spec.rest : null;
+    const grid = isDist(spec) ? distGridHtml(log, spec) : SL.gridHtml(log, spec, sugg);
+    const tag = grouped ? `${tagOf(day, g, gi, ei)} · ${SLOT[ex.slot] || ex.slot || ""}` : sprint ? `${ei + 1} · ${SLOT[ex.slot] || ex.slot || ""}` : "";
+    return `
+      <div class="grp-ex" data-ek="${exKey(gi, ei)}">
+        ${tag ? `<div class="grp-tag">${escapeHtml(tag)}</div>` : ""}
+        <div class="ex-name">${escapeHtml(ex.name)}</div>
+        <div class="ex-prescription">${rxText(ex, spec, !grouped, sprint ? ownRest : restSecs)}${isDist(spec) && spec.yards.length ? `<div class="pj-plan">Log the yards you ran per set; the plan's figures sit in the boxes.</div>` : ""}</div>
+        ${instructionText(ex) ? `<div class="ex-instruction">${escapeHtml(instructionText(ex))}</div>` : ""}
+        ${Array.isArray(ex.alternates) && ex.alternates.length ? `<div class="ex-alt">Alternate: ${ex.alternates.map(a => escapeHtml(typeof a === "string" ? a : a.name || "")).join(", ")}</div>` : ""}
+        ${lastHtml || weekHtml || suggHtml ? `<div class="hs-lastbox">${lastHtml}${weekHtml}${suggHtml}</div>` : ""}
+        <div class="ex-log open">
+          ${grid}
+          <textarea class="log-notes" placeholder="Notes: form, tempo, RPE, how it felt..."${hasNotes ? "" : " hidden"}>${escapeHtml(log.notes)}</textarea>
+        </div>
+        <div class="grp-ex-tools">
+          <a class="btn" href="${ex.videoUrl ? escapeHtml(ex.videoUrl) : v(ex.name)}" target="_blank" rel="noopener">${ICON.video}${ex.videoUrl ? "▶ Video" : "Video"}</a>
+          <button type="button" class="btn hs-note-btn">${ICON.note}Note</button>
+          ${ownRest ? `<button type="button" class="btn btn-timer row-timer" data-default="⏱ ${restText(ownRest)}">⏱ ${restText(ownRest)}</button>` : ""}
+        </div>
+      </div>`;
+  };
+
+  const watch = sprint ? watchOf(ds, gi) : null;
+  el.innerHTML = `
+    <div class="hs-row-full">
+      <div class="hs-now-eyebrow">Now · ${nth} of ${total} · ${sprint ? "Sprint block" : grouped ? `${g.name ? escapeHtml(cleanTitle(g.name)) : "Superset"} ${groupLabel(day, g, gi)}` : escapeHtml(slotWords)}</div>
+      ${sprint ? `<div class="ex-name">${escapeHtml(title)}${g.optional ? `<span class="pj-chip">Optional</span>` : ""}</div>` : ""}
+      ${grouped ? `<div class="grp-head"><span class="grp-type">${g.name ? escapeHtml(cleanTitle(g.name)) : "Superset"}</span><span>${members.length} moves back to back${g.rounds ? ` · ${g.rounds} rounds` : ""}${restSecs ? ` · rest ${fmtClock(restSecs)} after ${lastTag}` : ""}</span></div>` : ""}
+      ${sprint ? `<div class="grp-head"><span class="grp-type">Work / rest watch</span><span>tap Work at the line, Rest as you cross it; each rep's time is kept${g.restSec ? ` · rest ${fmtClock(g.restSec)}+ between sprints` : ""}</span></div>` : ""}
+      ${g.note ? `<div class="grp-note">${escapeHtml(g.note)}</div>` : ""}
+      ${sprint ? `<div class="hs-tools" style="border-top:0;padding-top:0;margin-top:4px">${watchButtonsHtml(day, gi, watch)}</div>` : ""}
+      ${members.map(memberHtml).join("")}
+      <div class="hs-tools">
+        ${restSecs ? `<button type="button" class="btn btn-timer row-timer" data-default="${restLabel}">${restLabel}</button>` : ""}
+        <button type="button" class="btn hs-done-btn${isDone ? " on" : ""}" aria-pressed="${isDone}">${ICON.check}Done${grouped ? ` ${groupLabel(day, g, gi)}` : sprint ? " sprints" : ""}</button>
+      </div>
+    </div>`;
+
+  el.querySelector(".hs-done-btn").onclick = () => {
+    const cur = dayState(day.date, true);
+    cur.completed["g" + gi] = !isDone;
+    if (!isDone) {
+      stampDate(cur);
+      if (tappedNow[day.date] === gi) delete tappedNow[day.date];
+      if (sprint) watchStop(day, gi, true);
+    }
+    saveState(); renderDay(day); renderWeekBar();
+    if (!isDone) revealNow(day);
+  };
+
+  members.forEach((m, mi) => {
+    const { ex, ei, spec, sugg } = m;
+    const root = el.querySelector(`.grp-ex[data-ek="${exKey(gi, ei)}"]`);
+    const isLast = mi === members.length - 1;
+    const ensureLog = () => {
+      const cur = dayState(day.date, true);
+      cur.logs[exKey(gi, ei)] = logOf(cur.logs[exKey(gi, ei)], spec);
+      stampDate(cur);
+      return cur.logs[exKey(gi, ei)];
+    };
+    const key = restKeyOf(day, gi, ei, ex.name);
+    if (isDist(spec)) wireDistGrid(root, { spec, getLog: ensureLog, save: saveState, rerender: () => renderDay(day), restKey: key, restSecs: sprint ? spec.rest : (isLast ? restSecs : null) });
+    else SL.wireGrid(root, { spec, sugg, getLog: ensureLog, save: saveState, rerender: () => renderDay(day), restKey: key,
+      // A member before the last starts no rest (the group rests once); a row without a rest gets no bar (SetLog would default to 90 s).
+      noRest: () => sprint ? !spec.rest : (!isLast || !restSecs) });
+    const notes = root.querySelector(".log-notes");
+    notes.addEventListener("input", e => { ensureLog().notes = e.target.value; saveState(); });
+    root.querySelector(".hs-note-btn").onclick = () => { notes.hidden = !notes.hidden; if (!notes.hidden) notes.focus(); };
+    const rt = root.querySelector(".row-timer");
+    if (rt) { const k = `${tKey}_${ei}`; reattachTimer(k, rt); rt.onclick = () => tapTimer(k, rt, spec.rest); }
+  });
+
+  const tBtn = el.querySelector(".hs-row-full > .hs-tools .row-timer");
+  if (tBtn) { reattachTimer(tKey, tBtn); tBtn.onclick = () => tapTimer(tKey, tBtn, restSecs); }
+  if (sprint) wireWatchButtons(el, day, gi);
+  return el;
+}
+function tapTimer(key, btn, secs) { if (activeTimers[key]) tapActiveTimer(key); else startCountdown(key, btn, secs); }
+function revealNow(day) {
+  const el = document.querySelector(`#container-${day.date} .hs-now`);
+  if (!el || !el.offsetParent) return;
+  if (CK.revealNow(el)) return;   // board: the lane scrolls, not the window
+  const bar = document.querySelector(".appbar");
+  const top = el.getBoundingClientRect().top - (bar ? bar.getBoundingClientRect().bottom : 0) - 8;
+  if (top < 0 || top > window.innerHeight * 0.6) window.scrollBy({ top, behavior: "smooth" });
+}
+
+/* ---------------------------------------------------------------------------
+   WORK / REST WATCH. One per sprint block, in state so a reload keeps counting:
+   { phase: "work" | "rest" | null, since: ms, laps: [{ w: s, r: s }] }. Tap
+   Work at the line, Rest as you cross it, Work again for the next rep; Stop
+   closes the phase and keeps the laps. The button on the card and the rail
+   card on a pure sprint day paint from the same record.
+   --------------------------------------------------------------------------- */
+function watchOf(ds, gi) { const w = ds && ds.sprint && ds.sprint[gi]; return w ? { phase: w.phase || null, since: w.since || null, laps: Array.isArray(w.laps) ? w.laps : [] } : { phase: null, since: null, laps: [] }; }
+function ensureWatch(day, gi) { const d = dayState(day.date, true); d.sprint[gi] = d.sprint[gi] || { phase: null, since: null, laps: [] }; d.sprint[gi].laps = d.sprint[gi].laps || []; stampDate(d); return d.sprint[gi]; }
+function watchTap(day, gi) {
+  ensureAudio(); if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  const w = ensureWatch(day, gi), now = Date.now();
+  if (!w.phase) { w.phase = "work"; w.since = now; w.laps.push({ w: null, r: null }); }
+  else if (w.phase === "work") { const lap = w.laps[w.laps.length - 1]; lap.w = Math.round((now - w.since) / 100) / 10; w.phase = "rest"; w.since = now; beepPhase(); }
+  else { const lap = w.laps[w.laps.length - 1]; lap.r = Math.round((now - w.since) / 1000); w.phase = "work"; w.since = now; w.laps.push({ w: null, r: null }); beepPhase(); }
+  saveState(); syncWatchIv(); paintWatches();
+}
+function watchStop(day, gi, quiet) {
+  const ds = dayState(day.date, false);
+  const cur = watchOf(ds, gi);
+  if (!cur.phase) return;
+  const w = ensureWatch(day, gi), now = Date.now();
+  const lap = w.laps[w.laps.length - 1];
+  if (w.phase === "work" && lap) lap.w = Math.round((now - w.since) / 100) / 10;
+  if (w.phase === "rest" && lap) lap.r = Math.round((now - w.since) / 1000);
+  w.phase = null; w.since = null;
+  if (!quiet) { saveState(); syncWatchIv(); paintWatches(); }
+}
+function watchReset(day, gi) {
+  const ds = dayState(day.date, false);
+  if (!watchOf(ds, gi).laps.length && !watchOf(ds, gi).phase) return;
+  if (!confirm("Clear the sprint times for this block?")) return;
+  const d = dayState(day.date, true); delete d.sprint[gi];
+  saveState(); syncWatchIv(); renderDay(day);
+}
+function watchElapsed(w) { return w.since ? (Date.now() - w.since) / 1000 : 0; }
+function watchButtonsHtml(day, gi, w) {
+  const k = `${day.date}_${gi}`;
+  return `<button type="button" class="btn pj-watch" data-watch="${k}" data-act="tap">⏱ Work / Rest</button>
+          <button type="button" class="btn pj-watch-x" data-watch="${k}" data-act="stop" title="Stop the watch, keep the times"${w && w.phase ? "" : " hidden"}>■ Stop</button>
+          <button type="button" class="btn pj-watch-x" data-watch="${k}" data-act="reset" title="Clear the times"${w && (w.laps.length || w.phase) ? "" : " hidden"}>✕</button>
+          <span class="pj-laps" data-watch-laps="${k}" style="margin:0 0 0 auto;align-self:center"></span>`;
+}
+function wireWatchButtons(root, day, gi) {
+  root.querySelectorAll(`[data-watch="${day.date}_${gi}"]`).forEach(b => {
+    b.onclick = () => { if (b.dataset.act === "tap") watchTap(day, gi); else if (b.dataset.act === "stop") watchStop(day, gi); else watchReset(day, gi); };
+  });
+  paintWatches();
+}
+function lapsText(w, short) {
+  const done = w.laps.filter(l => l.w != null);
+  if (!done.length) return "";
+  if (short) { const last = done[done.length - 1]; return `rep ${done.length} · ${fmtSecs1(last.w)}${last.r != null ? ` · rest ${fmtClock(last.r)}` : ""}`; }
+  return done.map((l, i) => `<span>${i + 1} · <b>${fmtSecs1(l.w)}</b>${l.r != null ? ` · rest ${fmtClock(l.r)}` : ""}</span>`).join("<br>");
+}
+function paintWatches() {
+  document.querySelectorAll("[data-watch]").forEach(b => {
+    const [date, gi] = b.dataset.watch.split("_");
+    const w = watchOf(dayState(date, false), gi);
+    const el = watchElapsed(w);
+    if (b.dataset.act === "tap") {
+      b.classList.toggle("work", w.phase === "work"); b.classList.toggle("rest", w.phase === "rest");
+      b.textContent = w.phase === "work" ? `▶ Work ${fmtSecs1(el)}` : w.phase === "rest" ? `Rest ${fmtClock(el)} · next: Work` : w.laps.length ? "▶ Work (next rep)" : "⏱ Work / Rest";
+    } else if (b.dataset.act === "stop") b.hidden = !w.phase;
+    else if (b.dataset.act === "reset") b.hidden = !(w.laps.length || w.phase);
+  });
+  document.querySelectorAll("[data-watch-laps]").forEach(s => { const [date, gi] = s.dataset.watchLaps.split("_"); s.textContent = lapsText(watchOf(dayState(date, false), gi), true); });
+  document.querySelectorAll("[data-watch-card]").forEach(card => {
+    const [date, gi] = card.dataset.watchCard.split("_");
+    const w = watchOf(dayState(date, false), gi);
+    const el = watchElapsed(w);
+    card.classList.toggle("work", w.phase === "work");
+    const big = card.querySelector(".clock-big"), sub = card.querySelector(".clock-sub"), laps = card.querySelector(".pj-laps"), tog = card.querySelector("[data-act=tap]");
+    big.className = "clock-big" + (w.phase ? " " + w.phase : "");
+    big.textContent = w.phase === "work" ? (Math.round(el * 10) / 10).toFixed(1) : w.phase === "rest" ? fmtClock(el) : w.laps.length ? fmtSecs1(w.laps[w.laps.length - 1].w || 0) : "0.0";
+    sub.textContent = w.phase === "work" ? `Rep ${w.laps.length} · working` : w.phase === "rest" ? `Resting after rep ${w.laps.length} · ${fmtSecs1(w.laps[w.laps.length - 1].w || 0)}` : w.laps.length ? `${w.laps.filter(l => l.w != null).length} reps timed` : "Tap Work at the line";
+    tog.textContent = w.phase === "work" ? "Rest" : w.phase === "rest" ? "Work" : w.laps.length ? "Work (next rep)" : "Work";
+    tog.className = "btn " + (w.phase === "work" ? "btn-rest" : "btn-primary");
+    laps.innerHTML = lapsText(w, false);
+    card.querySelector("[data-act=stop]").hidden = !w.phase;
+  });
+}
+let watchIv = null;
+function syncWatchIv() {
+  const running = Object.keys(state.days).some(d => Object.keys(state.days[d].sprint || {}).some(k => state.days[d].sprint[k] && state.days[d].sprint[k].phase));
+  if (running && !watchIv) watchIv = setInterval(paintWatches, 100);
+  if (!running && watchIv) { clearInterval(watchIv); watchIv = null; }
+}
+/* The rail card on a pure sprint day: the same watch, big. */
+function watchCard(day, gi) {
+  const card = document.createElement("div");
+  card.className = "cond-card";
+  card.dataset.watchCard = `${day.date}_${gi}`;
+  const g = day.groups[gi];
+  card.innerHTML = `
+    <div class="hs-now-eyebrow" style="color:var(--warning)">Sprint watch · ${escapeHtml(groupName(day, g, gi))}</div>
+    <div class="clock-wrap"><div class="clock-big">0.0</div><div class="clock-sub">Tap Work at the line</div></div>
+    <div class="clock-ctl">
+      <button type="button" class="btn btn-primary" data-act="tap">Work</button>
+      <button type="button" class="btn" data-act="stop" hidden>■ Stop</button>
+      <button type="button" class="btn" data-act="reset">✕ Clear</button>
+    </div>
+    <div class="pj-laps"></div>`;
+  card.querySelectorAll("[data-act]").forEach(b => b.onclick = () => { if (b.dataset.act === "tap") watchTap(day, gi); else if (b.dataset.act === "stop") watchStop(day, gi); else watchReset(day, gi); });
+  return card;
+}
+
+/* ---------------------------------------------------------------------------
+   iPad BOARD (shared/cockpit.js). A slot is one group: a warm-up is a 6-minute
+   "WU" segment with a dot per movement, a superset one segment labelled A1+A2
+   with every member's sets as dots, a sprint block a 12-minute "Sprints"
+   segment. A pure sprint day is a conditioning board: the lane holds the sprint
+   card, the rail the session clock and the big work / rest watch.
+   --------------------------------------------------------------------------- */
+/* The row the Now card shows: the tapped group, else the first group not done, warm-ups skipped (Ryan knows the warm-up). */
+function nowIndex(day) {
+  if (day.type === "rest") return -1;
+  const ds = dayState(day.date, false), k = day.date, groups = day.groups;
+  if (tappedNow[k] != null && tappedNow[k] < groups.length && !isWU(groups[tappedNow[k]])) return tappedNow[k];
+  return groups.findIndex((g, gi) => !isWU(g) && g.type !== "note" && !isGroupDone(ds, g, gi));
+}
+/* One state per prescribed set, members concatenated; a warm-up gives one per movement. */
+function setStates(day, gi) {
+  const ds = dayState(day.date, false), g = day.groups[gi];
+  if (isWU(g)) return g.exercises.map((_, ei) => (ds && ds.completed[exKey(gi, ei)]) ? "done" : "");
+  const done = isGroupDone(ds, g, gi);
+  const out = [];
+  g.exercises.forEach((ex, ei) => {
+    const spec = specOf(ex);
+    logOf(ds && ds.logs[exKey(gi, ei)], spec).sets.slice(0, spec.sets).forEach(x => out.push(done || x.d ? "done" : (x.r != null || x.w != null || x.y != null) ? "part" : ""));
+  });
+  return out;
+}
+CK.init({
+  id: day => day.date,
+  kind: day => day.type === "sprint" ? "conditioning" : "strength",
+  eyebrow: day => `Week ${dayWeek(day)} · ${DOW_FULL[day.dow] || day.dow} · ${shortDate(day.date)}${day.deload ? " · Deload" : ""}`,
+  title: day => day.title,
+  warmupSecs: () => 0,   // the warm-up is a slot of its own here
+  condSecs: day => day.type === "sprint" ? daySecs(day) : null,
+  slots: day => day.groups.map((g, gi) => ({ idx: gi, name: groupName(day, g, gi), label: groupLabel(day, g, gi), slotName: groupSlotName(day, g, gi),
+                                              secs: groupSecs(g), rest: isSprint(g) ? null : groupRest(g), closer: false, beat: "" })).filter(s => day.groups[s.idx].type !== "note"),
+  nowIndex,
+  setStates,
+  lastText: (day, gi) => { const g = day.groups[gi]; if (isWU(g)) return ""; const ex = g.exercises[0]; return ex ? lastTimeText(ex, day, specOf(ex)) : ""; },
+  restKey: (day, gi) => day.groups[gi].exercises.map((ex, ei) => restKeyOf(day, gi, ei, ex.name)),
+  clock: day => { const ds = dayState(day.date, false); return ds ? { start: ds.clockStart, stop: ds.clockStop } : null; },
+  toggleClock: day => {
+    const cur = dayState(day.date, true);
+    if (!cur.clockStart) { cur.clockStart = Date.now(); cur.clockStop = null; stampDate(cur); }
+    else if (!cur.clockStop) cur.clockStop = Date.now();
+    else { cur.clockStart = null; cur.clockStop = null; }
+    saveState();
+  },
+  isComplete: isDayComplete,
+  renderLane: (day, lane, rail) => {
+    renderDayInto(day, lane);
+    if (day.type === "sprint") day.groups.forEach((g, gi) => { if (isSprint(g)) rail.appendChild(watchCard(day, gi)); });
+    paintWatches();
+  },
+  jump: (day, target) => {
+    if (target != null && target !== "wu") {
+      const g = day.groups[target];
+      if (g && isWU(g)) prepOpen[`${day.date}_wu${target}`] = true;
+      else tappedNow[day.date] = target;
+    }
+    renderDay(day);
+  },
+  /* The ring's zero: the concatenated set number maps back to its member and local set. A sprint block's rows are
+     unlike each other (a check row, bounds, the sprints), so there the member whose check started the rest is armed. */
+  armSet: (day, gi, setNo) => {
+    const g = day.groups[gi];
+    const root = document.getElementById("container-" + day.date);
+    if (isSprint(g)) {
+      const m = String(SL.rest.chan().key || "").match(/_(\d+)_(\d+)$/);
+      const ei = m && +m[1] === gi ? +m[2] : -1;
+      const grid = ei >= 0 && root && root.querySelector(`.grp-ex[data-ek="${exKey(gi, ei)}"]`);
+      const row = grid && [...grid.querySelectorAll(".sl-row")].find(r => !r.classList.contains("sl-done"));
+      const inp = row && (row.querySelector(".sl-r") || row.querySelector(".sl-w"));
+      if (inp) inp.focus();
+      return;
+    }
+    let left = setNo;
+    for (let ei = 0; ei < g.exercises.length; ei++) {
+      const n = specOf(g.exercises[ei]).sets;
+      if (left <= n) {
+        const row = root && root.querySelectorAll(`.grp-ex[data-ek="${exKey(gi, ei)}"] .sl-row`)[left - 1];
+        const inp = row && (row.querySelector(".sl-r") || row.querySelector(".sl-w"));
+        if (inp) inp.focus();
+        return;
+      }
+      left -= n;
+    }
+  },
+  /* Every day with a record, groups in order, each set's check timestamp: the cockpit learns pace from these. */
+  sessions: () => ALL.map(day => {
+    if (day.type === "rest") return null;
+    const ds = dayState(day.date, false);
+    if (!ds) return null;
+    return { start: ds.clockStart || null, rows: day.groups.map((g, gi) => ({ name: groupName(day, g, gi),
+      t: g.exercises.flatMap((ex, ei) => normDistLog(ds.logs[exKey(gi, ei)], 0).sets.map(x => x.t).filter(Boolean)) })) };
+  }).filter(Boolean),
+  onModeChange: () => { if (!DATA) return; const open = currentOpenDay(); render(); openTab(open); }
+});
+
+/* ---------------------------------------------------------------------------
+   NOTES PANE: how it works, the weekly shape, the blocks, sprint logging, sync, backup
+   --------------------------------------------------------------------------- */
+function buildNotes() {
+  const card = document.getElementById("notes-card");
+  card.innerHTML = `
+    <h2>How this tracker works</h2>
+    <p><strong>${escapeHtml(DATA.name)}</strong> is coach ${escapeHtml(DATA.coach || "")}'s hybrid strength and speed calendar in the ${escapeHtml(DATA.app || "Chalk")} app. Karl ingests each block from the Chalk portal as it is posted (Sunday and Wednesday evenings); pick the block with the top pills, the week with the W pills and the day with the tabs. The page opens on today, else the next day still to do.</p>
+    <h3>The week</h3>
+    <p><strong>${escapeHtml(scheduleLine(CYC))}.</strong> Thursday and Sunday rest. Wednesday's sprints are optional in most blocks; when Chalk posts the sprints and the lifts as two workouts on one date they show here as one day, sprint block first or last as Chalk ordered them.</p>
+    <h3>Blocks</h3>
+    <div class="notes-block">${DATA.cycles.slice().reverse().map(c => { const last = c.days[c.days.length - 1]; return `<h4>${monthLabel(c.startDate)} · ${escapeHtml(c.label)}</h4><p style="margin:2px 0 0;font-size:12.5px;color:var(--muted)">${c.weeks} weeks · ${shortDate(c.startDate)} to ${last ? shortDate(last.date) : "…"} · ${c.days.filter(d => d.type !== "rest").length} sessions${c.days.some(d => d.deload) ? " · deload at the end" : ""}</p>`; }).join("")}</div>
+    <p>Chalk announces 4-week blocks; a new block here is one new start date in the ingest table, so a block that runs long (the summer's ten weeks) stays one block.</p>
+    <h3>Logging sets and the coach</h3>
+    <p>Each set takes reps and weight where Chalk asks for a weight; checking a set starts the rest shown on the row. The <strong>= 4 × 7</strong> button fills the targets; type over what differed. A hit is inferred: every set at or above the top of the range. The chip under a lift says what to do next: green adds weight after a hit (5 lb, 10 on lower-body lifts), grey holds the weight after a miss, amber cuts after three misses at one weight.</p>
+    <p>The <strong>Last time</strong> block is the newest session where that exercise was logged, by name, across every block: it reads <em>last week</em> within seven days, else the week and block it came from. Nothing seeds from Chalk; the first session you log here is the first reference.</p>
+    <p><strong>Warm-up supersets</strong> fold into a prep card (rounds in the head, a check per movement, a lb box only where Chalk tracks one). <strong>Power complexes and pump supersets</strong> are one card, moves stacked A1 / A2, each with its own grid and history, one rest after the last move; Done closes the group.</p>
+    <h3>Sprints</h3>
+    <p>A sprint block is one card. Sprints and bounds log <strong>yards per set</strong> (and reps when Chalk asks); the plan's distances sit in the boxes, <strong>= plan</strong> fills them. Jumps log reps; the dynamic warm-up is a check. The <strong>Work / Rest</strong> watch is a plain stopwatch: tap Work at the line, Rest as you cross it, Work again for the next rep. Each rep's time and rest are kept on the block and sync with the day. On the iPad a pure sprint day puts the watch in the rail.</p>
+    <p>Deload days carry a <em>Deload</em> flag and the coach's reduced sets; optional sprint blocks say <em>Optional</em> and do not hold up the day.</p>
+    ${SL.sync.notesHtml()}
+    <h3>Backup</h3>
+    <div class="notes-actions">
+      <button class="btn" id="btn-export">Export backup</button>
+      <button class="btn" id="btn-import">Import backup</button>
+    </div>
+    <div class="note-box" style="margin-top:12px">Source: ${escapeHtml(DATA.app || "Chalk Performance Training")}, coach ${escapeHtml(DATA.coach || "")}, plan ${escapeHtml(String(DATA.planId || ""))}. ${DATA.cycles.length} block${DATA.cycles.length === 1 ? "" : "s"} ingested by ${escapeHtml(DATA.generatedBy || "the ingest")}; the block on screen is ${escapeHtml(CYC.id)}.</div>`;
+  document.getElementById("btn-export").onclick = doExport;
+  document.getElementById("btn-import").onclick = doImport;
+}
+function doExport() {
+  const payload = { app: "powerjacked", version: 1, exportedAt: new Date().toISOString(), state };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `powerjacked-backup-${todayISO()}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast("Backup downloaded");
+}
+function doImport() {
+  const inp = document.createElement("input");
+  inp.type = "file"; inp.accept = ".json,application/json";
+  inp.onchange = () => {
+    const f = inp.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const obj = JSON.parse(r.result);
+        if (obj && obj.state && obj.state.days) {
+          if (!confirm("Replace current data with this backup?")) return;
+          state = normState(obj.state); saveState(); render(); toast("Import complete");
+        } else alert("Doesn't look like a POWERJACKED backup.");
+      } catch (e) { alert("Could not read file: " + e.message); }
+    };
+    r.readAsText(f);
+  };
+  inp.click();
+}
+let toastTimeout = null;
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg; el.classList.add("show");
+  if (toastTimeout) clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => el.classList.remove("show"), 2200);
+}
+
+/* ---------------------------------------------------------------------------
+   STATS + HERO
+   --------------------------------------------------------------------------- */
+function updateStats() {
+  if (!CYC) return;
+  const ref = currentWeekRef();
+  document.getElementById("stat-week").textContent = "W" + ref.w;
+  document.getElementById("stat-days").textContent = ALL.filter(d => d.type !== "rest" && isDayComplete(d)).length;
+  const wk = weekDays(ref.w, ref.cyc).filter(isRequired);
+  document.getElementById("stat-thisweek").textContent = `${wk.filter(isDayComplete).length} / ${wk.length}`;
+  const req = CYC.days.filter(isRequired);
+  document.getElementById("stat-overall").textContent = req.length ? Math.round(100 * req.filter(isDayComplete).length / req.length) + "%" : "0%";
+  const nx = nextDay();
+  document.querySelectorAll(".tab").forEach(tab => {
+    const dot = tab.querySelector(".due-dot");
+    if (dot) dot.hidden = !nx || tab.dataset.pane !== nx.date;
+  });
+}
+function render() {
+  renderCycleBar();
+  renderWeekBar();
+  buildWeek();
+  updateStats();
+  syncWatchIv();
+}
+
+/* ---------------------------------------------------------------------------
+   HEALTH-SYSTEM SUMMARY (contract in ../shared/shell.js). Set-day program:
+   every session has a calendar date; next.id is the day's date.
+   --------------------------------------------------------------------------- */
+function publishSummary() {
+  try {
+    if (!window.HS || typeof HS.summary !== "function" || !CYC) return;
+    const td = todayISO();
+    const nx = nextDay();
+    const todayDay = ALL.find(d => d.date === td && d.type !== "rest") || null;
+    const sessions = [];
+    ALL.forEach(d => { if (dayHasActivity(d)) { const ds = dayState(d.date, false); sessions.push(ds.trained || d.date); } });
+    sessions.sort();
+    const ref = currentWeekRef();
+    const planned = weekDays(ref.w, ref.cyc).filter(isRequired);
+    HS.summary(PROGRAM.slug, {
+      kind: "setdays", week: ref.w, weeks: ref.cyc.weeks, phase: ref.cyc.label,
+      next: nx ? { id: nx.date, label: nx.title, sub: `Week ${dayWeek(nx)} · ${nx.dow}${nx.cycle !== ref.cyc ? " · next block" : ""}`, date: nx.date, minutes: dayMinutes(nx), listed: null } : null,
+      today: todayDay ? { label: todayDay.title, minutes: dayMinutes(todayDay), done: isDayComplete(todayDay) } : null,
+      thisWeek: { done: planned.filter(isDayComplete).length, planned: planned.length },
+      days: liftDays(ref.cyc),
+      sessions, lastDate: sessions.length ? sessions[sessions.length - 1] : null
+    });
+  } catch (e) {}
+}
+function sessionFromHash() {
+  const m = (location.hash || "").match(/#s=([0-9-]+)/);
+  return m ? dayById(m[1]) : null;
+}
+
+/* ---------------------------------------------------------------------------
+   CATALOG (Phase 2 contract in ../shared/shell.js): every training day of every
+   block, each row with its slot as the tag so Gaps can pattern-tag it.
+   --------------------------------------------------------------------------- */
+window.HS_CATALOG = function () {
+  const sessions = [];
+  ALL.forEach(day => {
+    if (day.type === "rest") return;
+    const exercises = [];
+    day.groups.forEach((g, gi) => g.exercises.forEach((ex, ei) => {
+      const spec = specOf(ex);
+      const kind = isWU(g) ? "warmup" : ex.slot === "mobility" ? "mobility" : ex.slot === "abs" ? "core" : (isSprint(g) || ex.slot === "sprint" || ex.slot === "engine") ? "conditioning" : "strength";
+      exercises.push({ name: ex.name, scheme: shortRx(ex, spec), sets: spec.sets, reps: spec.kind === "sets" ? (repsStr(ex) || null) : spec.kind === "time" ? `${spec.repTop || ""} s` : null,
+                       restSec: isSprint(g) ? (spec.rest || null) : (isSuper(g) && ei < g.exercises.length - 1 ? null : (groupRest(g) || spec.rest || null)),
+                       minutes: isWU(g) ? Math.round(WU_SECS / g.exercises.length / 6) / 10 : isSprint(g) ? Math.round(SPRINT_SECS / g.exercises.length / 6) / 10 : Math.round(exSecs(ex, g) / 6) / 10,
+                       kind, tag: ex.slot || null });
+    }));
+    sessions.push({ id: day.date, week: dayWeek(day), day: day.dow, label: day.title, minutes: dayMinutes(day), optional: !!day.optional, exercises });
+  });
+  return { slug: PROGRAM.slug, kind: "setdays", sessions };
+};
+
+/* ---------------------------------------------------------------------------
+   SESSION CLOCK (phone): elapsed against the planning model. The board wires its rail clock instead.
+   --------------------------------------------------------------------------- */
+const sessionClocks = {};
+function wireClock(day, btn, stat) {
+  if (!btn) return;
+  const key = day.date;
+  const txt = btn.querySelector(".hs-clock-t") || btn;
+  const planned = daySecs(day);
+  function paint() {
+    const cur = dayState(day.date, false);
+    if (!cur || !cur.clockStart) {
+      txt.textContent = "Start"; btn.classList.remove("running", "stopped");
+      btn.setAttribute("aria-label", "Start the session clock");
+      if (stat) stat.textContent = "";
+      return;
+    }
+    const elapsed = Math.round(((cur.clockStop || Date.now()) - cur.clockStart) / 1000);
+    txt.textContent = fmtClock(elapsed);
+    btn.classList.toggle("running", !cur.clockStop);
+    btn.classList.toggle("stopped", !!cur.clockStop);
+    btn.setAttribute("aria-label", cur.clockStop ? `Session clock stopped at ${fmtClock(elapsed)}, tap to reset` : `Session clock ${fmtClock(elapsed)}, tap to stop`);
+    if (stat) stat.textContent = isDayComplete(day) ? `done in ${fmtClock(elapsed)}` : cur.clockStop ? "clock stopped" : planned != null ? `${Math.round(elapsed / 60)} of ${fmtMins(planned).replace("~", "")} in` : "";
+  }
+  function syncInterval() {
+    if (sessionClocks[key]) { clearInterval(sessionClocks[key]); delete sessionClocks[key]; }
+    const cur = dayState(day.date, false);
+    if (cur && cur.clockStart && !cur.clockStop) sessionClocks[key] = setInterval(() => { if (!btn.isConnected) { clearInterval(sessionClocks[key]); delete sessionClocks[key]; return; } paint(); }, 1000);
+  }
+  btn.onclick = () => {
+    const cur = dayState(day.date, true);
+    if (!cur.clockStart) { cur.clockStart = Date.now(); cur.clockStop = null; stampDate(cur); }
+    else if (!cur.clockStop) cur.clockStop = Date.now();
+    else { cur.clockStart = null; cur.clockStop = null; }
+    saveState(); syncInterval(); paint();
+  };
+  syncInterval(); paint();
+}
+
+/* ---------------------------------------------------------------------------
+   TIMERS: the row's rest countdown button, and the beeps the watch shares.
+   --------------------------------------------------------------------------- */
+const activeTimers = {};
+let audioCtx = null;
+function ensureAudio() {
+  if (audioCtx) return audioCtx;
+  try { const AC = window.AudioContext || window.webkitAudioContext; if (AC) audioCtx = new AC(); } catch (e) {}
+  return audioCtx;
+}
+function tone(offsets, freqs) {
+  const ctx = ensureAudio();
+  if (ctx) {
+    const now = ctx.currentTime;
+    offsets.forEach((off, i) => {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.type = "sine"; osc.frequency.value = freqs[i] || 880;
+      gain.gain.setValueAtTime(0, now + off);
+      gain.gain.linearRampToValueAtTime(0.25, now + off + 0.01);
+      gain.gain.linearRampToValueAtTime(0, now + off + 0.14);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + off); osc.stop(now + off + 0.16);
+    });
+  }
+}
+function beepDone() { tone([0, 0.18, 0.36], [880, 880, 1100]); if (navigator.vibrate) { try { navigator.vibrate([120, 80, 120, 80, 200]); } catch (e) {} } }
+function beepPhase() { tone([0], [990]); }
+function paintRunning(btn, text) { if (!btn) return; btn.classList.add("running"); btn.classList.remove("done"); btn.textContent = text; }
+function paintDone(btn) {
+  if (!btn || !btn.isConnected) return;
+  btn.classList.remove("running"); btn.classList.add("done");
+  btn.textContent = "Done!";
+  setTimeout(() => { if (btn && btn.isConnected) { btn.classList.remove("done"); btn.textContent = btn.dataset.default || "⏱"; } }, 1800);
+}
+function paintReset(btn) {
+  if (!btn || !btn.isConnected) return;
+  btn.classList.remove("running", "done");
+  btn.textContent = btn.dataset.default || "⏱";
+}
+function startCountdown(key, btn, secs) {
+  if (!secs) return;
+  ensureAudio(); if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  const endsAt = Date.now() + secs * 1000;
+  paintRunning(btn, fmtClock(secs));
+  const iv = setInterval(() => {
+    const t = activeTimers[key]; if (!t) return;
+    const remaining = Math.round((t.endsAt - Date.now()) / 1000);
+    if (remaining <= 0) { clearInterval(t.iv); const b = t.btn; delete activeTimers[key]; paintDone(b); beepDone(); }
+    else paintRunning(t.btn, fmtClock(remaining));
+  }, 250);
+  activeTimers[key] = { endsAt, iv, btn };
+}
+function tapActiveTimer(key) {
+  const t = activeTimers[key]; if (!t) return;
+  clearInterval(t.iv); delete activeTimers[key]; paintReset(t.btn);
+}
+function reattachTimer(key, btn) {
+  const t = activeTimers[key];
+  if (!btn || !t) return;
+  t.btn = btn;
+  const remaining = Math.round((t.endsAt - Date.now()) / 1000);
+  if (remaining > 0) paintRunning(btn, fmtClock(remaining));
+}
+
+/* ---------------------------------------------------------------------------
+   BOOT: fetch data.json (no-store so a new ingest lands on the next open),
+   fold the days, pick the day, wire sync.
+   --------------------------------------------------------------------------- */
+document.getElementById("reset-btn").onclick = () => {
+  if (confirm("Reset ALL tracking for this program? Every check, set, sprint time and clock across every block will be cleared.")) {
+    state = emptyState(); Object.keys(tappedNow).forEach(k => delete tappedNow[k]); saveState(); render();
+  }
+};
+
+async function boot() {
+  const notes = document.getElementById("notes-card");
+  try {
+    const r = await fetch("data.json", { cache: "no-store" });
+    if (!r.ok) throw new Error(`data.json ${r.status}`);
+    DATA = await r.json();
+  } catch (e) {
+    document.getElementById("hero-sub").textContent = "Could not load data.json.";
+    notes.innerHTML = `<h2>Program data did not load</h2><p>${escapeHtml(e.message)}. Pull to refresh on wifi; if it persists, the program file is missing from the deploy.</p>`;
+    document.querySelector('.tab[data-pane="notes"]').click();
+    return;
+  }
+  if (!DATA || !Array.isArray(DATA.cycles) || !DATA.cycles.length) {
+    notes.innerHTML = `<h2>No blocks in data.json</h2><p>The tracker expects schema 2 in "calendar-groups" mode with at least one block.</p>`;
+    document.querySelector('.tab[data-pane="notes"]').click();
+    return;
+  }
+  DATA.cycles.forEach(c => {
+    const byDate = new Map();
+    (c.days || []).forEach(raw => { if (!byDate.has(raw.date)) byDate.set(raw.date, []); byDate.get(raw.date).push(raw); });
+    c.days = Array.from(byDate.values()).map(parts => makeDay(parts, c)).sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  });
+  ALL = DATA.cycles.flatMap(c => c.days).sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  if (DATA.name) document.title = `${DATA.name.replace(/ - Chalk$/, "")} — Chalk`;
+
+  // Open on the deep link, else today's program day, else the next day still to do, else the last block's first session.
+  const td = todayISO();
+  const lastCyc = DATA.cycles[DATA.cycles.length - 1];
+  const start = sessionFromHash() || ALL.find(d => d.date === td) || nextDay() || lastCyc.days.find(d => d.type !== "rest") || lastCyc.days[0];
+  uiCycle = Math.max(0, DATA.cycles.indexOf(start.cycle));
+  CYC = DATA.cycles[uiCycle];
+  uiWeek = dayWeek(start);
+
+  SL.sync.init({
+    slug: PROGRAM.slug,
+    storageKey: PROGRAM.storageKey,
+    payload: () => ({ state, entries: syncEntries() }),
+    hasData: () => Object.keys(state.days).length > 0,
+    apply: merged => { const open = currentOpenDay(); state = normState(merged); render(); openTab(open); }
+  });
+
+  buildShell();
+  render();
+  SL.sync.wireNotes();
+  openTab(start);
+  publishSummary();
+}
+function currentOpenDay() {
+  const t = document.querySelector(".tab.active[data-day]");
+  return t ? dayById(t.dataset.day) : dueDayInWeek(uiWeek);
+}
+boot();
+</script>
+</body>
+</html>

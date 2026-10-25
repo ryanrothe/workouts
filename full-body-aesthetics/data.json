@@ -1,5 +1,5 @@
 {
- "name": "Full Body Aesthetics",
+ "name": "Full Body Aesthetics - Chalk",
  "coach": "Ryan Fischer",
  "app": "Chalk Performance Training",
  "unit": "lb",
@@ -632,7 +632,7 @@
        }
       },
       {
-       "slot": "chest",
+       "slot": "triceps",
        "name": "Close Grip Bench Press ",
        "sets": 3,
        "reps": "10",
@@ -650,7 +650,7 @@
        "closer": false
       },
       {
-       "slot": "biceps",
+       "slot": "triceps",
        "name": "Close Grip Barbell Curl",
        "sets": 3,
        "reps": "10",
@@ -689,7 +689,7 @@
        "closer": false
       },
       {
-       "slot": "back",
+       "slot": "triceps",
        "name": "Close Grip Cable Row",
        "sets": 3,
        "reps": "10",
@@ -1031,7 +1031,7 @@
        "closer": false
       },
       {
-       "slot": "biceps",
+       "slot": "legs",
        "name": "Swiss Ball Leg Curls",
        "sets": 3,
        "reps": "-1",
@@ -1736,7 +1736,7 @@
        "closer": false
       },
       {
-       "slot": "biceps",
+       "slot": "legs",
        "name": "Swiss Ball Leg Curls",
        "sets": 3,
        "reps": "-1",
@@ -2448,7 +2448,7 @@
        "closer": false
       },
       {
-       "slot": "biceps",
+       "slot": "legs",
        "name": "Swiss Ball Leg Curls",
        "sets": 3,
        "reps": "-1",
@@ -3157,7 +3157,7 @@
        "closer": false
       },
       {
-       "slot": "biceps",
+       "slot": "legs",
        "name": "Swiss Ball Leg Curls",
        "sets": 3,
        "reps": "-1",
@@ -6849,7 +6849,7 @@
        "closer": false
       },
       {
-       "slot": "back",
+       "slot": "triceps",
        "name": "Close Grip Cable Row",
        "sets": 3,
        "reps": "10",
@@ -7039,7 +7039,7 @@
        "closer": false
       },
       {
-       "slot": "biceps",
+       "slot": "triceps",
        "name": "Close Grip Barbell Curl",
        "sets": 3,
        "reps": "8",
@@ -7497,7 +7497,7 @@
        "closer": false
       },
       {
-       "slot": "back",
+       "slot": "triceps",
        "name": "Close Grip Cable Row",
        "sets": 3,
        "reps": "10",
@@ -7688,7 +7688,7 @@
        "closer": false
       },
       {
-       "slot": "biceps",
+       "slot": "triceps",
        "name": "Close Grip Barbell Curl",
        "sets": 3,
        "reps": "8",
@@ -8146,7 +8146,7 @@
        "closer": false
       },
       {
-       "slot": "back",
+       "slot": "triceps",
        "name": "Close Grip Cable Row",
        "sets": 3,
        "reps": "10",
@@ -8337,7 +8337,7 @@
        "closer": false
       },
       {
-       "slot": "biceps",
+       "slot": "triceps",
        "name": "Close Grip Barbell Curl",
        "sets": 3,
        "reps": "8",
@@ -8796,7 +8796,7 @@
        "closer": false
       },
       {
-       "slot": "back",
+       "slot": "triceps",
        "name": "Close Grip Cable Row",
        "sets": 3,
        "reps": "10",
@@ -8988,7 +8988,7 @@
        "closer": false
       },
       {
-       "slot": "biceps",
+       "slot": "triceps",
        "name": "Close Grip Barbell Curl",
        "sets": 3,
        "reps": "8",
@@ -9630,7 +9630,7 @@
        "closer": false
       },
       {
-       "slot": "chest",
+       "slot": "triceps",
        "name": "Close Grip Bench Press ",
        "sets": 3,
        "reps": "12",
@@ -10263,7 +10263,7 @@
        "closer": false
       },
       {
-       "slot": "chest",
+       "slot": "triceps",
        "name": "Close Grip Bench Press ",
        "sets": 3,
        "reps": "10",
@@ -10897,7 +10897,7 @@
        "closer": false
       },
       {
-       "slot": "chest",
+       "slot": "triceps",
        "name": "Close Grip Bench Press ",
        "sets": 3,
        "reps": "8",
@@ -11533,7 +11533,7 @@
        "closer": false
       },
       {
-       "slot": "chest",
+       "slot": "triceps",
        "name": "Close Grip Bench Press ",
        "sets": 3,
        "reps": "6",

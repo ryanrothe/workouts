@@ -56,6 +56,9 @@
   // Ratified by Ryan 2026-09-25 (the 8 unsure FBA rows). [] = deliberately uncounted: a finisher tied
   // to the exercise before it.
   const OVERRIDES = {
+    "pecdec": ["push"],   // Pec Dec (POWERJACKED)
+    "adductormachine": ["legs"],   // Adductor Machine (POWERJACKED)
+    "weightedbackextentions": ["legs"],   // Weighted Back Extentions, sic (POWERJACKED; posterior chain)
     "machinereardelts": ["pull"],   // Machine Rear Delts (Full Body 3-day; rear delts are pull)
     "chestsupportreardelts": ["pull"],   // Chest Support Rear Delts (FBA 2026-08 block; rear delts are pull)
     "araises": ["pull"],   // A Raises (FBA; rear-delt / scap raise, pull)

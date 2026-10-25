@@ -2,11 +2,12 @@
    v22 (2026-09-25): health system shell (Today, Library, Fuel), shared shell/fuel/library modules, self-hosted fonts.
    v36 (2026-10-24): shared iPad cockpit (shared/cockpit.js) on the seven single-lifter SetLog programs.
    v37 (2026-10-24): Dumbbells Only and Full Body (3 Day Split), Chalk session programs on SetLog + cockpit.
+   v38 (2026-10-24): POWERJACKED - Chalk, the second Chalk calendar program (groups + sprints) on SetLog + cockpit.
    Caches the launcher + all three sub-apps + shared styles + program data + icons.
    Network-first for HTML, scripts, styles and program data (so a deploy never pairs a
    new page with an old shared/setlog.js); cache-first for images and the manifest. */
 
-const CACHE = 'exercise-library-v37';
+const CACHE = 'exercise-library-v38';
 const PRECACHE = [
   './',
   './index.html',
@@ -57,6 +58,9 @@ const PRECACHE = [
   './full-body-3-day/',
   './full-body-3-day/index.html',
   './full-body-3-day/data.json',
+  './powerjacked/',
+  './powerjacked/index.html',
+  './powerjacked/data.json',
   './nutrition/',
   './nutrition/index.html',
   './icon-180.png',

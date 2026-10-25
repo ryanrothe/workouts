@@ -1,5 +1,5 @@
 {
- "name": "Full Body (3 Day Split)",
+ "name": "Full Body (3 Day Split) - Chalk",
  "slug": "full-body-3-day",
  "coach": "Ryan Fischer",
  "app": "Chalk Performance Training",
@@ -553,7 +553,7 @@
         "weight"
        ],
        "summary": "3 sets | 10 reps",
-       "slot": "biceps",
+       "slot": "legs",
        "alternates": [
         "Swiss Ball Leg Curls"
        ],
@@ -1082,7 +1082,7 @@
         "weight"
        ],
        "summary": "3 sets | 10 reps",
-       "slot": "biceps",
+       "slot": "legs",
        "alternates": [
         "Swiss Ball Leg Curls"
        ],
@@ -1611,7 +1611,7 @@
         "weight"
        ],
        "summary": "3 sets | 12 reps",
-       "slot": "biceps",
+       "slot": "legs",
        "alternates": [
         "Swiss Ball Leg Curls"
        ],
@@ -2140,7 +2140,7 @@
         "weight"
        ],
        "summary": "3 sets | 12 reps",
-       "slot": "biceps",
+       "slot": "legs",
        "alternates": [
         "Swiss Ball Leg Curls"
        ],
@@ -2375,7 +2375,7 @@
         "weight"
        ],
        "summary": "3 sets | 6 reps",
-       "slot": "chest",
+       "slot": "triceps",
        "exerciseId": 553920,
        "videoUrl": "https://stream.mux.com/BOz3V600POL16Fzji4r4xgTi4rg6b01NqRdbmmAHGExPg.m3u8"
       }
@@ -2596,7 +2596,7 @@
         "weight"
        ],
        "summary": "3 sets | 12 reps",
-       "slot": "biceps",
+       "slot": "legs",
        "exerciseId": 557020,
        "videoUrl": "https://stream.mux.com/9knxfQ6sROVA6l8CcNtgG0201tAuNZ502EJMz3pGTIo6oc.m3u8",
        "restSec": 90,
@@ -2900,7 +2900,7 @@
         "weight"
        ],
        "summary": "3 sets | 6 reps",
-       "slot": "chest",
+       "slot": "triceps",
        "exerciseId": 553920,
        "videoUrl": "https://stream.mux.com/BOz3V600POL16Fzji4r4xgTi4rg6b01NqRdbmmAHGExPg.m3u8"
       }
@@ -3121,7 +3121,7 @@
         "weight"
        ],
        "summary": "3 sets | 12 reps",
-       "slot": "biceps",
+       "slot": "legs",
        "exerciseId": 557020,
        "videoUrl": "https://stream.mux.com/9knxfQ6sROVA6l8CcNtgG0201tAuNZ502EJMz3pGTIo6oc.m3u8",
        "restSec": 90,
@@ -3425,7 +3425,7 @@
         "weight"
        ],
        "summary": "3 sets | 6 reps",
-       "slot": "chest",
+       "slot": "triceps",
        "exerciseId": 553920,
        "videoUrl": "https://stream.mux.com/BOz3V600POL16Fzji4r4xgTi4rg6b01NqRdbmmAHGExPg.m3u8"
       }
@@ -3646,7 +3646,7 @@
         "weight"
        ],
        "summary": "3 sets | 12 reps",
-       "slot": "biceps",
+       "slot": "legs",
        "exerciseId": 557020,
        "videoUrl": "https://stream.mux.com/9knxfQ6sROVA6l8CcNtgG0201tAuNZ502EJMz3pGTIo6oc.m3u8",
        "restSec": 90,
@@ -3950,7 +3950,7 @@
         "weight"
        ],
        "summary": "3 sets | 6 reps",
-       "slot": "chest",
+       "slot": "triceps",
        "exerciseId": 553920,
        "videoUrl": "https://stream.mux.com/BOz3V600POL16Fzji4r4xgTi4rg6b01NqRdbmmAHGExPg.m3u8"
       }
@@ -4171,7 +4171,7 @@
         "weight"
        ],
        "summary": "3 sets | 12 reps",
-       "slot": "biceps",
+       "slot": "legs",
        "exerciseId": 557020,
        "videoUrl": "https://stream.mux.com/9knxfQ6sROVA6l8CcNtgG0201tAuNZ502EJMz3pGTIo6oc.m3u8",
        "restSec": 90,

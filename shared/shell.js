@@ -196,7 +196,17 @@ body.hs-has-tabbar { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
     s.onerror = cb;
     document.head.appendChild(s);
   }
+  /* Ask the browser to keep this origin's storage (offline cache + every program's
+     localStorage). Without it Android Chrome treats it as best-effort and may evict it
+     when the device runs low on space (added 2026-10-24 for the Daylight tablet).
+     Safari ignores or auto-grants it; a refusal changes nothing. */
+  function persistStorage() {
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persisted().then((p) => p || navigator.storage.persist()).catch(() => {});
+    }
+  }
   function boot() {
+    persistStorage();
     injectCss();
     const which = document.body.dataset.shell;
     ensureFuel(() => {

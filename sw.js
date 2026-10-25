@@ -3,11 +3,12 @@
    v36 (2026-10-24): shared iPad cockpit (shared/cockpit.js) on the seven single-lifter SetLog programs.
    v37 (2026-10-24): Dumbbells Only and Full Body (3 Day Split), Chalk session programs on SetLog + cockpit.
    v38 (2026-10-24): POWERJACKED - Chalk, the second Chalk calendar program (groups + sprints) on SetLog + cockpit.
+   v39 (2026-10-24): shared/shell.js requests persistent storage so Android cannot evict the offline cache.
    Caches the launcher + all three sub-apps + shared styles + program data + icons.
    Network-first for HTML, scripts, styles and program data (so a deploy never pairs a
    new page with an old shared/setlog.js); cache-first for images and the manifest. */
 
-const CACHE = 'exercise-library-v38';
+const CACHE = 'exercise-library-v39';
 const PRECACHE = [
   './',
   './index.html',

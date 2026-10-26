@@ -11670,7 +11670,9 @@
    "schedule": {
     "lift": [
      "Mon",
-     "Tue"
+     "Tue",
+     "Thu",
+     "Fri"
     ],
     "optionalConditioning": [
      "Wed",
@@ -12003,6 +12005,294 @@
      }
     },
     {
+     "date": "2026-10-29",
+     "dow": "Thu",
+     "week": 1,
+     "type": "strength",
+     "exercises": [
+      {
+       "slot": "main",
+       "name": "Barbell Incline Bench Press",
+       "sets": 3,
+       "reps": "10",
+       "perSide": false,
+       "instruction": "Build to a 10‑rep max for the day. \nIntensity: 9/10",
+       "intensity": "9/10",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 10 reps",
+       "exerciseId": 523082,
+       "videoUrl": "https://stream.mux.com/TraB02jsRz008Jm2KXzCXuDPfTKOAfa02zdtv6X1POgs5I.m3u8",
+       "closer": false,
+       "score": {
+        "type": "repmax-load"
+       }
+      },
+      {
+       "slot": "chest",
+       "name": "Dumbbell Pullover",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Complete one set every 60 seconds. You should feel a solid stretch in your lats, so go far enough back to achieve it. Once you reach the stretch, return to the starting position.\nIntensity: 9/10",
+       "intensity": "9/10",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "exerciseId": 557043,
+       "videoUrl": "https://stream.mux.com/b9nn00VvxbQcCCmcWvc2liIgbIz1hKAj6YsqAp8EaRZI.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "shoulders",
+       "name": "Chest Support Lateral Dumbbell Raises",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Complete one set every 60 seconds. \nIntensity: 9/10",
+       "intensity": "9/10",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "exerciseId": 553873,
+       "videoUrl": "https://stream.mux.com/00iNUS1fmqWZZQTp00yDxNSoUYVz301G1WMnpqn02DSNSEw.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "shoulders",
+       "name": "Barbell Lateral Lunge",
+       "sets": 3,
+       "reps": "12",
+       "perSide": true,
+       "instruction": "Do one set every 60 seconds. \nIntensity: 8/10\nPerform Each Side",
+       "intensity": "8/10",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets (per side) | 12 reps",
+       "alternates": [
+        "Machine Abduction"
+       ],
+       "exerciseId": 523102,
+       "videoUrl": "https://stream.mux.com/FdtOn7hiuIsvgv7eV01u1pl1015dyiGaDouZK01O02Ehxh00.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "biceps",
+       "name": "Barbell 21's",
+       "sets": 3,
+       "reps": "21",
+       "perSide": false,
+       "instruction": "Complete 7 repetitions at each one of the ranges of motion:\n- From the top to 90°\n- From the bottom to 90°\n- Full range of motion\n7 reps at each stage (21 reps total) is 1 set. Rest 90 seconds between sets.\nIntensity: 9/10",
+       "intensity": "9/10",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 21 reps",
+       "exerciseId": 636467,
+       "videoUrl": "https://stream.mux.com/Hg8sq6JIKBcHYIkLCx94TkTMmD1tGmgLNokzp77zZZQ.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "triceps",
+       "name": "Dumbbell Tricep Kickback",
+       "sets": 3,
+       "reps": "12",
+       "perSide": true,
+       "instruction": "Complete 12 reps on each side, and then rest 60 seconds after the second side.\nIntensity: 9/10\nPerform Each Side",
+       "intensity": "9/10",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets (per side) | 12 reps",
+       "exerciseId": 553892,
+       "videoUrl": "https://stream.mux.com/GF2WDkwEuJ6pOT00BmF8rD601Cp6YTrwfdo1bf3FYAS1A.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "closer",
+       "name": "Weighted Sit-Up",
+       "sets": 1,
+       "reps": "50",
+       "perSide": false,
+       "instruction": "Complete 50 reps for time with a weight that you would normally be able to do for about 10 to 12 reps. This should take you about 4 to 5 minutes with the correct weight. Next week, we will do 60 reps with the same weight.\nIntensity: 9/10",
+       "intensity": "9/10",
+       "restSec": 0,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "1 sets | 50 reps",
+       "exerciseId": 557012,
+       "videoUrl": "https://stream.mux.com/3T34zDZvK201enK4hyDbOyrq54OzekSu3Zkq2BwJMlyY.m3u8",
+       "closer": true,
+       "score": {
+        "type": "for-time"
+       }
+      }
+     ],
+     "note": "🚨 WEEK 1 OF THE NEW CYCLE!\n\n👉 NEW HERE? Jump in with today’s workout. Everyone here trains the same block together, and a new one starts every 4 weeks. There’s never a bad time to start.\n\nLast month’s countdown worked, so we’re running it back with ALL-NEW movements. You don’t build real strength running a structure for only 4 weeks. You build it over 8 to 12. Same engine, brand new lifts. And since every lift is new, every rep max you set this month is an automatic PR.\n\nHow this block works:\n\n1️⃣ Every session starts with your main lift. Build to a rep max for the day. Week 1 it’s a 10-rep max, then 8, then 5, then 3. The reps fall every week, the weight climbs, and Week 4 is PR WEEK.\n\n2️⃣ Then it’s one exercise per body part: chest, back, legs, shoulders, biceps, triceps. The reps count down each week too: 12 → 10 → 8 → 6. When the reps drop, you add weight.\n\n3️⃣ Finish with THE CLOSER, and it changes every session. Sometimes it’s a DEATH BY, sometimes it’s a set number of reps done for time, sometimes it’s max reps on the clock. The app tells you exactly how to do each one. Whatever the format, it always ends in a score. Log it, and beat it next week.\n\n📅 Your week: Lift Mon · Tue · Thu · Fri. Optional 30-min conditioning Wed + Sat.\n\nEvery workout this block ends in a number: a rep max, a closer score, a distance. New lifts, new numbers, same mission. Show up for PR Week. Glad you’re here. 🤝\n\nTag us in your training: @ryanfisch & @chalk.performancetraining"
+    },
+    {
+     "date": "2026-10-30",
+     "dow": "Fri",
+     "week": 1,
+     "type": "strength",
+     "exercises": [
+      {
+       "slot": "main",
+       "name": "Dumbbell Bent Over Row",
+       "sets": 3,
+       "reps": "12",
+       "perSide": true,
+       "instruction": "Build to a 10‑rep max for the day on each side. Rest 2 minutes after the second side. \nIntensity: 9/10\nPerform Each Side",
+       "intensity": "9/10",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets (per side) | 12 reps",
+       "exerciseId": 566884,
+       "videoUrl": "https://stream.mux.com/CavkGcBGD401do9Aoj4RyGImC93bExU7KBZt8fSqQ8Ko.m3u8",
+       "closer": false,
+       "score": {
+        "type": "repmax-load"
+       }
+      },
+      {
+       "slot": "chest",
+       "name": "Machine Bench Press (Neutral Grip)",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 9/10",
+       "intensity": "9/10",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "alternates": [
+        "Dumbbell Bench Press (Neutral Grip)"
+       ],
+       "exerciseId": 553921,
+       "videoUrl": "https://stream.mux.com/H9yjwSkEvjvNeQiyXxeeeqoY4bx7Rc501q01fgYiVo00pA.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "legs",
+       "name": "Front Squat",
+       "sets": 3,
+       "reps": "12",
+       "perSide": true,
+       "instruction": "Intensity: 8/10\nPerform Each Side",
+       "intensity": "8/10",
+       "restSec": 120,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets (per side) | 12 reps",
+       "exerciseId": 523028,
+       "videoUrl": "https://stream.mux.com/ejtIlNqZfgQb3VbIytVCpNa1qRa02WUndy1FphzPBZUw.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "shoulders",
+       "name": "Arnold Press (Seated)",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 9/10",
+       "intensity": "9/10",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "exerciseId": 523075,
+       "videoUrl": "https://stream.mux.com/F3R3YIPDdfHBrHCPfJggUdjVqdzb101Dzy00bbgFnXsj4.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "biceps",
+       "name": "Rope Bicep Curls",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 9/10",
+       "intensity": "9/10",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "exerciseId": 553897,
+       "videoUrl": "https://stream.mux.com/4wmGbRNRM3K01f00X0151Ne4Wsnq01nSIajiYItr02LLTqQs.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "triceps",
+       "name": "Tricep Pull-down",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 9/10",
+       "intensity": "9/10",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "exerciseId": 553908,
+       "videoUrl": "https://stream.mux.com/QXlHH7AzrmyyhN8Lq4ivR5KMCSb00hHpXwo5EcqaD02FQ.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "closer",
+       "name": "Barbell Deficit Standing Calf Raises",
+       "sets": 1,
+       "reps": "-1",
+       "perSide": false,
+       "instruction": "Complete as many reps as possible in 5 minutes. Use a weight that you would normally be able to do for about 15 reps. Using that same weight, next week your goal is to try to get a few more reps. \nIntensity: 9/10",
+       "intensity": "9/10",
+       "restSec": 0,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "1 sets | max reps",
+       "exerciseId": 557029,
+       "videoUrl": "https://stream.mux.com/VfwLPt35SClgey2D9ZQuduDuyPhau01kAzp00yw502hZsE.m3u8",
+       "closer": true,
+       "score": {
+        "type": "amrap-reps"
+       }
+      }
+     ],
+     "note": "🚨 WEEK 1 OF THE NEW CYCLE!\n\n👉 NEW HERE? Jump in with today’s workout. Everyone here trains the same block together, and a new one starts every 4 weeks. There’s never a bad time to start.\n\nLast month’s countdown worked, so we’re running it back with ALL-NEW movements. You don’t build real strength running a structure for only 4 weeks. You build it over 8 to 12. Same engine, brand new lifts. And since every lift is new, every rep max you set this month is an automatic PR.\n\nHow this block works:\n\n1️⃣ Every session starts with your main lift. Build to a rep max for the day. Week 1 it’s a 10-rep max, then 8, then 5, then 3. The reps fall every week, the weight climbs, and Week 4 is PR WEEK.\n\n2️⃣ Then it’s one exercise per body part: chest, back, legs, shoulders, biceps, triceps. The reps count down each week too: 12 → 10 → 8 → 6. When the reps drop, you add weight.\n\n3️⃣ Finish with THE CLOSER, and it changes every session. Sometimes it’s a DEATH BY, sometimes it’s a set number of reps done for time, sometimes it’s max reps on the clock. The app tells you exactly how to do each one. Whatever the format, it always ends in a score. Log it, and beat it next week.\n\n📅 Your week: Lift Mon · Tue · Thu · Fri. Optional 30-min conditioning Wed + Sat.\n\nEvery workout this block ends in a number: a rep max, a closer score, a distance. New lifts, new numbers, same mission. Show up for PR Week. Glad you’re here. 🤝\n\nTag us in your training: @ryanfisch & @chalk.performancetraining"
+    },
+    {
      "date": "2026-10-31",
      "dow": "Sat",
      "week": 1,
@@ -12025,7 +12315,7 @@
      }
     }
    ],
-   "daysPresent": 4,
+   "daysPresent": 6,
    "structure": {
     "mainLiftRepMaxByWeek": [
      10,

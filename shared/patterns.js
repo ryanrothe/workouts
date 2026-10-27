@@ -56,6 +56,7 @@
   // Ratified by Ryan 2026-09-25 (the 8 unsure FBA rows). [] = deliberately uncounted: a finisher tied
   // to the exercise before it.
   const OVERRIDES = {
+    "barbell21s": ["arms"],   // Barbell 21's (FBA closer 2026-10-29; a curl)
     "pecdec": ["push"],   // Pec Dec (POWERJACKED)
     "adductormachine": ["legs"],   // Adductor Machine (POWERJACKED)
     "weightedbackextentions": ["legs"],   // Weighted Back Extentions, sic (POWERJACKED; posterior chain)

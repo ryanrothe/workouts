@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="KB Circuits" />
+<meta name="theme-color" content="#B4532A" />
+<link rel="manifest" href="../manifest.webmanifest" />
+<link rel="apple-touch-icon" href="../icon-180.png" />
+<link rel="icon" type="image/png" href="../favicon.png" />
+<title>KB Circuits</title>
+<link rel="stylesheet" href="../shared/styles.css" />
+<style>
+/* ─── KB Circuits specific ───────────────────────────────────── */
+main { padding: 12px 14px 110px; max-width: 720px; margin: 0 auto; }
+
+.hero { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+.stat { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 6px; text-align: center; }
+.stat-num { font-size: 18px; font-weight: 800; color: var(--primary); font-variant-numeric: tabular-nums; }
+.stat-label { font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-top: 2px; }
+
+.tabs { margin: 0 0 12px; }
+.intro { font-size: 13px; color: var(--muted); margin: 0 2px 12px; line-height: 1.45; }
+
+/* Circuit cards in the list */
+.c-card { display: block; width: 100%; text-align: left; font-family: inherit; color: var(--text); cursor: pointer;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 13px 14px; margin: 0 0 10px; }
+.c-card:active { background: var(--card-2); }
+.c-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.c-title { font-size: 16px; font-weight: 700; line-height: 1.3; }
+.c-date { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.c-meta { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+.c-moves { font-size: 13px; color: var(--text-body); margin-top: 6px; line-height: 1.45; }
+.c-foot { display: flex; gap: 12px; margin-top: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.c-foot .tag { color: var(--primary); text-transform: none; letter-spacing: 0; font-size: 12.5px; }
+.focus-line { font-size: 13px; font-weight: 700; color: var(--primary); margin: -4px 0 4px; }
+.c-foot .done, .c-foot .new { white-space: nowrap; }
+.c-foot .done { color: var(--success); margin-left: auto; text-transform: none; letter-spacing: 0; font-size: 12px; }
+.c-foot .new { color: var(--muted); margin-left: auto; text-transform: none; letter-spacing: 0; font-size: 12px; }
+.empty { text-align: center; color: var(--muted); font-size: 14px; padding: 30px 10px; }
+
+/* Circuit view */
+.back-link { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; font-size: 14px; font-weight: 600; color: var(--primary);
+  background: none; border: 0; padding: 0 2px; cursor: pointer; font-family: inherit; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin: 0 0 12px; }
+.card h3 { font-size: 11px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: var(--primary); margin: 0 0 10px; }
+.rx-line { font-size: 13px; color: var(--muted); margin: -4px 0 10px; }
+.moves { list-style: none; padding: 0; margin: 0; counter-reset: mv; }
+.moves li { display: flex; align-items: baseline; gap: 10px; padding: 9px 0; border-top: 1px solid var(--border-soft); counter-increment: mv; }
+.moves li:first-child { border-top: 0; padding-top: 2px; }
+.moves li::before { content: counter(mv); font-size: 11px; font-weight: 800; color: var(--muted); min-width: 14px; }
+.mv-name { flex: 1; font-size: 15.5px; font-weight: 600; line-height: 1.3; }
+.mv-name small { display: block; font-size: 12px; font-weight: 400; color: var(--muted); margin-top: 1px; }
+.mv-reps { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.gap-note { font-size: 12px; color: var(--warning); margin-top: 10px; line-height: 1.4; }
+.read-note { font-size: 12px; color: var(--muted); margin-top: 10px; line-height: 1.4; }
+.set-ex { margin: 0 0 12px; }
+.set-ex-name { font-size: 14.5px; font-weight: 600; margin: 0 0 6px; }
+.set-ex-name span { font-weight: 800; color: var(--muted); margin-left: 4px; }
+.src-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.src-row a { font-size: 13px; font-weight: 600; color: var(--primary); text-decoration: none; min-height: 32px; display: inline-flex; align-items: center; }
+
+.bell-row { display: flex; align-items: center; gap: 10px; }
+.bell-in { width: 110px; height: 48px; padding: 0 12px; font-size: 20px; font-weight: 700; font-family: inherit; text-align: center;
+  background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); -webkit-appearance: none; appearance: none; }
+.bell-in:focus { outline: none; border-color: var(--primary); }
+.bell-unit { font-size: 14px; color: var(--muted); font-weight: 600; }
+.bell-last { font-size: 12.5px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
+.chip { display: inline-flex; align-items: center; min-height: 34px; padding: 0 12px; margin-top: 8px; border-radius: 17px; cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 700; border: 1px solid var(--primary-line); background: var(--primary-soft); color: var(--primary); }
+.chip.up { border-color: var(--success-line); background: var(--success-soft); color: var(--success); }
+
+.rounds { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 8px; }
+.rnd { height: 52px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--card-2); cursor: pointer;
+  font-family: inherit; font-size: 17px; font-weight: 800; color: var(--muted); display: flex; align-items: center; justify-content: center; }
+.rnd.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+.rnd-hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+.notes-in { width: 100%; min-height: 60px; padding: 9px 10px; box-sizing: border-box; resize: vertical; font-family: inherit; font-size: 14px;
+  background: var(--card-2); border: 1px solid var(--border-soft); border-radius: 10px; color: var(--text); }
+.notes-in:focus { outline: none; border-color: var(--primary); }
+
+.finish-btn { width: 100%; height: 50px; border-radius: var(--radius); border: 1.5px solid var(--primary); background: var(--primary); color: #fff;
+  font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; margin: 0 0 12px; }
+.finish-btn.undo { background: var(--card); color: var(--primary); }
+
+.hist { list-style: none; padding: 0; margin: 0; }
+.hist li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--border-soft); font-size: 13.5px; }
+.hist li:first-child { border-top: 0; padding-top: 0; }
+.hist .h-d { font-weight: 700; min-width: 44px; }
+.hist .h-t { flex: 1; color: var(--muted); }
+.hist .h-x { background: none; border: 0; color: var(--muted); font-size: 18px; cursor: pointer; min-width: 36px; min-height: 36px; }
+
+.hs-sess-clock .hs-clock-t { font-variant-numeric: tabular-nums; }
+.hs-sess-clock:not(.running):not(.stopped) .hs-clock-t { color: var(--primary); font-size: 18px; }
+.hs-sess-clock.stopped .hs-clock-t { color: var(--muted); }
+.hs-sess-title.long { font-size: 27px; }
+
+/* Bottom rest bar (drawn from SetLog.rest) */
+.rest-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 60; display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--border);
+  transform: translateY(100%); transition: transform .25s; }
+.rest-bar.visible { transform: translateY(0); }
+.rest-bar.go { background: var(--success-soft); }
+.rest-time { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--primary); min-width: 70px; }
+.rest-bar.go .rest-time { color: var(--success); }
+.rest-desc { flex: 1; font-size: 12.5px; color: var(--muted); }
+.rest-btn { height: 40px; padding: 0 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--card); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+
+.modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; align-items: flex-end; }
+.modal-backdrop.visible { display: flex; }
+.modal { background: var(--card); border-radius: 20px 20px 0 0; width: 100%; max-height: 80vh; overflow-y: auto;
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); }
+.modal h3 { font-size: 18px; font-weight: 800; margin: 0 0 14px; }
+.modal-close { float: right; cursor: pointer; color: var(--muted); font-size: 22px; line-height: 1; }
+.menu-list { list-style: none; padding: 0; margin: 0; }
+.menu-list li { border-bottom: 1px solid var(--border); }
+.menu-list li:last-child { border-bottom: none; }
+.menu-list button { width: 100%; text-align: left; padding: 14px 2px; background: none; border: none; font-size: 15px; font-family: inherit; cursor: pointer; color: var(--text); }
+.more-row { display: flex; justify-content: flex-end; margin: -4px 0 6px; }
+.toast { position: fixed; bottom: calc(80px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%) translateY(16px);
+  background: var(--text); color: #fff; border-radius: 999px; padding: 8px 18px; font-size: 13.5px; font-weight: 600;
+  opacity: 0; transition: opacity .2s, transform .2s; z-index: 200; white-space: nowrap; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body data-program="kb-circuits">
+
+<header class="appbar">
+  <div class="appbar-inner">
+    <a class="appbar-back" href="../" aria-label="Back to Exercise Library">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="10 3 5 8 10 13"/></svg>
+      Library
+    </a>
+    <div class="appbar-title">
+      <div class="eyebrow">Program</div>
+      <div class="name">KB Circuits</div>
+    </div>
+  </div>
+  <div class="appbar-accent"></div>
+</header>
+
+<main id="main"></main>
+
+<div class="rest-bar" id="restBar">
+  <div class="rest-time" id="restTime">0:00</div>
+  <div class="rest-desc" id="restDesc">Rest</div>
+  <button class="rest-btn" id="restAdd">+30s</button>
+  <button class="rest-btn" id="restStop">Skip</button>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="../shared/setlog.js"></script>
+<script src="../shared/shell.js"></script>
+<script>
+/* ============================================================
+   KB Circuits: Adam Gooch's one-bell circuits from X (@Asgooch).
+   Open-ended: a library of standalone circuits, one session log per outing.
+   Data: circuits.json, generated by automation/exercise-library/gooch_ingest.py
+   (never hand-edit it; the gooch-circuits-refresh skill adds new posts).
+   State in localStorage, key kb_circuits_v1:
+     { v: 1, sessions: [{ id, circuit, date, bell, rounds: [bool], sets: { exIdx: [bool] }, times: [ms], start, stop, notes, done }] }
+   Most posts are rounds (one tap per round); a few are straight sets (format "sets", one tap per set).
+   A circuit id is the X post id, so logs survive a re-extraction.
+   ============================================================ */
+
+const STORAGE_KEY = 'kb_circuits_v1';
+const SLUG = 'kb-circuits';
+const KG_LB = 2.20462;
+let DATA = null;
+let STATE = null;
+let VIEW = { circuit: null, filter: 'all' };
+
+/* ── storage ────────────────────────────────────────────────── */
+function freshState() { return { v: 1, sessions: [] }; }
+function loadState() {
+  try {
+    const p = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+    if (p && Array.isArray(p.sessions)) return p;
+  } catch (e) {}
+  return freshState();
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); } catch (e) {}
+  if (DATA) SetLog.sync.schedule();
+  publishSummary();
+}
+
+/* ── helpers ────────────────────────────────────────────────── */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const today = () => HS.today();
+function shortDate(iso) { if (!iso) return ''; const [, m, d] = iso.split('-'); return `${parseInt(m, 10)}/${parseInt(d, 10)}`; }
+function longDate(iso) {
+  if (!iso) return '';
+  return new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+function fmtTime(s) { s = Math.max(0, Math.round(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
+function weekStart(iso) {
+  const d = new Date(iso + 'T12:00:00');
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return HS.dstr(d);
+}
+function daysBetween(a, b) { return Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 86400000); }
+const FOCUS_LABEL = { full: 'Full body', lower: 'Lower body', upper: 'Upper body', core: 'Core' };
+const REGION_LABEL = { legs: 'legs', hips: 'hips & glutes', back: 'back', chest: 'chest', shoulders: 'shoulders', arms: 'arms', core: 'core' };
+/* "Full body · hips & glutes, back, chest" (focus and regions come from gooch_ingest.py's body-region map). */
+function focusText(c) {
+  const f = FOCUS_LABEL[c.focus] || 'Full body';
+  const regs = (c.regions || []).map((r) => REGION_LABEL[r] || r);
+  return regs.length ? `${f} · ${regs.join(', ')}` : f;
+}
+function matchesFilter(c, k) { return k === 'core' ? c.focus === 'core' || (c.regions || []).includes('core') : c.focus === k; }
+const BW_RE = /push ?ups?|plank|burpee|pull ?ups?|dips?\b/i;
+const CORE_RE = /plank|sit ?up|windmill|get ?up|crunch|v-?up|russian|hollow|dead ?bug|leg raise|around the world/i;
+
+function circuit(id) { return DATA.circuits.find((c) => c.id === id) || null; }
+function sessionsFor(id) { return STATE.sessions.filter((s) => s.circuit === id).sort((a, b) => (b.date + (b.start || 0)).localeCompare(a.date + (a.start || 0))); }
+function setsDone(s) { return Object.values(s.sets || {}).reduce((n, a) => n + (a || []).filter(Boolean).length, 0); }
+function hasWork(s) { return !!s && (s.done || (s.rounds || []).some(Boolean) || setsDone(s) > 0 || s.bell != null || !!(s.notes || '').trim()); }
+function roundsDone(s) { return (s.rounds || []).filter(Boolean).length; }
+function nRounds(c) { return c.rounds || 1; }
+const isSets = (c) => c.format === 'sets';
+/* Progress in the circuit's own unit: rounds, or sets across every move for straight-set posts. */
+function totalUnits(c) { return isSets(c) ? c.exercises.reduce((n, e) => n + (e.sets || 1), 0) : nRounds(c); }
+function doneUnits(s, c) { return s ? (isSets(c) ? setsDone(s) : roundsDone(s)) : 0; }
+function unitWord(c, n) { return isSets(c) ? (n === 1 ? 'set' : 'sets') : (n === 1 ? 'round' : 'rounds'); }
+function repText(ex) {
+  if (ex.seconds) return `${ex.seconds}s`;
+  if (ex.reps == null) { const m = /\d+\s*-\s*\d+|\d+\s*yds?/i.exec(ex.note || ''); return m ? m[0].replace(/\s+/g, '') : '?'; }
+  return `×${ex.reps}${ex.perSide ? ' / side' : ''}`;
+}
+function schemeText(c) {
+  if (isSets(c)) return 'Straight sets';
+  if (c.format === 'emom') return `EMOM${c.capMin ? ` · ${c.capMin} min` : ''}`;
+  if (c.format === 'amrap') return `AMRAP${c.capMin ? ` · ${c.capMin} min` : ''}`;
+  return c.rounds ? `${c.rounds} rounds` : 'Rounds as written';
+}
+function metaText(c) {
+  const parts = [schemeText(c), `${c.exercises.length} moves`];
+  if (c.minutes) parts.push(`~${c.minutes} min`);
+  if (c.bells === 2) parts.push('two bells');
+  return parts.join(' · ');
+}
+function restDefault(c) { return c.restSec || (isSets(c) ? 60 : 120); }
+
+/* The session being logged for a circuit: today's, created on first touch. */
+function liveSession(c, create) {
+  let s = STATE.sessions.find((x) => x.circuit === c.id && x.date === today());
+  if (!s && create) {
+    s = { id: `s_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, circuit: c.id, date: today(), bell: null,
+          rounds: Array(nRounds(c)).fill(false), sets: {}, times: [], start: null, stop: null, notes: '', done: false };
+    STATE.sessions.push(s);
+  }
+  if (s && !s.sets) s.sets = {};
+  if (s && s.rounds.length < nRounds(c)) s.rounds = s.rounds.concat(Array(nRounds(c) - s.rounds.length).fill(false));
+  return s;
+}
+
+/* ── coach: one bell for the whole circuit ───────────────────
+   Bells move in fixed jumps, so like KB Shred the coach never names a weight
+   it can't know: all rounds done last time → next bell up; short → hold and
+   finish them. No history for this circuit → your last circuit bell, if any. */
+function bellAdvice(c) {
+  const prior = sessionsFor(c.id).filter((s) => s.date !== today() && s.bell != null);
+  if (prior.length) {
+    const p = prior[0];
+    const all = doneUnits(p, c) >= totalUnits(c), u = unitWord(c, 2);
+    return { bell: p.bell, up: all,
+      last: `Last (${shortDate(p.date)}): ${p.bell} lb, ${doneUnits(p, c)} of ${totalUnits(c)} ${u}`,
+      chip: all ? `All ${u} done · next bell up` : `Hold ${p.bell} lb · finish all ${totalUnits(c)}` };
+  }
+  const any = STATE.sessions.filter((s) => s.date !== today() && s.bell != null).sort((a, b) => b.date.localeCompare(a.date))[0];
+  if (any) return { bell: any.bell, up: false, last: `First time on this one. Your last circuit bell: ${any.bell} lb (${shortDate(any.date)})`, chip: `Use ${any.bell} lb` };
+  return null;
+}
+
+/* ── rest between rounds (SetLog.rest, one channel) ─────────── */
+let restLabel = 'Rest';
+function startRest(c, label) {
+  SetLog.rest.unlock();
+  restLabel = label;
+  SetLog.rest.start('kbc', restDefault(c));
+}
+SetLog.rest.onPaint((chans) => {
+  const ch = chans.page, bar = $('#restBar');
+  if (!ch || !ch.key || (!ch.end && !ch.goUntil)) { bar.classList.remove('visible', 'go'); return; }
+  const l = SetLog.rest.left(ch), go = !ch.end;
+  bar.classList.add('visible');
+  bar.classList.toggle('go', go);
+  $('#restTime').textContent = go ? 'Go' : fmtTime(l);
+  $('#restDesc').textContent = go ? 'Next round' : restLabel;
+});
+$('#restStop').onclick = () => SetLog.rest.stop();
+$('#restAdd').onclick = () => { const ch = SetLog.rest.chan(); if (ch.end) { ch.end += 30000; ch.total += 30; SetLog.rest.paintAll(); } };
+
+/* ── session clock ──────────────────────────────────────────── */
+let clockIv = null;
+function paintClock() {
+  const btn = $('#clockBtn');
+  if (!btn || !VIEW.circuit) return;
+  const c = circuit(VIEW.circuit), s = liveSession(c, false);
+  const t = btn.querySelector('.hs-clock-t');
+  btn.classList.remove('running', 'stopped');
+  if (!s || !s.start) { t.textContent = 'Start'; return; }
+  t.textContent = fmtTime(((s.stop || Date.now()) - s.start) / 1000);
+  btn.classList.add(s.stop ? 'stopped' : 'running');
+}
+function syncClock() {
+  if (clockIv) { clearInterval(clockIv); clockIv = null; }
+  const c = VIEW.circuit && circuit(VIEW.circuit), s = c && liveSession(c, false);
+  if (s && s.start && !s.stop) clockIv = setInterval(paintClock, 1000);
+  paintClock();
+}
+
+/* ── render ─────────────────────────────────────────────────── */
+function render() {
+  if (VIEW.circuit && circuit(VIEW.circuit)) renderCircuit(circuit(VIEW.circuit));
+  else { VIEW.circuit = null; renderList(); }
+  syncClock();
+}
+
+function renderList() {
+  const done = STATE.sessions.filter(hasWork);
+  const dates = [...new Set(done.map((s) => s.date))].sort();
+  const ws = weekStart(today());
+  const last = dates[dates.length - 1];
+  const tried = new Set(done.map((s) => s.circuit));
+  const filters = [['all', 'All'], ['new', 'Not tried'], ['full', 'Full body'], ['lower', 'Lower'], ['upper', 'Upper'], ['core', 'Core']]
+    .filter(([k]) => k === 'all' || k === 'new' || DATA.circuits.some((c) => matchesFilter(c, k)));
+  const list = DATA.circuits.filter((c) => VIEW.filter === 'all' ? true : VIEW.filter === 'new' ? !tried.has(c.id) : matchesFilter(c, VIEW.filter));
+  $('#main').innerHTML = `
+    <div class="hero">
+      <div class="stat"><div class="stat-num">${DATA.circuits.length}</div><div class="stat-label">Circuits</div></div>
+      <div class="stat"><div class="stat-num">${done.length}</div><div class="stat-label">Sessions</div></div>
+      <div class="stat"><div class="stat-num">${dates.filter((d) => d >= ws).length}</div><div class="stat-label">This week</div></div>
+      <div class="stat"><div class="stat-num">${last ? daysBetween(last, today()) : '–'}</div><div class="stat-label">Days since</div></div>
+    </div>
+    <p class="intro">Adam Gooch's one-bell circuits, newest first, each with its body focus. Pick one, log the bell, tap each round as you finish it.</p>
+    <div class="tabs" role="tablist">${filters.map(([k, l]) => `<button class="tab${VIEW.filter === k ? ' active' : ''}" data-f="${k}">${l}</button>`).join('')}</div>
+    <div id="cards">${list.length ? list.map(cardHtml).join('') : '<div class="empty">Nothing here yet.</div>'}</div>
+    <div class="more-row"><button class="btn" id="btnMenu">More</button></div>`;
+  $('#main').querySelectorAll('.tab').forEach((b) => b.onclick = () => { VIEW.filter = b.dataset.f; renderList(); });
+  $('#main').querySelectorAll('.c-card').forEach((b) => b.onclick = () => openCircuit(b.dataset.id));
+  $('#btnMenu').onclick = openMenu;
+}
+
+function cardHtml(c) {
+  const ss = sessionsFor(c.id).filter(hasWork);
+  const moves = c.exercises.map((e) => `${esc(e.name || '?')} ${isSets(c) && e.sets ? `${e.sets}` : ''}${repText(e)}`).join(' · ');
+  const right = ss.length ? `<span class="done">Done ${ss.length}× · last ${shortDate(ss[0].date)}${ss[0].bell != null ? ` @ ${ss[0].bell} lb` : ''}</span>` : '<span class="new">Not tried</span>';
+  return `<button class="c-card" data-id="${c.id}">
+    <div class="c-top"><div class="c-title">${esc(c.title)}</div><div class="c-date">${longDate(c.date)}</div></div>
+    <div class="c-meta">${metaText(c)}</div>
+    <div class="c-moves">${moves}</div>
+    <div class="c-foot"><span class="tag">${esc(focusText(c))}</span>${right}</div>
+  </button>`;
+}
+
+function renderCircuit(c) {
+  const s = liveSession(c, false);
+  const done = doneUnits(s, c);
+  const adv = bellAdvice(c);
+  const hist = sessionsFor(c.id).filter((x) => hasWork(x) && x.date !== today());
+  const ref = c.refBellKg ? ` · Adam used ${c.refBellKg} kg (${Math.round(c.refBellKg * KG_LB)} lb)` : '';
+  const between = isSets(c) ? 'sets' : 'rounds';
+  const restTxt = c.rest ? `${esc(c.rest)} rest between ${between}` : `Rest as needed between ${between} (timer ${fmtTime(restDefault(c))})`;
+  const gaps = c.confidence !== 'high'
+    ? `<div class="gap-note">Not every label was legible, so check the video: ${esc((c.gaps || []).join('; ') || 'partial read')}.</div>`
+    : (c.gaps || []).length ? `<div class="read-note">From the read: ${esc(c.gaps.join('; '))}.</div>` : '';
+  $('#main').innerHTML = `
+    <button class="back-link" id="backBtn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="10 3 5 8 10 13"/></svg>All circuits</button>
+    <div class="hs-sess-head">
+      <div class="hs-sess-eyebrow">Circuit · posted ${longDate(c.date)}</div>
+      <div class="hs-sess-top">
+        <h1 class="hs-sess-title${c.title.length > 24 ? ' long' : ''}">${esc(c.title)}</h1>
+        <button class="hs-sess-clock" id="clockBtn" aria-label="Session clock">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>
+          <span class="hs-clock-t">Start</span>
+        </button>
+      </div>
+      <div class="hs-sess-progress"><div class="hs-bar"><i style="width:${Math.round(done / nRounds(c) * 100)}%"></i></div><span>${done} of ${totalUnits(c)} ${unitWord(c, 2)}${c.minutes ? ` · plan ~${c.minutes} min` : ''}</span></div>
+    </div>
+
+    <div class="card">
+      <h3>The circuit</h3>
+      <div class="focus-line">${esc(focusText(c))}</div>
+      <div class="rx-line">${schemeText(c)} · ${restTxt}${ref}</div>
+      <ol class="moves">${c.exercises.map((e) => `<li><div class="mv-name">${esc(e.name || 'Not legible')}${e.note ? `<small>${esc(e.note)}</small>` : ''}</div><div class="mv-reps">${isSets(c) && e.sets ? `${e.sets} ` : ''}${repText(e)}</div></li>`).join('')}</ol>
+      ${gaps}
+      <div class="src-row"><a href="${esc(c.url)}" target="_blank" rel="noopener">Watch on X ↗</a></div>
+    </div>
+
+    <div class="card">
+      <h3>Bell</h3>
+      <div class="bell-row"><input class="bell-in" id="bellIn" inputmode="decimal" placeholder="lb" value="${s && s.bell != null ? s.bell : ''}" aria-label="Bell weight in pounds" /><span class="bell-unit">lb</span></div>
+      ${adv ? `<div class="bell-last">${esc(adv.last)}</div><button class="chip${adv.up ? ' up' : ''}" id="bellChip">${esc(adv.chip)}</button>` : ''}
+    </div>
+
+    ${isSets(c) ? `<div class="card">
+      <h3>Sets</h3>
+      ${c.exercises.map((e, ei) => `<div class="set-ex"><div class="set-ex-name">${esc(e.name || '?')} <span>${e.sets || 1} ${repText(e)}</span></div>
+        <div class="rounds">${Array.from({ length: e.sets || 1 }, (_, i) => `<button class="rnd${s && s.sets && (s.sets[ei] || [])[i] ? ' on' : ''}" data-e="${ei}" data-i="${i}" aria-label="${esc(e.name || '')} set ${i + 1}">${i + 1}</button>`).join('')}</div></div>`).join('')}
+      <div class="rnd-hint">Tap a set when you finish it. The rest timer starts on its own.</div>
+    </div>` : `<div class="card">
+      <h3>Rounds</h3>
+      <div class="rounds">${Array.from({ length: nRounds(c) }, (_, i) => `<button class="rnd${s && s.rounds[i] ? ' on' : ''}" data-i="${i}" aria-label="Round ${i + 1}">${i + 1}</button>`).join('')}</div>
+      <div class="rnd-hint">Tap a round when you finish it. The rest timer starts on its own.</div>
+    </div>`}
+
+    <div class="card">
+      <h3>Notes</h3>
+      <textarea class="notes-in" id="notesIn" placeholder="How it felt, swaps, the bell for next time">${esc(s ? s.notes : '')}</textarea>
+    </div>
+
+    <button class="finish-btn${s && s.done ? ' undo' : ''}" id="finishBtn">${s && s.done ? 'Done today · tap to reopen' : 'Finish session'}</button>
+
+    ${hist.length ? `<div class="card"><h3>History</h3><ul class="hist">${hist.map((h) => `<li><span class="h-d">${shortDate(h.date)}</span><span class="h-t">${h.bell != null ? `${h.bell} lb · ` : ''}${doneUnits(h, c)} of ${totalUnits(c)} ${unitWord(c, 2)}${h.start && h.stop ? ` · ${fmtTime((h.stop - h.start) / 1000)}` : ''}${h.notes ? ` · ${esc(h.notes)}` : ''}</span><button class="h-x" data-sid="${h.id}" aria-label="Delete this session">×</button></li>`).join('')}</ul></div>` : ''}`;
+
+  $('#backBtn').onclick = closeCircuit;
+  $('#clockBtn').onclick = () => {
+    const x = liveSession(c, true);
+    if (!x.start) { x.start = Date.now(); x.stop = null; }
+    else if (!x.stop) x.stop = Date.now();
+    else { x.start = null; x.stop = null; }
+    saveState(); syncClock();
+  };
+  $('#bellIn').onchange = (e) => {
+    const x = liveSession(c, true);
+    const v = SetLog.parseWeight(e.target.value);
+    x.bell = v == null || isNaN(v) ? null : v;
+    saveState(); render();
+  };
+  const chip = $('#bellChip');
+  if (chip) chip.onclick = () => {
+    const x = liveSession(c, true);
+    if (adv.up) { $('#bellIn').focus(); toast('Type your next bell up'); return; }
+    x.bell = adv.bell; saveState(); render();
+  };
+  $('#main').querySelectorAll('.rnd').forEach((b) => b.onclick = () => {
+    const x = liveSession(c, true), i = +b.dataset.i;
+    let on;
+    if (isSets(c)) {
+      const ei = +b.dataset.e, arr = x.sets[ei] || (x.sets[ei] = []);
+      on = arr[i] = !arr[i];
+    } else {
+      on = x.rounds[i] = !x.rounds[i];
+      if (on) x.times[i] = Date.now(); else delete x.times[i];
+    }
+    if (on) {
+      if (!x.start) x.start = Date.now();
+      const left = totalUnits(c) - doneUnits(x, c);
+      if (left > 0) startRest(c, `Rest · ${left} ${unitWord(c, left)} to go`);
+      else { SetLog.rest.stop(); x.done = true; if (!x.stop) x.stop = Date.now(); toast(isSets(c) ? 'Workout done' : 'Circuit done'); }
+    } else x.done = false;
+    saveState(); render();
+  });
+  $('#notesIn').onchange = (e) => { const x = liveSession(c, true); x.notes = e.target.value; saveState(); };
+  $('#finishBtn').onclick = () => {
+    const x = liveSession(c, true);
+    x.done = !x.done;
+    if (x.done && x.start && !x.stop) x.stop = Date.now();
+    if (x.done) SetLog.rest.stop();
+    saveState(); render();
+  };
+  $('#main').querySelectorAll('.h-x').forEach((b) => b.onclick = () => {
+    if (!confirm('Delete this session?')) return;
+    STATE.sessions = STATE.sessions.filter((x) => x.id !== b.dataset.sid);
+    saveState(); render();
+  });
+}
+
+function openCircuit(id) {
+  VIEW.circuit = id;
+  try { history.pushState(null, '', '#s=' + encodeURIComponent(id)); } catch (e) {}
+  render(); window.scrollTo(0, 0);
+}
+function closeCircuit() {
+  VIEW.circuit = null;
+  try { history.pushState(null, '', location.pathname); } catch (e) {}
+  render(); window.scrollTo(0, 0);
+}
+window.addEventListener('popstate', () => { VIEW.circuit = hashId(); render(); });
+function hashId() { try { const m = /^#s=(.+)$/.exec(location.hash); return m ? decodeURIComponent(m[1]) : null; } catch (e) { return null; } }
+
+/* ── sync: one row per exercise per session, sets = rounds done ── */
+function syncEntries() {
+  const out = [];
+  STATE.sessions.forEach((s) => {
+    const c = circuit(s.circuit);
+    if (!c || !hasWork(s)) return;
+    c.exercises.forEach((e, ei) => {
+      const bw = BW_RE.test(e.name || '');
+      const sets = [];
+      const marks = isSets(c) ? ((s.sets || {})[ei] || []) : s.rounds;
+      marks.forEach((on, i) => { if (on) sets.push({ r: e.seconds || e.reps, w: bw ? null : s.bell, done: true, t: isSets(c) ? undefined : s.times[i] || undefined }); });
+      out.push({ date: s.date, where: c.title, exercise: e.name || '?', rx: isSets(c) ? `${e.sets || 1} × ${repText(e).replace('×', '')}` : `${schemeText(c)} × ${repText(e).replace('×', '')}`,
+                 unit: e.seconds ? 's' : 'reps', target: e.seconds || e.reps, loaded: !bw, bw,
+                 sets, hit: isSets(c) ? sets.length >= (e.sets || 1) : roundsDone(s) >= nRounds(c), notes: s.notes || '' });
+    });
+  });
+  return out;
+}
+
+/* ── health-system summary + catalog (../shared/shell.js) ───────
+   next = the newest circuit not tried yet, else the one done longest ago. */
+function nextCircuit() {
+  const lastDone = {};
+  STATE.sessions.filter(hasWork).forEach((s) => { if (!lastDone[s.circuit] || s.date > lastDone[s.circuit]) lastDone[s.circuit] = s.date; });
+  const fresh = DATA.circuits.find((c) => !lastDone[c.id]);
+  if (fresh) return fresh;
+  return DATA.circuits.slice().sort((a, b) => lastDone[a.id].localeCompare(lastDone[b.id]))[0] || null;
+}
+function publishSummary() {
+  try {
+    if (!DATA || !STATE || !window.HS) return;
+    const dates = [...new Set(STATE.sessions.filter(hasWork).map((s) => s.date))].sort();
+    const ws = weekStart(today());
+    const n = nextCircuit();
+    HS.summary(SLUG, {
+      kind: 'open', week: null, weeks: null,
+      next: n ? { id: n.id, label: n.title, sub: metaText(n), date: null, minutes: n.minutes || null, listed: null } : null,
+      today: null,
+      thisWeek: { done: dates.filter((d) => d >= ws).length, planned: null },
+      days: null,
+      sessions: dates,
+      lastDate: dates.length ? dates[dates.length - 1] : null
+    });
+  } catch (e) { console.warn('kb-circuits summary failed', e); }
+}
+window.HS_CATALOG = function () {
+  if (!DATA) return null;
+  return { slug: SLUG, kind: 'open', sessions: DATA.circuits.map((c) => ({
+    id: c.id, week: null, day: null, label: c.title, minutes: c.minutes || null, optional: false,
+    exercises: c.exercises.map((e) => ({
+      name: e.name || '?', scheme: isSets(c) ? `${e.sets || 1} × ${repText(e).replace('×', '')}` : `${schemeText(c)} × ${repText(e).replace('×', '')}`, sets: isSets(c) ? (e.sets || 1) : nRounds(c),
+      reps: e.seconds ? `${e.seconds}s` : e.reps != null ? String(e.reps) : null, restSec: c.restSec || (isSets(c) ? 60 : null),
+      minutes: c.minutes ? Math.round(c.minutes / c.exercises.length * 10) / 10 : null,
+      kind: CORE_RE.test(e.name || '') ? 'core' : 'conditioning', tag: c.focus || null
+    }))
+  })) };
+};
+
+/* ── menu, about, export / import / reset ───────────────────── */
+function openModal(html) { $('#modal').innerHTML = html; $('#modalBackdrop').classList.add('visible'); }
+function closeModal() { $('#modalBackdrop').classList.remove('visible'); }
+$('#modalBackdrop').addEventListener('click', (e) => { if (e.target.id === 'modalBackdrop') closeModal(); });
+function openMenu() {
+  openModal(`<span class="modal-close" id="mClose">×</span><h3>More</h3><ul class="menu-list">
+    <li><button data-a="about">About and sync</button></li><li><button data-a="export">Export backup</button></li>
+    <li><button data-a="import">Import backup</button></li><li><button data-a="reset">Reset all data</button></li></ul>`);
+  $('#mClose').onclick = closeModal;
+  $('#modal').querySelectorAll('[data-a]').forEach((b) => b.onclick = () => { closeModal(); ({ about: openAbout, export: doExport, import: doImport, reset: doReset })[b.dataset.a](); });
+}
+function openAbout() {
+  openModal(`<span class="modal-close" id="mClose">×</span><h3>About</h3><div style="font-size:14px;line-height:1.6;color:var(--text-body)">
+    <p><strong>KB Circuits</strong> collects the standalone kettlebell circuits Adam Gooch posts on X (<a href="${esc(DATA.source)}" target="_blank" rel="noopener">@Asgooch</a>), the same coach as KB Shred. Most need one bell and about 30 minutes, so they travel.</p>
+    <p>Karl reads each post's text and the labels in its video, and adds new circuits on a weekly refresh. Last update: ${longDate(DATA.updated)}. If a circuit says a label wasn't legible, check the video.</p>
+    <p>Log one bell per session and tap each round as you finish it; the rest timer starts on its own. All rounds done last time → the coach says next bell up.</p></div>` + SetLog.sync.notesHtml());
+  $('#mClose').onclick = closeModal;
+  SetLog.sync.wireNotes();
+}
+function doExport() {
+  const blob = new Blob([JSON.stringify({ app: SLUG, version: 1, exportedAt: new Date().toISOString(), state: STATE }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `kb-circuits-backup-${today()}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('Backup downloaded');
+}
+function doImport() {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json,application/json';
+  inp.onchange = () => {
+    const f = inp.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const obj = JSON.parse(r.result);
+        if (!obj || !obj.state || !Array.isArray(obj.state.sessions)) return alert("Doesn't look like a KB Circuits backup.");
+        if (!confirm('Replace current data with this backup?')) return;
+        STATE = obj.state; saveState(); render(); toast('Import complete');
+      } catch (e) { alert('Could not read file: ' + e.message); }
+    };
+    r.readAsText(f);
+  };
+  inp.click();
+}
+function doReset() {
+  if (!confirm('Delete all your logged circuit sessions? This cannot be undone.')) return;
+  STATE = freshState(); saveState(); render(); toast('Data cleared');
+}
+let toastT = null;
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ── init ───────────────────────────────────────────────────── */
+async function init() {
+  STATE = loadState();
+  try {
+    const res = await fetch('circuits.json', { cache: 'no-store' });
+    DATA = await res.json();
+  } catch (e) {
+    $('#main').innerHTML = '<div class="empty">Could not load circuits.json. Open the app online once.</div>';
+    return;
+  }
+  // "#s=<circuit id>" (Today, Gaps, a shared link) opens that circuit; otherwise the list.
+  VIEW.circuit = hashId();
+  SetLog.sync.init({
+    slug: SLUG,
+    storageKey: STORAGE_KEY,
+    payload: () => ({ state: STATE, entries: syncEntries() }),
+    hasData: () => STATE.sessions.some(hasWork),
+    apply: (merged) => { if (merged && Array.isArray(merged.sessions)) { STATE = merged; render(); publishSummary(); } }
+  });
+  render();
+  publishSummary();
+}
+init();
+</script>
+</body>
+</html>

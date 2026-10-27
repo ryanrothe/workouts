@@ -145,7 +145,7 @@
       <a class="btn btn-block" style="background:${p.color};color:#fff;border-color:transparent" href="${p.slug}/">Open ${esc(p.short)}</a>
       <div class="eyebrow" style="padding:4px 2px 0">Role</div>
       <div class="seg" role="radiogroup">${roles.map(([k, l]) => `<button role="radio" aria-checked="${k === r}" class="${k === r ? "on" : ""}" data-role="${k}">${l}</button>`).join("")}</div>
-      <div class="hint" id="role-msg">${p.travel ? "Hotel is a travel swap: it works from the pool and never needs a slot." : r === "pool" ? "In the pool you can still open it and log any session." : ""}</div>`);
+      <div class="hint" id="role-msg">${p.travel ? `${p.short} is a travel swap: it works from the pool and never needs a slot.` : r === "pool" ? "In the pool you can still open it and log any session." : ""}</div>`);
     sheet.querySelectorAll("[data-role]").forEach((b) => (b.onclick = () => tryRole(slug, b.dataset.role)));
   }
   function tryRole(slug, r, bump) {

@@ -4,11 +4,12 @@
    v37 (2026-10-24): Dumbbells Only and Full Body (3 Day Split), Chalk session programs on SetLog + cockpit.
    v38 (2026-10-24): POWERJACKED - Chalk, the second Chalk calendar program (groups + sprints) on SetLog + cockpit.
    v39 (2026-10-24): shared/shell.js requests persistent storage so Android cannot evict the offline cache.
+   v41 (2026-10-26): KB Circuits, Adam Gooch's one-bell circuits from X (open-ended, circuits.json from gooch_ingest.py).
    Caches the launcher + all three sub-apps + shared styles + program data + icons.
    Network-first for HTML, scripts, styles and program data (so a deploy never pairs a
    new page with an old shared/setlog.js); cache-first for images and the manifest. */
 
-const CACHE = 'exercise-library-v40';
+const CACHE = 'exercise-library-v41';
 const PRECACHE = [
   './',
   './index.html',
@@ -51,6 +52,9 @@ const PRECACHE = [
   './kb-shred/',
   './kb-shred/index.html',
   './kb-shred/data.json',
+  './kb-circuits/',
+  './kb-circuits/index.html',
+  './kb-circuits/circuits.json',
   './ppl/',
   './ppl/index.html',
   './dumbbells-only/',

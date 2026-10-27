@@ -78,6 +78,11 @@ body[data-program="kb-shred"] {
   --primary-soft: #ecfdf5;
   --primary-line: #a7f3d0;
 }
+body[data-program="kb-circuits"] {
+  --primary:      #B4532A;     /* cast-iron rust — KB Circuits */
+  --primary-soft: #FBEEE6;
+  --primary-line: #EDC3A9;
+}
 body[data-program="hyrox"] {
   --primary:      #c8860a;     /* amber/gold — Hyrox (black + yellow identity) */
   --primary-soft: #fbeecb;

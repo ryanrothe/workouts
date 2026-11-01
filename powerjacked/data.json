@@ -24183,6 +24183,1095 @@
        ]
       }
      ]
+    },
+    {
+     "date": "2026-11-01",
+     "dow": "Sun",
+     "week": 4,
+     "type": "rest",
+     "title": "Rest Day"
+    },
+    {
+     "date": "2026-11-02",
+     "dow": "Mon",
+     "week": 5,
+     "type": "strength",
+     "title": "Lower",
+     "groups": [
+      {
+       "type": "warmup",
+       "name": "WARMUP",
+       "rounds": 2,
+       "note": "Repeat 2x through to get lower body warmed up for session",
+       "exercises": [
+        {
+         "name": "90-90 Hip Flips",
+         "sets": 2,
+         "reps": "8",
+         "perSide": false,
+         "instruction": "- 8 flips each side\n- Keep hands on ground and really focus on opening up hips",
+         "fields": [
+          "reps"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "2 sets | 8 reps",
+         "slot": "mobility",
+         "exerciseId": 1095679
+        },
+        {
+         "name": "Banded Lateral Walks",
+         "sets": 2,
+         "reps": "20",
+         "perSide": false,
+         "instruction": "- 20 steps to each side",
+         "fields": [
+          "reps"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "2 sets | 20 reps",
+         "slot": "legs",
+         "exerciseId": 1038249
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 30,
+       "exercises": [
+        {
+         "name": "Seated Broad Jump",
+         "sets": 1,
+         "reps": "12",
+         "perSide": false,
+         "instruction": "- Starting in a seated position jump as far as possible (use a 6-12 inch box to absorb the landing)\n- Focus on quality not quantity\n- With each rep try to push the box back slightly \n- Challenge yourself with distance \n- Dont rush, aim to do one rep every 30 seconds or so\n- 12 total reps",
+         "restSec": 30,
+         "fields": [
+          "reps"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "1 sets | 12 reps",
+         "slot": "power",
+         "exerciseId": 1078396
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 240,
+       "exercises": [
+        {
+         "name": "Back Squat",
+         "sets": 4,
+         "reps": "4,6,6,6",
+         "perSide": false,
+         "instruction": "- Week 5: New rep scheme \n- Set 1: Work to a top set at 87-90% of 1RM for 4 reps (RPE 9/10)\n- Set 2-4: 3x6 backdown sets at 7% lighter then top set weight \nIntensity: 9/10",
+         "intensity": "9/10",
+         "restSec": 240,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "time": "840",
+         "summary": "4 sets | 4, 6, 6, 6 reps",
+         "slot": "legs",
+         "exerciseId": 523104,
+         "videoUrl": "https://stream.mux.com/Wd5ZY6eNKMpTlCvXNmvgLjLucD00fumPTlqja9AfkgmU.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 180,
+       "exercises": [
+        {
+         "name": "RDL (Belt Squat Machine)",
+         "sets": 3,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- RDL using a belt squat machine (if you have access to it, if not then regular BB RDL)\n- 3 sets of 6-8 reps focusing on a big stretch \nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 180,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6-8 reps",
+         "slot": "legs",
+         "alternates": [
+          "RDL"
+         ],
+         "exerciseId": 1195794
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 180,
+       "exercises": [
+        {
+         "name": "Hatfield Split Squats",
+         "sets": 2,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- I am gone apologize in advance for this: Im sorry to do this to you\n- 2 heavy sets of 6-8 reps per leg\n- If your shorter and a bench is to high for you back foot, try also elevating your front foot with a plate\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 180,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "2 sets | 6-8 reps",
+         "slot": "legs",
+         "alternates": [
+          "Dumbbell Split Squats"
+         ],
+         "exerciseId": 1195796
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 180,
+       "exercises": [
+        {
+         "name": "Lying Hamstring Curl",
+         "sets": 2,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- 2 heavy sets of 6-8 reps\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 180,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "2 sets | 6-8 reps",
+         "slot": "legs",
+         "alternates": [
+          "Nordic Ham Curl (Band Assisted)"
+         ],
+         "exerciseId": 557020,
+         "videoUrl": "https://stream.mux.com/9knxfQ6sROVA6l8CcNtgG0201tAuNZ502EJMz3pGTIo6oc.m3u8"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "date": "2026-11-03",
+     "dow": "Tue",
+     "week": 5,
+     "type": "strength",
+     "title": "Push",
+     "groups": [
+      {
+       "type": "warmup",
+       "name": "WARMUP",
+       "rounds": 2,
+       "note": "Complete 2 times through. Superset both exercises together",
+       "exercises": [
+        {
+         "name": "Toes To Bar (with back support)",
+         "sets": 2,
+         "reps": "8-12",
+         "perSide": false,
+         "instruction": "- If able set up a barbell behind your mid to upper back to help keep you locked in\n- Aim for 2 sets of 8-12 reps\n- Pair with a Dumbbell EXT ROT",
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "2 sets | 8-12 reps",
+         "slot": "abs",
+         "exerciseId": 1058868
+        },
+        {
+         "name": "DB External Rotations",
+         "sets": 2,
+         "reps": "12",
+         "perSide": false,
+         "instruction": "- Can set up on a bench or on the ground\n- Perform 2x12 each side",
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "2 sets | 12 reps",
+         "slot": "shoulders",
+         "exerciseId": 1038271
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 240,
+       "exercises": [
+        {
+         "name": "Barbell Bench Press",
+         "sets": 4,
+         "reps": "4,6,6,6",
+         "perSide": false,
+         "instruction": "- Week 5: New rep scheme \n- Set 1: Work to a top set at 87-90% of 1RM for 4 reps (RPE 9/10)\n- Set 2-4: 3x6 backdown sets at 7% lighter then top set weight \nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 240,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "4 sets | 4, 6, 6, 6 reps",
+         "slot": "chest",
+         "exerciseId": 523081,
+         "videoUrl": "https://stream.mux.com/iZW8pIuhF003RWATFKkUXyVmAr86TaEMbYHFOqtF02wjo.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 180,
+       "exercises": [
+        {
+         "name": "Dips",
+         "sets": 3,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- 3 heavy sets of 6-8 reps\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 180,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6-8 reps",
+         "slot": "chest",
+         "exerciseId": 553919,
+         "videoUrl": "https://stream.mux.com/QeHmck901CWYHkUVZMYjOK7hSt7foRGBTU5004UQPuJK8.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 180,
+       "exercises": [
+        {
+         "name": "Dumbbell Shoulder Press (Seated)",
+         "sets": 3,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- 3 sets of 6-8 reps\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 180,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6-8 reps",
+         "slot": "shoulders",
+         "exerciseId": 523076,
+         "videoUrl": "https://stream.mux.com/VTvP3TtKnvJsHL8aZLUBAj7vup2GGZ35brzLg5fGFKw.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 180,
+       "exercises": [
+        {
+         "name": "Ez Bar Skull Crusher",
+         "sets": 3,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- Bring bar behind head to increase the range of motion\n- 3 sets of 6-8 reps\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 180,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6-8 reps",
+         "slot": "triceps",
+         "exerciseId": 1195860
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 180,
+       "exercises": [
+        {
+         "name": "Cable Lateral Raise",
+         "sets": 3,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- 6-8 reps per side\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 180,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6-8 reps",
+         "slot": "shoulders",
+         "alternates": [
+          "Dumbbell Lateral Raise"
+         ],
+         "exerciseId": 566885,
+         "videoUrl": "https://stream.mux.com/76RhFsnHNYdAe5zZxCZDSDkF5VUQm1WfLAufePvYrmU.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Assault Bike",
+         "sets": 2,
+         "reps": "8",
+         "perSide": false,
+         "instruction": "OPTIONAL CONDITIONING \n\n- 30 seconds at 7-10 intensity, 30 second rest x8 reps\n- Rest 2-3 minutes\n- Repeat for one more round (2 rounds total)",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "time"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "time": "30",
+         "summary": "2 sets | 8 reps | 30 secs",
+         "slot": "engine",
+         "exerciseId": 1198448
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "date": "2026-11-04",
+     "dow": "Wed",
+     "week": 5,
+     "type": "strength",
+     "title": "PULL",
+     "groups": [
+      {
+       "type": "warmup",
+       "name": "WARMUP",
+       "rounds": 2,
+       "note": "Complete 2 times through. Superset both movements together",
+       "exercises": [
+        {
+         "name": "GHD Reverse Crunch",
+         "sets": 2,
+         "reps": "5-10",
+         "perSide": false,
+         "instruction": "- Utilizing the GHD perform a reverse crunch bring your knees to you chest\n- Focus on wrapping around the pad \n- Aim for 2 sets of 5-12 reps\n- If dont have a GHD can replace with a incline crunch",
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "2 sets | 5-10 reps",
+         "slot": "abs",
+         "alternates": [
+          "Incline Reverse Crunch"
+         ],
+         "exerciseId": 1078393
+        },
+        {
+         "name": "Prayer Stretch",
+         "sets": 2,
+         "perSide": false,
+         "instruction": "- Hold prayer stretch in between for 60 seconds\n- Use a PVC pipe or rod to really get into the stretch \n- Can perform on the GHD pad in between crunches",
+         "fields": [
+          "time"
+         ],
+         "kind": "time",
+         "distanceUnit": "miles",
+         "time": "60",
+         "summary": "2 sets | 1 min",
+         "slot": "mobility",
+         "exerciseId": 1119853
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 180,
+       "exercises": [
+        {
+         "name": "Power Clean",
+         "sets": 4,
+         "reps": "3",
+         "perSide": false,
+         "instruction": "- 4 sets of 3 on power cleans \n- Focus on moving the bar with intent\n- 70-80% of 1RM\nIntensity: 7/10",
+         "intensity": "7/10",
+         "restSec": 180,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "4 sets | 3 reps",
+         "slot": "power",
+         "exerciseId": 523020,
+         "videoUrl": "https://stream.mux.com/9OCNc3vcprYDRpAlZwywsA6HgrYfCci4rH702Uc8WdlY.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 180,
+       "exercises": [
+        {
+         "name": "Chest Supported T-bar Row",
+         "sets": 3,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- 3 heavy sets of 6-8 reps\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 180,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6-8 reps",
+         "slot": "back",
+         "alternates": [
+          "Chest Supported Prone Dumbbell Row"
+         ],
+         "exerciseId": 1038227
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 180,
+       "exercises": [
+        {
+         "name": "Single Arm Pulldowns",
+         "sets": 3,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- 3 sets of 6-8 reps per arm\n- Focus on driving the elbow down and getting a big stretch in the lat\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 180,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6-8 reps",
+         "slot": "back",
+         "alternates": [
+          "Pull-Up"
+         ],
+         "exerciseId": 1119850
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 180,
+       "exercises": [
+        {
+         "name": "Meadows Row",
+         "sets": 3,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- Use a landmine to set up\n- 3 sets of 6-8 each side\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 180,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6-8 reps",
+         "slot": "back",
+         "exerciseId": 1195861
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "DB Incline Curl",
+         "sets": 3,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- 3 sets of 6-8 reps\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6-8 reps",
+         "slot": "biceps",
+         "exerciseId": 1038293
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "date": "2026-11-04",
+     "dow": "Wed",
+     "week": 5,
+     "type": "sprint",
+     "title": "Sprints: OPTIONAL",
+     "optional": true,
+     "groups": [
+      {
+       "type": "sprint",
+       "name": "Sprints (OPTIONAL)",
+       "restSec": 90,
+       "note": "- SPRINTS ARE OPTIONAL",
+       "exercises": [
+        {
+         "name": "Sprint Dynamic Warmup",
+         "sets": 1,
+         "perSide": false,
+         "instruction": "- Complete warmup 1 time through\n\n15 yards each drill\n- Hamstring Scoop\n- Reverse Lunge with Reach\n- Knee Hug to Forward Lunge\n- Lateral Lunge\n- Single Leg Reaches \n- High Kicks",
+         "fields": [
+          "reps"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "1 sets",
+         "slot": "power",
+         "exerciseId": 1038241
+        },
+        {
+         "name": "Power skips for height",
+         "sets": 2,
+         "perSide": false,
+         "instruction": "- Driving off one leg try to jump as high as possible",
+         "fields": [
+          "distance"
+         ],
+         "kind": "distance",
+         "distance": "20",
+         "distanceUnit": "yards",
+         "summary": "2 sets | 20.00 yds",
+         "slot": "power",
+         "exerciseId": 1038236
+        },
+        {
+         "name": "Alternating Bounds",
+         "sets": 2,
+         "perSide": false,
+         "instruction": "- 2x20 yards\n- Attack the ground with each rep",
+         "fields": [
+          "distance"
+         ],
+         "kind": "distance",
+         "distance": "20",
+         "distanceUnit": "yards",
+         "summary": "2 sets | 20.00 yds",
+         "slot": "power",
+         "exerciseId": 1038244
+        },
+        {
+         "name": "Straight leg bound",
+         "sets": 2,
+         "perSide": false,
+         "instruction": "- 2 Sets of 20 yards with a walk back recovery\n- Gradually build it up to prime the hamstrings",
+         "fields": [
+          "distance"
+         ],
+         "kind": "distance",
+         "distance": "20",
+         "distanceUnit": "yards",
+         "summary": "2 sets | 20.00 yds",
+         "slot": "power",
+         "exerciseId": 1038235
+        },
+        {
+         "name": "Sprints",
+         "sets": 8,
+         "reps": "1",
+         "perSide": false,
+         "instruction": "- Max effort sprints complete at 90-100% effort\n- 3x10 yards with a 1 minute rest\n- 3x20 yards with a 2 minute rest\n- 2x30 yards with a 3 minute rest\n- Focus on maximal reps with full recoveries between each rep\n\n-IF UNABLE TO SPRINT DUE TO CONSTRAINTS CAN SUB OUT ENTIRELY",
+         "restSec": 90,
+         "fields": [
+          "distance",
+          "reps"
+         ],
+         "kind": "distance",
+         "distance": "10, 10, 10, 20, 20, 20, 30, 30",
+         "distanceUnit": "yards",
+         "summary": "8 sets | 1 reps | 10.00, 10.00, 10.00, 20.00, 20.00, 20.00, 30.00, 30.00yds",
+         "slot": "power",
+         "exerciseId": 1038243
+        },
+        {
+         "name": "Continuous Broad Jumps",
+         "sets": 3,
+         "reps": "3",
+         "perSide": false,
+         "instruction": "- 3 broad jumps in a row\n- If new to this can pause in between each rep and reset \n- If more advanced try to get as far as possible with 3 jumps",
+         "restSec": 60,
+         "fields": [
+          "reps"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 3 reps",
+         "slot": "power",
+         "exerciseId": 1144097
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "date": "2026-11-05",
+     "dow": "Thu",
+     "week": 5,
+     "type": "rest",
+     "title": "Rest Day"
+    },
+    {
+     "date": "2026-11-06",
+     "dow": "Fri",
+     "week": 5,
+     "type": "strength",
+     "title": "Lower",
+     "groups": [
+      {
+       "type": "warmup",
+       "name": "WARMUP",
+       "rounds": 2,
+       "note": "Repeat 2x through to get lower body warmed up for session",
+       "exercises": [
+        {
+         "name": "Banded Lateral Walks",
+         "sets": 2,
+         "reps": "20",
+         "perSide": false,
+         "instruction": "- 20 steps to each side",
+         "fields": [
+          "reps"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "2 sets | 20 reps",
+         "slot": "legs",
+         "exerciseId": 1038249
+        },
+        {
+         "name": "Hamstring Stretch to Deep Squat",
+         "sets": 2,
+         "reps": "10",
+         "perSide": false,
+         "instruction": "- Hamstring stretch into a deep squat\n- Repeat for 10 reps",
+         "fields": [
+          "reps"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "2 sets | 10 reps",
+         "slot": "mobility",
+         "exerciseId": 1038246
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 30,
+       "exercises": [
+        {
+         "name": "Seated Vertical Jump",
+         "sets": 1,
+         "reps": "12",
+         "perSide": false,
+         "instruction": "- Aim for 12 total high quality reps\n- Take your time in between each rep (30 seconds)\n- Aim to jump as high as possible, set up a target to touch or a hurdle to jump over to gamify it",
+         "restSec": 30,
+         "fields": [
+          "reps"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "1 sets | 12 reps",
+         "slot": "power",
+         "exerciseId": 1038263
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "exercises": [
+        {
+         "name": "Barbell Deadlift",
+         "sets": 4,
+         "reps": "4,6,6,6",
+         "perSide": false,
+         "instruction": "- Week 5: New rep scheme \n- Set 1: Work to a top set at 87-90% of 1RM for 4 reps (RPE 9/10)\n- Set 2-4: 3x6 backdown sets at 7% lighter then top set weight",
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "4 sets | 4, 6, 6, 6 reps",
+         "slot": "legs",
+         "exerciseId": 523103,
+         "videoUrl": "https://stream.mux.com/PL0200SsqNPAsKr00GIuHREEKKYiQO02NM02oqMCdCEHksxg.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 180,
+       "exercises": [
+        {
+         "name": "Hack Squats",
+         "sets": 3,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- 3 heavy sets of 6-8 reps\nIntensity: 8-10",
+         "intensity": "8-10",
+         "restSec": 180,
+         "fields": [
+          "reps"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6-8 reps",
+         "slot": "legs",
+         "alternates": [
+          "Front Squat"
+         ],
+         "exerciseId": 1078430
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 180,
+       "exercises": [
+        {
+         "name": "Leg Extension",
+         "sets": 3,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- 3 sets of 6-8 reps\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 180,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6-8 reps",
+         "slot": "legs",
+         "alternates": [
+          "Walking DB Lunge"
+         ],
+         "exerciseId": 554482,
+         "videoUrl": "https://stream.mux.com/KWbrEOR3rGvAQqLr7baFuAU9vTc00svO302V7ld00W3YdE.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Seated Hamstring Curl",
+         "sets": 2,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- 2 sets of 6-8 reps\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 60,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "2 sets | 6-8 reps",
+         "slot": "legs",
+         "alternates": [
+          "Nordic Ham Curl (Band Assisted)"
+         ],
+         "exerciseId": 554473,
+         "videoUrl": "https://stream.mux.com/I3x2A01NJL22Qw2UzomNzGUTgV02hufpQCDHbr01N02qynQ.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "exercises": [
+        {
+         "name": "Seated Calf Raise",
+         "sets": 3,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- 3 sets of 6-8 reps",
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6-8 reps",
+         "slot": "legs",
+         "alternates": [
+          "Deficit Dumbbell Calf Raises "
+         ],
+         "exerciseId": 554483,
+         "videoUrl": "https://stream.mux.com/ETsUTx44sz1NMRB5pDWZcT6nSBH3XW0000UK87QZWCJgo.m3u8"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "date": "2026-11-07",
+     "dow": "Sat",
+     "week": 5,
+     "type": "strength",
+     "title": "Upper",
+     "groups": [
+      {
+       "type": "warmup",
+       "name": "WARMUP",
+       "rounds": 2,
+       "note": "Complete 2 times through. Superset both movements together",
+       "exercises": [
+        {
+         "name": "Cable Crunches",
+         "sets": 2,
+         "reps": "8-12",
+         "perSide": false,
+         "instruction": "- 2 sets of 8-12 reps\n- Load it heavy\n- If dont have cable then sub for a incline reverse crunch on a bench",
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "2 sets | 8-12 reps",
+         "slot": "abs",
+         "alternates": [
+          "Incline Reverse Crunch"
+         ],
+         "exerciseId": 557031,
+         "videoUrl": "https://stream.mux.com/p00WI8mX1xQNnZT9i02pb018KhrPhISkQnDVUfbkWWL7io.m3u8"
+        },
+        {
+         "name": "DB External Rotations",
+         "sets": 2,
+         "reps": "10",
+         "perSide": false,
+         "instruction": "- Set up elbow on top of knee\n- Control on the way down\n- 10 each side",
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "2 sets | 10 reps",
+         "slot": "shoulders",
+         "exerciseId": 1038271
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 180,
+       "exercises": [
+        {
+         "name": "Pull-Up",
+         "sets": 3,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- 3 sets of 6-8 reps\n- add weight if able or use band assistance if needed\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 180,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6-8 reps",
+         "slot": "back",
+         "exerciseId": 523089,
+         "videoUrl": "https://stream.mux.com/S01ilh7cAtId5WtpDVxk02eCwJ6SodTYe702yoHW8letlE.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 180,
+       "exercises": [
+        {
+         "name": "Dumbbell Incline Bench Press",
+         "sets": 3,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- 3 sets of 6-8 reps\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 180,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6-8 reps",
+         "slot": "chest",
+         "exerciseId": 523078,
+         "videoUrl": "https://stream.mux.com/AhrFStTXSBu6hkXzV6oukM5F5oM9joyvey96RXqfb018.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 180,
+       "exercises": [
+        {
+         "name": "Close Grip Cable Row",
+         "sets": 3,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- focus on a big stretch and squeeze\n- 3 sets of 6-8 reps\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 180,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6-8 reps",
+         "slot": "triceps",
+         "alternates": [
+          "Incline Seal Row"
+         ],
+         "exerciseId": 553880,
+         "videoUrl": "https://stream.mux.com/77JBwOa5jbXnvTtXLmbw02nIwMMKNbhDmMg4XDNWIZkc.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 180,
+       "exercises": [
+        {
+         "name": "Cable Fly",
+         "sets": 3,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- 3 sets of 6-8 reps\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 180,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6-8 reps",
+         "slot": "chest",
+         "alternates": [
+          "Incline Dumbbell Fly"
+         ],
+         "exerciseId": 553874,
+         "videoUrl": "https://stream.mux.com/6R00l16d00B6P3PaxT005a1NpyR00KI2fZLy2FGvh5gW3sM.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "EZ Bar Preacher Curl",
+         "sets": 3,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- 3 sets of 6-8 reps\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6-8 reps",
+         "slot": "biceps",
+         "exerciseId": 557027,
+         "videoUrl": "https://stream.mux.com/gZEYEICG56LM8XE2QeQ015yXZtOFUwTsHMl6Ccwvxflc.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 180,
+       "exercises": [
+        {
+         "name": "Lying Tricep Pushdowns",
+         "sets": 3,
+         "reps": "6-8",
+         "perSide": false,
+         "instruction": "- set up a incline bench under a cable to use for support\n- 3 sets of 6-8 reps\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 180,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6-8 reps",
+         "slot": "triceps",
+         "alternates": [
+          "Ez Bar Skull Crusher"
+         ],
+         "exerciseId": 1195865
+        }
+       ]
+      }
+     ]
     }
    ],
    "schedule": {
@@ -24192,8 +25281,8 @@
     "Fri": "Lower",
     "Sat": "Upper"
    },
-   "daysPresent": 30,
-   "weeks": 4
+   "daysPresent": 38,
+   "weeks": 5
   }
  ]
 }

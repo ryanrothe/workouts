@@ -5,6 +5,10 @@
 #   ./deploy.sh "message"       → same, with your own commit message
 #   ./deploy.sh --dry-run       → show what would change, touch nothing
 #
+# Since 2026-11-09 it also builds and deploys every profile instance (Alicia's app) from the same
+# source with automation/exercise-library/build_profile.py. Program folders that belong only to a
+# profile are kept off Ryan's site (PROFILE_ONLY).
+#
 # Source of truth is the iCloud folder; this repo is just the deploy target.
 
 set -euo pipefail
@@ -17,6 +21,10 @@ if [ ! -d "$SRC" ]; then
   echo "  $SRC"
   exit 1
 fi
+
+PROFILE_ONLY=(womens-program)
+PROFILES=(alicia)
+KARL_CORE="$HOME/Developer/karl-core"
 
 DRY=""
 MSG=""
@@ -33,6 +41,7 @@ rsync -a --delete $DRY \
   --exclude '.DS_Store' \
   --exclude '.claude/' \
   --exclude 'deploy.sh' \
+  $(for d in "${PROFILE_ONLY[@]}"; do printf -- "--exclude %s/ " "$d"; done) \
   --itemize-changes \
   "$SRC"/ "$REPO"/
 
@@ -57,14 +66,20 @@ fi
 git fetch -q origin main
 if [ -z "$(git log origin/main..HEAD --oneline)" ]; then
   echo "→ Nothing to push. Already up to date."
-  exit 0
+else
+  echo "→ Commits to push:"
+  git log origin/main..HEAD --oneline
+  echo "→ Pushing to GitHub..."
+  git push -q origin main
+  echo "✓ Pushed. GitHub Pages redeploys in ~30-60 seconds."
+  echo "  https://ryanrothe.github.io/workouts/"
+  echo
+  echo "  On your phone: open the app on wifi and pull down to refresh."
 fi
-echo "→ Commits to push:"
-git log origin/main..HEAD --oneline
 
-echo "→ Pushing to GitHub..."
-git push -q origin main
-echo "✓ Pushed. GitHub Pages redeploys in ~30-60 seconds."
-echo "  https://ryanrothe.github.io/workouts/"
-echo
-echo "  On your phone: open the app on wifi and pull down to refresh."
+# Profile instances: rebuilt from the same source every deploy (cheap, deterministic), then shipped.
+for prof in "${PROFILES[@]}"; do
+  echo
+  echo "→ Profile: $prof"
+  python3 -I "$KARL_CORE/automation/exercise-library/build_profile.py" --profile "$prof" --deploy
+done

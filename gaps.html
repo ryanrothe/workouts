@@ -97,8 +97,8 @@
     return `<section class="card cov" aria-label="Coverage">
       <div class="row-head" style="padding:0;min-height:0"><span class="eyebrow">Hard sets this week</span><span class="hint">${daysLeft === 0 ? "last day" : `${daysLeft} day${daysLeft === 1 ? "" : "s"} left`}</span></div>
       ${setRows}<div style="height:1px;background:var(--line);margin:4px 0"></div>${minRows}
-      <div class="legend"><span><i style="background:${COL.solo}"></i>You, solo</span><span><i style="background:${COL.porter}"></i>With Porter</span><span><i style="background:${COL.her}"></i>With your daughter</span><span><i style="background:#E3EBD2;width:14px"></i>Target range</span></div>
-      <div class="hint">Every exercise in every program is tagged by movement. Only your sets count, and sets with the kids count at the load you logged. ${cov.entries ? "" : "Nothing is logged yet this week, so every row starts at zero."}</div>
+      <div class="legend"><span><i style="background:${COL.solo}"></i>You, solo</span>${HS.familyOn ? `<span><i style="background:${COL.porter}"></i>With Porter</span><span><i style="background:${COL.her}"></i>With your daughter</span>` : ""}<span><i style="background:#E3EBD2;width:14px"></i>Target range</span></div>
+      <div class="hint">Every exercise in every program is tagged by movement. Only your sets count${HS.familyOn ? ", and sets with the kids count at the load you logged" : ""}. ${cov.entries ? "" : "Nothing is logged yet this week, so every row starts at zero."}</div>
     </section>`;
   }
   function focusCard() {

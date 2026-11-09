@@ -47,6 +47,11 @@
   const me = document.currentScript;
   const BASE = me && me.src ? me.src.replace(/shared\/shell\.js(\?.*)?$/, "") : "../";
   HS.base = BASE;
+  /* Build profile flag (2026-11-09). A profile without Fuel (Alicia's) ships false: build_profile.py
+     rewrites this exact line and fails if it is missing. Ryan's build keeps true. */
+  HS.fuelOn = true;
+  HS.owner = true;      /* Ryan's own build: Karl reads the sync and builds programs. A profile for someone else ships false. */
+  HS.familyOn = true;   /* Porter / daughter UI (Who switch, Gaps legend, Progress card). Same rewrite rule. */
 
   const lsGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
@@ -139,6 +144,7 @@ body.hs-has-tabbar { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
       back.setAttribute("aria-label", "Back to Today");
       back.childNodes.forEach((n) => { if (n.nodeType === 3 && /Library/.test(n.textContent)) n.textContent = n.textContent.replace("Library", "Today"); });
     }
+    if (!HS.fuelOn) return;
     const inner = document.querySelector(".appbar-inner");
     if (!inner || inner.querySelector(".hs-fuel")) return;
     const a = document.createElement("a");
@@ -178,7 +184,7 @@ body.hs-has-tabbar { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
         ["library", "Library", BASE + "library.html", `<span class="hs-ico">${HS.icon("library", 23, 1.8)}</span>`],
         ["fuel", fuelLabel, BASE + "nutrition/", `<span class="hs-ico">${fuelMiniRing(st, 28, active === "fuel" ? "#16171B" : "#5C5F66")}</span>`],
         ["progress", "Progress", BASE + "progress.html", `<span class="hs-ico">${HS.icon("progress", 23, 1.8)}</span>`]
-      ];
+      ].filter(([k]) => k !== "fuel" || HS.fuelOn);
       nav.innerHTML = `<div class="hs-tabbar-in">${items.map(([k, label, href, ico]) =>
         `<a class="hs-tab" href="${href}"${k === active ? ' aria-current="page"' : ""}>${ico}<span>${label}</span></a>`).join("")}</div>`;
     };

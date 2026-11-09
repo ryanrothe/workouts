@@ -665,7 +665,7 @@
   sync.notesHtml = function () {
     return `
     <h3>Sync</h3>
-    <p>Every save posts this program's data to a private sync endpoint, where Karl reads it. Opening the program, or coming back to it, pulls the latest copy and merges it in, so an iPad and an iPhone paired to one token keep one log. Each device keeps a full copy, so nothing is lost offline.</p>
+    <p>Every save posts this program's data to a private sync endpoint${window.HS && HS.owner === false ? "" : ", where Karl reads it"}. Opening the program, or coming back to it, pulls the latest copy and merges it in, so an iPad and an iPhone paired to one token keep one log. Each device keeps a full copy, so nothing is lost offline.</p>
     <p><strong>Device token:</strong> <code id="sync-token" style="user-select:all;font-size:13px">${sync.token()}</code><br><span id="sync-status" style="font-size:12px;color:var(--muted)">Sync: not yet</span></p>
     <div class="ex-actions" style="margin-top:6px">
       <button class="btn" id="sync-now">↻ Sync now</button>

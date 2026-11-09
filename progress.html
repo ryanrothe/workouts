@@ -99,6 +99,7 @@
 
   /* ------------------------------------------------------------ with Porter */
   function porter() {
+    if (!HS.familyOn) return "";
     const sm = HS.readSummary("father-son");
     const tr = sm && sm.extra && sm.extra.tracks;
     const firstMon = addDays(mondayOf(today), -7 * (weeks - 1));
@@ -155,6 +156,7 @@
 
   /* ------------------------------------------------------------ weight */
   function weight() {
+    if (!HS.fuelOn) return "";
     const S = Fuel.read();
     const from = addDays(today, -(weeks * 7 - 1));
     const W = S && S.weights ? Object.keys(S.weights).filter((d) => d >= from && d <= today).sort() : [];
@@ -184,6 +186,7 @@
 
   /* ------------------------------------------------------------ fuel */
   function fuel() {
+    if (!HS.fuelOn) return "";
     const S = Fuel.read(); if (!S) return "";
     const days = Array.from({ length: 7 }, (_, i) => addDays(today, i - 6));
     let on = 0, pSum = 0, pN = 0, pT = 0;

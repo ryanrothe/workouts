@@ -59,6 +59,8 @@
     "barbell21s": ["arms"],   // Barbell 21's (FBA closer 2026-10-29; a curl)
     "pecdec": ["push"],   // Pec Dec (POWERJACKED)
     "adductormachine": ["legs"],   // Adductor Machine (POWERJACKED)
+    "cableabduction": ["legs"],   // Cable Abduction (Women's Program 2026-11-09; hip abduction, same call as the adductor)
+    "bandedlateralwalks": ["legs"],   // Banded Lateral Walks (Women's Program 2026-11-09; glute medius)
     "weightedbackextentions": ["legs"],   // Weighted Back Extentions, sic (POWERJACKED; posterior chain)
     "machinereardelts": ["pull"],   // Machine Rear Delts (Full Body 3-day; rear delts are pull)
     "chestsupportreardelts": ["pull"],   // Chest Support Rear Delts (FBA 2026-08 block; rear delts are pull)

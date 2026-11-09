@@ -93,9 +93,9 @@
 
   function render() {
     const all = window.PROGRAMS.filter((p) => filter === "all" || p.cat === filter);
-    const by = (r) => all.filter((p) => Lib.role(L, p.slug) === r);
+    const by = (r) => all.filter((p) => !p.viewOnly && Lib.role(L, p.slug) === r);
     const caps = Lib.caps(L);
-    const real = window.PROGRAMS.filter((p) => !p.placeholder).length;
+    const real = window.PROGRAMS.filter((p) => !p.placeholder && !p.viewOnly).length;
     const active = window.PROGRAMS.filter((p) => !p.placeholder && ["family", "mine"].indexOf(Lib.role(L, p.slug)) >= 0).length;
     $("#app").innerHTML = `
       <header class="page-head"><div><div class="eyebrow">${real} programs · ${active} active</div><h1>Library</h1></div></header>
@@ -105,6 +105,7 @@
       ${group("Mine", caps.mine === 1 ? "1 while a family program runs" : "up to 2", by("mine"), "mine")}
       ${group("Pool", HINT.pool, by("pool"), "pool")}
       ${group("Finished", "", by("finished"), "finished")}
+      ${group("Following", "view only · their logs stay on their phone", all.filter((p) => p.viewOnly), "following")}
       ${HS.owner ? `<button class="add" data-add><span class="sq">${I.plus}</span><span class="t"><b>Add a program</b><small>A coach's PDF, photos, or build one with Karl</small></span></button>` : ""}
       <section class="card pad sync-card" id="data">
         <h3>Cloudflare backup</h3>
@@ -132,6 +133,10 @@
   function openProgram(slug) {
     const p = Lib.bySlug(slug), r = Lib.role(L, slug), sm = HS.readSummary(slug);
     if (p.placeholder) return openAdd();
+    if (p.viewOnly) return openSheet(`${head(p.name)}
+      <div style="display:flex;gap:12px;align-items:center">${mono(p)}<div><div style="font-size:13px;font-weight:700;color:${p.color}">${esc(p.by)}</div><div class="hint">${esc(p.meta)}</div></div></div>
+      <p class="hint" style="font-size:14px;margin:0">Here to follow the plan day by day. Nothing logs or syncs from this app, and her progress stays on her own phone.</p>
+      <a class="btn btn-block" style="background:${p.color};color:#fff;border-color:transparent" href="${p.slug}/">Open ${esc(p.short)}</a>`);
     const facts = sm ? `<div class="facts">
         <div><b>${sm.week != null ? sm.week : "·"}</b><small>${sm.weeks ? `week of ${sm.weeks}` : "open-ended"}</small></div>
         <div><b>${(sm.sessions || []).length}</b><small>days logged</small></div>

@@ -65,7 +65,7 @@
     const firstMon = addDays(mondayOf(today), -7 * (weeks - 1));
     const wkStarts = Array.from({ length: weeks }, (_, i) => addDays(firstMon, 7 * i));
     const sums = HS.readSummaries();
-    const progs = (window.PROGRAMS || []).filter((p) => !p.placeholder);
+    const progs = (window.PROGRAMS || []).filter((p) => !p.placeholder && !p.viewOnly);
     const counts = wkStarts.map(() => ({}));
     const used = new Set();
     progs.forEach((p) => {
@@ -120,7 +120,7 @@
   function movingUp() {
     const from = addDays(mondayOf(today), -7 * (weeks - 1));
     const lifts = {};
-    (window.PROGRAMS || []).filter((p) => !p.placeholder).map((p) => p.slug).concat(["stack"]).forEach((slug) => {
+    (window.PROGRAMS || []).filter((p) => !p.placeholder && !p.viewOnly).map((p) => p.slug).concat(["stack"]).forEach((slug) => {
       const prog = Lib.bySlug(slug) || { short: "Stack", color: OTHER };
       readEntries(slug).forEach((e) => {
         if (!e.date || e.date < from || (e.lifter && String(e.lifter).toLowerCase() !== "ryan") || !Array.isArray(e.sets)) return;

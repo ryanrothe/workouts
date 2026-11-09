@@ -2,7 +2,10 @@
    One entry per program folder. Adding a program = one entry here + its folder.
    `sync` is the workout-sync slug the program posts under; `storageKey` is its localStorage key.
    `family: true` marks a kid program (it may take a Family slot, outside the cap).
-   `role` is the default role on first run; the user's choice lives in library_v1. */
+   `role` is the default role on first run; the user's choice lives in library_v1.
+   `viewOnly: true` (Ryan, 2026-11-09): a program shown to follow, not to train. It sits in its own
+   Library group with no role, never feeds Today, Gaps or Progress, has no `sync`, and its page
+   logs nothing on this build (HS.owner). Used for Alicia's Women's Program; her logs stay on her phone. */
 window.PROGRAMS = [
   { slug: "father-son", name: "Father & Son Strength", short: "Father & Son", mono: "F&S", color: "#4338CA",
     by: "With Porter", meta: "12 weeks · Mon upper · Wed lower", family: true, role: "family",
@@ -42,6 +45,9 @@ window.PROGRAMS = [
   { slug: "powerjacked", name: "POWERJACKED - Chalk", short: "PowerJacked", mono: "PJ", color: "#65A30D",
     by: "Chalk · Ryan Fischer", meta: "Hybrid strength + speed · Lower, Push, Sprint & Pull, Lower, Upper · 4-week blocks", role: "pool",
     storageKey: "pj_v1", sync: "powerjacked", cat: "strength" },
+  { slug: "womens-program", name: "Women's Program - Chalk", short: "Women's Program", mono: "WP", color: "#BE185D",
+    by: "Alicia's program · Chalk", meta: "View only · Lower, Upper, Lower, Upper · 4-week blocks", role: "pool", viewOnly: true,
+    storageKey: "wp_v1", cat: "strength" },
   { slug: "hotel", name: "Hotel Workouts", short: "Hotel", mono: "HTL", color: "#1D4ED8",
     by: "Madsen upper and lower splits", meta: "Travel swap · DB and bodyweight", role: "pool", travel: true,
     storageKey: "madsen_split_v1", sync: "hotel", cat: "strength" },

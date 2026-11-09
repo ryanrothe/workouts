@@ -1,0 +1,1852 @@
+{
+ "name": "Women's Program - Chalk",
+ "slug": "womens-program",
+ "coach": "Chalk Performance Training",
+ "app": "Chalk Performance Training",
+ "unit": "lb",
+ "schema": 2,
+ "mode": "calendar-groups",
+ "planId": 3883357,
+ "programDetails": null,
+ "generatedBy": "automation/exercise-library/chalk_calendar_ingest.py",
+ "cycles": [
+  {
+   "id": "2026-11-01",
+   "label": "Block 1 · Build the Shape",
+   "startDate": "2026-11-01",
+   "days": [
+    {
+     "date": "2026-11-01",
+     "dow": "Sun",
+     "week": 1,
+     "type": "rest",
+     "title": "Rest Day",
+     "note": "🛌 REST DAY\n\nNo lifting today. Use it to work on the other 23 hours outside the gym. That’s where your results actually get built.\n\n🥗 Meal prep. Get your food set up for the week ahead. Check out the nutrition guides in the Resources tab of the app for easy meals and ideas.\n\n👟 Hit 10,000 steps. Walk the dog, take a call on foot, park farther away. It all counts.\n\n😴 Sleep 7 to 8 hours. Good-quality sleep is when your body recovers and your muscles grow.\n\n🚴‍♀️ Want to move? Today is a great day for low- to moderate-intensity cardio of your choice: a fitness class without weights, a bike ride or a run. Just don’t get so sore that it takes away from your next workout.\n\nRest well. We’re back at it next session. 🤝"
+    },
+    {
+     "date": "2026-11-02",
+     "dow": "Mon",
+     "week": 1,
+     "type": "strength",
+     "title": "Lower · Glutes and hamstrings",
+     "groups": [
+      {
+       "type": "note",
+       "name": "Warm-Up",
+       "text": "WARM-UP (about 8 minutes, before every workout)\n\nStep 1: Cardio (3 to 5 minutes)\nYour choice: incline treadmill, StairMaster, rower or bike. Easy pace, just enough to get warm.\n\nStep 2: Dumbbell flow (1 round, no rest)\nGrab one pair of light dumbbells and go straight from one move to the next:\n\nGoblet Squat × 10\nDB Romanian Deadlift × 10\nDB Reverse Lunge × 5 each leg\nDB Bent-Over Row × 10\nDB Shoulder Press × 10\n\nStep 3: Build up to your working weight\nBefore your first exercise, or any exercise that feels stiff:\n\nSet 1: about 50% effort × 8 reps\nSet 2: about 70% effort × 5 reps\nThen go straight into your working weight\n\nOnly log your working sets!"
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Barbell Hip Thrust",
+         "sets": 3,
+         "reps": "8",
+         "perSide": false,
+         "instruction": "Intensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 8 reps",
+         "slot": "legs",
+         "exerciseId": 557039,
+         "videoUrl": "https://stream.mux.com/YT4krFtjjAOZslukMkCopi76kZpvnboF1iySssXCrX4.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Dumbbell RDL",
+         "sets": 3,
+         "reps": "8",
+         "perSide": false,
+         "instruction": "Intensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 8 reps",
+         "slot": "legs",
+         "exerciseId": 553883,
+         "videoUrl": "https://stream.mux.com/kO9lb9JdJNctxuvXIdSN02E6XdDQhRwekOWbedsalMDU.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "exercises": [
+        {
+         "name": "Walking DB Lunge",
+         "sets": 3,
+         "reps": "10",
+         "perSide": true,
+         "instruction": "Complete 10 long strides on EACH leg.\nIntensity: 8/10\nPerform Each Side",
+         "intensity": "8/10",
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets (per side) | 10 reps",
+         "slot": "legs",
+         "alternates": [
+          "Dumbbell Lunges (Reverse Step)"
+         ],
+         "exerciseId": 523022,
+         "videoUrl": "https://stream.mux.com/ysxAW1hsiM435p02gafHhCnYjzpF3aIQqgHmtRBiUSyg.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 90,
+       "exercises": [
+        {
+         "name": "Seated Hamstring Curl",
+         "sets": 3,
+         "reps": "10",
+         "perSide": false,
+         "instruction": "Intensity: 9/10",
+         "intensity": "9/10",
+         "restSec": 90,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 10 reps",
+         "slot": "legs",
+         "alternates": [
+          "Swiss Ball Leg Curls"
+         ],
+         "exerciseId": 554473,
+         "videoUrl": "https://stream.mux.com/I3x2A01NJL22Qw2UzomNzGUTgV02hufpQCDHbr01N02qynQ.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Glute Cable Kickback",
+         "sets": 3,
+         "reps": "12",
+         "perSide": true,
+         "instruction": "Complete 12 reps on each side and rest 60 seconds after the second leg. \nIntensity: 9/10\nPerform Each Side",
+         "intensity": "9/10",
+         "restSec": 60,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets (per side) | 12 reps",
+         "slot": "triceps",
+         "exerciseId": 1212434,
+         "videoUrl": "https://stream.mux.com/am9HiAs1JCMZqG016e2KXhKj1rjzBaYu0201MyCzwY01ZLU.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Cable Abduction",
+         "sets": 3,
+         "reps": "15",
+         "perSide": true,
+         "instruction": "Complete 15 reps on each side and rest 60 seconds after the second side. \nPerform Each Side",
+         "restSec": 60,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets (per side) | 15 reps",
+         "slot": "legs",
+         "alternates": [
+          "Machine Abduction",
+          "Plate Abduction"
+         ],
+         "exerciseId": 1212431,
+         "videoUrl": "https://stream.mux.com/P02rnmXW53lKavq4Kc7tdvBQIQoFbI00hHcVXQVt9kFXI.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Barbell Standing Calf Raises",
+         "sets": 3,
+         "reps": "12",
+         "perSide": false,
+         "instruction": "Feel free to do this on a leg press machine, a regular squat rack, a Smith machine, or even holding dumbbells in your hand. \nIntensity: 9/10",
+         "intensity": "9/10",
+         "restSec": 60,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 12 reps",
+         "slot": "legs",
+         "exerciseId": 557030,
+         "videoUrl": "https://stream.mux.com/ormXtq00bVzrckYn4XWZ8ygLaFWpRPQrudVFpt01L006sk.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Hanging Leg Raises",
+         "sets": 3,
+         "reps": "10",
+         "perSide": false,
+         "instruction": "Intensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 60,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 10 reps",
+         "slot": "abs",
+         "alternates": [
+          "Barbell Ab Rollout"
+         ],
+         "exerciseId": 523084,
+         "videoUrl": "https://stream.mux.com/E9LntaKzpGk94FWiui400CrOOQzSl4XVaW8h2YS6XSGo.m3u8"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "date": "2026-11-03",
+     "dow": "Tue",
+     "week": 1,
+     "type": "strength",
+     "title": "Upper · Push and shoulders",
+     "groups": [
+      {
+       "type": "note",
+       "name": "Warm-Up",
+       "text": "WARM-UP (about 8 minutes, before every workout)\n\nStep 1: Cardio (3 to 5 minutes)\nYour choice: incline treadmill, StairMaster, rower or bike. Easy pace, just enough to get warm.\n\nStep 2: Dumbbell flow (1 round, no rest)\nGrab one pair of light dumbbells and go straight from one move to the next:\n\nGoblet Squat × 10\nDB Romanian Deadlift × 10\nDB Reverse Lunge × 5 each leg\nDB Bent-Over Row × 10\nDB Shoulder Press × 10\n\nStep 3: Build up to your working weight\nBefore your first exercise, or any exercise that feels stiff:\n\nSet 1: about 50% effort × 8 reps\nSet 2: about 70% effort × 5 reps\nThen go straight into your working weight\n\nOnly log your working sets!"
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Dumbbell Shoulder Press (Seated)",
+         "sets": 3,
+         "reps": "6",
+         "perSide": false,
+         "instruction": "Intensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6 reps",
+         "slot": "shoulders",
+         "exerciseId": 523076,
+         "videoUrl": "https://stream.mux.com/VTvP3TtKnvJsHL8aZLUBAj7vup2GGZ35brzLg5fGFKw.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Dumbbell Bench Press",
+         "sets": 3,
+         "reps": "8",
+         "perSide": false,
+         "instruction": "Intensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 8 reps",
+         "slot": "chest",
+         "exerciseId": 523079,
+         "videoUrl": "https://stream.mux.com/E7VDLBnPm8IOlIRjHKbiMRpfQacVxNYzVKSBwHBYixs.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Dumbbell Incline Bench Press",
+         "sets": 3,
+         "reps": "10",
+         "perSide": false,
+         "instruction": "Intensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 10 reps",
+         "slot": "chest",
+         "exerciseId": 523078,
+         "videoUrl": "https://stream.mux.com/AhrFStTXSBu6hkXzV6oukM5F5oM9joyvey96RXqfb018.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 90,
+       "exercises": [
+        {
+         "name": "Dumbbell Lateral Raise",
+         "sets": 3,
+         "reps": "12",
+         "perSide": false,
+         "instruction": "Intensity: 9/10",
+         "intensity": "9/10",
+         "restSec": 90,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 12 reps",
+         "slot": "shoulders",
+         "exerciseId": 523059,
+         "videoUrl": "https://stream.mux.com/AdEiZIM02Q1A56On99PSpdiBPy2q9Wjb8iM01OfKnGQNQ.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 90,
+       "exercises": [
+        {
+         "name": "Double Dumbbell Overhead Extension (Seated)",
+         "sets": 3,
+         "reps": "12",
+         "perSide": false,
+         "instruction": "Intensity: 9/10",
+         "intensity": "9/10",
+         "restSec": 90,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 12 reps",
+         "slot": "triceps",
+         "exerciseId": 553877,
+         "videoUrl": "https://stream.mux.com/ktTCBn5U5GXMeCCcNt005PtF2Sjqlh8JJ7SUCDkoh4Fk.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 90,
+       "exercises": [
+        {
+         "name": "Flat Dumbbell Fly",
+         "sets": 3,
+         "reps": "12",
+         "perSide": false,
+         "instruction": "Intensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 90,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 12 reps",
+         "slot": "chest",
+         "exerciseId": 553891,
+         "videoUrl": "https://stream.mux.com/loH3LeouQLkQTneENriv8SH4JOmfdq3xl5HAfyachto.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Face-Pulls",
+         "sets": 3,
+         "reps": "15",
+         "perSide": false,
+         "instruction": "Intensity: 9/10",
+         "intensity": "9/10",
+         "restSec": 60,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 15 reps",
+         "slot": "shoulders",
+         "exerciseId": 557033,
+         "videoUrl": "https://stream.mux.com/r02EQkF00pQXoEgA00gC02hLtWi58ydl01n004NfU5aNP7n8I.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Weighted Plank",
+         "sets": 3,
+         "reps": "10",
+         "perSide": false,
+         "instruction": "3 sets of a 1-minute hold with either body weight or a plate on your back. Rest 1 minute between sets. \nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 60,
+         "fields": [
+          "time",
+          "weight"
+         ],
+         "kind": "time",
+         "distanceUnit": "miles",
+         "time": "60",
+         "summary": "3 sets | 1 min",
+         "slot": "abs",
+         "exerciseId": 557013,
+         "videoUrl": "https://stream.mux.com/02TbVmvmOPgli01L4lQmH7ZkdY301HVsixRP01QRtPL3cII.m3u8"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "date": "2026-11-04",
+     "dow": "Wed",
+     "week": 1,
+     "type": "rest",
+     "title": "Rest Day",
+     "note": "🛌 REST DAY\n\nNo lifting today. Use it to work on the other 23 hours outside the gym. That’s where your results actually get built.\n\n🥗 Meal prep. Get your food set up for the week ahead. Check out the nutrition guides in the Resources tab of the app for easy meals and ideas.\n\n👟 Hit 10,000 steps. Walk the dog, take a call on foot, park farther away. It all counts.\n\n😴 Sleep 7 to 8 hours. Good-quality sleep is when your body recovers and your muscles grow.\n\n🚴‍♀️ Want to move? Today is a great day for low- to moderate-intensity cardio of your choice: a fitness class without weights, a bike ride or a run. Just don’t get so sore that it takes away from your next workout.\n\nRest well. We’re back at it next session. 🤝"
+    },
+    {
+     "date": "2026-11-05",
+     "dow": "Thu",
+     "week": 1,
+     "type": "strength",
+     "title": "Lower · Quads and glute medius",
+     "groups": [
+      {
+       "type": "note",
+       "name": "Warm-Up",
+       "text": "WARM-UP (about 8 minutes, before every workout)\n\nStep 1: Cardio (3 to 5 minutes)\nYour choice: incline treadmill, StairMaster, rower or bike. Easy pace, just enough to get warm.\n\nStep 2: Dumbbell flow (1 round, no rest)\nGrab one pair of light dumbbells and go straight from one move to the next:\n\nGoblet Squat × 10\nDB Romanian Deadlift × 10\nDB Reverse Lunge × 5 each leg\nDB Bent-Over Row × 10\nDB Shoulder Press × 10\n\nStep 3: Build up to your working weight\nBefore your first exercise, or any exercise that feels stiff:\n\nSet 1: about 50% effort × 8 reps\nSet 2: about 70% effort × 5 reps\nThen go straight into your working weight\n\nOnly log your working sets!"
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Back Squat",
+         "sets": 3,
+         "reps": "6",
+         "perSide": false,
+         "instruction": "Intensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 6 reps",
+         "slot": "legs",
+         "exerciseId": 523104,
+         "videoUrl": "https://stream.mux.com/Wd5ZY6eNKMpTlCvXNmvgLjLucD00fumPTlqja9AfkgmU.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Dumbbell Split Squats",
+         "sets": 3,
+         "reps": "8",
+         "perSide": true,
+         "instruction": "Intensity: 8/10\nPerform Each Side",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets (per side) | 8 reps",
+         "slot": "legs",
+         "exerciseId": 557041,
+         "videoUrl": "https://stream.mux.com/td4HNFTE65Q01o900DCMVhn2x4316sII010075rFdUJDPkA.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "exercises": [
+        {
+         "name": "Barbell Hip Thrust",
+         "sets": 1,
+         "reps": "50",
+         "perSide": false,
+         "instruction": "Use about 80–90% of the weight you used for Monday’s hip thrust and complete 50 reps for time, maintaining perfect form and minimizing rest. Aim to finish in 5 minutes; if you finish far too quickly, the weight was too light, so adjust accordingly.\nIntensity: 9/10",
+         "intensity": "9/10",
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "1 sets | 50 reps",
+         "slot": "legs",
+         "exerciseId": 557039,
+         "videoUrl": "https://stream.mux.com/YT4krFtjjAOZslukMkCopi76kZpvnboF1iySssXCrX4.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Machine Leg Press",
+         "sets": 3,
+         "reps": "12",
+         "perSide": false,
+         "instruction": "Intensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 12 reps",
+         "slot": "legs",
+         "alternates": [
+          "Dumbbell Goblet Squat "
+         ],
+         "exerciseId": 554467,
+         "videoUrl": "https://stream.mux.com/VnG3nj00kL7sf00TUL6iGSZ01v4HxInLu4TxHsTxx88YzU.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 90,
+       "exercises": [
+        {
+         "name": "Banded Lateral Walks",
+         "sets": 3,
+         "reps": "15",
+         "perSide": true,
+         "instruction": "Intensity: 9/10\nPerform Each Side",
+         "intensity": "9/10",
+         "restSec": 90,
+         "fields": [
+          "reps"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets (per side) | 15 reps",
+         "slot": "legs",
+         "exerciseId": 1034482
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 90,
+       "exercises": [
+        {
+         "name": "Single-leg Dumbbell RDL",
+         "sets": 3,
+         "reps": "10",
+         "perSide": true,
+         "instruction": "Intensity: 9/10\nPerform Each Side",
+         "intensity": "9/10",
+         "restSec": 90,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets (per side) | 10 reps",
+         "slot": "legs",
+         "exerciseId": 1107369,
+         "videoUrl": "https://stream.mux.com/HYTt00exs5iVsAc9csdF28Uwy1hmJHiouLoveiZKUfVg.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Seated Calf Raise",
+         "sets": 3,
+         "reps": "15",
+         "perSide": false,
+         "instruction": "Intensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 60,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 15 reps",
+         "slot": "legs",
+         "alternates": [
+          "Seated Dumbbell Calf Raises"
+         ],
+         "exerciseId": 554483,
+         "videoUrl": "https://stream.mux.com/ETsUTx44sz1NMRB5pDWZcT6nSBH3XW0000UK87QZWCJgo.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Cable Crunches",
+         "sets": 3,
+         "reps": "12",
+         "perSide": false,
+         "instruction": "Intensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 60,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 12 reps",
+         "slot": "abs",
+         "alternates": [
+          "Weighted Sit-Up",
+          "Weighted Sit-Up"
+         ],
+         "exerciseId": 557031,
+         "videoUrl": "https://stream.mux.com/p00WI8mX1xQNnZT9i02pb018KhrPhISkQnDVUfbkWWL7io.m3u8"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "date": "2026-11-06",
+     "dow": "Fri",
+     "week": 1,
+     "type": "strength",
+     "title": "Upper · Pull and arms",
+     "groups": [
+      {
+       "type": "note",
+       "name": "Warm-Up",
+       "text": "WARM-UP (about 8 minutes, before every workout)\n\nStep 1: Cardio (3 to 5 minutes)\nYour choice: incline treadmill, StairMaster, rower or bike. Easy pace, just enough to get warm.\n\nStep 2: Dumbbell flow (1 round, no rest)\nGrab one pair of light dumbbells and go straight from one move to the next:\n\nGoblet Squat × 10\nDB Romanian Deadlift × 10\nDB Reverse Lunge × 5 each leg\nDB Bent-Over Row × 10\nDB Shoulder Press × 10\n\nStep 3: Build up to your working weight\nBefore your first exercise, or any exercise that feels stiff:\n\nSet 1: about 50% effort × 8 reps\nSet 2: about 70% effort × 5 reps\nThen go straight into your working weight\n\nOnly log your working sets!"
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Barbell Row (Pronated)",
+         "sets": 3,
+         "reps": "8",
+         "perSide": false,
+         "instruction": "Intensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 8 reps",
+         "slot": "back",
+         "exerciseId": 523073,
+         "videoUrl": "https://stream.mux.com/CSfFW3bKNuWnQKEfmrgiTxg2TkZUAfZ59z22oM029LSc.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Lat Pull-down",
+         "sets": 3,
+         "reps": "10",
+         "perSide": false,
+         "instruction": "Intensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 10 reps",
+         "slot": "back",
+         "alternates": [
+          "Inverted Pull-Up",
+          "Straight Arm Lat Pull-Down",
+          "Chin-Up"
+         ],
+         "exerciseId": 553912,
+         "videoUrl": "https://stream.mux.com/LgyOJ1TknE01w52RwnWSh6NihEFV67WqMbfYPen1Za02U.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Incline Seal Row",
+         "sets": 3,
+         "reps": "10",
+         "perSide": false,
+         "instruction": "Intensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 10 reps",
+         "slot": "back",
+         "exerciseId": 553888,
+         "videoUrl": "https://stream.mux.com/UYiakQkoqTa8mHBIpa1PLN02bN4NLIsBiE1HbHXNAR02w.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 90,
+       "exercises": [
+        {
+         "name": "Dumbbell Pullover",
+         "sets": 3,
+         "reps": "12",
+         "perSide": false,
+         "instruction": "Intensity: 9/10",
+         "intensity": "9/10",
+         "restSec": 90,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 12 reps",
+         "slot": "chest",
+         "exerciseId": 557043,
+         "videoUrl": "https://stream.mux.com/b9nn00VvxbQcCCmcWvc2liIgbIz1hKAj6YsqAp8EaRZI.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 90,
+       "exercises": [
+        {
+         "name": "EZ Bar Preacher Curl",
+         "sets": 3,
+         "reps": "10",
+         "perSide": false,
+         "instruction": "Intensity: 9/10",
+         "intensity": "9/10",
+         "restSec": 90,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 10 reps",
+         "slot": "biceps",
+         "alternates": [
+          "Close Grip Barbell Curl",
+          "Dumbbell Supinated Curl"
+         ],
+         "exerciseId": 557027,
+         "videoUrl": "https://stream.mux.com/gZEYEICG56LM8XE2QeQ015yXZtOFUwTsHMl6Ccwvxflc.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 90,
+       "exercises": [
+        {
+         "name": "Dumbbell Hammer Curl",
+         "sets": 3,
+         "reps": "12",
+         "perSide": false,
+         "instruction": "Intensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 90,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 12 reps",
+         "slot": "biceps",
+         "exerciseId": 523068,
+         "videoUrl": "https://stream.mux.com/POdah01q3AHfdgJqPqmxBfqbiCl2UtrKSYTetvmP02bRc.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Seated DB Reverse Fly",
+         "sets": 3,
+         "reps": "15",
+         "perSide": false,
+         "instruction": "Intensity: 9/10",
+         "intensity": "9/10",
+         "restSec": 60,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 15 reps",
+         "slot": "chest",
+         "exerciseId": 1038289
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Russian Twist",
+         "sets": 3,
+         "reps": "15",
+         "perSide": true,
+         "instruction": "Both sides equal 1 rep. \nIntensity: 8/10\nPerform Each Side",
+         "intensity": "8/10",
+         "restSec": 60,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "time": "60",
+         "summary": "3 sets (per side) | 15 reps",
+         "slot": "abs",
+         "exerciseId": 557011,
+         "videoUrl": "https://stream.mux.com/bjfhd00IuyRR009r1Uu3kh3oNABbZCwD026klUbROiFBvI.m3u8"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "date": "2026-11-07",
+     "dow": "Sat",
+     "week": 1,
+     "type": "rest",
+     "title": "Rest Day",
+     "note": "🛌 REST DAY\n\nNo lifting today. Use it to work on the other 23 hours outside the gym. That’s where your results actually get built.\n\n🥗 Meal prep. Get your food set up for the week ahead. Check out the nutrition guides in the Resources tab of the app for easy meals and ideas.\n\n👟 Hit 10,000 steps. Walk the dog, take a call on foot, park farther away. It all counts.\n\n😴 Sleep 7 to 8 hours. Good-quality sleep is when your body recovers and your muscles grow.\n\n🚴‍♀️ Want to move? Today is a great day for low- to moderate-intensity cardio of your choice: a fitness class without weights, a bike ride or a run. Just don’t get so sore that it takes away from your next workout.\n\nRest well. We’re back at it next session. 🤝"
+    },
+    {
+     "date": "2026-11-08",
+     "dow": "Sun",
+     "week": 2,
+     "type": "rest",
+     "title": "Rest Day",
+     "note": "🛌 REST DAY\n\nNo lifting today. Use it to work on the other 23 hours outside the gym. That’s where your results actually get built.\n\n🥗 Meal prep. Get your food set up for the week ahead. Check out the nutrition guides in the Resources tab of the app for easy meals and ideas.\n\n👟 Hit 10,000 steps. Walk the dog, take a call on foot, park farther away. It all counts.\n\n😴 Sleep 7 to 8 hours. Good-quality sleep is when your body recovers and your muscles grow.\n\n🚴‍♀️ Want to move? Today is a great day for low- to moderate-intensity cardio of your choice: a fitness class without weights, a bike ride or a run. Just don’t get so sore that it takes away from your next workout.\n\nRest well. We’re back at it next session. 🤝"
+    },
+    {
+     "date": "2026-11-09",
+     "dow": "Mon",
+     "week": 2,
+     "type": "strength",
+     "title": "Lower · Glutes and hamstrings",
+     "groups": [
+      {
+       "type": "note",
+       "name": "Warm-Up",
+       "text": "WARM-UP (about 8 minutes, before every workout)\n\nStep 1: Cardio (3 to 5 minutes)\nYour choice: incline treadmill, StairMaster, rower or bike. Easy pace, just enough to get warm.\n\nStep 2: Dumbbell flow (1 round, no rest)\nGrab one pair of light dumbbells and go straight from one move to the next:\n\nGoblet Squat × 10\nDB Romanian Deadlift × 10\nDB Reverse Lunge × 5 each leg\nDB Bent-Over Row × 10\nDB Shoulder Press × 10\n\nStep 3: Build up to your working weight\nBefore your first exercise, or any exercise that feels stiff:\n\nSet 1: about 50% effort × 8 reps\nSet 2: about 70% effort × 5 reps\nThen go straight into your working weight\n\nOnly log your working sets!"
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Barbell Hip Thrust",
+         "sets": 3,
+         "reps": "9",
+         "perSide": false,
+         "instruction": "Using the same weight as last week (or slightly more), do one additional rep.\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 9 reps",
+         "slot": "legs",
+         "exerciseId": 557039,
+         "videoUrl": "https://stream.mux.com/YT4krFtjjAOZslukMkCopi76kZpvnboF1iySssXCrX4.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Dumbbell RDL",
+         "sets": 3,
+         "reps": "9",
+         "perSide": false,
+         "instruction": "Using the same weight as last week (or slightly more), do one additional rep.\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 9 reps",
+         "slot": "legs",
+         "exerciseId": 553883,
+         "videoUrl": "https://stream.mux.com/kO9lb9JdJNctxuvXIdSN02E6XdDQhRwekOWbedsalMDU.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 90,
+       "exercises": [
+        {
+         "name": "Walking DB Lunge",
+         "sets": 3,
+         "reps": "11",
+         "perSide": true,
+         "instruction": "Complete 11 long strides on EACH leg.\nIntensity: 8/10\nPerform Each Side",
+         "intensity": "8/10",
+         "restSec": 90,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets (per side) | 11 reps",
+         "slot": "legs",
+         "alternates": [
+          "Dumbbell Lunges (Reverse Step)"
+         ],
+         "exerciseId": 523022,
+         "videoUrl": "https://stream.mux.com/ysxAW1hsiM435p02gafHhCnYjzpF3aIQqgHmtRBiUSyg.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 90,
+       "exercises": [
+        {
+         "name": "Seated Hamstring Curl",
+         "sets": 3,
+         "reps": "11",
+         "perSide": false,
+         "instruction": "Using the same weight as last week (or slightly more), do one additional rep.\nIntensity: 9/10",
+         "intensity": "9/10",
+         "restSec": 90,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 11 reps",
+         "slot": "legs",
+         "alternates": [
+          "Swiss Ball Leg Curls"
+         ],
+         "exerciseId": 554473,
+         "videoUrl": "https://stream.mux.com/I3x2A01NJL22Qw2UzomNzGUTgV02hufpQCDHbr01N02qynQ.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Glute Cable Kickback",
+         "sets": 3,
+         "reps": "13",
+         "perSide": true,
+         "instruction": "Complete 13 reps on each side and rest 60 seconds after the second leg. \nIntensity: 9/10\nPerform Each Side",
+         "intensity": "9/10",
+         "restSec": 60,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets (per side) | 13 reps",
+         "slot": "triceps",
+         "alternates": [
+          "Glute Back Extentions",
+          "Single Leg Glute Bridges"
+         ],
+         "exerciseId": 1212434,
+         "videoUrl": "https://stream.mux.com/am9HiAs1JCMZqG016e2KXhKj1rjzBaYu0201MyCzwY01ZLU.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Cable Abduction",
+         "sets": 3,
+         "reps": "16",
+         "perSide": true,
+         "instruction": "Using the same weight as last week or slightly more, complete one extra repetition.\nPerform Each Side",
+         "restSec": 60,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets (per side) | 16 reps",
+         "slot": "legs",
+         "alternates": [
+          "Machine Abduction",
+          "Plate Abduction"
+         ],
+         "exerciseId": 1212431,
+         "videoUrl": "https://stream.mux.com/P02rnmXW53lKavq4Kc7tdvBQIQoFbI00hHcVXQVt9kFXI.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Barbell Standing Calf Raises",
+         "sets": 3,
+         "reps": "13",
+         "perSide": false,
+         "instruction": "Feel free to do this on a leg press machine, a regular squat rack, a Smith machine, or even holding dumbbells in your hand. Your goal this week is to use the same weight as last week or slightly more and do one extra repetition. \nIntensity: 9/10",
+         "intensity": "9/10",
+         "restSec": 60,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 13 reps",
+         "slot": "legs",
+         "alternates": [
+          "Standing Calf Raises"
+         ],
+         "exerciseId": 557030,
+         "videoUrl": "https://stream.mux.com/ormXtq00bVzrckYn4XWZ8ygLaFWpRPQrudVFpt01L006sk.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Hanging Leg Raises",
+         "sets": 3,
+         "reps": "11",
+         "perSide": false,
+         "instruction": "Trying to get one more rep than last week!\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 60,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 11 reps",
+         "slot": "abs",
+         "alternates": [
+          "Barbell Ab Rollout"
+         ],
+         "exerciseId": 523084,
+         "videoUrl": "https://stream.mux.com/E9LntaKzpGk94FWiui400CrOOQzSl4XVaW8h2YS6XSGo.m3u8"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "date": "2026-11-10",
+     "dow": "Tue",
+     "week": 2,
+     "type": "strength",
+     "title": "Upper · Push and shoulders",
+     "groups": [
+      {
+       "type": "note",
+       "name": "Warm-Up",
+       "text": "WARM-UP (about 8 minutes, before every workout)\n\nStep 1: Cardio (3 to 5 minutes)\nYour choice: incline treadmill, StairMaster, rower or bike. Easy pace, just enough to get warm.\n\nStep 2: Dumbbell flow (1 round, no rest)\nGrab one pair of light dumbbells and go straight from one move to the next:\n\nGoblet Squat × 10\nDB Romanian Deadlift × 10\nDB Reverse Lunge × 5 each leg\nDB Bent-Over Row × 10\nDB Shoulder Press × 10\n\nStep 3: Build up to your working weight\nBefore your first exercise, or any exercise that feels stiff:\n\nSet 1: about 50% effort × 8 reps\nSet 2: about 70% effort × 5 reps\nThen go straight into your working weight\n\nOnly log your working sets!"
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Dumbbell Shoulder Press (Seated)",
+         "sets": 3,
+         "reps": "7",
+         "perSide": false,
+         "instruction": "Goal: Use the same weight as last week or slightly more and complete one extra repetition.\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 7 reps",
+         "slot": "shoulders",
+         "exerciseId": 523076,
+         "videoUrl": "https://stream.mux.com/VTvP3TtKnvJsHL8aZLUBAj7vup2GGZ35brzLg5fGFKw.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Dumbbell Bench Press",
+         "sets": 3,
+         "reps": "9",
+         "perSide": false,
+         "instruction": "Goal: Use the same weight as last week or slightly more and complete one extra repetition.\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 9 reps",
+         "slot": "chest",
+         "exerciseId": 523079,
+         "videoUrl": "https://stream.mux.com/E7VDLBnPm8IOlIRjHKbiMRpfQacVxNYzVKSBwHBYixs.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Dumbbell Incline Bench Press",
+         "sets": 3,
+         "reps": "11",
+         "perSide": false,
+         "instruction": "Goal: Use the same weight as last week or slightly more and complete one extra repetition.\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 11 reps",
+         "slot": "chest",
+         "exerciseId": 523078,
+         "videoUrl": "https://stream.mux.com/AhrFStTXSBu6hkXzV6oukM5F5oM9joyvey96RXqfb018.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 90,
+       "exercises": [
+        {
+         "name": "Dumbbell Lateral Raise",
+         "sets": 3,
+         "reps": "13",
+         "perSide": false,
+         "instruction": "Goal: Use the same weight as last week or slightly more and complete one extra repetition.\nIntensity: 9/10",
+         "intensity": "9/10",
+         "restSec": 90,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 13 reps",
+         "slot": "shoulders",
+         "exerciseId": 523059,
+         "videoUrl": "https://stream.mux.com/AdEiZIM02Q1A56On99PSpdiBPy2q9Wjb8iM01OfKnGQNQ.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 90,
+       "exercises": [
+        {
+         "name": "Double Dumbbell Overhead Extension (Seated)",
+         "sets": 3,
+         "reps": "13",
+         "perSide": false,
+         "instruction": "Goal: Use the same weight as last week or slightly more and complete one extra repetition.\nIntensity: 9/10",
+         "intensity": "9/10",
+         "restSec": 90,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 13 reps",
+         "slot": "triceps",
+         "exerciseId": 553877,
+         "videoUrl": "https://stream.mux.com/ktTCBn5U5GXMeCCcNt005PtF2Sjqlh8JJ7SUCDkoh4Fk.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 90,
+       "exercises": [
+        {
+         "name": "Flat Dumbbell Fly",
+         "sets": 3,
+         "reps": "13",
+         "perSide": false,
+         "instruction": "Goal: Use the same weight as last week or slightly more and complete one extra repetition.\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 90,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 13 reps",
+         "slot": "chest",
+         "exerciseId": 553891,
+         "videoUrl": "https://stream.mux.com/loH3LeouQLkQTneENriv8SH4JOmfdq3xl5HAfyachto.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Face-Pulls",
+         "sets": 3,
+         "reps": "16",
+         "perSide": false,
+         "instruction": "Goal: Use the same weight as last week or slightly more and complete one extra repetition.\nIntensity: 9/10",
+         "intensity": "9/10",
+         "restSec": 60,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 16 reps",
+         "slot": "shoulders",
+         "alternates": [
+          "Face Pull (Banded)"
+         ],
+         "exerciseId": 557033,
+         "videoUrl": "https://stream.mux.com/r02EQkF00pQXoEgA00gC02hLtWi58ydl01n004NfU5aNP7n8I.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Weighted Plank",
+         "sets": 3,
+         "reps": "10",
+         "perSide": false,
+         "instruction": "3 sets of a 1-minute hold with either body weight or a plate on your back. Rest 1 minute between sets. To make this harder than last week, either use a heavier weight or try to hold for an extra 5 or 10 seconds per set. \nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 60,
+         "fields": [
+          "time",
+          "weight"
+         ],
+         "kind": "time",
+         "distanceUnit": "miles",
+         "time": "60",
+         "summary": "3 sets | 1 min",
+         "slot": "abs",
+         "exerciseId": 557013,
+         "videoUrl": "https://stream.mux.com/02TbVmvmOPgli01L4lQmH7ZkdY301HVsixRP01QRtPL3cII.m3u8"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "date": "2026-11-11",
+     "dow": "Wed",
+     "week": 2,
+     "type": "rest",
+     "title": "Rest Day",
+     "note": "🛌 REST DAY\n\nNo lifting today. Use it to work on the other 23 hours outside the gym. That’s where your results actually get built.\n\n🥗 Meal prep. Get your food set up for the week ahead. Check out the nutrition guides in the Resources tab of the app for easy meals and ideas.\n\n👟 Hit 10,000 steps. Walk the dog, take a call on foot, park farther away. It all counts.\n\n😴 Sleep 7 to 8 hours. Good-quality sleep is when your body recovers and your muscles grow.\n\n🚴‍♀️ Want to move? Today is a great day for low- to moderate-intensity cardio of your choice: a fitness class without weights, a bike ride or a run. Just don’t get so sore that it takes away from your next workout.\n\nRest well. We’re back at it next session. 🤝"
+    },
+    {
+     "date": "2026-11-12",
+     "dow": "Thu",
+     "week": 2,
+     "type": "strength",
+     "title": "Lower · Quads and glute medius",
+     "groups": [
+      {
+       "type": "note",
+       "name": "Warm-Up",
+       "text": "WARM-UP (about 8 minutes, before every workout)\n\nStep 1: Cardio (3 to 5 minutes)\nYour choice: incline treadmill, StairMaster, rower or bike. Easy pace, just enough to get warm.\n\nStep 2: Dumbbell flow (1 round, no rest)\nGrab one pair of light dumbbells and go straight from one move to the next:\n\nGoblet Squat × 10\nDB Romanian Deadlift × 10\nDB Reverse Lunge × 5 each leg\nDB Bent-Over Row × 10\nDB Shoulder Press × 10\n\nStep 3: Build up to your working weight\nBefore your first exercise, or any exercise that feels stiff:\n\nSet 1: about 50% effort × 8 reps\nSet 2: about 70% effort × 5 reps\nThen go straight into your working weight\n\nOnly log your working sets!"
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Back Squat",
+         "sets": 3,
+         "reps": "7",
+         "perSide": false,
+         "instruction": "Intensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 7 reps",
+         "slot": "legs",
+         "exerciseId": 523104,
+         "videoUrl": "https://stream.mux.com/Wd5ZY6eNKMpTlCvXNmvgLjLucD00fumPTlqja9AfkgmU.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Dumbbell Split Squats",
+         "sets": 3,
+         "reps": "9",
+         "perSide": true,
+         "instruction": "Intensity: 8/10\nPerform Each Side",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets (per side) | 9 reps",
+         "slot": "legs",
+         "exerciseId": 557041,
+         "videoUrl": "https://stream.mux.com/td4HNFTE65Q01o900DCMVhn2x4316sII010075rFdUJDPkA.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "exercises": [
+        {
+         "name": "Barbell Hip Thrust",
+         "sets": 1,
+         "reps": "60",
+         "perSide": false,
+         "instruction": "Use about 80–90% of the weight you used for Monday’s hip thrust and complete 60 reps for time, maintaining perfect form and minimizing rest. Aim to finish in 5 minutes; if you finish far too quickly, the weight was too light, so adjust accordingly.\nIntensity: 9/10",
+         "intensity": "9/10",
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "1 sets | 60 reps",
+         "slot": "legs",
+         "exerciseId": 557039,
+         "videoUrl": "https://stream.mux.com/YT4krFtjjAOZslukMkCopi76kZpvnboF1iySssXCrX4.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Machine Leg Press",
+         "sets": 3,
+         "reps": "13",
+         "perSide": false,
+         "instruction": "Intensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 13 reps",
+         "slot": "legs",
+         "alternates": [
+          "Dumbbell Goblet Squat "
+         ],
+         "exerciseId": 554467,
+         "videoUrl": "https://stream.mux.com/VnG3nj00kL7sf00TUL6iGSZ01v4HxInLu4TxHsTxx88YzU.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 90,
+       "exercises": [
+        {
+         "name": "Banded Lateral Walks",
+         "sets": 3,
+         "reps": "18",
+         "perSide": true,
+         "instruction": "Intensity: 9/10\nPerform Each Side",
+         "intensity": "9/10",
+         "restSec": 90,
+         "fields": [
+          "reps"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets (per side) | 18 reps",
+         "slot": "legs",
+         "exerciseId": 1034482
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 90,
+       "exercises": [
+        {
+         "name": "Single-leg Dumbbell RDL",
+         "sets": 3,
+         "reps": "11",
+         "perSide": true,
+         "instruction": "Intensity: 9/10\nPerform Each Side",
+         "intensity": "9/10",
+         "restSec": 90,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets (per side) | 11 reps",
+         "slot": "legs",
+         "exerciseId": 1107369,
+         "videoUrl": "https://stream.mux.com/HYTt00exs5iVsAc9csdF28Uwy1hmJHiouLoveiZKUfVg.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Seated Calf Raise",
+         "sets": 3,
+         "reps": "16",
+         "perSide": false,
+         "instruction": "Goal: Use the same weight as last week or slightly more and complete one extra repetition.\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 60,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 16 reps",
+         "slot": "legs",
+         "alternates": [
+          "Seated Dumbbell Calf Raises"
+         ],
+         "exerciseId": 554483,
+         "videoUrl": "https://stream.mux.com/ETsUTx44sz1NMRB5pDWZcT6nSBH3XW0000UK87QZWCJgo.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Cable Crunches",
+         "sets": 3,
+         "reps": "13",
+         "perSide": false,
+         "instruction": "Goal: Use the same weight as last week or slightly more and complete one extra repetition.\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 60,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 13 reps",
+         "slot": "abs",
+         "alternates": [
+          "Weighted Sit-Up"
+         ],
+         "exerciseId": 557031,
+         "videoUrl": "https://stream.mux.com/p00WI8mX1xQNnZT9i02pb018KhrPhISkQnDVUfbkWWL7io.m3u8"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "date": "2026-11-13",
+     "dow": "Fri",
+     "week": 2,
+     "type": "strength",
+     "title": "Upper · Pull and arms",
+     "groups": [
+      {
+       "type": "note",
+       "name": "Warm-Up",
+       "text": "WARM-UP (about 8 minutes, before every workout)\n\nStep 1: Cardio (3 to 5 minutes)\nYour choice: incline treadmill, StairMaster, rower or bike. Easy pace, just enough to get warm.\n\nStep 2: Dumbbell flow (1 round, no rest)\nGrab one pair of light dumbbells and go straight from one move to the next:\n\nGoblet Squat × 10\nDB Romanian Deadlift × 10\nDB Reverse Lunge × 5 each leg\nDB Bent-Over Row × 10\nDB Shoulder Press × 10\n\nStep 3: Build up to your working weight\nBefore your first exercise, or any exercise that feels stiff:\n\nSet 1: about 50% effort × 8 reps\nSet 2: about 70% effort × 5 reps\nThen go straight into your working weight\n\nOnly log your working sets!"
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Barbell Row (Pronated)",
+         "sets": 3,
+         "reps": "9",
+         "perSide": false,
+         "instruction": "Goal: Use the same weight as last week or slightly more and complete one extra repetition.\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 9 reps",
+         "slot": "back",
+         "exerciseId": 523073,
+         "videoUrl": "https://stream.mux.com/CSfFW3bKNuWnQKEfmrgiTxg2TkZUAfZ59z22oM029LSc.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Lat Pull-down",
+         "sets": 3,
+         "reps": "11",
+         "perSide": false,
+         "instruction": "Goal: Use the same weight as last week or slightly more and complete one extra repetition.\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 11 reps",
+         "slot": "back",
+         "alternates": [
+          "Inverted Pull-Up",
+          "Straight Arm Lat Pull-Down",
+          "Chin-Up"
+         ],
+         "exerciseId": 553912,
+         "videoUrl": "https://stream.mux.com/LgyOJ1TknE01w52RwnWSh6NihEFV67WqMbfYPen1Za02U.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 120,
+       "exercises": [
+        {
+         "name": "Incline Seal Row",
+         "sets": 3,
+         "reps": "11",
+         "perSide": false,
+         "instruction": "Goal: Use the same weight as last week or slightly more and complete one extra repetition.\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 120,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 11 reps",
+         "slot": "back",
+         "exerciseId": 553888,
+         "videoUrl": "https://stream.mux.com/UYiakQkoqTa8mHBIpa1PLN02bN4NLIsBiE1HbHXNAR02w.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 90,
+       "exercises": [
+        {
+         "name": "Dumbbell Pullover",
+         "sets": 3,
+         "reps": "13",
+         "perSide": false,
+         "instruction": "Goal: Use the same weight as last week or slightly more and complete one extra repetition.\nIntensity: 9/10",
+         "intensity": "9/10",
+         "restSec": 90,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 13 reps",
+         "slot": "chest",
+         "exerciseId": 557043,
+         "videoUrl": "https://stream.mux.com/b9nn00VvxbQcCCmcWvc2liIgbIz1hKAj6YsqAp8EaRZI.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 90,
+       "exercises": [
+        {
+         "name": "EZ Bar Preacher Curl",
+         "sets": 3,
+         "reps": "11",
+         "perSide": false,
+         "instruction": "Goal: Use the same weight as last week or slightly more and complete one extra repetition.\nIntensity: 9/10",
+         "intensity": "9/10",
+         "restSec": 90,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 11 reps",
+         "slot": "biceps",
+         "alternates": [
+          "Close Grip Barbell Curl",
+          "Dumbbell Supinated Curl"
+         ],
+         "exerciseId": 557027,
+         "videoUrl": "https://stream.mux.com/gZEYEICG56LM8XE2QeQ015yXZtOFUwTsHMl6Ccwvxflc.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 90,
+       "exercises": [
+        {
+         "name": "Dumbbell Hammer Curl",
+         "sets": 3,
+         "reps": "13",
+         "perSide": false,
+         "instruction": "Goal: Use the same weight as last week or slightly more and complete one extra repetition.\nIntensity: 8/10",
+         "intensity": "8/10",
+         "restSec": 90,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 13 reps",
+         "slot": "biceps",
+         "exerciseId": 523068,
+         "videoUrl": "https://stream.mux.com/POdah01q3AHfdgJqPqmxBfqbiCl2UtrKSYTetvmP02bRc.m3u8"
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Seated DB Reverse Fly",
+         "sets": 3,
+         "reps": "16",
+         "perSide": false,
+         "instruction": "Goal: Use the same weight as last week or slightly more and complete one extra repetition.\nIntensity: 9/10",
+         "intensity": "9/10",
+         "restSec": 60,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "summary": "3 sets | 16 reps",
+         "slot": "chest",
+         "exerciseId": 1038289
+        }
+       ]
+      },
+      {
+       "type": "straight",
+       "restSec": 60,
+       "exercises": [
+        {
+         "name": "Russian Twist",
+         "sets": 3,
+         "reps": "16",
+         "perSide": true,
+         "instruction": "Both sides equal 1 rep. \nIntensity: 8/10\nPerform Each Side",
+         "intensity": "8/10",
+         "restSec": 60,
+         "fields": [
+          "reps",
+          "weight"
+         ],
+         "kind": "sets",
+         "distanceUnit": "miles",
+         "time": "60",
+         "summary": "3 sets (per side) | 16 reps",
+         "slot": "abs",
+         "exerciseId": 557011,
+         "videoUrl": "https://stream.mux.com/bjfhd00IuyRR009r1Uu3kh3oNABbZCwD026klUbROiFBvI.m3u8"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "date": "2026-11-14",
+     "dow": "Sat",
+     "week": 2,
+     "type": "rest",
+     "title": "Rest Day",
+     "note": "🛌 REST DAY\n\nNo lifting today. Use it to work on the other 23 hours outside the gym. That’s where your results actually get built.\n\n🥗 Meal prep. Get your food set up for the week ahead. Check out the nutrition guides in the Resources tab of the app for easy meals and ideas.\n\n👟 Hit 10,000 steps. Walk the dog, take a call on foot, park farther away. It all counts.\n\n😴 Sleep 7 to 8 hours. Good-quality sleep is when your body recovers and your muscles grow.\n\n🚴‍♀️ Want to move? Today is a great day for low- to moderate-intensity cardio of your choice: a fitness class without weights, a bike ride or a run. Just don’t get so sore that it takes away from your next workout.\n\nRest well. We’re back at it next session. 🤝"
+    }
+   ],
+   "schedule": {
+    "Mon": "Lower · Glutes and hamstrings",
+    "Tue": "Upper · Push and shoulders",
+    "Thu": "Lower · Quads and glute medius",
+    "Fri": "Upper · Pull and arms"
+   },
+   "daysPresent": 14,
+   "weeks": 2
+  }
+ ]
+}

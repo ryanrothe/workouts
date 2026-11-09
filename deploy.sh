@@ -7,7 +7,7 @@
 #
 # Since 2026-11-09 it also builds and deploys every profile instance (Alicia's app) from the same
 # source with automation/exercise-library/build_profile.py. Program folders that belong only to a
-# profile are kept off Ryan's site (PROFILE_ONLY).
+# profile are kept off Ryan's site (PROFILE_ONLY; empty since 2026-11-09).
 #
 # Source of truth is the iCloud folder; this repo is just the deploy target.
 
@@ -22,7 +22,7 @@ if [ ! -d "$SRC" ]; then
   exit 1
 fi
 
-PROFILE_ONLY=(womens-program)
+PROFILE_ONLY=()   # womens-program left this list 2026-11-09: it ships on Ryan's site too, view only
 PROFILES=(alicia)
 KARL_CORE="$HOME/Developer/karl-core"
 
@@ -41,7 +41,7 @@ rsync -a --delete $DRY \
   --exclude '.DS_Store' \
   --exclude '.claude/' \
   --exclude 'deploy.sh' \
-  $(for d in "${PROFILE_ONLY[@]}"; do printf -- "--exclude %s/ " "$d"; done) \
+  $(for d in ${PROFILE_ONLY[@]+"${PROFILE_ONLY[@]}"}; do printf -- "--exclude %s/ " "$d"; done) \
   --itemize-changes \
   "$SRC"/ "$REPO"/
 

@@ -94,7 +94,7 @@
     P.PATTERNS.forEach((p) => { by[p.key] = { solo: 0, porter: 0, her: 0, total: 0 }; });
     const days = new Set();
     let n = 0;
-    const slugs = (window.PROGRAMS || []).filter((p) => !p.placeholder).map((p) => p.slug).concat(["stack"]);
+    const slugs = (window.PROGRAMS || []).filter((p) => !p.placeholder && !p.viewOnly).map((p) => p.slug).concat(["stack"]);
     slugs.forEach((slug) => {
       const entries = readJSON("entries." + slug, []);
       const who = whoFor(slug, roles);
@@ -179,7 +179,7 @@
   function candidates(lib) {
     const out = [];
     const roles = (lib && lib.roles) || {};
-    (window.PROGRAMS || []).filter((p) => !p.placeholder && CATALOG && CATALOG.programs[p.slug]).forEach((p) => {
+    (window.PROGRAMS || []).filter((p) => !p.placeholder && !p.viewOnly && CATALOG && CATALOG.programs[p.slug]).forEach((p) => {
       const role = roles[p.slug] || p.role;
       if (role === "finished" || role === "family") return;
       const prog = CATALOG.programs[p.slug], sm = window.HS ? HS.readSummary(p.slug) : null;
@@ -216,7 +216,7 @@
     const guard = opts.ignoreGuard ? new Set() : tomorrowFamilyPatterns(date, lib);
     const roles = (lib && lib.roles) || {};
     const seen = new Set(), pool = [];
-    (window.PROGRAMS || []).filter((p) => !p.placeholder && CATALOG && CATALOG.programs[p.slug]).forEach((p) => {
+    (window.PROGRAMS || []).filter((p) => !p.placeholder && !p.viewOnly && CATALOG && CATALOG.programs[p.slug]).forEach((p) => {
       const role = roles[p.slug] || p.role;
       if (role === "family") return;
       CATALOG.programs[p.slug].sessions.forEach((s) => s.x.forEach((x) => {

@@ -57,6 +57,8 @@
   // to the exercise before it.
   const OVERRIDES = {
     "barbell21s": ["arms"],   // Barbell 21's (FBA closer 2026-10-29; a curl)
+    "inclinetatepress": ["arms"],   // Incline Tate Press (FBA American Volume 2026-11-24; triceps isolation; pending Ryan ratification)
+    "strictpress": ["push"],   // Strict Press (FBA American Volume; standing overhead press; pending Ryan ratification)
     "pecdec": ["push"],   // Pec Dec (POWERJACKED)
     "adductormachine": ["legs"],   // Adductor Machine (POWERJACKED)
     "cableabduction": ["legs"],   // Cable Abduction (Women's Program; hip abduction; ratified by Ryan 2026-11-09)

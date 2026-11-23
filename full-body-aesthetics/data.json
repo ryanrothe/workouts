@@ -14253,9 +14253,16 @@
       "type": "distance",
       "unit": "m"
      }
+    },
+    {
+     "date": "2026-11-22",
+     "dow": "Sun",
+     "week": 4,
+     "type": "rest",
+     "note": "Since this current cycle is 5 days per week, I do not recommend doing any additional work on your rest days. We really need these days to recover so we can keep progressing in those strength numbers each week. Extra activity is only going to hurt your progress, trust me!\n\nThings you can do if you like:\n- Go on a walk\n- Do a fun activity like biking, surfing, a light jog, etc... Just nothing at maximal efforts!\n- Yoga or some kind of mobility/stretching routine\n\nSince nutrition is a big part of our fitness goals, today can also be a great day food shop, meal prep, and remind yourself to dial in this section of your training!\n\nRemember, If you ever have any questions, you can always shoot them in the Facebook Group! The link is on the sidebar!"
     }
    ],
-   "daysPresent": 27,
+   "daysPresent": 28,
    "structure": {
     "mainLiftRepMaxByWeek": [
      10,
@@ -14269,6 +14276,645 @@
      8,
      6
     ]
+   }
+  },
+  {
+   "id": "2026-11-23",
+   "label": "American Volume cycle (main lift: 50/60/70 total reps for time, same weight all month)",
+   "startDate": "2026-11-23",
+   "weeks": 4,
+   "schedule": {
+    "lift": [
+     "Mon",
+     "Tue",
+     "Thu",
+     "Fri"
+    ],
+    "optionalConditioning": [
+     "Wed",
+     "Sat"
+    ]
+   },
+   "intro": "🚨 DAY 1 OF THE NEW CYCLE: AMERICAN VOLUME! 🇺🇸\n\nYour main lift this month is a race against the clock.\n\n1️⃣ THE MAIN LIFT: Pick a weight you could lift about 20 times fresh. Start a clock and do 50 TOTAL reps as fast as you can. Split them up any way you want, but the clock keeps running while you rest. Your time is your score, so log it.\n\n2️⃣ SAME WEIGHT ALL MONTH: The reps go up from 50 to 60 to 70. Week 4 is THE REMATCH: 50 reps again, and you try to beat your Week 1 time. Week 1 should take 5–8 minutes. Over 10 minutes? Drop the weight 10% and keep it there.\n\n3️⃣ FRIDAY DEADLIFTS: 40, 50, 60, then 40. No more than 5 reps per set, every rep from the floor, flat back.\n\n4️⃣ AFTER THE MAIN LIFT: 6 movements that get harder every week. Week 1 is 3 sets, Week 2 is heavier, and Week 3 is 4 sets at your heaviest weights. In Week 4 you beat your Week 1 weight. Sets, reps and rest are on each movement. Hit every rep? Go heavier next week.\n\n5️⃣ WED + SAT (OPTIONAL): Conditioning for your heart and lungs. Wednesday is a 20–30 minute piece and Saturday is intervals. Run, row, bike, or ski, and stick with the same one all month.\n\n📅 Lift Mon · Tue · Thu · Fri. Rest Sunday.\n\nNo maxes this month, just you against the clock. Glad you're here. 🤝\n\nTag us: @ryanfisch & @chalk.performancetraining",
+   "warmup": [
+    "\"THE BUY-IN\"",
+    "(0:00–3:00) — Choose 1: bike, row, ski erg, stair climber, or jog. Easy pace, break a light sweat.",
+    "Then pay your BUY-IN: 50 reps before you touch the bar.",
+    "20 Air Squats\n15 Push-Ups\n15 Walking Lunges",
+    "Break them up however you want, cruise pace, this is a warm-up, not the workout.",
+    "Then ramp up. For the main lift only, do one light set of 6‑8 reps at about 30 % of your working weight, followed by 3‑5 easy reps at 60‑70 % of your working weight. Rest for a minute, then start the clock with your working weight."
+   ],
+   "days": [
+    {
+     "date": "2026-11-23",
+     "dow": "Mon",
+     "week": 1,
+     "type": "strength",
+     "exercises": [
+      {
+       "slot": "main",
+       "name": "Back Squat",
+       "sets": 1,
+       "reps": "50",
+       "perSide": false,
+       "instruction": "50 reps for time. The clock keeps running. Use a weight you could squat about 20 times fresh. Full depth, sets of 8–10, never to failure. Over 10 minutes? Drop the weight 10% and use it all month. Log your time.",
+       "fields": [
+        "reps",
+        "weight",
+        "time"
+       ],
+       "summary": "1 sets | 50 reps",
+       "exerciseId": 523104,
+       "videoUrl": "https://stream.mux.com/Wd5ZY6eNKMpTlCvXNmvgLjLucD00fumPTlqja9AfkgmU.m3u8",
+       "closer": false,
+       "score": {
+        "type": "load"
+       }
+      },
+      {
+       "slot": "chest",
+       "name": "Dips",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Lean your chest forward and sink into a deep stretch. Leave 3 reps in the tank on the last set. Hit all 12? Add weight next week.",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "alternates": [
+        "Push-Up"
+       ],
+       "exerciseId": 553919,
+       "videoUrl": "https://stream.mux.com/QeHmck901CWYHkUVZMYjOK7hSt7foRGBTU5004UQPuJK8.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "back",
+       "name": "Meadows Row",
+       "sets": 3,
+       "reps": "12",
+       "perSide": true,
+       "instruction": "Barbell in a landmine or rack corner. High elbow, pull the end of the bar to your hip. Leave 3 reps in the tank. Hit all 12 per arm? Add weight next week.\nPerform Each Side",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets (per side) | 12 reps",
+       "alternates": [
+        "Single Arm DB Row"
+       ],
+       "exerciseId": 1195861,
+       "closer": false
+      },
+      {
+       "slot": "shoulders",
+       "name": "Seated Dumbbell Lateral Raises",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Raise out to the sides with a slight elbow bend, no swinging. Leave 3 reps in the tank. Hit all 15? Add weight next week.",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "exerciseId": 553896,
+       "videoUrl": "https://stream.mux.com/ntRSCIV6AK2qpw6DNMFlv01sfPWD3PXxl68bgbQ7VJ8o.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "triceps",
+       "name": "Double Dumbbell Overhead Extension (Seated)",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Exact movement: Overhead DB Triceps Extension. Leave 3 reps in the tank on the last set. Hit all 15, add weight next week.",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "alternates": [
+        "Single Dumbbell Overhead Extension"
+       ],
+       "exerciseId": 553877,
+       "videoUrl": "https://stream.mux.com/ktTCBn5U5GXMeCCcNt005PtF2Sjqlh8JJ7SUCDkoh4Fk.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "biceps",
+       "name": "Dumbbell Hammer Curl",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Palms face each other, elbows at your sides, no swinging. Leave 3 reps in the tank. Hit all 15? Add weight next week.",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "exerciseId": 523068,
+       "videoUrl": "https://stream.mux.com/POdah01q3AHfdgJqPqmxBfqbiCl2UtrKSYTetvmP02bRc.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "abs",
+       "name": "Incline Reverse Crunch",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Curl your hips up off the bench, then lower slowly. Leave 3 reps in the tank. Hit all 15? Add more reps next week.",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "alternates": [
+        "Cable Crunches",
+        "Weighted Sit-Up"
+       ],
+       "exerciseId": 1038226,
+       "closer": false
+      }
+     ]
+    },
+    {
+     "date": "2026-11-24",
+     "dow": "Tue",
+     "week": 1,
+     "type": "strength",
+     "exercises": [
+      {
+       "slot": "main",
+       "name": "Barbell Bench Press",
+       "sets": 1,
+       "reps": "50",
+       "perSide": false,
+       "instruction": "Your one weight for the month. Use a weight you could press about 20 times if you were fresh, not 15. If this takes more than 10 minutes, drop the weight 10% and use that all month. Never fail under the bar. Log your time.",
+       "fields": [
+        "reps",
+        "weight",
+        "time"
+       ],
+       "summary": "1 sets | 50 reps",
+       "alternates": [
+        "Dumbbell Bench Press",
+        "Push-Up"
+       ],
+       "exerciseId": 523081,
+       "videoUrl": "https://stream.mux.com/iZW8pIuhF003RWATFKkUXyVmAr86TaEMbYHFOqtF02wjo.m3u8",
+       "closer": false,
+       "score": {
+        "type": "load"
+       }
+      },
+      {
+       "slot": "legs",
+       "name": "Dumbbell RDL",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Leave 3 reps in the tank on the last set. Hit all 12, add weight next week.",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "alternates": [
+        "Single-leg Dumbbell RDL",
+        "RDL"
+       ],
+       "exerciseId": 553883,
+       "videoUrl": "https://stream.mux.com/kO9lb9JdJNctxuvXIdSN02E6XdDQhRwekOWbedsalMDU.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "back",
+       "name": "Pull-Up",
+       "sets": 3,
+       "reps": "-1",
+       "perSide": false,
+       "instruction": "Exact movement: Wide-Grip Pull-Up. Stop 1 rep before you can't do another. Log your total reps. A band is fine.",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | max reps",
+       "alternates": [
+        "Wide-Grip Lat Pulldown",
+        "Inverted Pull-Up"
+       ],
+       "exerciseId": 523089,
+       "videoUrl": "https://stream.mux.com/S01ilh7cAtId5WtpDVxk02eCwJ6SodTYe702yoHW8letlE.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "shoulders",
+       "name": "Face-Pulls",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Exact movement: Cable Face Pull. Leave 3 reps in the tank on the last set. Hit all 15, add weight next week.",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "alternates": [
+        "Bent Over Dumbbell Lateral Raises",
+        "Pull-Aparts"
+       ],
+       "exerciseId": 557033,
+       "videoUrl": "https://stream.mux.com/r02EQkF00pQXoEgA00gC02hLtWi58ydl01n004NfU5aNP7n8I.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "triceps",
+       "name": "Incline Tate Press",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Exact movement: DB Tate Press. Leave 3 reps in the tank on the last set. Hit all 15, add weight next week.",
+       "restSec": 60,
+       "fields": [
+        "reps"
+       ],
+       "summary": "3 sets | 15 reps",
+       "alternates": [
+        "Push-Up"
+       ],
+       "exerciseId": 633931,
+       "videoUrl": "https://stream.mux.com/2w52tuYvum00e8P6Pm4fGnhLyVyZO1A43ssLJES5UtWc.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "biceps",
+       "name": "Dumbbell Spider Curl",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Exact movement: DB Spider Curl (chest down on an incline bench). Leave 3 reps in the tank on the last set. Hit all 15, add weight next week.",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "alternates": [
+        "EZ Bar Preacher Curl"
+       ],
+       "exerciseId": 638059,
+       "videoUrl": "https://stream.mux.com/seZH2rwKntelc0201dILAVqUW9gHt3tOua7MkmrATFAFM.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "legs",
+       "name": "Leg Press Calf Raise",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Leave 3 reps in the tank on the last set. Hit all 15, add weight next week.",
+       "restSec": 60,
+       "fields": [
+        "reps"
+       ],
+       "summary": "3 sets | 15 reps",
+       "alternates": [
+        "Seated Dumbbell Calf Raises",
+        "Single Leg Deficit DB Calf Raises"
+       ],
+       "exerciseId": 624189,
+       "videoUrl": "https://stream.mux.com/SZZ4a1TQ02oMr8u01Rfq7wjBvBi00PQeTFnusa1EUYEdfQ.m3u8",
+       "closer": false
+      }
+     ]
+    },
+    {
+     "date": "2026-11-25",
+     "dow": "Wed",
+     "week": 1,
+     "type": "conditioning",
+     "title": "Warm-Up",
+     "optional": true,
+     "modalities": [],
+     "text": "\"THE PRIMER\"\n\n(0:00–5:00) — Same machine you're using today. Start very easy and build a little each minute.\n\nThen 2 x 20 seconds a little faster than today's hard pace, with 40 seconds easy after each.\n\nShake it out, then start the clock.",
+     "work": {
+      "durationSec": null
+     },
+     "score": {
+      "type": "unknown"
+     }
+    },
+    {
+     "date": "2026-11-26",
+     "dow": "Thu",
+     "week": 1,
+     "type": "strength",
+     "exercises": [
+      {
+       "slot": "main",
+       "name": "Strict Press",
+       "sets": 1,
+       "reps": "50",
+       "perSide": false,
+       "instruction": "Exact movement: Standing Strict Barbell Overhead Press. 50 reps for time (clock keeps running). Your one weight for the month. Use a weight you could press about 20 times if you were fresh, not 15. If this takes more than 10 minutes, drop the weight 10% and use that all month. Log your time.",
+       "fields": [
+        "reps"
+       ],
+       "summary": "1 sets | 50 reps",
+       "alternates": [
+        "Dumbbell Shoulder Press"
+       ],
+       "exerciseId": 621881,
+       "closer": false,
+       "score": {
+        "type": "load"
+       }
+      },
+      {
+       "slot": "legs",
+       "name": "Barbell Hip Thrust",
+       "sets": 3,
+       "reps": "12",
+       "perSide": true,
+       "instruction": "Perform Each Side",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets (per side) | 12 reps",
+       "alternates": [
+        "Hip Thrust Machine"
+       ],
+       "exerciseId": 557039,
+       "videoUrl": "https://stream.mux.com/YT4krFtjjAOZslukMkCopi76kZpvnboF1iySssXCrX4.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "back",
+       "name": "Straight Arm Lat Pull-Down",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Intensity: 9/10",
+       "intensity": "9/10",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "exerciseId": 553902,
+       "videoUrl": "https://stream.mux.com/00sLF02RFMiFbD015fzM02eschlrb1T300y2q1cAqEO4Svt00.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "chest",
+       "name": "Pec Dec",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Leave 3 reps in the tank on the last set. Hit all 15, add weight next week.\nIntensity: 9/10",
+       "intensity": "9/10",
+       "restSec": 60,
+       "fields": [
+        "reps"
+       ],
+       "summary": "3 sets | 15 reps",
+       "alternates": [
+        "Flat Dumbbell Fly",
+        "Cable Fly"
+       ],
+       "exerciseId": 1078437,
+       "closer": false
+      },
+      {
+       "slot": "biceps",
+       "name": "Incline Hammer Dumbbell Curl",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Leave 3 reps in the tank on the last set. Hit all 15, add weight next week.",
+       "restSec": 60,
+       "fields": [
+        "reps"
+       ],
+       "summary": "3 sets | 15 reps",
+       "alternates": [
+        "Dumbbell Supinated Curl"
+       ],
+       "exerciseId": 624243,
+       "videoUrl": "https://stream.mux.com/m1EexO74pG8Xj3mqQ7Dyc53y89669uwOeR019TX8zfjk.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "chest",
+       "name": "Diamond Push-Ups ",
+       "sets": 3,
+       "reps": "-1",
+       "perSide": false,
+       "instruction": "Exact movement: Diamond Push-Up. 3 sets. Stop 1 rep before you can't do another. Log your total reps.",
+       "restSec": 60,
+       "fields": [
+        "reps"
+       ],
+       "summary": "3 sets | max reps",
+       "exerciseId": 1228871,
+       "videoUrl": "https://stream.mux.com/qsEFcZSvIl029zkNkDH5rhEp7028CFzCQYr63CeAW5xIQ.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "abs",
+       "name": "Russian Twist",
+       "sets": 3,
+       "reps": "20",
+       "perSide": true,
+       "instruction": "Left + Right = 1 rep. \nIntensity: 9/10\nPerform Each Side",
+       "intensity": "9/10",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets (per side) | 20 reps",
+       "exerciseId": 557011,
+       "videoUrl": "https://stream.mux.com/bjfhd00IuyRR009r1Uu3kh3oNABbZCwD026klUbROiFBvI.m3u8",
+       "closer": false
+      }
+     ]
+    },
+    {
+     "date": "2026-11-27",
+     "dow": "Fri",
+     "week": 1,
+     "type": "strength",
+     "exercises": [
+      {
+       "slot": "main",
+       "name": "Barbell Deadlift",
+       "sets": 1,
+       "reps": "40",
+       "perSide": false,
+       "instruction": "Exact movement: Conventional Deadlift. 40 reps for time (clock keeps running). Your one weight for the month. Use a weight you could pull about 20 times if you were fresh, not 15. No more than 5 reps per set, dead stop every rep. If this takes more than 10 minutes, drop the weight 10% and use that all month. If your back rounds, that's a rest break. Log your time.",
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "1 sets | 40 reps",
+       "exerciseId": 523103,
+       "videoUrl": "https://stream.mux.com/PL0200SsqNPAsKr00GIuHREEKKYiQO02NM02oqMCdCEHksxg.m3u8",
+       "closer": false,
+       "score": {
+        "type": "load"
+       }
+      },
+      {
+       "slot": "chest",
+       "name": "Dumbbell Bench Press",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Exact movement: Flat DB Bench Press. Leave 3 reps in the tank on the last set. Hit all 12, add weight next week.",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "exerciseId": 523079,
+       "videoUrl": "https://stream.mux.com/E7VDLBnPm8IOlIRjHKbiMRpfQacVxNYzVKSBwHBYixs.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "back",
+       "name": "Chest Supported Prone Dumbbell Row",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Leave 3 reps in the tank on the last set. Hit all 12, add weight next week.",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "alternates": [
+        "Single Arm DB Row"
+       ],
+       "exerciseId": 638046,
+       "videoUrl": "https://stream.mux.com/NYhasCOpLBepD02CRAKx4aYiB6Pf2E5Z2lJumiT71kXU.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "shoulders",
+       "name": "Dumbbell Lateral Raise",
+       "sets": 3,
+       "reps": "20",
+       "perSide": false,
+       "instruction": "Exact movement: DB Lateral Raise, Heavy Partials + Full. Each set = 10 heavy partials + 10 full raises. Leave 3 reps in the tank on the last set. Hit all the raises, add weight next week.",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "weight"
+       ],
+       "summary": "3 sets | 20 reps",
+       "exerciseId": 523059,
+       "videoUrl": "https://stream.mux.com/AdEiZIM02Q1A56On99PSpdiBPy2q9Wjb8iM01OfKnGQNQ.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "biceps",
+       "name": "Supinated Dumbbell Curls",
+       "sets": 3,
+       "reps": "15",
+       "perSide": false,
+       "instruction": "Intensity: 9/10",
+       "intensity": "9/10",
+       "restSec": 60,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 15 reps",
+       "exerciseId": 553909,
+       "videoUrl": "https://stream.mux.com/Gw3tZgXd8XcelhOWnbd5VAk02WkzdUJN026aW008Pbdl24.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "triceps",
+       "name": "Close Grip Bench Press ",
+       "sets": 3,
+       "reps": "12",
+       "perSide": false,
+       "instruction": "Exact movement: EZ-Bar JM Press. Leave 3 reps in the tank on the last set. Hit all 12, add weight next week.",
+       "restSec": 90,
+       "fields": [
+        "reps",
+        "time",
+        "weight"
+       ],
+       "summary": "3 sets | 12 reps",
+       "alternates": [
+        "Dumbbell Bench Press (Neutral Grip)"
+       ],
+       "exerciseId": 553920,
+       "videoUrl": "https://stream.mux.com/BOz3V600POL16Fzji4r4xgTi4rg6b01NqRdbmmAHGExPg.m3u8",
+       "closer": false
+      },
+      {
+       "slot": "legs",
+       "name": "Standing Calf Raises",
+       "sets": 3,
+       "reps": "-1",
+       "perSide": false,
+       "instruction": "Do three sets to failure. If possible, use a deficit and perform the movement slowly and under control. Avoid fast, bouncy reps.",
+       "restSec": 60,
+       "fields": [
+        "reps"
+       ],
+       "summary": "3 sets | max reps",
+       "exerciseId": 633949,
+       "videoUrl": "https://stream.mux.com/S8Wp7gCna9XVLIcOsLRL97vqlGr02xH2yKz01Eg85qUzI.m3u8",
+       "closer": false
+      }
+     ]
+    },
+    {
+     "date": "2026-11-28",
+     "dow": "Sat",
+     "week": 1,
+     "type": "conditioning",
+     "title": "Warm-Up",
+     "optional": true,
+     "modalities": [],
+     "text": "\"THE PRIMER\"\n\n(0:00–5:00) — Same machine you're using today. Start very easy and build a little each minute.\n\nThen 2 x 20 seconds a little faster than today's hard pace, with 40 seconds easy after each.\n\nShake it out, then start the clock.",
+     "work": {
+      "durationSec": null
+     },
+     "score": {
+      "type": "unknown"
+     }
+    }
+   ],
+   "daysPresent": 6,
+   "structure": {
+    "mainLiftRepMaxByWeek": null,
+    "accessoryRepsByWeek": null
    }
   }
  ]

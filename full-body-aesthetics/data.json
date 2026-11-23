@@ -14328,7 +14328,7 @@
        "videoUrl": "https://stream.mux.com/Wd5ZY6eNKMpTlCvXNmvgLjLucD00fumPTlqja9AfkgmU.m3u8",
        "closer": false,
        "score": {
-        "type": "load"
+        "type": "time-load"
        }
       },
       {
@@ -14474,7 +14474,7 @@
        "videoUrl": "https://stream.mux.com/iZW8pIuhF003RWATFKkUXyVmAr86TaEMbYHFOqtF02wjo.m3u8",
        "closer": false,
        "score": {
-        "type": "load"
+        "type": "time-load"
        }
       },
       {
@@ -14641,7 +14641,7 @@
        "exerciseId": 621881,
        "closer": false,
        "score": {
-        "type": "load"
+        "type": "time-load"
        }
       },
       {
@@ -14779,7 +14779,7 @@
        "videoUrl": "https://stream.mux.com/PL0200SsqNPAsKr00GIuHREEKKYiQO02NM02oqMCdCEHksxg.m3u8",
        "closer": false,
        "score": {
-        "type": "load"
+        "type": "time-load"
        }
       },
       {

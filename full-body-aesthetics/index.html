@@ -253,6 +253,9 @@ const SCORE = {
   "deathby-minute": { label: "Minutes completed", unit: "min", kind: "number", prefix: "minute " },
   "ladder-reps":    { label: "Total reps", unit: "reps", kind: "number", gridOnly: true },
   "for-time":       { label: "Time", unit: "", kind: "text", placeholder: "m:ss" },
+  /* American Volume (2026-11-23): the main lift is N total reps for time at one weight all month.
+     The grid logs the weight (1 × N), the box logs the time, the Clock button fills it. */
+  "time-load":      { label: "Time", unit: "", kind: "text", placeholder: "m:ss" },
   "amrap-reps":     { label: "Total reps", unit: "reps", kind: "number", gridOnly: true },
   "closer-unknown": { label: "Score", unit: "", kind: "number" },
   "distance":       { label: "Distance", unit: "m", kind: "number" },
@@ -485,7 +488,8 @@ function priorScores(name, beforeDate) {
       if (normName(x.name) !== key || !x.score) return;
       const sc = scoreOf(ds, i, x);
       if (sc.val == null || sc.val === "") return;
-      out.push({ date: ds.trained || day.date, where: whereOf(day), type: x.score.type, val: sc.val, note: sc.note || "", rm: repsStr(x) });
+      const ws = SL.normLog(ds.logs[i], 0).sets.map(s => s.w).filter(v => v != null);
+      out.push({ date: ds.trained || day.date, where: whereOf(day), type: x.score.type, val: sc.val, note: sc.note || "", rm: repsStr(x), w: ws.length ? Math.max(...ws) : null });
     });
   });
   return out.reverse();
@@ -767,7 +771,8 @@ function renderStrength(day, container) {
   rows.forEach((ex, idx) => {
     const st = idx === nowIdx ? "now" : isDoneAt(idx) ? "done" : "next";
     let label = "";
-    if (ex.slot === "main") label = r.rm ? `Main · build to a ${r.rm}-rep max` : isGridScore(ex) && ex.score.type === "repmax-load" ? `Main · build to a ${repsStr(ex)}-rep max` : "Main lift";
+    if (ex.slot === "main" && ex.score && ex.score.type === "time-load") label = `Main · ${repsStr(ex)} reps for time`;
+    else if (ex.slot === "main") label = r.rm ? `Main · build to a ${r.rm}-rep max` : isGridScore(ex) && ex.score.type === "repmax-load" ? `Main · build to a ${repsStr(ex)}-rep max` : "Main lift";
     else if (ex.closer) label = "Closer · scored";
     else if (!seenAcc) { seenAcc = true; label = r.acc ? `Accessories · 3 × ${r.acc}` : "Accessories"; }
     if (idx === upNextAt) label = label ? `Up next · ${label}` : "Up next";
@@ -841,7 +846,8 @@ function scoreBoxHtml(ex, sc, day) {
       ${derived ? `<div class="score-hist">Heaviest set that hit the target: <b>${fmtWeight(sc.val)} lb${sc.reps != null ? ` × ${sc.reps}` : ""}</b>. Type a load only to override it.</div>` : def.fromGrid ? `<div class="score-hist">Fills itself from the heaviest set at or above ${repsStr(ex)} reps.</div>` : ""}
       ${def.fromGrid ? "" : `<input type="text" class="score-note" placeholder="${t === "deathby-minute" ? "Reps in the last minute, how it went" : "How it went"}" value="${escapeHtml(sc.note)}">`}
       ${hist ? `<div class="score-hist">Logged so far: ${hist}</div>` : ""}
-      ${last ? `<div class="score-hist">Last (${last.where}${last.date ? " · " + shortDate(last.date) : ""}): <b>${def.prefix || ""}${escapeHtml(last.val)}${def.unit && def.unit !== "lb" ? " " + def.unit : ""}</b>${last.note ? ` · ${escapeHtml(last.note)}` : ""} · beat it</div>` : ""}
+      ${last ? `<div class="score-hist">Last (${last.where}${last.date ? " · " + shortDate(last.date) : ""}): <b>${def.prefix || ""}${escapeHtml(last.val)}${def.unit && def.unit !== "lb" ? " " + def.unit : ""}${t === "time-load" && last.w != null ? ` @ ${fmtWeight(last.w)} lb` : ""}</b>${t === "time-load" && last.rm ? ` for ${escapeHtml(last.rm)} reps` : ""}${last.note ? ` · ${escapeHtml(last.note)}` : ""} · beat it</div>` : ""}
+      ${t === "time-load" ? `<div class="score-hist">Log the weight in the set below and the time here. Tap <b>⏱ Clock</b> to start, tap again to stop and fill the time. One weight all month; over 10:00, drop 10% and keep that.</div>` : ""}
     </div>`;
 }
 
@@ -859,11 +865,20 @@ function renderRow(day, ex, idx, st, total) {
   // Timer button: a rest countdown on lifts, a running clock with a beep every minute on a Death By.
   const tKey = `${k}_${idx}`;
   const deathBy = ex.score && ex.score.type === "deathby-minute";
-  const hasTimer = deathBy || !!spec.rest;
-  const timerLabel = deathBy ? "⏱ Clock" : !spec.rest ? "" : spec.rest >= 120 ? `⏱ ${fmtClock(spec.rest)}` : `⏱ ${spec.rest}s`;
+  const timed = ex.score && ex.score.type === "time-load";
+  const hasTimer = deathBy || timed || !!spec.rest;
+  const timerLabel = deathBy || timed ? "⏱ Clock" : !spec.rest ? "" : spec.rest >= 120 ? `⏱ ${fmtClock(spec.rest)}` : `⏱ ${spec.rest}s`;
   function tapTimer(btn) {
-    if (activeTimers[tKey]) tapActiveTimer(tKey);
-    else if (deathBy) startWatch(tKey, btn, 60);
+    const run = activeTimers[tKey];
+    if (run && timed && run.mode === "watch" && run.stopped == null) {
+      // Stopping the clock on a timed lift writes the time into the score box (only if it is empty).
+      tapActiveTimer(tKey);
+      const secs = Math.round((run.stopped - run.startedAt) / 1000);
+      const sc0 = ensureScore();
+      if (sc0.val == null || sc0.val === "") { sc0.val = fmtClock(secs); saveState(); const inp = el.querySelector(".score-val"); if (inp) inp.value = sc0.val; }
+    }
+    else if (run) tapActiveTimer(tKey);
+    else if (deathBy || timed) startWatch(tKey, btn, 60);
     else startCountdown(tKey, btn, spec.rest);
   }
 
@@ -901,7 +916,7 @@ function renderRow(day, ex, idx, st, total) {
       lastHtml = lastTimeHtml(ex, day, spec, hist);
       weekHtml = L.seed ? "" : weekOverHtml(L, spec, day);   // the seed line already says it came from Chalk
     }
-    sugg = suggestNext(ex, day, spec);
+    sugg = timed ? null : suggestNext(ex, day, spec);   // one weight all month: no +5 lb chip
   }
   const suggHtml = SL.suggestHtml(sugg);
   const hasNotes = !!(log.notes && log.notes.trim());
@@ -953,7 +968,7 @@ function renderRow(day, ex, idx, st, total) {
 
   if (!scoreOnly) {
     // A Death By runs on its own clock and a row with no restSec gets no rest bar (SetLog would default to 90 s).
-    SL.wireGrid(el, { spec, sugg, getLog: ensureLog, save: saveState, rerender: () => renderDay(day), noRest: () => deathBy || !spec.rest });
+    SL.wireGrid(el, { spec, sugg, getLog: ensureLog, save: saveState, rerender: () => renderDay(day), noRest: () => deathBy || timed || !spec.rest });
     const notes = el.querySelector(".log-notes");
     notes.addEventListener("input", e => { ensureLog().notes = e.target.value; saveState(); });
     el.querySelector(".hs-note-btn").onclick = () => { notes.hidden = !notes.hidden; if (!notes.hidden) notes.focus(); };

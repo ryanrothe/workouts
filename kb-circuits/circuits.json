@@ -3,8 +3,867 @@
  "coach": "Adam Gooch",
  "source": "https://x.com/Asgooch",
  "unit": "lb",
- "updated": "2026-10-26",
+ "updated": "2026-11-22",
  "circuits": [
+  {
+   "id": "2124485574564454711",
+   "date": "2026-11-22",
+   "title": "Double Kettlebell Strength & Muscle Building",
+   "url": "https://x.com/Asgooch/status/2124485574564454711",
+   "format": "rounds",
+   "rounds": 5,
+   "rest": null,
+   "restSec": null,
+   "capMin": null,
+   "bells": 2,
+   "refBellKg": null,
+   "minutes": 32,
+   "focus": "full",
+   "regions": [
+    "back",
+    "legs",
+    "chest",
+    "hips"
+   ],
+   "tags": [
+    "full"
+   ],
+   "travel": false,
+   "exercises": [
+    {
+     "name": "Swing Clean",
+     "reps": 10,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "Front Rack Squat",
+     "reps": 10,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "See-Saw Row",
+     "reps": 24,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "See-Saw Floor Press",
+     "reps": 20,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    }
+   ],
+   "source": "text",
+   "confidence": "high",
+   "gaps": [
+    "Last frames checked: no end card; rest not stated"
+   ]
+  },
+  {
+   "id": "2123841030868832293",
+   "date": "2026-11-20",
+   "title": "Full body athletic workout, with the wifey",
+   "url": "https://x.com/Asgooch/status/2123841030868832293",
+   "format": "rounds",
+   "rounds": 4,
+   "rest": null,
+   "restSec": null,
+   "capMin": null,
+   "bells": 1,
+   "refBellKg": null,
+   "minutes": 22,
+   "focus": "full",
+   "regions": [
+    "back",
+    "hips",
+    "shoulders",
+    "legs"
+   ],
+   "tags": [
+    "full"
+   ],
+   "travel": true,
+   "exercises": [
+    {
+     "name": "Deadlift/Swing",
+     "reps": 10,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "Narrow/Wide Jump Squat",
+     "reps": 12,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "Ballistic Row",
+     "reps": 20,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "Half Kneeling CG Press",
+     "reps": 8,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    }
+   ],
+   "source": "text",
+   "confidence": "high",
+   "gaps": [
+    "Rest not stated in the caption; carousel video not scanned for an end card"
+   ]
+  },
+  {
+   "id": "2123137276360142996",
+   "date": "2026-11-18",
+   "title": "How to get stronger with kettlebells",
+   "url": "https://x.com/Asgooch/status/2123137276360142996",
+   "format": "sets",
+   "rounds": null,
+   "rest": null,
+   "restSec": null,
+   "capMin": null,
+   "bells": 1,
+   "refBellKg": null,
+   "minutes": 31,
+   "focus": "full",
+   "regions": [
+    "back",
+    "legs",
+    "chest",
+    "hips"
+   ],
+   "tags": [
+    "full"
+   ],
+   "travel": true,
+   "exercises": [
+    {
+     "name": "RFE Split Squat",
+     "reps": 8,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": 5,
+     "note": null
+    },
+    {
+     "name": "Cleans",
+     "reps": 6,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": 5,
+     "note": null
+    },
+    {
+     "name": "Waiters Floor Press",
+     "reps": 8,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": 4,
+     "note": null
+    },
+    {
+     "name": "Dead Stop Row",
+     "reps": 10,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": 4,
+     "note": null
+    }
+   ],
+   "source": "text",
+   "confidence": "high",
+   "gaps": [
+    "Straight sets in 'sets x reps' form, not a circuit; no rest stated",
+    "Labels do not say each side"
+   ]
+  },
+  {
+   "id": "2122774675323531347",
+   "date": "2026-11-17",
+   "title": "Another Simple Brutal Lower Body Complex (and even heavier)",
+   "url": "https://x.com/Asgooch/status/2122774675323531347",
+   "format": "complex",
+   "rounds": 4,
+   "rest": "3 min",
+   "restSec": 180,
+   "capMin": null,
+   "bells": 1,
+   "refBellKg": null,
+   "minutes": 21,
+   "focus": "lower",
+   "regions": [
+    "legs",
+    "hips",
+    "back"
+   ],
+   "tags": [
+    "lower"
+   ],
+   "travel": true,
+   "exercises": [
+    {
+     "name": "Swing Cleans",
+     "reps": 6,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "Swing Clean to Squat",
+     "reps": 6,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "Goblet Squat",
+     "reps": 6,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "Alt Reverse Lunge",
+     "reps": 6,
+     "seconds": null,
+     "alt": true,
+     "perSide": true,
+     "sets": null,
+     "note": null
+    }
+   ],
+   "source": "video",
+   "confidence": "high",
+   "gaps": [
+    "Caption: pair it with an upper body complex or hit it solo"
+   ]
+  },
+  {
+   "id": "2122420141275390293",
+   "date": "2026-11-16",
+   "title": "Building strength and conditioning at home with just a couple of kettlebells",
+   "url": "https://x.com/Asgooch/status/2122420141275390293",
+   "format": "rounds",
+   "rounds": 4,
+   "rest": null,
+   "restSec": null,
+   "capMin": null,
+   "bells": 1,
+   "refBellKg": null,
+   "minutes": 12,
+   "focus": "full",
+   "regions": [
+    "hips",
+    "back",
+    "legs",
+    "shoulders"
+   ],
+   "tags": [
+    "full"
+   ],
+   "travel": true,
+   "exercises": [
+    {
+     "name": "Swing/Clean/Squat",
+     "reps": 10,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "Row/Waiters Clean/Press",
+     "reps": 10,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    }
+   ],
+   "source": "text",
+   "confidence": "high",
+   "gaps": [
+    "Rest not stated in the caption; carousel video not scanned for an end card",
+    "Caption says 'a couple of kettlebells'; one vs two bells not confirmed"
+   ]
+  },
+  {
+   "id": "2120935775277597068",
+   "date": "2026-11-12",
+   "title": "Follow along with my exact training",
+   "url": "https://x.com/Asgooch/status/2120935775277597068",
+   "format": "sets",
+   "rounds": null,
+   "rest": null,
+   "restSec": null,
+   "capMin": null,
+   "bells": 1,
+   "refBellKg": null,
+   "minutes": 32,
+   "focus": "full",
+   "regions": [
+    "back",
+    "legs",
+    "chest",
+    "hips"
+   ],
+   "tags": [
+    "full"
+   ],
+   "travel": true,
+   "exercises": [
+    {
+     "name": "Clean/B-Stance Squat",
+     "reps": 8,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": 4,
+     "note": null
+    },
+    {
+     "name": "Close Grip Floor Press",
+     "reps": 10,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": 4,
+     "note": null
+    },
+    {
+     "name": "Over/Under Row",
+     "reps": 20,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": 4,
+     "note": null
+    },
+    {
+     "name": "Assisted Clean/Lunge",
+     "reps": 6,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": 4,
+     "note": null
+    }
+   ],
+   "source": "text",
+   "confidence": "high",
+   "gaps": [
+    "Straight sets in 'sets x reps' form, not a circuit; no rest stated",
+    "Labels do not say each side"
+   ]
+  },
+  {
+   "id": "2120592883023769831",
+   "date": "2026-11-11",
+   "title": "How I build muscle with kettlebells",
+   "url": "https://x.com/Asgooch/status/2120592883023769831",
+   "format": "sets",
+   "rounds": null,
+   "rest": null,
+   "restSec": null,
+   "capMin": null,
+   "bells": 1,
+   "refBellKg": null,
+   "minutes": 34,
+   "focus": "full",
+   "regions": [
+    "back",
+    "legs",
+    "chest",
+    "hips"
+   ],
+   "tags": [
+    "full"
+   ],
+   "travel": true,
+   "exercises": [
+    {
+     "name": "Swing Cleans",
+     "reps": 8,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": 4,
+     "note": null
+    },
+    {
+     "name": "Alt Lunges",
+     "reps": 16,
+     "seconds": null,
+     "alt": true,
+     "perSide": false,
+     "sets": 4,
+     "note": null
+    },
+    {
+     "name": "Gorilla Rows",
+     "reps": 20,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": 4,
+     "note": null
+    },
+    {
+     "name": "Close Grip Chest Press",
+     "reps": 10,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": 4,
+     "note": null
+    }
+   ],
+   "source": "text",
+   "confidence": "high",
+   "gaps": [
+    "Straight sets in 'sets x reps' form, not a circuit; no rest stated",
+    "Gorilla Rows usually use two bells; one vs two not confirmed"
+   ]
+  },
+  {
+   "id": "2120228423595618499",
+   "date": "2026-11-10",
+   "title": "Another Brutal Kettlebell Complex (but more brutal)",
+   "url": "https://x.com/Asgooch/status/2120228423595618499",
+   "format": "complex",
+   "rounds": 5,
+   "rest": "2-3 min",
+   "restSec": 150,
+   "capMin": null,
+   "bells": 1,
+   "refBellKg": null,
+   "minutes": 28,
+   "focus": "full",
+   "regions": [
+    "legs",
+    "hips",
+    "back",
+    "chest"
+   ],
+   "tags": [
+    "full"
+   ],
+   "travel": true,
+   "exercises": [
+    {
+     "name": "Alternating Rows",
+     "reps": 10,
+     "seconds": null,
+     "alt": true,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "Swings",
+     "reps": 10,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "Goblet Squats",
+     "reps": 10,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "Close Grip Pushups",
+     "reps": 10,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": "hands on the bell"
+    }
+   ],
+   "source": "video",
+   "confidence": "high",
+   "gaps": [
+    "Alternating Rows x10 label does not say each side or total"
+   ]
+  },
+  {
+   "id": "2118416919967748394",
+   "date": "2026-11-05",
+   "title": "Only have 20 minutes? Then follow this workout.",
+   "url": "https://x.com/Asgooch/status/2118416919967748394",
+   "format": "rounds",
+   "rounds": 4,
+   "rest": "2 min",
+   "restSec": 120,
+   "capMin": null,
+   "bells": 1,
+   "refBellKg": null,
+   "minutes": 33,
+   "focus": "full",
+   "regions": [
+    "back",
+    "legs",
+    "hips",
+    "chest"
+   ],
+   "tags": [
+    "full"
+   ],
+   "travel": true,
+   "exercises": [
+    {
+     "name": "Swing/Clean/Squat",
+     "reps": 12,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "March to Lunge",
+     "reps": 10,
+     "seconds": null,
+     "alt": false,
+     "perSide": true,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "Row to Ballistic Row",
+     "reps": 30,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "Single Arm Bridge Press",
+     "reps": 12,
+     "seconds": null,
+     "alt": false,
+     "perSide": true,
+     "sets": null,
+     "note": null
+    }
+   ],
+   "source": "video",
+   "confidence": "high",
+   "gaps": []
+  },
+  {
+   "id": "2118044722522440000",
+   "date": "2026-11-04",
+   "title": "Full Body Athletic Workout",
+   "url": "https://x.com/Asgooch/status/2118044722522440000",
+   "format": "rounds",
+   "rounds": 5,
+   "rest": null,
+   "restSec": null,
+   "capMin": null,
+   "bells": 1,
+   "refBellKg": null,
+   "minutes": 28,
+   "focus": "lower",
+   "regions": [
+    "legs",
+    "hips",
+    "shoulders"
+   ],
+   "tags": [
+    "lower"
+   ],
+   "travel": true,
+   "exercises": [
+    {
+     "name": "Alt Swings",
+     "reps": 16,
+     "seconds": null,
+     "alt": true,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "Clean/Squat",
+     "reps": 8,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "Jumping Lunge",
+     "reps": 16,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "Incline KB Press",
+     "reps": 10,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    }
+   ],
+   "source": "text",
+   "confidence": "high",
+   "gaps": [
+    "Rest not stated in the caption; carousel video not scanned for an end card"
+   ]
+  },
+  {
+   "id": "2117314499015270477",
+   "date": "2026-11-02",
+   "title": "A single kettlebell and a partner for a solid workout at home",
+   "url": "https://x.com/Asgooch/status/2117314499015270477",
+   "format": "rounds",
+   "rounds": 4,
+   "rest": null,
+   "restSec": null,
+   "capMin": null,
+   "bells": 1,
+   "refBellKg": null,
+   "minutes": 22,
+   "focus": "full",
+   "regions": [
+    "back",
+    "core",
+    "hips",
+    "legs"
+   ],
+   "tags": [
+    "full",
+    "core"
+   ],
+   "travel": true,
+   "exercises": [
+    {
+     "name": "Clean to Alt B-Stance Squat",
+     "reps": 10,
+     "seconds": null,
+     "alt": true,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "Tactical Clean",
+     "reps": 10,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "Alt Row/Waiters Clean/Press",
+     "reps": 10,
+     "seconds": null,
+     "alt": true,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "High Plank Pull Through",
+     "reps": 20,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    }
+   ],
+   "source": "text",
+   "confidence": "high",
+   "gaps": [
+    "Rest not stated in the caption; carousel video not scanned for an end card"
+   ]
+  },
+  {
+   "id": "2116211577171169777",
+   "date": "2026-10-30",
+   "title": "30 Minute Beginner Kettlebell Strength",
+   "url": "https://x.com/Asgooch/status/2116211577171169777",
+   "format": "sets",
+   "rounds": null,
+   "rest": null,
+   "restSec": null,
+   "capMin": null,
+   "bells": 1,
+   "refBellKg": null,
+   "minutes": 44,
+   "focus": "full",
+   "regions": [
+    "hips",
+    "back",
+    "legs",
+    "shoulders",
+    "core"
+   ],
+   "tags": [
+    "full",
+    "core"
+   ],
+   "travel": true,
+   "exercises": [
+    {
+     "name": "Swings",
+     "reps": 12,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": 4,
+     "note": null
+    },
+    {
+     "name": "Clean to Squat",
+     "reps": 10,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": 4,
+     "note": null
+    },
+    {
+     "name": "Bent Over Row",
+     "reps": 24,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": 4,
+     "note": null
+    },
+    {
+     "name": "Goblet March",
+     "reps": 30,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": 3,
+     "note": null
+    },
+    {
+     "name": "Half Kneeling Waiters Press",
+     "reps": 8,
+     "seconds": null,
+     "alt": false,
+     "perSide": false,
+     "sets": 4,
+     "note": null
+    }
+   ],
+   "source": "video",
+   "confidence": "high",
+   "gaps": [
+    "Straight sets in 'sets x reps' form, not a circuit; no end card and no rest stated",
+    "Labels do not say each side"
+   ]
+  },
+  {
+   "id": "2115130960840732830",
+   "date": "2026-10-27",
+   "title": "Beginner 15 Minute Kettlebell Workout",
+   "url": "https://x.com/Asgooch/status/2115130960840732830",
+   "format": "rounds",
+   "rounds": 4,
+   "rest": "2 min",
+   "restSec": 120,
+   "capMin": null,
+   "bells": 1,
+   "refBellKg": null,
+   "minutes": 13,
+   "focus": "full",
+   "regions": [
+    "legs",
+    "back",
+    "hips",
+    "shoulders"
+   ],
+   "tags": [
+    "full"
+   ],
+   "travel": true,
+   "exercises": [
+    {
+     "name": "Alt Clean/Squat/Lunge",
+     "reps": 10,
+     "seconds": null,
+     "alt": true,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    },
+    {
+     "name": "Alt Row/Waiters Clean/Press",
+     "reps": 10,
+     "seconds": null,
+     "alt": true,
+     "perSide": false,
+     "sets": null,
+     "note": null
+    }
+   ],
+   "source": "video",
+   "confidence": "high",
+   "gaps": []
+  },
   {
    "id": "2114784368971362541",
    "date": "2026-10-26",
